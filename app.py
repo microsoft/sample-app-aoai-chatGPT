@@ -30,7 +30,8 @@ def conversation():
     try:
         messages = request.json["messages"]
         body = {
-            "messages": messages
+            "messages": messages,
+            "enable_Indomain": False
         }
         
         azure_openai_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/completions?api-version=2022-12-01"
