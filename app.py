@@ -38,7 +38,7 @@ def conversation():
         messages = request.json["messages"]
         body = {
             "messages": messages,
-            "enable_Indomain": AZURE_SEARCH_ENABLE_IN_DOMAIN,
+            "enable_Indomain": True if AZURE_SEARCH_ENABLE_IN_DOMAIN == "true" else False,
             "azure_document_search_top_k": AZURE_SEARCH_TOP_K,
             "temperature": AZURE_OPENAI_TEMPERATURE,
             "top_p": AZURE_OPENAI_TOP_P,
