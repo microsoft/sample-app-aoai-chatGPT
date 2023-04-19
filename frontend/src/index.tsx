@@ -7,7 +7,6 @@ import "./index.css";
 
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
-import OneShot from "./pages/oneshot/OneShot";
 import Chat from "./pages/chat/Chat";
 
 initializeIcons();
@@ -18,7 +17,6 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Chat />} />
-                    <Route path="qa" element={<OneShot />} />
                     <Route path="*" element={<NoPage />} />
                 </Route>
             </Routes>
