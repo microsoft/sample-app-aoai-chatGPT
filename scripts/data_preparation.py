@@ -283,6 +283,14 @@ def create_index(config, credential):
     print("Chunking directory...")
     result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"])
 
+    if len(result.chunks) == 0:
+        raise Exception("No chunks found. Please check the data path and chunk size.")
+
+    print(f"Processed {result.total_files} files")
+    print(f"Unsupported formats: {result.num_unsupported_format_files} files")
+    print(f"Files with errors: {result.num_files_with_errors} files")
+    print(f"Found {len(result.chunks)} chunks")
+
     # upload documents to index
     print("Uploading documents to index...")
     upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
