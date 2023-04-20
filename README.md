@@ -1,14 +1,13 @@
-# Project
+# [Preview] Sample Chat App with AOAI
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Some portions of the app use preview APIs and features that should not be used for any production dependency.
 
-As the maintainer of this project, please make a few updates:
+## Run the app
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+Start the app with `start.cmd`.
+This will build the frontend, install backend dependencies, and then start the app.
+You can see the local running app at http://127.0.0.1:5000.
+Note: this app is under construction!
 
 ## Contributing
 
