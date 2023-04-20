@@ -178,7 +178,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
     
     return True
 
-def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential, upload_batch_size = 1000):
+def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential, upload_batch_size = 50):
     if credential is None:
         raise ValueError("credential cannot be None")
     
