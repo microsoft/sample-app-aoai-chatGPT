@@ -31,13 +31,17 @@
 }
 
 .chatEmptyStateTitle {
-    font-size: 4rem;
+    font-size: 2rem;
     font-weight: 600;
-    margin-top: 150px;
 }
 
 .chatEmptyStateSubtitle {
+    font-size: 1rem;
     font-weight: 600;
+}
+
+.chatSparkleIcon {
+    color: #0078d4;
 }
 
 .chatMessageStream {

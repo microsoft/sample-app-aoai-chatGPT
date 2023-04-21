@@ -22,7 +22,9 @@ export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedD
                 return `[doc${part}]`;
             }
             let citedDocument = answer.top_docs[citationNumber - 1];
-
+            if (citedDocument.id === null) {
+                citedDocument.id = crypto.randomUUID();
+            }
             citations.push(citedDocument);
             citationIndex++;
 
