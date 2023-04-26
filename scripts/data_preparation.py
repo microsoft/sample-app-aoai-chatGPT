@@ -10,6 +10,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
 from data_utils import chunk_directory
 from azure.search.documents import SearchClient
+from azure.ai.formrecognizer import DocumentAnalysisClient
 
 def check_if_search_service_exists(search_service_name: str,
     subscription_id: str,
@@ -261,7 +262,7 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential):
+def create_index(config, credential, form_recognizer_client=None):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
@@ -281,7 +282,7 @@ def create_index(config, credential):
     
     # chunk directory
     print("Chunking directory...")
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config["token_overlap"])
+    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config["token_overlap"], form_recognizer_client=form_recognizer_client)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
@@ -303,17 +304,23 @@ def create_index(config, credential):
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, help="Path to config file containing settings for data preparation")
+    parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
+    parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
     args = parser.parse_args()
 
     with open(args.config) as f:
         config = json.load(f)
 
     credential = AzureCliCredential()
+    form_recognizer_client = None
 
     print("Data preparation script started")
+    if args.form_rec_resource and args.form_rec_key:
+        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        create_index(index_config, credential)
+        create_index(index_config, credential, form_recognizer_client)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
