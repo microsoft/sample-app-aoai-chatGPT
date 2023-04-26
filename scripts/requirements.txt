@@ -6,3 +6,4 @@ azure-search-documents
 tiktoken
 langchain
 bs4
+azure-ai-formrecognizer
