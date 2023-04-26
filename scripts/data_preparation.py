@@ -282,7 +282,7 @@ def create_index(config, credential, form_recognizer_client=None):
     
     # chunk directory
     print("Chunking directory...")
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], form_recognizer_client=form_recognizer_client)
+    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config["token_overlap"], form_recognizer_client=form_recognizer_client)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
