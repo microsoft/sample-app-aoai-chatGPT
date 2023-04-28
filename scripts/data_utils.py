@@ -374,17 +374,18 @@ def table_to_html(table):
     table_html += "</table>"
     return table_html
 
-def extract_pdf_content(file_path, form_recognizer_client): 
+def extract_pdf_content(file_path, form_recognizer_client, use_layout=False): 
     offset = 0
     page_map = []
+    model = "prebuilt-layout" if use_layout else "prebuilt-read"
     with open(file_path, "rb") as f:
-        poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
+        poller = form_recognizer_client.begin_analyze_document(model, document = f)
     form_recognizer_results = poller.result()
 
     for page_num, page in enumerate(form_recognizer_results.pages):
         tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
 
-        # mark all positions of the table spans in the page
+        # (if using layout) mark all positions of the table spans in the page
         page_offset = page.spans[0].offset
         page_length = page.spans[0].length
         table_chars = [-1]*page_length
@@ -396,7 +397,7 @@ def extract_pdf_content(file_path, form_recognizer_client):
                     if idx >=0 and idx < page_length:
                         table_chars[idx] = table_id
 
-        # build page text by replacing charcters in table spans with table html
+        # build page text by replacing charcters in table spans with table html if using layout
         page_text = ""
         added_tables = set()
         for idx, table_id in enumerate(table_chars):
@@ -517,7 +518,8 @@ def chunk_file(
     url = None,
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
-    form_recognizer_client = None
+    form_recognizer_client = None,
+    use_layout = False
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -539,7 +541,7 @@ def chunk_file(
     if file_format == "pdf":
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
-        content = extract_pdf_content(file_path, form_recognizer_client)
+        content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
     else:
         with open(file_path, "r", encoding="utf8") as f:
@@ -564,7 +566,8 @@ def chunk_directory(
     url_prefix = None,
     token_overlap: int = 0,
     extensions_to_process: List[str] = FILE_FORMAT_DICT.keys(),
-    form_recognizer_client = None
+    form_recognizer_client = None,
+    use_layout = False
 ):
     """
     Chunks the given directory recursively
@@ -577,6 +580,10 @@ def chunk_directory(
                             For example, if the directory path is /home/user/data and the url_prefix is https://example.com/data, 
                             then the url for the file /home/user/data/file1.txt will be https://example.com/data/file1.txt
         token_overlap (int): The number of tokens to overlap between chunks.
+        extensions_to_process (List[str]): The list of extensions to process. 
+        form_recognizer_client: Optional form recognizer client to use for pdf files.
+        use_layout (bool): If true, uses Layout model for pdf files. Otherwise, uses Read.
+
     Returns:
         List[Document]: List of chunked documents.
     """
@@ -602,7 +609,8 @@ def chunk_directory(
                     url=url_path,
                     token_overlap=token_overlap,
                     extensions_to_process=extensions_to_process,
-                    form_recognizer_client=form_recognizer_client
+                    form_recognizer_client=form_recognizer_client,
+                    use_layout=use_layout
                 )
                 for chunk_doc in result.chunks:
                     chunk_doc.filepath = rel_file_path
