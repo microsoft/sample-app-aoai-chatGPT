@@ -8,10 +8,10 @@ import html
 
 from tqdm import tqdm
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag, NavigableString
 from dataclasses import dataclass
 
-from typing import List, Dict, Optional, Generator, Tuple
+from typing import List, Dict, Optional, Generator, Tuple, Union
 from langchain.text_splitter import MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 
 FILE_FORMAT_DICT = {
@@ -113,7 +113,7 @@ class MarkdownParser(BaseParser):
         Returns:
             Document: The parsed document.
         """
-        html_content = markdown.markdown(content)
+        html_content = markdown.markdown(content, extensions=['fenced_code', 'toc', 'tables', 'sane_lists'])
 
         return self._html_parser.parse(html_content, file_name)
 
@@ -121,6 +121,7 @@ class MarkdownParser(BaseParser):
 class HTMLParser(BaseParser):
     """Parses HTML content."""
     TITLE_MAX_TOKENS = 128
+    NEWLINE_TEMPL = "<NEWLINE_TEXT>"
 
     def __init__(self) -> None:
         super().__init__()
@@ -134,18 +135,71 @@ class HTMLParser(BaseParser):
         Returns:
             Document: The parsed document.
         """
-        soup = BeautifulSoup(content, "html.parser")
-        try:
-            title = next(soup.stripped_strings)
-            title = self.token_estimator.construct_tokens_with_size(title, self.TITLE_MAX_TOKENS)
+        soup = BeautifulSoup(content, 'html.parser')
 
-        except StopIteration:
-            title = file_name
+        # Extract the title
+        title = ''
+        if soup.title:
+            title = soup.title.string
+        else:
+            # Try to find the first <h1> tag
+            h1_tag = soup.find('h1')
+            if h1_tag:
+                title = h1_tag.get_text(strip=True)
+            else:
+                h2_tag = soup.find('h2')
+                if h2_tag:
+                    title = h2_tag.get_text(strip=True)
+        if title == '':
+            # if title is still not found, guess using the next string
+            try:
+                title = next(soup.stripped_strings)
+                title = self.token_estimator.construct_tokens_with_size(title, self.TITLE_MAX_TOKENS)
 
-        text = soup.get_text()
+            except StopIteration:
+                title = file_name
 
-        return Document(content=cleanup_content(text), title=title)
+                # Helper function to process text nodes
+        def process_text(text):
+            return text.strip()
 
+        # Helper function to process anchor tags
+        def process_anchor_tag(tag):
+            href = tag.get('href', '')
+            text = tag.get_text(strip=True)
+            return f'{text} ({href})'
+
+        # Collect all text nodes and anchor tags in a list
+        elements = []
+
+        for elem in soup.descendants:
+            if isinstance(elem, (Tag, NavigableString)):
+                page_element: Union[Tag, NavigableString] = elem
+                if page_element.name in ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code']:
+                    if elements and not elements[-1].endswith('\n'):
+                        elements.append(self.NEWLINE_TEMPL)
+                if isinstance(page_element, str):
+                    elements.append(process_text(page_element))
+                elif page_element.name == 'a':
+                    elements.append(process_anchor_tag(page_element))
+
+
+        # Join the list into a single string and return but ensure that either of newlines or space are used.
+        result = ''
+        is_prev_newline = False
+        for elem in elements:
+            if elem:
+                if elem == self.NEWLINE_TEMPL:
+                    result += "\n"
+                    is_prev_newline = True
+                else:
+                    if not is_prev_newline:
+                        result += " "
+                    else:
+                        is_prev_newline = False
+                    result += f"{elem}"
+
+        return Document(content=cleanup_content(result), title=title)
 
 class TextParser(BaseParser):
     """Parses text content."""
