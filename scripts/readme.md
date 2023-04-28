@@ -42,3 +42,7 @@ If your data is in PDF format, you'll first need to convert from PDF to .txt for
 Pass in your Form Recognizer resource name and key when running the data preparation script:
 
 `python data_preparation.py --config config.json --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
+
+This will use the Form Recognizer Read model by default. If your documents have a lot of tables and relevant layout information, you can use the Form Recognizer Layout model, which is more costly and slower to run but will preserve table information with better quality. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
+
+`python data_preparation.py --config config.json --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key> --form-rec-use-layout`
