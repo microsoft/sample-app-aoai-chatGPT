@@ -25,8 +25,11 @@ export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedD
             if (citedDocument.id === null) {
                 citedDocument.id = crypto.randomUUID();
             }
-            citations.push(citedDocument);
-            citationIndex++;
+
+            if (!citations.find((c) => c.id === citedDocument.id)) {
+                citations.push(citedDocument);
+                citationIndex++;
+            }
 
             return (
                 <a className="supContainer" title={citedDocument.filepath ?? ""} onClick={() => onCitationClicked(citedDocument)}>
