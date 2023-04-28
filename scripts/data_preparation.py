@@ -262,7 +262,7 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential, form_recognizer_client=None):
+def create_index(config, credential, form_recognizer_client=None, use_layout=False):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
@@ -282,7 +282,7 @@ def create_index(config, credential, form_recognizer_client=None):
     
     # chunk directory
     print("Chunking directory...")
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client)
+    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
@@ -306,6 +306,7 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, help="Path to config file containing settings for data preparation")
     parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
     parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
+    parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -317,10 +318,11 @@ if __name__ == "__main__":
     print("Data preparation script started")
     if args.form_rec_resource and args.form_rec_key:
         form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+        print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        create_index(index_config, credential, form_recognizer_client)
+        create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
