@@ -22,6 +22,9 @@
 ```
 
 ## Create Indexes and Ingest Data
+
+Disclaimer: Make sure there are no duplicate pages in your data. That could impact the quality of the responses you get in a negative way.
+
 - Run the data preparation script, passing in your config file.
 
      `python data_preparation.py --config config.json`
