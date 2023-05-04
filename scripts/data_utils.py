@@ -5,6 +5,7 @@ import markdown
 import re
 import tiktoken
 import html
+import json
 
 from tqdm import tqdm
 from abc import ABC, abstractmethod
@@ -139,7 +140,7 @@ class HTMLParser(BaseParser):
 
         # Extract the title
         title = ''
-        if soup.title:
+        if soup.title and soup.title.string:
             title = soup.title.string
         else:
             # Try to find the first <h1> tag
@@ -150,7 +151,7 @@ class HTMLParser(BaseParser):
                 h2_tag = soup.find('h2')
                 if h2_tag:
                     title = h2_tag.get_text(strip=True)
-        if title == '':
+        if title is None or title == '':
             # if title is still not found, guess using the next string
             try:
                 title = next(soup.stripped_strings)
@@ -199,7 +200,9 @@ class HTMLParser(BaseParser):
                         is_prev_newline = False
                     result += f"{elem}"
 
-        return Document(content=cleanup_content(result), title=title)
+        if title is None:
+            title = '' # ensure no 'None' type title
+        return Document(content=cleanup_content(result), title=str(title))
 
 class TextParser(BaseParser):
     """Parses text content."""
@@ -612,8 +615,9 @@ def chunk_directory(
                     form_recognizer_client=form_recognizer_client,
                     use_layout=use_layout
                 )
-                for chunk_doc in result.chunks:
+                for chunk_idx, chunk_doc in enumerate(result.chunks):
                     chunk_doc.filepath = rel_file_path
+                    chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
                 chunks.extend(result.chunks)
                 num_unsupported_format_files += result.num_unsupported_format_files
                 num_files_with_errors += result.num_files_with_errors
