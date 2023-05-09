@@ -29,6 +29,12 @@ Make sure that the app name and resource group match exactly for the app that wa
 
 Deployment will take several minutes. When it completes, you should be able to navigate to your app at {app-name}.azurewebsites.net.
 
+## Best Practices
+Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to expose some of the settings in `app.py` in the UI for users to try out different behaviors. We recommend keeping these best practices in mind:
+
+- Reset the chat session (clear chat) if the user changes any settings. Notify the user that their chat history will be lost.
+- Clearly communicate to the user what impact each setting will have on their experience.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
