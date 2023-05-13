@@ -5,7 +5,7 @@ type JsxParsedAnswer = {
     citations: DocumentResult[];
 };
 
-export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedDocument: DocumentResult) => void): JsxParsedAnswer {
+export function parseAnswerToJsx(answer: AskResponse, onInlineCitationClicked: (citedDocument: DocumentResult) => void): JsxParsedAnswer {
     let citationIndex = 0;
     const citations: DocumentResult[] = [];
 
@@ -32,7 +32,7 @@ export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedD
             }
 
             return (
-                <a className="supContainer" title={citedDocument.filepath ?? ""} onClick={() => onCitationClicked(citedDocument)}>
+                <a className="citation" title={citedDocument.filepath ?? ""} onClick={() => onInlineCitationClicked(citedDocument)}>
                     <sup>{citationIndex}</sup>
                 </a>
             );

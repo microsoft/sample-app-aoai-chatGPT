@@ -1,6 +1,6 @@
 import { ChatMessage, ConversationRequest } from "./models";
 
-export async function conversationApi(options: ConversationRequest): Promise<ChatMessage> {
+export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<ChatMessage> {
     const response = await fetch("/conversation", {
         method: "POST",
         headers: {
@@ -8,7 +8,8 @@ export async function conversationApi(options: ConversationRequest): Promise<Cha
         },
         body: JSON.stringify({
             messages: options.messages
-        })
+        }),
+        signal: abortSignal
     });
 
     const parsedResponse: ChatMessage = await response.json();
