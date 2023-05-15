@@ -46,7 +46,7 @@ export const Answer = ({
         }
 
         if (citation.chunk_id !== null) {
-            citationDisplay += `- Part ${parseInt(citation.chunk_id) + 1}`;
+            citationDisplay += ` - Part ${parseInt(citation.chunk_id) + 1}`;
         }
         return citationDisplay;
     }

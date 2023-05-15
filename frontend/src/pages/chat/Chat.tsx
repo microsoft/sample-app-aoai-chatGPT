@@ -4,6 +4,7 @@ import { BroomRegular, DismissRegular, SquareRegular } from "@fluentui/react-ico
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from "rehype-raw"; 
 
 import styles from "./Chat.module.css";
 import Sparkle from "../../assets/sparkle.svg";
@@ -89,12 +90,8 @@ const Chat = () => {
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const onShowCitation = (citation: DocumentResult, index: number) => {
-        if (activeCitation && activeCitation[1] === citation.id && isCitationPanelOpen) {
-            setIsCitationPanelOpen(false);
-        } else {
-            setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
-            setIsCitationPanelOpen(true);
-        }
+        setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
+        setIsCitationPanelOpen(true);
     };
 
     return (
@@ -196,7 +193,7 @@ const Chat = () => {
                         <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
                     </Stack>
                     <h5 className={styles.citationPanelTitle}>{activeCitation[2]}</h5>
-                    <ReactMarkdown className={styles.citationPanelContent} children={activeCitation[0]} remarkPlugins={[remarkGfm]}/>
+                    <ReactMarkdown className={styles.citationPanelContent} children={activeCitation[0]} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}/>
                 </Stack.Item>
             )}
             </Stack>
