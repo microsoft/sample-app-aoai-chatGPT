@@ -2,6 +2,9 @@ import { useRef, useState, useEffect } from "react";
 import { Stack } from "@fluentui/react";
 import { BroomRegular, DismissRegular, SquareRegular } from "@fluentui/react-icons";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm'
+
 import styles from "./Chat.module.css";
 import Sparkle from "../../assets/sparkle.svg";
 import {
@@ -27,8 +30,6 @@ const Chat = () => {
         lastQuestionRef.current = question;
 
         setIsLoading(true);
-        setActiveCitation(undefined);
-        setIsCitationPanelOpen(false);
         const abortController = new AbortController();
         abortFuncs.current.unshift(abortController);
 
@@ -188,14 +189,14 @@ const Chat = () => {
                         />
                     </Stack>
                 </div>
-                {!isLoading && answers.length > 0 && isCitationPanelOpen && activeCitation && (
+                {answers.length > 0 && isCitationPanelOpen && activeCitation && (
                 <Stack.Item className={styles.citationPanel}>
                     <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
                         <span className={styles.citationPanelHeader}>Citations</span>
                         <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
                     </Stack>
                     <h5 className={styles.citationPanelTitle}>{activeCitation[2]}</h5>
-                    <p className={styles.citationPanelContent} dangerouslySetInnerHTML={{__html: activeCitation[0]}}></p>
+                    <ReactMarkdown className={styles.citationPanelContent} children={activeCitation[0]} remarkPlugins={[remarkGfm]}/>
                 </Stack.Item>
             )}
             </Stack>

@@ -21,7 +21,9 @@
     align-self: stretch;
     flex-grow: 0;
     margin: 11px;
+    white-space: pre-wrap;
 }
+
 .answerFooter {
     display: flex;
     flex-flow: row nowrap;

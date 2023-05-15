@@ -16,7 +16,7 @@ AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
 AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY")
 AZURE_SEARCH_USE_SEMANTIC_SEARCH = os.environ.get("AZURE_SEARCH_USE_SEMANTIC_SEARCH", False)
 AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG = os.environ.get("AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG", "default")
-AZURE_SEARCH_INDEX_IS_PRECHUNKED = os.environ.get("AZURE_SEARCH_INDEX_IS_PRECHUNKED", True)
+AZURE_SEARCH_INDEX_IS_PRECHUNKED = os.environ.get("AZURE_SEARCH_INDEX_IS_PRECHUNKED", "false")
 AZURE_SEARCH_TOP_K = os.environ.get("AZURE_SEARCH_TOP_K", 5)
 AZURE_SEARCH_ENABLE_IN_DOMAIN = os.environ.get("AZURE_SEARCH_ENABLE_IN_DOMAIN", False)
 AZURE_SEARCH_CONTENT_COLUMNS = os.environ.get("AZURE_SEARCH_CONTENT_COLUMNS")
@@ -67,9 +67,8 @@ def prepare_body_headers_with_data(request):
         index_column_mapping["title_column"] = AZURE_SEARCH_TITLE_COLUMN
     if AZURE_SEARCH_URL_COLUMN:
         index_column_mapping["url_column"] = AZURE_SEARCH_URL_COLUMN
-    # TODO: uncomment this when the API is ready
-    # if index_column_mapping:
-    #     body["index_column_mapping"] = index_column_mapping
+    if index_column_mapping:
+        body["index_column_mapping"] = index_column_mapping
 
     azure_openai_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/completions?api-version=2022-12-01"
     search_url = f"https://{AZURE_SEARCH_SERVICE}.search.windows.net"
@@ -79,7 +78,7 @@ def prepare_body_headers_with_data(request):
         "azure_document_search_url": search_url,
         "azure_document_search_api_key": AZURE_SEARCH_KEY,
         "azure_document_search_index": AZURE_SEARCH_INDEX,
-        "azure_document_is_prechunked": AZURE_SEARCH_INDEX_IS_PRECHUNKED,
+        "azure_document_is_prechunked": "true" if AZURE_SEARCH_INDEX_IS_PRECHUNKED.lower() == "true" else "false",
         "chatgpt_url": azure_openai_url,
         "chatgpt_key": AZURE_OPENAI_KEY,
         "Ocp-Apim-Subscription-Key": AZURE_OPENAI_KEY,

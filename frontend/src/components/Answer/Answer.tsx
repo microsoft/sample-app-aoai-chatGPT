@@ -35,6 +35,22 @@ export const Answer = ({
         setChevronIsExpanded(isRefAccordionOpen);
     }, [isRefAccordionOpen]);
 
+    const createCitationFilepath = (citation: DocumentResult) => {
+        let citationDisplay = "";
+
+        if (citation.filepath) {
+            citationDisplay = citation.filepath;
+        }
+        else if (citation.title) {
+            citationDisplay = citation.title;
+        }
+
+        if (citation.chunk_id !== null) {
+            citationDisplay += `- Part ${parseInt(citation.chunk_id) + 1}`;
+        }
+        return citationDisplay;
+    }
+
     return (
         <>
             <Stack className={styles.answerContainer}>
@@ -70,7 +86,7 @@ export const Answer = ({
                             return (
                                 <span key={idx} onClick={() => onCitationClicked(citation)} className={styles.citationContainer}>
                                     <div className={styles.citation}>{++idx}</div>
-                                    {citation.filepath ?? ""}
+                                    {createCitationFilepath(citation)}
                                 </span>);
                         })}
                     </div>

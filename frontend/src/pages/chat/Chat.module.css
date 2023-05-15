@@ -93,7 +93,7 @@
     font-family: 'Segoe UI';
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 22px;
     color: #242424;
     flex: none;
@@ -114,9 +114,10 @@
     padding-bottom: 24px;
     padding-left: 24px;
     padding-right: 24px;
-    width: 100%;
+    width: calc(100% - 100px);
     max-width: 1028px;
     margin-bottom: 50px;
+    margin-top: 8px;
 }
 
 .clearChatBroom {
@@ -134,6 +135,7 @@
     color: #FFFFFF;
     border: 1px solid #D1D1D1;
     border-radius: 20px;
+    z-index: 1;
 }
 
 .stopGeneratingContainer {
@@ -189,6 +191,8 @@
     align-self: stretch;
     flex-grow: 0.3;
     max-width: 30%;
+    overflow-y: scroll;
+    max-height: calc(100vh - 100px);
 }
 
 .citationPanelHeaderContainer {
@@ -241,6 +245,7 @@
     align-self: stretch;
     flex-grow: 0;
     white-space: pre-wrap;
+    overflow-y: scroll;
 } 
 
 .chatAnalysisPanel {
