@@ -1,9 +1,13 @@
 import { useRef, useState, useEffect } from "react";
-import { Pivot, PivotItem } from "@fluentui/react";
-import { Sparkle28Filled, Sparkle48Filled } from "@fluentui/react-icons";
+import { Stack } from "@fluentui/react";
+import { BroomRegular, DismissRegular, SquareRegular } from "@fluentui/react-icons";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from "rehype-raw"; 
 
 import styles from "./Chat.module.css";
-
+import Sparkle from "../../assets/sparkle.svg";
 import {
     ChatMessage,
     ConversationRequest,
@@ -13,68 +17,63 @@ import {
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { SupportingContent } from "../../components/SupportingContent";
-import { ClearChatButton } from "../../components/ClearChatButton";
-
-enum Tabs {
-    SupportingContentTab = "supportingContent",
-    CitationTab = "citation"
-}
 
 const Chat = () => {
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
-
     const [isLoading, setIsLoading] = useState<boolean>(false);
-
     const [activeCitation, setActiveCitation] = useState<[content: string, id: string, title: string, filepath: string, url: string, metadata: string]>();
-    const [activeTab, setActiveTab] = useState<Tabs | undefined>(undefined);
-
-    const [currentAnswer, setCurrentAnswer] = useState<number>(0);
-    const [answers, setAnswers] = useState<[message_id: string, parent_message_id: string, role: string, content: MessageContent][]>(
-        []
-    );
+    const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
+    const [answers, setAnswers] = useState<[message_id: string, parent_message_id: string, role: string, content: MessageContent][]>([]);
+    const abortFuncs = useRef([] as AbortController[]);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
 
         setIsLoading(true);
-        setActiveCitation(undefined);
-        setActiveTab(undefined);
+        const abortController = new AbortController();
+        abortFuncs.current.unshift(abortController);
+
+        const prevMessages: ChatMessage[] = answers.map(a => ({
+            message_id: a[0],
+            parent_message_id: a[1] ?? "",
+            role: a[2],
+            content: a[3]
+        }));
+        const userMessage: ChatMessage = {
+            message_id: crypto.randomUUID(),
+            parent_message_id: prevMessages.length > 0 ? prevMessages[prevMessages.length - 1].message_id : "",
+            role: "user",
+            content: {
+                content_type: "text",
+                parts: [question],
+                top_docs: [],
+                intent: ""
+            }
+        };
+
+        const request: ConversationRequest = {
+            messages: [...prevMessages, userMessage]
+        };
 
         try {
-            const prevMessages: ChatMessage[] = answers.map(a => ({
-                message_id: a[0],
-                parent_message_id: a[1] ?? "",
-                role: a[2],
-                content: a[3]
-            }));
-            const userMessage: ChatMessage = {
-                message_id: crypto.randomUUID(),
-                parent_message_id: prevMessages.length > 0 ? prevMessages[prevMessages.length - 1].message_id : "",
-                role: "user",
-                content: {
-                    content_type: "text",
-                    parts: [question],
-                    top_docs: [],
-                    intent: ""
-                }
-            };
-
-            const request: ConversationRequest = {
-                messages: [...prevMessages, userMessage]
-            };
-
-            const result = await conversationApi(request);
-
+            const result = await conversationApi(request, abortController.signal);
             setAnswers([
                 ...answers,
                 [userMessage.message_id, userMessage.parent_message_id ?? "", userMessage.role, userMessage.content],
                 [result.message_id, result.parent_message_id ?? "", result.role, result.content]
             ]);
+        } catch {
+            setAnswers([
+                ...answers,
+                [userMessage.message_id, userMessage.parent_message_id ?? "", userMessage.role, userMessage.content]
+            ]);
         } finally {
             setIsLoading(false);
+            abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
         }
+
+        return abortController.abort();
     };
 
     const clearChat = () => {
@@ -83,33 +82,32 @@ const Chat = () => {
         setAnswers([]);
     };
 
+    const stopGenerating = () => {
+        abortFuncs.current.forEach(a => a.abort());
+        setIsLoading(false);
+    }
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const onShowCitation = (citation: DocumentResult, index: number) => {
-        setCurrentAnswer(index);
-        if (activeCitation && activeCitation[1] === citation.id && activeTab === Tabs.CitationTab) {
-            setActiveTab(undefined);
-        } else {
-            setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
-            setActiveTab(Tabs.CitationTab);
-        }
+        setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
+        setIsCitationPanelOpen(true);
     };
-
-    const isDisabledCitationTab: boolean = !activeCitation;
 
     return (
         <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-            </div>
-            <div className={styles.chatRoot}>
+            <Stack horizontal className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState}>
-                            <Sparkle48Filled aria-hidden="true" className={styles.chatSparkleIcon}/>
+                        <Stack className={styles.chatEmptyState}>
+                            <img
+                                src={Sparkle}
+                                className={styles.chatSparkleIcon}
+                                aria-hidden="true"
+                            />
                             <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
                             <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions.</h2>
-                        </div>
+                        </Stack>
                     ) : (
                         <div className={styles.chatMessageStream}>
                             {answers.map((answer, index) => (
@@ -138,9 +136,16 @@ const Chat = () => {
                                     <div className={styles.chatMessageUser}>
                                         <div className={styles.chatMessageUserMessage}>{lastQuestionRef.current}</div>
                                     </div>
-                                    <div className={styles.chatMessageGptLoading}>
-                                        <Sparkle28Filled aria-hidden="true" aria-label="Answer logo" />
-                                        <p>Generating answer...</p>
+                                    <div className={styles.chatMessageGpt}>
+                                        <Answer
+                                            answer={{
+                                                answer: "Generating answer...",
+                                                thoughts: null,
+                                                data_points: [],
+                                                top_docs: []
+                                            }}
+                                            onCitationClicked={() => null}
+                                        />
                                     </div>
                                 </>
                             )}
@@ -148,39 +153,51 @@ const Chat = () => {
                         </div>
                     )}
 
-                    <div className={styles.chatInput}>
+                    <Stack horizontal className={styles.chatInput}>
+                        {isLoading && (
+                            <Stack 
+                                horizontal
+                                className={styles.stopGeneratingContainer}
+                                role="button"
+                                aria-label="Stop generating"
+                                tabIndex={0}
+                                onClick={stopGenerating}
+                                onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
+                                >
+                                    <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
+                                    <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
+                            </Stack>
+                        )}
+                        <BroomRegular
+                            className={styles.clearChatBroom}
+                            style={{ background: isLoading || answers.length === 0 ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)", 
+                                     cursor: isLoading || answers.length === 0 ? "" : "pointer"}}
+                            onClick={clearChat}
+                            onKeyDown={e => e.key === "Enter" || e.key === " " ? clearChat() : null}
+                            aria-label="Clear session"
+                            role="button"
+                            tabIndex={0}
+                        />
                         <QuestionInput
                             clearOnSend
                             placeholder="Type a new question..."
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
-                    </div>
+                    </Stack>
                 </div>
-
-                {!isLoading && answers.length > 0 && activeTab && (
-                    <Pivot
-                        className={styles.chatAnalysisPanel}
-                        selectedKey={activeTab}
-                        onLinkClick={pivotItem => pivotItem && setActiveTab(pivotItem.props.itemKey! as Tabs)}
-                    >
-                        <PivotItem
-                            itemKey={Tabs.CitationTab}
-                            headerText="Citation"
-                            headerButtonProps={isDisabledCitationTab ? { disabled: true, style: { color: "grey" } } : undefined}
-                        >
-                            { activeCitation && <SupportingContent supportingContent={{
-                                content: activeCitation[0], 
-                                id: activeCitation[1],
-                                title: activeCitation[2],
-                                filepath: activeCitation[3],
-                                url: activeCitation[4],
-                                metadata: activeCitation[5]
-                            }} />}
-                        </PivotItem>
-                    </Pivot>
-                )}
-            </div>
+                {answers.length > 0 && isCitationPanelOpen && activeCitation && (
+                <Stack.Item className={styles.citationPanel}>
+                    <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
+                        <span className={styles.citationPanelHeader}>Citations</span>
+                        <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
+                    </Stack>
+                    <h5 className={styles.citationPanelTitle}>{activeCitation[2]}</h5>
+                    <ReactMarkdown className={styles.citationPanelContent} children={activeCitation[0]} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}/>
+                </Stack.Item>
+            )}
+            </Stack>
+            
         </div>
     );
 };

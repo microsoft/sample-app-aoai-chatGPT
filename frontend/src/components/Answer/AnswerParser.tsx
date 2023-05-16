@@ -1,25 +1,32 @@
 import { AskResponse, DocumentResult } from "../../api";
+import styles from "./Answer.module.css";
 
 type JsxParsedAnswer = {
     answerJsx: (string | JSX.Element)[];
     citations: DocumentResult[];
+    markdownFormatText: string;
 };
 
-export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedDocument: DocumentResult) => void): JsxParsedAnswer {
+export function parseAnswerToJsx(answer: AskResponse, onInlineCitationClicked: (citedDocument: DocumentResult) => void): JsxParsedAnswer {
     let citationIndex = 0;
     const citations: DocumentResult[] = [];
 
     const answerText = answer.answer;
     const parts = answerText.split(/\[doc([\d]+)\]/g);
+    
+    let markdownFormatText = "";
+    const fragments: (string | JSX.Element)[] = [];
 
-    const fragments: (string | JSX.Element)[] = parts.map((part, index) => {
+    parts.forEach((part, index) => {
         if (index % 2 === 0) {
-            return part;
+            fragments.push(part);
+            markdownFormatText += part;
         } else {
             // match the citation to the top docs
             let citationNumber = parseInt(part.slice(-1));
             if (isNaN(citationNumber) || citationNumber > answer.top_docs.length || citationNumber <= 0) {
-                return `[doc${part}]`;
+                fragments.push(`[doc${part}]`);
+                markdownFormatText += `[doc${part}]`;
             }
             let citedDocument = answer.top_docs[citationNumber - 1];
             if (citedDocument.id === null) {
@@ -31,16 +38,18 @@ export function parseAnswerToJsx(answer: AskResponse, onCitationClicked: (citedD
                 citationIndex++;
             }
 
-            return (
-                <a className="supContainer" title={citedDocument.filepath ?? ""} onClick={() => onCitationClicked(citedDocument)}>
-                    <sup>{citationIndex}</sup>
+            fragments.push(
+                <a className={styles.citation} title={citedDocument.filepath ?? ""} onClick={() => onInlineCitationClicked(citedDocument)}>
+                    <sup className={styles.clickableSup}>{citationIndex}</sup>
                 </a>
             );
+            markdownFormatText += ` ^${citationIndex}^ `;
         }
     });
 
     return {
         answerJsx: fragments,
-        citations
+        citations,
+        markdownFormatText
     };
 }

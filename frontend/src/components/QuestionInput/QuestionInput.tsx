@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
-import { Sparkle28Filled } from "@fluentui/react-icons";
-
+import { SendRegular } from "@fluentui/react-icons";
+import Send from "../../assets/Send.svg";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
@@ -51,15 +51,20 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
             />
-            <div className={styles.questionInputButtonsContainer}>
-                <div
-                    className={`${styles.questionInputSendButton} ${sendQuestionDisabled ? styles.questionInputSendButtonDisabled : ""}`}
-                    aria-label="Ask question button"
-                    onClick={sendQuestion}
-                >
-                    <Sparkle28Filled />
-                </div>
+            <div className={styles.questionInputSendButtonContainer} 
+                role="button" 
+                tabIndex={0}
+                aria-label="Ask question button"
+                onClick={sendQuestion}
+                onKeyDown={e => e.key === "Enter" || e.key === " " ? sendQuestion() : null}
+            >
+                { sendQuestionDisabled ? 
+                    <SendRegular className={styles.questionInputSendButtonDisabled}/>
+                    :
+                    <img src={Send} className={styles.questionInputSendButton}/>
+                }
             </div>
+            <div className={styles.questionInputBottomBorder} />
         </Stack>
     );
 };
