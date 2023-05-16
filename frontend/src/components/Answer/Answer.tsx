@@ -7,6 +7,10 @@ import styles from "./Answer.module.css";
 import { AskResponse, DocumentResult } from "../../api";
 import { parseAnswerToJsx } from "./AnswerParser";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import supersub from 'remark-supersub'
+
 interface Props {
     answer: AskResponse;
     onCitationClicked: (citedDocument: DocumentResult) => void;
@@ -22,6 +26,8 @@ export const Answer = ({
             toggleIsRefAccordionOpen();
         }
     };
+
+    const useMarkdownFormat = false; // set to false to use inline clickable citations without markdown formatting
 
     const parsedAnswer = useMemo(() => parseAnswerToJsx(answer, onInlineCitationClicked), [answer]);
     const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
@@ -55,7 +61,13 @@ export const Answer = ({
         <>
             <Stack className={styles.answerContainer}>
                 <Stack.Item grow>
-                    <p className={styles.answerText}>{parsedAnswer.answerJsx}</p>
+                    {useMarkdownFormat ? ( 
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm, supersub]}
+                            children={parsedAnswer.markdownFormatText}
+                            className={styles.answerText}
+                        /> ) : ( 
+                        <p className={styles.answerText}>{parsedAnswer.answerJsx}</p>)}
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
                 {!!parsedAnswer.citations.length && (

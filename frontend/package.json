@@ -16,7 +16,8 @@
     "react-markdown": "^7.0.1",
     "react-router-dom": "^6.8.1",
     "rehype-raw": "^6.1.1",
-    "remark-gfm": "^3.0.1"
+    "remark-gfm": "^3.0.1",
+    "remark-supersub": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.27",

@@ -138,7 +138,7 @@
     cursor:pointer;
 }
 
-sup {
+.clickableSup {
     box-sizing: border-box;
     display: inline-flex;
     flex-direction: column;
@@ -163,7 +163,7 @@ sup {
     cursor: pointer;
 }
 
-sup:hover {
+.clickableSup:hover {
     text-decoration: underline;
     cursor: pointer;
 }
