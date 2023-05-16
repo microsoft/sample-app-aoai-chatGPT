@@ -28,6 +28,7 @@ export const Answer = ({
     };
 
     const useMarkdownFormat = true; // set to false to use inline clickable citations without markdown formatting
+    const filePathTruncationLimit = 50;
 
     const parsedAnswer = useMemo(() => parseAnswerToJsx(answer, onInlineCitationClicked), [answer]);
     const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
@@ -41,20 +42,22 @@ export const Answer = ({
         setChevronIsExpanded(isRefAccordionOpen);
     }, [isRefAccordionOpen]);
 
-    const createCitationFilepath = (citation: DocumentResult) => {
-        let citationDisplay = "";
+    const createCitationFilepath = (citation: DocumentResult, index: number, truncate: boolean = false) => {
+        let citationFilename = "";
 
-        if (citation.filepath) {
-            citationDisplay = citation.filepath;
+        if (citation.filepath && citation.chunk_id) {
+            if (truncate && citation.filepath.length > filePathTruncationLimit) {
+                const citationLength = citation.filepath.length;
+                citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength -20)} - Part ${parseInt(citation.chunk_id) + 1}`;
+            }
+            else {
+                citationFilename = `${citation.filepath} - Part ${parseInt(citation.chunk_id) + 1}`;
+            }
         }
-        else if (citation.title) {
-            citationDisplay = citation.title;
+        else {
+            citationFilename = `Citation ${index}`;
         }
-
-        if (citation.chunk_id !== null) {
-            citationDisplay += ` - Part ${parseInt(citation.chunk_id) + 1}`;
-        }
-        return citationDisplay;
+        return citationFilename;
     }
 
     return (
@@ -96,9 +99,9 @@ export const Answer = ({
                     <div style={{ marginTop: 8, display: "flex", flexFlow: "wrap column", maxHeight: "150px", gap: "4px" }}>
                         {parsedAnswer.citations.map((citation, idx) => {
                             return (
-                                <span key={idx} onClick={() => onCitationClicked(citation)} className={styles.citationContainer}>
-                                    <div className={styles.citation}>{++idx}</div>
-                                    {createCitationFilepath(citation)}
+                                <span title={createCitationFilepath(citation, ++idx)} key={idx} onClick={() => onCitationClicked(citation)} className={styles.citationContainer}>
+                                    <div className={styles.citation}>{idx}</div>
+                                    {createCitationFilepath(citation, idx, true)}
                                 </span>);
                         })}
                     </div>
