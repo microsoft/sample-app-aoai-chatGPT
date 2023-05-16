@@ -7,7 +7,8 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from "rehype-raw"; 
 
 import styles from "./Chat.module.css";
-import Sparkle from "../../assets/sparkle.svg";
+import AzureOpenAILogo from "../../assets/AzureOpenAILogo.svg";
+
 import {
     ChatMessage,
     ConversationRequest,
@@ -100,11 +101,11 @@ const Chat = () => {
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <Stack className={styles.chatEmptyState}>
-                            <img
-                                src={Sparkle}
-                                className={styles.chatSparkleIcon}
+                            {/* <img
+                                src={AzureOpenAILogo}
+                                className={styles.chatIcon}
                                 aria-hidden="true"
-                            />
+                            /> */}
                             <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
                             <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions.</h2>
                         </Stack>
