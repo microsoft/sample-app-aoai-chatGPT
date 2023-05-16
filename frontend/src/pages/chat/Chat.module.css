@@ -22,7 +22,9 @@
     align-items: center;
     background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%);
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-    border-radius: 12px;
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
 }
 
 .chatEmptyState {
@@ -31,11 +33,10 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    max-height: 1024px;
 }
 
 .chatEmptyStateTitle {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 700;
     font-size: 36px;
@@ -49,7 +50,7 @@
 
 .chatEmptyStateSubtitle {
     margin-top: 20px;
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 400;
     font-size: 16px;
@@ -90,7 +91,7 @@
     background: #EDF5FD;
     border-radius: 8px;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
@@ -164,7 +165,7 @@
 .stopGeneratingText {
     width: 103px;
     height: 20px;
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -200,7 +201,7 @@
 }
 
 .citationPanelHeader {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 18px;
@@ -223,7 +224,7 @@
 }
 
 .citationPanelTitle {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 16px;
@@ -234,7 +235,7 @@
 } 
 
 .citationPanelContent {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 400;
     font-size: 14px;

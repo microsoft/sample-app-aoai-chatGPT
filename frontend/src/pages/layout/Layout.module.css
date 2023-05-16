@@ -22,7 +22,7 @@
 }
 
 .headerTitle {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 20px;
@@ -62,7 +62,7 @@
 }
 
 .shareButtonText {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -73,7 +73,7 @@
 }
 
 .urlTextBox {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
@@ -106,7 +106,7 @@
 }
 
 .copyButtonText {
-    font-family: 'Segoe UI';
+    font-family: "Segoe UI";
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
