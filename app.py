@@ -28,7 +28,6 @@ AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
 AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
 AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
-AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
 AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
@@ -51,9 +50,6 @@ def prepare_body_headers_with_data(request):
     if AZURE_OPENAI_STOP_SEQUENCE:
         sequences = AZURE_OPENAI_STOP_SEQUENCE.split("|")
         body["stop"] = sequences
-    
-    if AZURE_OPENAI_DEPLOYMENT:
-        body["deployment"] = AZURE_OPENAI_DEPLOYMENT
 
     if AZURE_OPENAI_SYSTEM_MESSAGE:
         body["system_message"] = AZURE_OPENAI_SYSTEM_MESSAGE
