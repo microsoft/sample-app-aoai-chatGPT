@@ -26,4 +26,4 @@ COPY . /usr/src/app/
 COPY --from=frontend /home/node/app/  /usr/src/app/frontend/  
 WORKDIR /usr/src/app  
 EXPOSE 80  
-CMD ["uwsgi", "--http", ":80", "--wsgi-file", "app.py", "--callable", "app"]  
+CMD ["uwsgi", "--http", ":80", "--wsgi-file", "app.py", "--callable", "app", "-b","32768"]  
