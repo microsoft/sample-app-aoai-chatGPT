@@ -69,7 +69,6 @@
 
 .chatMessageStream {
     flex-grow: 1;
-    max-height: 1024px;
     max-width: 1028px;
     width: 100%;
     overflow-y: auto;
@@ -100,6 +99,9 @@
     flex: none;
     order: 0;
     flex-grow: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-width: 800px;
 }
 
 .chatMessageGpt {
