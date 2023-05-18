@@ -1,0 +1,4 @@
+.venv
+WebApp.Dockerfile
+WebApp.dockerignore
+frontend/node_modules
