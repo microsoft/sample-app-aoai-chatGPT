@@ -25,5 +25,5 @@ RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \
 COPY . /usr/src/app/  
 COPY --from=frontend /home/node/app/  /usr/src/app/frontend/  
 WORKDIR /usr/src/app  
-EXPOSE 5000  
-CMD ["uwsgi", "--http", ":5000", "--wsgi-file", "app.py", "--callable", "app", "--processes", "4", "--threads", "2", "--uid", "guest"]  
+EXPOSE 80  
+CMD ["uwsgi", "--http", ":80", "--wsgi-file", "app.py", "--callable", "app"]  
