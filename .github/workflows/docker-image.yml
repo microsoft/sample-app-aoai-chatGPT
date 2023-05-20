@@ -27,11 +27,7 @@ jobs:
         
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: 
-        docker build . --file Docker/Dockerfile --tag ${{ secrets.ACR_LOGIN_SERVER }}/web-ui:latest;
-        docker push ${{ secrets.ACR_LOGIN_SERVER }}/web-ui:latest
-        
-        
+      run:         
         docker build . --file WebApp.Dockerfile --tag fruoccopublic.azurecr.io/sample-app-aoai-chatGPT:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
         docker tag fruoccopublic.azurecr.io/sample-app-aoai-chatGPT:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER fruoccopublic.azurecr.io/sample-app-aoai-chatGPT:latest;
         docker push fruoccopublic.azurecr.io/sample-app-aoai-chatGPT:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
