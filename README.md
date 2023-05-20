@@ -22,7 +22,7 @@ Please be aware that you need:
 
 ### Deploy from your local machine
 
-You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. 
+You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. Make sure you have version 2.48.1 or later.
 
 If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following command from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
 
@@ -45,6 +45,7 @@ Feel free to fork this repository and make your own modifications to the UX or b
 
 - Reset the chat session (clear chat) if the user changes any settings. Notify the user that their chat history will be lost.
 - Clearly communicate to the user what impact each setting will have on their experience.
+- When you rotate API keys for your AOAI or ACS resource, be sure to update the app settings for each of your deployed apps to use the new key.
 
 ## Environment variables
 
