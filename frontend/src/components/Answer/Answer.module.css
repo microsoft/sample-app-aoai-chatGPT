@@ -21,9 +21,10 @@
     align-self: stretch;
     flex-grow: 0;
     margin: 11px;
-    white-space: pre-wrap;
+    white-space: normal;
     word-wrap: break-word;
     max-width: 800px;
+    overflow-x: auto;
 }
 
 .answerFooter {
@@ -168,4 +169,9 @@
 .clickableSup:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+sup {
+    font-size: 10px;
+    line-height: 10px;
 }
