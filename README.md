@@ -66,7 +66,6 @@ Feel free to fork this repository and make your own modifications to the UX or b
 |AZURE_OPENAI_RESOURCE|||
 |AZURE_OPENAI_MODEL|||
 |AZURE_OPENAI_KEY|||
-|AZURE_OPENAI_DEPLOYMENT|||
 |AZURE_OPENAI_TEMPERATURE|0||
 |AZURE_OPENAI_TOP_P|1.0||
 |AZURE_OPENAI_MAX_TOKENS|1000||
