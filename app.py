@@ -35,54 +35,48 @@ AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
-AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-03-31-preview")
+AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 
 
 def prepare_body_headers_with_data(request):
-    messages = request.json["messages"]
+    request_messages = request.json["messages"]
+
     body = {
-        "messages": messages,
-        "enable_Indomain": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-        "azure_document_search_top_k": AZURE_SEARCH_TOP_K,
+        "messages": request_messages,
         "temperature": AZURE_OPENAI_TEMPERATURE,
+        "max_tokens": AZURE_OPENAI_MAX_TOKENS,
         "top_p": AZURE_OPENAI_TOP_P,
-        "max_tokens": AZURE_OPENAI_MAX_TOKENS
+        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else [],
+        "stream": False,
+        "dataSources": [
+            {
+                "type": "AzureCognitiveSearch",
+                "parameters": {
+                    "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+                    "key": AZURE_SEARCH_KEY,
+                    "indexName": AZURE_SEARCH_INDEX,
+                    "fieldsMapping": {
+                        "contentField": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                        "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
+                        "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
+                        "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None
+                    },
+                    "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                    "topNDocuments": AZURE_SEARCH_TOP_K,
+                    "queryType": "semantic" if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" else "simple",
+                    "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
+                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
+                }
+            }
+        ]
     }
-
-    if AZURE_OPENAI_STOP_SEQUENCE:
-        sequences = AZURE_OPENAI_STOP_SEQUENCE.split("|")
-        body["stop"] = sequences
-
-    if AZURE_OPENAI_SYSTEM_MESSAGE:
-        body["system_message"] = AZURE_OPENAI_SYSTEM_MESSAGE
-
-    index_column_mapping = {}
-    if AZURE_SEARCH_CONTENT_COLUMNS:
-        index_column_mapping["content_column"] = AZURE_SEARCH_CONTENT_COLUMNS.split("|")
-    if AZURE_SEARCH_FILENAME_COLUMN:
-        index_column_mapping["filepath_column"] = AZURE_SEARCH_FILENAME_COLUMN
-    if AZURE_SEARCH_TITLE_COLUMN:
-        index_column_mapping["title_column"] = AZURE_SEARCH_TITLE_COLUMN
-    if AZURE_SEARCH_URL_COLUMN:
-        index_column_mapping["url_column"] = AZURE_SEARCH_URL_COLUMN
-    if index_column_mapping:
-        body["index_column_mapping"] = index_column_mapping
-
-    azure_openai_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/completions?api-version=2022-12-01"
-    search_url = f"https://{AZURE_SEARCH_SERVICE}.search.windows.net"
-
+    
     headers = {
-        "Content-Type": "application/json",
-        "azure_document_search_url": search_url,
-        "azure_document_search_api_key": AZURE_SEARCH_KEY,
-        "azure_document_search_index": AZURE_SEARCH_INDEX,
-        "chatgpt_url": azure_openai_url,
-        "chatgpt_key": AZURE_OPENAI_KEY,
-        "Ocp-Apim-Subscription-Key": AZURE_OPENAI_KEY,
+        'Content-Type': 'application/json',
         'api-key': AZURE_OPENAI_KEY,
-        "azure_document_search_configuration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-        "azure_document_search_query_type": "semantic" if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" else "simple",
-        "x-ms-useragent": "GitHubSampleWebApp/2.0.1"
+        'chatgpt_url': f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/completions?api-version=2023-03-31-preview",
+        'chatgpt_key': AZURE_OPENAI_KEY,
+        "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/1.0.0"
     }
 
     return body, headers
@@ -133,7 +127,7 @@ def conversation():
         use_data = should_use_data()
         if use_data:
             body, headers = prepare_body_headers_with_data(request)
-            endpoint = f"{base_url}/openai/wednesday-private/conversation?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+            endpoint = f"{base_url}/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
         else:
             body, headers = prepare_body_headers_without_data(request)
             endpoint = f"{base_url}/openai/deployments/{AZURE_OPENAI_MODEL}/chat/completions?api-version=2023-03-15-preview"

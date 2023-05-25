@@ -13,8 +13,8 @@ import {
     ChatMessage,
     ConversationRequest,
     conversationApi,
-    MessageContent,
-    DocumentResult
+    Citation,
+    ToolMessageContent
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -25,7 +25,7 @@ const Chat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [activeCitation, setActiveCitation] = useState<[content: string, id: string, title: string, filepath: string, url: string, metadata: string]>();
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
-    const [answers, setAnswers] = useState<[message_id: string, parent_message_id: string, role: string, content: MessageContent][]>([]);
+    const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
 
     const makeApiRequest = async (question: string) => {
@@ -35,40 +35,21 @@ const Chat = () => {
         const abortController = new AbortController();
         abortFuncs.current.unshift(abortController);
 
-        const prevMessages: ChatMessage[] = answers.map(a => ({
-            message_id: a[0],
-            parent_message_id: a[1] ?? "",
-            role: a[2],
-            content: a[3]
-        }));
         const userMessage: ChatMessage = {
-            message_id: crypto.randomUUID(),
-            parent_message_id: prevMessages.length > 0 ? prevMessages[prevMessages.length - 1].message_id : "",
             role: "user",
-            content: {
-                content_type: "text",
-                parts: [question],
-                top_docs: [],
-                intent: ""
-            }
+            content: question,
+            end_turn: null
         };
 
         const request: ConversationRequest = {
-            messages: [...prevMessages, userMessage]
+            messages: [...answers, userMessage]
         };
 
         try {
             const result = await conversationApi(request, abortController.signal);
-            setAnswers([
-                ...answers,
-                [userMessage.message_id, userMessage.parent_message_id ?? "", userMessage.role, userMessage.content],
-                [result.message_id, result.parent_message_id ?? "", result.role, result.content]
-            ]);
+            setAnswers([...answers, userMessage, ...result.choices[0].messages]);
         } catch {
-            setAnswers([
-                ...answers,
-                [userMessage.message_id, userMessage.parent_message_id ?? "", userMessage.role, userMessage.content]
-            ]);
+            setAnswers([...answers, userMessage]);
         } finally {
             setIsLoading(false);
             abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
@@ -90,10 +71,23 @@ const Chat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const onShowCitation = (citation: DocumentResult, index: number) => {
+    const onShowCitation = (citation: Citation) => {
         setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
         setIsCitationPanelOpen(true);
     };
+
+    const parseCitationFromMessage = (message: ChatMessage) => {
+        if (message.role === "tool") {
+            try {
+                const toolMessage = JSON.parse(message.content) as ToolMessageContent;
+                return toolMessage.citations;
+            }
+            catch {
+                return [];
+            }
+        }
+        return [];
+    }
 
     return (
         <div className={styles.container}>
@@ -113,22 +107,20 @@ const Chat = () => {
                         <div className={styles.chatMessageStream}>
                             {answers.map((answer, index) => (
                                 <>
-                                    {answer[2] === "user" ? (
+                                    {answer.role === "user" ? (
                                         <div className={styles.chatMessageUser}>
-                                            <div className={styles.chatMessageUserMessage}>{answer[3].parts[0]}</div>
+                                            <div className={styles.chatMessageUserMessage}>{answer.content}</div>
                                         </div>
                                     ) : (
-                                        <div className={styles.chatMessageGpt}>
+                                        answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
                                             <Answer
                                                 answer={{
-                                                    answer: answer[3].parts[0],
-                                                    thoughts: null,
-                                                    data_points: [],
-                                                    top_docs: answer[3].top_docs
+                                                    answer: answer.content,
+                                                    citations: parseCitationFromMessage(answers[index - 1]),
                                                 }}
-                                                onCitationClicked={c => onShowCitation(c, index)}
+                                                onCitationClicked={c => onShowCitation(c)}
                                             />
-                                        </div>
+                                        </div> : null
                                     )}
                                 </>
                             ))}
@@ -141,9 +133,7 @@ const Chat = () => {
                                         <Answer
                                             answer={{
                                                 answer: "Generating answer...",
-                                                thoughts: null,
-                                                data_points: [],
-                                                top_docs: []
+                                                citations: []
                                             }}
                                             onCitationClicked={() => null}
                                         />
