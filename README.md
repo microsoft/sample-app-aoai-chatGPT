@@ -27,7 +27,7 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
 
 ### Chat with your data
 1. Update the `AZURE_OPENAI_*` environment variables as described above. 
-2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure OpenAI Studio](https://oai.azure.com/portal/chat) to create the index for you.
+2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
 
     These variables are required when adding your data:
     - `AZURE_SEARCH_SERVICE`: the name of your Azure Cognitive Search resource
