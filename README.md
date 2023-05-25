@@ -110,7 +110,7 @@ Feel free to fork this repository and make your own modifications to the UX or b
 |AZURE_OPENAI_MAX_TOKENS|1000||
 |AZURE_OPENAI_STOP_SEQUENCE|||
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.||
-|AZURE_OPENAI_API_VERSION|2023-03-31-preview||
+|AZURE_OPENAI_API_VERSION|2023-06-01-preview||
 
 
 ## Contributing
