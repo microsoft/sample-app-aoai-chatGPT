@@ -137,7 +137,7 @@
         "AzureOpenAIModel": {
             "type": "string",
             "metadata": {
-                "description": "Azure OpenAI Model"
+                "description": "Azure OpenAI Model Deployment name"
             }
         },
         "AzureOpenAIKey": {
