@@ -92,8 +92,8 @@ def prepare_body_headers_without_data(request):
 
     for message in request_messages:
         body_messages.append({
-            "role": "assistant" if  message["role"] == "bot" else "user",
-            "content": message["content"]["parts"][0]
+            "role": message["role"] ,
+            "content": message["content"]
         })
 
     body = {
@@ -138,19 +138,10 @@ def conversation():
 
         if not use_data and status_code == 200:
             # convert to the same format as the data version
-            r = {
-                "message_id": r["id"],
-                "parent_message_id": "",
-                "role": "bot",
-                "content": {
-                    "content_type": "text",
-                    "parts": [
-                        r["choices"][0]["message"]["content"]
-                    ],
-                    "top_docs": [],
-                    "intent": ""
-                },
-            }
+            r["choices"][0]["messages"] = [{
+                "content": r["choices"][0]["message"]["content"],
+                "role": "assistant"
+                }]
 
         return jsonify(r), status_code
     except Exception as e:
