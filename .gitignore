@@ -2,3 +2,8 @@
 frontend/node_modules
 .env
 static
+__pycache__/app.cpython-310.pyc
+.vscode/launch.json
+package-lock.json
+frontend/package-lock.json
+
