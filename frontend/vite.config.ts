@@ -5,14 +5,27 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
     plugins: [react()],
     build: {
-        outDir: "../static",
+        outDir: "../backend/static",
         emptyOutDir: true,
         sourcemap: true
     },
     server: {
         proxy: {
-            "/ask": "http://localhost:5000",
-            "/chat": "http://localhost:5000"
+            "/ask": {
+                target: "http://127.0.0.1:5000",
+                changeOrigin: true,
+                secure: false
+            },
+            "/chat": {
+                target: "http://127.0.0.1:5000",
+                changeOrigin: true,
+                secure: false
+            },
+            "/conversation": {
+                target: "http://127.0.0.1:5000",
+                changeOrigin: true,
+                secure: false
+            }
         }
     }
 });

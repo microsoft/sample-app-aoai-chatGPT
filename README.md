@@ -9,6 +9,27 @@ This will build the frontend, install backend dependencies, and then start the a
 You can see the local running app at http://127.0.0.1:5000.
 Note: this app is under construction!
 
+### For local development
+If you are modifying this app locally, you can greatly speed up the time to change and test the app by allowing the app to "hot reload". To do this open two separate terminal sessions. 
+
+**Start the backend flask app with hot reload**
+Run `debug_backend.ps1` or `debug_backend.sh`
+```
+pwsh ./debug_backend.ps1
+```
+or in bash
+```
+TODO
+```
+
+**Start the frontend app with hot reload**
+Run the following command to enable hot reload on the frontend
+```
+cd ./frontend
+npm run dev
+```
+This will create a VITE server instance that will reload when code changes. You can access the API at http://localhost:5173/. The VITE server is set to proxy API calls to the flask application using the settings in `frontend/vite.config.ts`
+
 ## Deploy the app
 
 ### One click Azure deployment
