@@ -191,9 +191,16 @@
         },
         "AzureOpenAIApiVersion": {
             "type": "string",
-            "defaultValue": "2023-03-31-preview",
+            "defaultValue": "2023-06-01-preview",
             "metadata": {
                 "description": "Azure OpenAI Api Version"
+            }
+        },
+        "AzureOpenAIStream": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Whether or not to stream responses from Azure OpenAI"
             }
         }
     },
@@ -318,6 +325,10 @@
                         {
                             "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
                             "value": "[parameters('AzureOpenAIApiVersion')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_STREAM",
+                            "value": "[parameters('AzureOpenAIStream')]"
                         }                        
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"

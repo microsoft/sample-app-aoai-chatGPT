@@ -23,7 +23,7 @@ export type ToolMessageContent = {
 export type ChatMessage = {
     role: string;
     content: string;
-    end_turn: boolean | null;
+    end_turn?: boolean;
 };
 
 export enum ChatCompletionType {
@@ -32,7 +32,6 @@ export enum ChatCompletionType {
 }
 
 export type ChatResponseChoice = {
-    index: number;
     messages: ChatMessage[];
 }
 

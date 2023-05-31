@@ -1,7 +1,9 @@
+import json
 import os
 import logging
 import requests
-from flask import Flask, request, jsonify
+import openai
+from flask import Flask, Response, request, jsonify
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -36,7 +38,7 @@ AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
-
+AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
@@ -47,7 +49,7 @@ def prepare_body_headers_with_data(request):
         "max_tokens": AZURE_OPENAI_MAX_TOKENS,
         "top_p": AZURE_OPENAI_TOP_P,
         "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else [],
-        "stream": False,
+        "stream": True if AZURE_OPENAI_STREAM.lower() == "true" else False,
         "dataSources": [
             {
                 "type": "AzureCognitiveSearch",
@@ -81,9 +83,105 @@ def prepare_body_headers_with_data(request):
 
     return body, headers
 
-def prepare_body_headers_without_data(request):
+def should_use_data():
+    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
+        return True
+    return False
+
+def stream_with_data(body, headers, endpoint):
+    s = requests.Session()
+    response = {
+        "id": "",
+        "model": "",
+        "created": 0,
+        "object": "",
+        "choices": [{
+            "messages": []
+        }]
+    }
+    with s.post(endpoint, json=body, headers=headers, stream=True) as r:
+        for line in r.iter_lines(chunk_size=10):
+            if line:
+                lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                response["id"] = lineJson["id"]
+                response["model"] = lineJson["model"]
+                response["created"] = lineJson["created"]
+                response["object"] = lineJson["object"]
+
+                role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
+                if role == "tool":
+                    response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
+                elif role == "assistant": 
+                    response["choices"][0]["messages"].append({
+                        "role": "assistant",
+                        "content": ""
+                    })
+                else:
+                    deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
+                    if deltaText != "[DONE]":
+                        response["choices"][0]["messages"][1]["content"] += deltaText                
+
+                yield json.dumps(response)
+
+def conversation_with_data(request):
+    body, headers = prepare_body_headers_with_data(request)
+    endpoint = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+    
+    if AZURE_OPENAI_STREAM.lower() != "true":
+        r = requests.post(endpoint, headers=headers, json=body)
+        status_code = r.status_code
+        r = r.json()
+
+        return Response(json.dumps(r), status=status_code)
+    else:
+        if request.method == "POST":
+            return Response(stream_with_data(body, headers, endpoint), mimetype='text/event-stream')
+        else:
+            return Response(None, mimetype='text/event-stream')
+
+def stream_without_data(messages):
+    response = {
+        "id": "",
+        "model": "",
+        "created": 0,
+        "object": "",
+        "choices": [{
+            "messages": [{
+                "role": "assistant",
+                "content": ""
+            }]
+        }]
+    }
+    completion = openai.ChatCompletion.create(
+            engine=AZURE_OPENAI_MODEL,
+            messages = messages,
+            temperature=float(AZURE_OPENAI_TEMPERATURE),
+            max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+            top_p=float(AZURE_OPENAI_TOP_P),
+            stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+            stream=True
+        )
+    for line in completion:
+        response["id"] = line["id"]
+        response["model"] = line["model"]
+        response["created"] = line["created"]
+        response["object"] = line["object"]
+
+        deltaText = line["choices"][0]["delta"].get('content')
+        if deltaText and deltaText != "[DONE]":
+            response["choices"][0]["messages"][0]["content"] += deltaText                
+
+        yield json.dumps(response)
+
+
+def conversation_without_data(request):
+    openai.api_type = "azure"
+    openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+    openai.api_version = "2023-03-15-preview"
+    openai.api_key = AZURE_OPENAI_KEY
+
     request_messages = request.json["messages"]
-    body_messages = [
+    messages = [
         {
             "role": "system",
             "content": AZURE_OPENAI_SYSTEM_MESSAGE
@@ -91,59 +189,54 @@ def prepare_body_headers_without_data(request):
     ]
 
     for message in request_messages:
-        body_messages.append({
+        messages.append({
             "role": message["role"] ,
             "content": message["content"]
         })
 
-    body = {
-        "messages": body_messages,
-        "temperature": float(AZURE_OPENAI_TEMPERATURE),
-        "top_p": float(AZURE_OPENAI_TOP_P),
-        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
-        "stream": False
+    response_obj = {
+        "id": "",
+        "model": "",
+        "created": 0,
+        "object": "",
+        "choices": [{
+            "messages": []
+        }]
     }
 
-    headers = {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_OPENAI_KEY
-    }
+    if AZURE_OPENAI_STREAM.lower() != "true":
+        response = openai.ChatCompletion.create(
+            engine=AZURE_OPENAI_MODEL,
+            messages = messages,
+            temperature=float(AZURE_OPENAI_TEMPERATURE),
+            max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+            top_p=float(AZURE_OPENAI_TOP_P),
+            stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None
+        )
+        response_obj["id"] = response.id
+        response_obj["model"] = response.model
+        response_obj["created"] = response.created
+        response_obj["object"] = response.object
+        response_obj["choices"][0]["messages"] = [{
+            "role": "assistant",
+            "content": response.choices[0].message.content,
+            "end_turn": None
+        }]
+        return jsonify(response_obj), 200
+    else:
+        if request.method == "POST":
+            return Response(stream_without_data(messages), mimetype='text/event-stream')
+        else:
+            return Response(None, mimetype='text/event-stream')
 
-    if AZURE_OPENAI_STOP_SEQUENCE:
-        sequences = AZURE_OPENAI_STOP_SEQUENCE.split("|")
-        body["stop"] = sequences
-
-    return body, headers
-
-def should_use_data():
-    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
-        return True
-    return False
-
-@app.route("/conversation", methods=["POST"])
+@app.route("/conversation", methods=["GET", "POST"])
 def conversation():
     try:
-        base_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com"
         use_data = should_use_data()
         if use_data:
-            body, headers = prepare_body_headers_with_data(request)
-            endpoint = f"{base_url}/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+            return conversation_with_data(request)
         else:
-            body, headers = prepare_body_headers_without_data(request)
-            endpoint = f"{base_url}/openai/deployments/{AZURE_OPENAI_MODEL}/chat/completions?api-version=2023-03-15-preview"
-
-        r = requests.post(endpoint, headers=headers, json=body)
-        status_code = r.status_code
-        r = r.json()
-
-        if not use_data and status_code == 200:
-            # convert to the same format as the data version
-            r["choices"][0]["messages"] = [{
-                "content": r["choices"][0]["message"]["content"],
-                "role": "assistant"
-                }]
-
-        return jsonify(r), status_code
+            return conversation_without_data(request)
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
