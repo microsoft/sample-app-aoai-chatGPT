@@ -55,7 +55,7 @@ Feel free to fork this repository and make your own modifications to the UX or b
 |AZURE_SEARCH_INDEX|||
 |AZURE_SEARCH_KEYv
 |AZURE_SEARCH_USE_SEMANTIC_SEARCH|False||
-|AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG|default||
+|AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG|||
 |AZURE_SEARCH_INDEX_IS_PRECHUNKED|False||
 |AZURE_SEARCH_TOP_K|5||
 |AZURE_SEARCH_ENABLE_IN_DOMAIN|False||
@@ -64,14 +64,16 @@ Feel free to fork this repository and make your own modifications to the UX or b
 |AZURE_SEARCH_TITLE_COLUMN|||
 |AZURE_SEARCH_URL_COLUMN|||
 |AZURE_OPENAI_RESOURCE|||
-|AZURE_OPENAI_MODEL|||
+|AZURE_OPENAI_MODEL||The name of your model deployment|
+|AZURE_OPENAI_MODEL_NAME|gpt-35-turbo|The name of the model|
 |AZURE_OPENAI_KEY|||
 |AZURE_OPENAI_TEMPERATURE|0||
 |AZURE_OPENAI_TOP_P|1.0||
 |AZURE_OPENAI_MAX_TOKENS|1000||
 |AZURE_OPENAI_STOP_SEQUENCE|||
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.||
-|AZURE_OPENAI_API_VERSION|2023-03-31-preview||
+|AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview||
+|AZURE_OPENAI_STREAM|True||
 
 
 ## Contributing

@@ -137,7 +137,14 @@
         "AzureOpenAIModel": {
             "type": "string",
             "metadata": {
-                "description": "Azure OpenAI Model Deployment name"
+                "description": "Azure OpenAI Model Deployment Name"
+            }
+        },
+        "AzureOpenAIModelName": {
+            "type": "string",
+            "defaultValue": "gpt-35-turbo",
+            "metadata": {
+                "description": "Azure OpenAI Model Name"
             }
         },
         "AzureOpenAIKey": {
@@ -183,9 +190,16 @@
         },
         "AzureOpenAIApiVersion": {
             "type": "string",
-            "defaultValue": "2023-03-31-preview",
+            "defaultValue": "2023-06-01-preview",
             "metadata": {
                 "description": "Azure OpenAI Api Version"
+            }
+        },
+        "AzureOpenAIStream": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Whether or not to stream responses from Azure OpenAI"
             }
         }
     },
@@ -284,6 +298,10 @@
                             "value": "[parameters('AzureOpenAIKey')]"
                         },
                         {
+                            "name": "AZURE_OPENAI_MODEL_NAME",
+                            "value": "[parameters('AzureOpenAIModelName')]"
+                        },
+                        {
                             "name": "AZURE_OPENAI_TEMPERATURE",
                             "value": "[parameters('AzureOpenAITemperature')]"
                         },
@@ -306,6 +324,10 @@
                         {
                             "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
                             "value": "[parameters('AzureOpenAIApiVersion')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_STREAM",
+                            "value": "[parameters('AzureOpenAIStream')]"
                         }                        
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"

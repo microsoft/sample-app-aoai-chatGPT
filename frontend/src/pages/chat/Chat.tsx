@@ -14,7 +14,8 @@ import {
     ConversationRequest,
     conversationApi,
     Citation,
-    ToolMessageContent
+    ToolMessageContent,
+    ChatResponse
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -23,6 +24,7 @@ const Chat = () => {
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
     const [activeCitation, setActiveCitation] = useState<[content: string, id: string, title: string, filepath: string, url: string, metadata: string]>();
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
@@ -32,26 +34,55 @@ const Chat = () => {
         lastQuestionRef.current = question;
 
         setIsLoading(true);
+        setShowLoadingMessage(true);
         const abortController = new AbortController();
         abortFuncs.current.unshift(abortController);
 
         const userMessage: ChatMessage = {
             role: "user",
-            content: question,
-            end_turn: null
+            content: question
         };
 
         const request: ConversationRequest = {
             messages: [...answers, userMessage]
         };
 
+        let result = {} as ChatResponse;
         try {
-            const result = await conversationApi(request, abortController.signal);
-            setAnswers([...answers, userMessage, ...result.choices[0].messages]);
-        } catch {
+            const response = await conversationApi(request, abortController.signal);
+            if (response?.body) {
+                
+                const reader = response.body.getReader();
+                let runningText = "";
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    var text = new TextDecoder("utf-8").decode(value);
+                    const objects = text.split("\n");
+                    objects.forEach((obj) => {
+                        try {
+                            runningText += obj;
+                            result = JSON.parse(runningText);
+                            setShowLoadingMessage(false);
+                            setAnswers([...answers, userMessage, ...result.choices[0].messages]);
+                            runningText = "";
+                        }
+                        catch { }
+                    });
+                }
+                setAnswers([...answers, userMessage, ...result.choices[0].messages]);
+            }
+            
+        } catch ( e )  {
+            if (!abortController.signal.aborted) {
+                console.error(result);
+                alert("An error occurred. Please try again. If the problem persists, please contact the site administrator.")
+            }
             setAnswers([...answers, userMessage]);
         } finally {
             setIsLoading(false);
+            setShowLoadingMessage(false);
             abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
         }
 
@@ -66,10 +97,11 @@ const Chat = () => {
 
     const stopGenerating = () => {
         abortFuncs.current.forEach(a => a.abort());
+        setShowLoadingMessage(false);
         setIsLoading(false);
     }
 
-    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
+    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [showLoadingMessage]);
 
     const onShowCitation = (citation: Citation) => {
         setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
@@ -104,7 +136,7 @@ const Chat = () => {
                             <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
                         </Stack>
                     ) : (
-                        <div className={styles.chatMessageStream}>
+                        <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}}>
                             {answers.map((answer, index) => (
                                 <>
                                     {answer.role === "user" ? (
@@ -124,7 +156,7 @@ const Chat = () => {
                                     )}
                                 </>
                             ))}
-                            {isLoading && (
+                            {showLoadingMessage && (
                                 <>
                                     <div className={styles.chatMessageUser}>
                                         <div className={styles.chatMessageUserMessage}>{lastQuestionRef.current}</div>
