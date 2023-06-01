@@ -120,7 +120,7 @@ def stream_with_data(body, headers, endpoint):
                 if line:
                     lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
                     if 'error' in lineJson:
-                        yield json.dumps(lineJson) + "<newline>"
+                        yield json.dumps(lineJson).replace("\n", "\\n") + "\n"
                     response["id"] = lineJson["id"]
                     response["model"] = lineJson["model"]
                     response["created"] = lineJson["created"]
@@ -139,9 +139,9 @@ def stream_with_data(body, headers, endpoint):
                         if deltaText != "[DONE]":
                             response["choices"][0]["messages"][1]["content"] += deltaText                
 
-                    yield json.dumps(response) + "<newline>"
+                    yield json.dumps(response).replace("\n", "\\n") + "\n"
     except Exception as e:
-        yield json.dumps({"error": str(e)}) + "<newline>"
+        yield json.dumps({"error": str(e)}).replace("\n", "\\n") + "\n"
 
 
 def conversation_with_data(request):
@@ -153,7 +153,7 @@ def conversation_with_data(request):
         status_code = r.status_code
         r = r.json()
 
-        return Response(json.dumps(r), status=status_code)
+        return Response(json.dumps(r).replace("\n", "\\n"), status=status_code)
     else:
         if request.method == "POST":
             return Response(stream_with_data(body, headers, endpoint), mimetype='text/event-stream')
@@ -179,7 +179,7 @@ def stream_without_data(response):
                 }]
             }]
         }
-        yield json.dumps(response_obj) + "<newline>"
+        yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
 
 
 def conversation_without_data(request):

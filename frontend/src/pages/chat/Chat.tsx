@@ -59,7 +59,7 @@ const Chat = () => {
                     if (done) break;
 
                     var text = new TextDecoder("utf-8").decode(value);
-                    const objects = text.split("<newline>");
+                    const objects = text.split("\n");
                     objects.forEach((obj) => {
                         try {
                             runningText += obj;
