@@ -59,15 +59,8 @@ const Chat = () => {
                     if (done) break;
 
                     var text = new TextDecoder("utf-8").decode(value);
-                    console.log(text);
-                    const objects = text.split("}{");
-                    objects.forEach((obj, index) => {
-                        if (obj[0] !== "{" && index !== 0) {
-                            obj = "{" + obj;
-                        }
-                        if (obj[obj.length - 1] !== "}" && index !== objects.length - 1) {
-                            obj = obj + "}";
-                        }
+                    const objects = text.split("<newline>");
+                    objects.forEach((obj) => {
                         try {
                             runningText += obj;
                             result = JSON.parse(runningText);

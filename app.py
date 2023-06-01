@@ -41,6 +41,8 @@ AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERS
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
 
+SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
+
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower():
         return True
@@ -60,7 +62,7 @@ def prepare_body_headers_with_data(request):
         "max_tokens": AZURE_OPENAI_MAX_TOKENS,
         "top_p": AZURE_OPENAI_TOP_P,
         "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else [],
-        "stream": True if AZURE_OPENAI_STREAM.lower() == "true" else False,
+        "stream": SHOULD_STREAM,
         "dataSources": [
             {
                 "type": "AzureCognitiveSearch",
@@ -134,13 +136,13 @@ def stream_with_data(body, headers, endpoint):
                     if deltaText != "[DONE]":
                         response["choices"][0]["messages"][1]["content"] += deltaText                
 
-                yield json.dumps(response)
+                yield json.dumps(response) + "<newline>"
 
 def conversation_with_data(request):
     body, headers = prepare_body_headers_with_data(request)
     endpoint = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
     
-    if AZURE_OPENAI_STREAM.lower() != "true":
+    if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
@@ -152,39 +154,26 @@ def conversation_with_data(request):
         else:
             return Response(None, mimetype='text/event-stream')
 
-def stream_without_data(messages):
-    response = {
-        "id": "",
-        "model": "",
-        "created": 0,
-        "object": "",
-        "choices": [{
-            "messages": [{
-                "role": "assistant",
-                "content": ""
-            }]
-        }]
-    }
-    completion = openai.ChatCompletion.create(
-            engine=AZURE_OPENAI_MODEL,
-            messages = messages,
-            temperature=float(AZURE_OPENAI_TEMPERATURE),
-            max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
-            top_p=float(AZURE_OPENAI_TOP_P),
-            stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
-            stream=True
-        )
-    for line in completion:
-        response["id"] = line["id"]
-        response["model"] = line["model"]
-        response["created"] = line["created"]
-        response["object"] = line["object"]
-
+def stream_without_data(response):
+    responseText = ""
+    for line in response:
         deltaText = line["choices"][0]["delta"].get('content')
         if deltaText and deltaText != "[DONE]":
-            response["choices"][0]["messages"][0]["content"] += deltaText                
+            responseText += deltaText
 
-        yield json.dumps(response)
+        response_obj = {
+            "id": line["id"],
+            "model": line["model"],
+            "created": line["created"],
+            "object": line["object"],
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": responseText
+                }]
+            }]
+        }
+        yield json.dumps(response_obj) + "<newline>"
 
 
 def conversation_without_data(request):
@@ -207,38 +196,34 @@ def conversation_without_data(request):
             "content": message["content"]
         })
 
-    response_obj = {
-        "id": "",
-        "model": "",
-        "created": 0,
-        "object": "",
-        "choices": [{
-            "messages": []
-        }]
-    }
+    response = openai.ChatCompletion.create(
+        engine=AZURE_OPENAI_MODEL,
+        messages = messages,
+        temperature=float(AZURE_OPENAI_TEMPERATURE),
+        max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
+        top_p=float(AZURE_OPENAI_TOP_P),
+        stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+        stream=SHOULD_STREAM
+    )
 
-    if AZURE_OPENAI_STREAM.lower() != "true":
-        response = openai.ChatCompletion.create(
-            engine=AZURE_OPENAI_MODEL,
-            messages = messages,
-            temperature=float(AZURE_OPENAI_TEMPERATURE),
-            max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
-            top_p=float(AZURE_OPENAI_TOP_P),
-            stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None
-        )
-        response_obj["id"] = response.id
-        response_obj["model"] = response.model
-        response_obj["created"] = response.created
-        response_obj["object"] = response.object
-        response_obj["choices"][0]["messages"] = [{
-            "role": "assistant",
-            "content": response.choices[0].message.content,
-            "end_turn": None
-        }]
+    if not SHOULD_STREAM:
+        response_obj = {
+            "id": response,
+            "model": response.model,
+            "created": response.created,
+            "object": response.object,
+            "choices": [{
+                "messages": [{
+                    "role": "assistant",
+                    "content": response.choices[0].message.content
+                }]
+            }]
+        }
+
         return jsonify(response_obj), 200
     else:
         if request.method == "POST":
-            return Response(stream_without_data(messages), mimetype='text/event-stream')
+            return Response(stream_without_data(response), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
 

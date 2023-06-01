@@ -64,9 +64,9 @@ Feel free to fork this repository and make your own modifications to the UX or b
 |AZURE_SEARCH_TITLE_COLUMN|||
 |AZURE_SEARCH_URL_COLUMN|||
 |AZURE_OPENAI_RESOURCE|||
-|AZURE_OPENAI_MODEL|||
+|AZURE_OPENAI_MODEL||The name of your model deployment|
+|AZURE_OPENAI_MODEL_NAME|gpt-35-turbo|The name of the model|
 |AZURE_OPENAI_KEY|||
-|AZURE_OPENAI_DEPLOYMENT|||
 |AZURE_OPENAI_TEMPERATURE|0||
 |AZURE_OPENAI_TOP_P|1.0||
 |AZURE_OPENAI_MAX_TOKENS|1000||
