@@ -68,9 +68,7 @@ const Chat = () => {
                             setAnswers([...answers, userMessage, ...result.choices[0].messages]);
                             runningText = "";
                         }
-                        catch {
-                            console.log(runningText);
-                        }
+                        catch { }
                     });
                 }
                 setAnswers([...answers, userMessage, ...result.choices[0].messages]);
@@ -78,7 +76,7 @@ const Chat = () => {
             
         } catch ( e )  {
             if (!abortController.signal.aborted) {
-                console.log(result);
+                console.error(result);
                 alert("An error occurred. Please try again. If the problem persists, please contact the site administrator.")
             }
             setAnswers([...answers, userMessage]);

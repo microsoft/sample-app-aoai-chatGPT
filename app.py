@@ -114,29 +114,35 @@ def stream_with_data(body, headers, endpoint):
             "messages": []
         }]
     }
-    with s.post(endpoint, json=body, headers=headers, stream=True) as r:
-        for line in r.iter_lines(chunk_size=10):
-            if line:
-                lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
-                response["id"] = lineJson["id"]
-                response["model"] = lineJson["model"]
-                response["created"] = lineJson["created"]
-                response["object"] = lineJson["object"]
+    try:
+        with s.post(endpoint, json=body, headers=headers, stream=True) as r:
+            for line in r.iter_lines(chunk_size=10):
+                if line:
+                    lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                    if 'error' in lineJson:
+                        yield json.dumps(lineJson) + "<newline>"
+                    response["id"] = lineJson["id"]
+                    response["model"] = lineJson["model"]
+                    response["created"] = lineJson["created"]
+                    response["object"] = lineJson["object"]
 
-                role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
-                if role == "tool":
-                    response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
-                elif role == "assistant": 
-                    response["choices"][0]["messages"].append({
-                        "role": "assistant",
-                        "content": ""
-                    })
-                else:
-                    deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
-                    if deltaText != "[DONE]":
-                        response["choices"][0]["messages"][1]["content"] += deltaText                
+                    role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
+                    if role == "tool":
+                        response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
+                    elif role == "assistant": 
+                        response["choices"][0]["messages"].append({
+                            "role": "assistant",
+                            "content": ""
+                        })
+                    else:
+                        deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
+                        if deltaText != "[DONE]":
+                            response["choices"][0]["messages"][1]["content"] += deltaText                
 
-                yield json.dumps(response) + "<newline>"
+                    yield json.dumps(response) + "<newline>"
+    except Exception as e:
+        yield json.dumps({"error": str(e)}) + "<newline>"
+
 
 def conversation_with_data(request):
     body, headers = prepare_body_headers_with_data(request)

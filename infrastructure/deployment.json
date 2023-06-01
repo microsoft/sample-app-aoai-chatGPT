@@ -136,22 +136,21 @@
         },
         "AzureOpenAIModel": {
             "type": "string",
-            "defaultValue": "text-davinci-003",
             "metadata": {
-                "description": "Azure OpenAI Model"
+                "description": "Azure OpenAI Model Deployment Name"
+            }
+        },
+        "AzureOpenAIModelName": {
+            "type": "string",
+            "defaultValue": "gpt-35-turbo",
+            "metadata": {
+                "description": "Azure OpenAI Model Name"
             }
         },
         "AzureOpenAIKey": {
             "type": "securestring",
             "metadata": {
                 "description": "Azure OpenAI Key"
-            }
-        },
-        "AzureOpenAIDeployment": {
-            "type": "string",
-            "defaultValue": "text-davinci-003",
-            "metadata": {
-                "description": "Azure OpenAI Deployment"
             }
         },
         "AzureOpenAITemperature": {
@@ -299,8 +298,8 @@
                             "value": "[parameters('AzureOpenAIKey')]"
                         },
                         {
-                            "name": "AZURE_OPENAI_DEPLOYMENT",
-                            "value": "[parameters('AzureOpenAIDeployment')]"
+                            "name": "AZURE_OPENAI_MODEL_NAME",
+                            "value": "[parameters('AzureOpenAIModelName')]"
                         },
                         {
                             "name": "AZURE_OPENAI_TEMPERATURE",
