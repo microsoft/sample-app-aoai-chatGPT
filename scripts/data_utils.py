@@ -178,7 +178,7 @@ class HTMLParser(BaseParser):
                 page_element: Union[Tag, NavigableString] = elem
                 if page_element.name in ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code']:
                     if elements and not elements[-1].endswith('\n'):
-                        elements.append(self.NEWLINE_TEMPL)
+                        elements.append(page_element)
                 if isinstance(page_element, str):
                     elements.append(process_text(page_element))
                 elif page_element.name == 'a':
