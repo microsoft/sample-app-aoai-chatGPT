@@ -227,7 +227,6 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
 
     id = 0
     for document in docs:
-        print(f"Doc-{document.filepath}")
         d = dataclasses.asdict(document)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
