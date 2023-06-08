@@ -384,7 +384,6 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
     with open(file_path, "rb") as f:
         poller = form_recognizer_client.begin_analyze_document(model, document = f)
     form_recognizer_results = poller.result()
-    title = next((p.content for p in form_recognizer_results.paragraphs if p.role == "title"), None)
 
     for page_num, page in enumerate(form_recognizer_results.pages):
         tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
@@ -516,7 +515,7 @@ def chunk_content(
 
 def chunk_file(
     file_path: str,
-    ignore_errors: bool = False,
+    ignore_errors: bool = True,
     num_tokens=256,
     min_chunk_size=10,
     url = None,
@@ -564,7 +563,7 @@ def chunk_file(
 
 def chunk_directory(
     directory_path: str,
-    ignore_errors: bool = False,
+    ignore_errors: bool = True,
     num_tokens: int = 1024,
     min_chunk_size: int = 10,
     url_prefix = None,
@@ -597,7 +596,6 @@ def chunk_directory(
     num_files_with_errors = 0
     skipped_chunks = 0
     for file_path in tqdm(get_files_recursively(directory_path)):
-        print(file_path)
         if os.path.isfile(file_path):
             # get relpath
             url_path = None
