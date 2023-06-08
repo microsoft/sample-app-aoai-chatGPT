@@ -10,6 +10,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# setup basic logging
+logging.basicConfig(level=logging.INFO)
+
 @app.route("/", defaults={"path": "index.html"})
 @app.route("/<path:path>")
 def static_file(path):
@@ -26,6 +29,7 @@ AZURE_SEARCH_ENABLE_IN_DOMAIN = os.environ.get("AZURE_SEARCH_ENABLE_IN_DOMAIN", 
 AZURE_SEARCH_CONTENT_COLUMNS = os.environ.get("AZURE_SEARCH_CONTENT_COLUMNS")
 AZURE_SEARCH_FILENAME_COLUMN = os.environ.get("AZURE_SEARCH_FILENAME_COLUMN")
 AZURE_SEARCH_TITLE_COLUMN = os.environ.get("AZURE_SEARCH_TITLE_COLUMN")
+print('title', AZURE_SEARCH_TITLE_COLUMN)
 AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 
 # AOAI Integration Settings
@@ -44,7 +48,7 @@ AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turb
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
 def is_chat_model():
-    if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower():
+    if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or 'gpt-35' in AZURE_OPENAI_MODEL_NAME.lower():
         return True
     return False
 
@@ -85,7 +89,7 @@ def prepare_body_headers_with_data(request):
             }
         ]
     }
-    
+    app.logger.info(body)
     chatgpt_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}"
     if is_chat_model():
         chatgpt_url += "/chat/completions?api-version=2023-03-15-preview"
@@ -138,7 +142,7 @@ def stream_with_data(body, headers, endpoint):
                         deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
                         if deltaText != "[DONE]":
                             response["choices"][0]["messages"][1]["content"] += deltaText                
-
+                    app.logger.info(response)
                     yield json.dumps(response).replace("\n", "\\n") + "\n"
     except Exception as e:
         yield json.dumps({"error": str(e)}).replace("\n", "\\n") + "\n"

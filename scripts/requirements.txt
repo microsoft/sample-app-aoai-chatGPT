@@ -1,9 +1,10 @@
+azure-identity==1.13.0b4
+azure-search-documents==11.4.0b3
+azure-ai-formrecognizer==3.2.1
+azure-storage-blob==12.14.1
 markdown
 requests
 tqdm
-azure-identity
-azure-search-documents
 tiktoken
 langchain
 bs4
-azure-ai-formrecognizer
