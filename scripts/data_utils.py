@@ -172,33 +172,28 @@ class HTMLParser(BaseParser):
 
         # Collect all text nodes and anchor tags in a list
         elements = []
-
+        skip_elements = []
         for elem in soup.descendants:
+            if elem in skip_elements:
+                continue
             if isinstance(elem, (Tag, NavigableString)):
                 page_element: Union[Tag, NavigableString] = elem
-                if page_element.name in ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code']:
-                    if elements and not elements[-1].endswith('\n'):
-                        elements.append(self.NEWLINE_TEMPL)
-                if isinstance(page_element, str):
+                if page_element.name in ['title', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code']:
+                    if isinstance(page_element, Tag):
+                        del page_element['id']
+                        skip_elements += list(page_element.descendants)
+                    elements.append(page_element)
+                if isinstance(page_element, str) and \
+                        (
+                                (not elements) or
+                                (isinstance(elements[-1], Tag) and (page_element not in elements[-1].descendants))
+                        ):
                     elements.append(process_text(page_element))
                 elif page_element.name == 'a':
                     elements.append(process_anchor_tag(page_element))
 
-
         # Join the list into a single string and return but ensure that either of newlines or space are used.
-        result = ''
-        is_prev_newline = False
-        for elem in elements:
-            if elem:
-                if elem == self.NEWLINE_TEMPL:
-                    result += "\n"
-                    is_prev_newline = True
-                else:
-                    if not is_prev_newline:
-                        result += " "
-                    else:
-                        is_prev_newline = False
-                    result += f"{elem}"
+        result = '\n'.join([str(elem) for elem in elements])
 
         if title is None:
             title = '' # ensure no 'None' type title
