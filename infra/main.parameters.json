@@ -29,12 +29,6 @@
     "searchServiceSkuName": {
       "value": "${AZURE_SEARCH_SKU_NAME}"
     },
-    "storageAccountName": {
-      "value": "${AZURE_STORAGE_ACCOUNT}"
-    },
-    "storageResourceGroupName": {
-      "value": "${AZURE_STORAGE_RESOURCE_GROUP}"
-    },
     "formRecognizerServiceName": {
       "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
     },
