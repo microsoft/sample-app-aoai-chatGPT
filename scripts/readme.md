@@ -18,7 +18,7 @@
         "chunk_size": 1024, // set to null to disable chunking before ingestion
         "token_overlap": 128 // number of tokens to overlap between chunks
         "semantic_config_name": "default",
-        "language": "en" // Two-letter code to set language of your documents. Change if your documents are not in English. Look in data_preparation.py for SUPPORTED_LANGUAGE_CODES
+        "language": "en" // setting to set language of your documents. Change if your documents are not in English. Look in data_preparation.py for SUPPORTED_LANGUAGE_CODES
     }
 ]
 ```
