@@ -10,7 +10,7 @@ You can see the local running app at http://127.0.0.1:5000.
 Note: this app is under construction!
 
 ## Deploy the app
-
+Please see the [section below](#add-an-identity-provider) for important information about adding authentication to your app.
 ### One click Azure deployment
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fmain%2Finfrastructure%2Fdeployment.json)
 
