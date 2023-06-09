@@ -90,6 +90,7 @@ def upload_documents_to_index(docs, search_client, upload_batch_size=50):
                 f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}"
             )
 
+
 def validate_index(index_name, index_client):
     for retry_count in range(5):
         stats = index_client.get_index_statistics(index_name)
@@ -101,10 +102,10 @@ def validate_index(index_name, index_client):
             print("Index is empty. Please investigate and re-index.")
         else:
             print(f"The index contains {num_chunks} chunks.")
-            average_chunk_size = stats['storage_size']/num_chunks
+            average_chunk_size = stats["storage_size"] / num_chunks
             print(f"The average chunk size of the index is {average_chunk_size} bytes.")
             break
-    
+
 
 def create_and_populate_index(
     index_name, index_client, search_client, form_recognizer_client
@@ -180,9 +181,7 @@ if __name__ == "__main__":
         if args.tenantid == None
         else AzureDeveloperCliCredential(tenant_id=args.tenantid, process_timeout=60)
     )
-    default_creds = (
-        azd_credential if args.searchkey == None else None
-    )
+    default_creds = azd_credential if args.searchkey == None else None
     search_creds = (
         default_creds if args.searchkey == None else AzureKeyCredential(args.searchkey)
     )
