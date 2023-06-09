@@ -48,7 +48,7 @@ echo ""
 echo "Starting backend"
 echo ""
 cd ..
-python3 -m flask run --port=50555 --reload --debug
+python3 -m flask run --port=5000 --reload --debug
 if [ $? -ne 0 ]; then
     echo "Failed to start backend"
     exit $?
