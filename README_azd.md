@@ -26,7 +26,8 @@ Otherwise, you need to install them locally.
 If you don't have any pre-existing Azure services (i.e. OpenAI or Cognitive Search service), then you can provision
 all resources from scratch by following these steps:
 
-1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
+1. Run `azd auth login` to login to your Azure account.
+1. Run `azd up` to provision Azure resources and deploy this sample to those resources. This also runs a script to build the search index based on files in the `./data` folder.
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.
     > NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
 
@@ -46,8 +47,8 @@ Run the following commands based on what you want to customize:
 * `azd env set AZURE_FORMRECOGNIZER_SERVICE_RESOURCE_GROUP {Name of existing resource group that Form Recognizer service is provisioned to}`.
 * `azd env set AZURE_FORMRECOGNIZER_SKU_NAME {Name of Form Recognizer SKU}`. Defaults to 'S0'.
 
-
-1. Run `azd up`. This will provision any missing Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
+1. Run `azd auth login` to login to your Azure account.
+1. Run `azd up` to provision Azure resources and deploy this sample to those resources. This also runs a script to build the search index based on files in the `./data` folder.
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.
     > NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
 

@@ -3,7 +3,7 @@
     "build": {
         "dockerfile": "Dockerfile",
         "args": {
-            "VARIANT": "bullseye"
+            "IMAGE": "python:3.10"
         }
     },
     "features": {
