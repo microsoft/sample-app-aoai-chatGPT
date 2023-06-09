@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+import time
 
 from tqdm import tqdm
 from azure.identity import AzureDeveloperCliCredential
@@ -89,6 +90,21 @@ def upload_documents_to_index(docs, search_client, upload_batch_size=50):
                 f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}"
             )
 
+def validate_index(index_name, index_client):
+    for retry_count in range(5):
+        stats = index_client.get_index_statistics(index_name)
+        num_chunks = stats["document_count"]
+        if num_chunks == 0 and retry_count < 4:
+            print("Index is empty. Waiting 60 seconds to check again...")
+            time.sleep(60)
+        elif num_chunks == 0 and retry_count == 4:
+            print("Index is empty. Please investigate and re-index.")
+        else:
+            print(f"The index contains {num_chunks} chunks.")
+            average_chunk_size = stats['storage_size']/num_chunks
+            print(f"The average chunk size of the index is {average_chunk_size} bytes.")
+            break
+    
 
 def create_and_populate_index(
     index_name, index_client, search_client, form_recognizer_client
@@ -118,9 +134,9 @@ def create_and_populate_index(
     upload_documents_to_index(result.chunks, search_client)
 
     # check if index is ready/validate index
-    # print("Validating index...")
-    # TODO: validate_index(index_name) - Port to Azure CLI
-    # print("Index validation completed")
+    print("Validating index...")
+    validate_index(index_name, index_client)
+    print("Index validation completed")
 
 
 if __name__ == "__main__":
@@ -187,7 +203,6 @@ if __name__ == "__main__":
         endpoint=f"https://{args.formrecognizerservice}.cognitiveservices.azure.com/",
         credential=formrecognizer_creds,
     )
-
     create_and_populate_index(
         args.index, index_client, search_client, form_recognizer_client
     )

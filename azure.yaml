@@ -24,11 +24,11 @@ hooks:
     postprovision:
       windows:
         shell: pwsh
-        run: $output = azd env get-values; Add-Content -Path .env -Value $output;
+        run: ./scripts/prepdocs.ps1
         interactive: true
         continueOnError: false
       posix:
         shell: sh
-        run: azd env get-values > .env
+        run: ./scripts/prepdocs.sh
         interactive: true
         continueOnError: false
