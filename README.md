@@ -1,6 +1,6 @@
 # [Preview] Sample Chat App with AOAI
 
-This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Some portions of the app use preview APIs and features that should not be used for any production dependency.
+This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Note: some portions of the app use preview APIs.
 
 ## Run the app
 Update the environment variables listed in `app.py`. At minimum, you need to specify `AZURE_OPENAI_RESOURCE`, `AZURE_OPENAI_MODEL`, and `AZURE_OPENAI_KEY`.
@@ -10,7 +10,7 @@ You can see the local running app at http://127.0.0.1:5000.
 Note: this app is under construction!
 
 ## Deploy the app
-
+Please see the [section below](#add-an-identity-provider) for important information about adding authentication to your app.
 ### One click Azure deployment
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fmain%2Finfrastructure%2Fdeployment.json)
 
@@ -39,6 +39,11 @@ Then, use the `az webapp up` command to deploy your local code to the existing a
 Make sure that the app name and resource group match exactly for the app that was previously deployed.
 
 Deployment will take several minutes. When it completes, you should be able to navigate to your app at {app-name}.azurewebsites.net.
+
+### Add an identity provider
+After deployment, you will need to add an identity provider to provide authentication support in your app. See [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) for more information.
+
+If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. To remove this restriction, or add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`.
 
 ## Best Practices
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to expose some of the settings in `app.py` in the UI for users to try out different behaviors. We recommend keeping these best practices in mind:
