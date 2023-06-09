@@ -20,6 +20,11 @@
                 "ms-azuretools.vscode-bicep",
                 "ms-python.python"
             ]
+        },
+        "codespaces": {
+            "openFiles": [
+              "README.md"
+            ]
         }
     },
     "forwardPorts": [
