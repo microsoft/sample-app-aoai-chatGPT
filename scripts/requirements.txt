@@ -7,3 +7,4 @@ tqdm
 tiktoken
 langchain
 bs4
+urllib3

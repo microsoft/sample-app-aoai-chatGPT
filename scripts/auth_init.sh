@@ -17,7 +17,5 @@ python3 -m venv scripts/.venv
 echo 'Installing dependencies from "requirements.txt" into virtual environment'
 ./scripts/.venv/bin/python -m pip install -r scripts/requirements.txt
 
-echo 'Running "auth_update.py"'
-./scripts/.venv/bin/python ./scripts/auth_update.py --appid "$AUTH_APP_ID" --uri "$BACKEND_URI" 
-echo 'Running "prepdocs.py"'
-./scripts/.venv/bin/python ./scripts/prepdocs.py --searchservice "$AZURE_SEARCH_SERVICE" --index "$AZURE_SEARCH_INDEX" --formrecognizerservice "$AZURE_FORMRECOGNIZER_SERVICE" --tenantid "$AZURE_TENANT_ID"
+echo 'Running "auth_init.py"'
+./scripts/.venv/bin/python ./scripts/auth_init.py

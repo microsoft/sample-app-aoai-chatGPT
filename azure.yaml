@@ -21,6 +21,12 @@ services:
           interactive: true
           continueOnError: false
 hooks:
+    preprovision:
+      posix:
+        shell: sh
+        run: ./scripts/auth_init.sh
+        interactive: true
+        continueOnError: false
     postprovision:
       windows:
         shell: pwsh

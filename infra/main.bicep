@@ -47,6 +47,11 @@ param formRecognizerResourceGroupName string = ''
 param formRecognizerResourceGroupLocation string = location
 param formRecognizerSkuName string = ''
 
+// Used for the Azure AD application
+param authClientId string
+@secure()
+param authClientSecret string
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -87,11 +92,12 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 }
 
 // The application frontend
+var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
   params: {
-    name: !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
+    name: appServiceName
     location: location
     tags: union(tags, { 'azd-service-name': 'backend' })
     appServicePlanId: appServicePlan.outputs.id
@@ -99,6 +105,8 @@ module backend 'core/host/appservice.bicep' = {
     runtimeVersion: '3.10'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
+    authClientSecret: authClientSecret
+    authClientId: authClientId
     appSettings: {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
@@ -238,6 +246,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
+
 // For doc prep
 
 module docPrepResources 'docprep.bicep' = {
@@ -294,3 +303,5 @@ output AZURE_OPENAI_STREAM bool = openAIStream
 output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SERVICE
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
 output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
+
+output AUTH_ISSUER_URI string = environment().authentication.loginEndpoint
