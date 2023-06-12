@@ -93,6 +93,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 
 // The application frontend
 var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
+var authIssuerUri = 'https://login.microsoftonline.com/${tenant().tenantId}/v2.0'
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
@@ -107,6 +108,7 @@ module backend 'core/host/appservice.bicep' = {
     managedIdentity: true
     authClientSecret: authClientSecret
     authClientId: authClientId
+    authIssuerUri: authIssuerUri
     appSettings: {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
@@ -304,4 +306,4 @@ output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORM
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
 output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
 
-output AUTH_ISSUER_URI string = environment().authentication.loginEndpoint
+output AUTH_ISSUER_URI string = authIssuerUri
