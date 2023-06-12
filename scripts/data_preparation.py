@@ -1,6 +1,7 @@
 """Data Preparation Script for an Azure Cognitive Search Index."""
 import argparse
 import json
+import logging
 import time
 import requests
 import subprocess
@@ -11,6 +12,45 @@ from azure.identity import AzureCliCredential
 from data_utils import chunk_directory
 from azure.search.documents import SearchClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
+
+SUPPORTED_LANGUAGE_CODES = {
+    "ar": "Arabic",
+    "hy": "Armenian",
+    "eu": "Basque",
+    "bg": "Bulgarian",
+    "ca": "Catalan",
+    "zh-Hans": "Chinese Simplified",
+    "zh-Hant": "Chinese Traditional",
+    "cs": "Czech",
+    "da": "Danish",
+    "nl": "Dutch",
+    "en": "English",
+    "fi": "Finnish",
+    "fr": "French",
+    "gl": "Galician",
+    "de": "German",
+    "el": "Greek",
+    "hi": "Hindi",
+    "hu": "Hungarian",
+    "id": "Indonesian (Bahasa)",
+    "ga": "Irish",
+    "it": "Italian",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "lv": "Latvian",
+    "no": "Norwegian",
+    "fa": "Persian",
+    "pl": "Polish",
+    "pt-Br": "Portuguese (Brazil)",
+    "pt-Pt": "Portuguese (Portugal)",
+    "ro": "Romanian",
+    "ru": "Russian",
+    "es": "Spanish",
+    "sv": "Swedish",
+    "th": "Thai",
+    "tr": "Turkish"
+}
+
 
 def check_if_search_service_exists(search_service_name: str,
     subscription_id: str,
@@ -90,7 +130,7 @@ def create_search_service(
         raise Exception(
             f"Failed to create search service. Error: {response.text}")
 
-def create_or_update_search_index(service_name, subscription_id, resource_group, index_name, semantic_config_name, credential):
+def create_or_update_search_index(service_name, subscription_id, resource_group, index_name, semantic_config_name, credential, language):
     if credential is None:
         raise ValueError("credential cannot be None")
     admin_key = json.loads(
@@ -123,7 +163,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": "en.lucene",
+                "analyzer": f"{language}.lucene",
             },
             {
                 "name": "title",
@@ -132,7 +172,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": "en.lucene",
+                "analyzer": f"{language}.lucene",
             },
             {
                 "name": "filepath",
@@ -268,6 +308,11 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     resource_group = config["resource_group"]
     location = config["location"]
     index_name = config["index_name"]
+    language = config.get("language", "en")
+
+    if language not in SUPPORTED_LANGUAGE_CODES:
+        print(f"ERROR: Ingestion does not support {language} documents")
+        print(f"Please use one of {SUPPORTED_LANGUAGE_CODES}. Language is set as two letter code for e.g. 'en' for English.")
 
     # check if search service exists, create if not
     if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
@@ -277,7 +322,7 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
         create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
 
     # create or update search index with compatible schema
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential):
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language):
         raise Exception(f"Failed to create or update index {index_name}")
     
     # chunk directory

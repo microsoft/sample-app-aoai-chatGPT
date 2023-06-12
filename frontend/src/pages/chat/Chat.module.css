@@ -248,3 +248,8 @@
     align-self: stretch;
     flex-grow: 0;
 } 
+
+a {
+    padding-left: 5px;
+    padding-right: 5px;
+}

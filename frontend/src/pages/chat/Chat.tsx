@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
-import { Stack } from "@fluentui/react";
-import { BroomRegular, DismissRegular, SquareRegular } from "@fluentui/react-icons";
+import { DefaultButton, Stack } from "@fluentui/react";
+import { BroomRegular, DismissRegular, SquareRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
@@ -15,7 +15,8 @@ import {
     conversationApi,
     Citation,
     ToolMessageContent,
-    ChatResponse
+    ChatResponse,
+    getUserInfo
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -29,6 +30,17 @@ const Chat = () => {
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
+    
+    const getUserInfoList = async () => {
+        const userInfoList = await getUserInfo();
+        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
+            setShowAuthMessage(true);
+        }
+        else {
+            setShowAuthMessage(false);
+        }
+    }
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -76,6 +88,7 @@ const Chat = () => {
             
         } catch ( e )  {
             if (!abortController.signal.aborted) {
+                console.error(e);
                 console.error(result);
                 alert("An error occurred. Please try again. If the problem persists, please contact the site administrator.")
             }
@@ -101,6 +114,10 @@ const Chat = () => {
         setIsLoading(false);
     }
 
+    useEffect(() => {
+        getUserInfoList();
+    }, []);
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [showLoadingMessage]);
 
     const onShowCitation = (citation: Citation) => {
@@ -123,104 +140,123 @@ const Chat = () => {
 
     return (
         <div className={styles.container}>
-            <Stack horizontal className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <Stack className={styles.chatEmptyState}>
-                            <img
-                                src={Azure}
-                                className={styles.chatIcon}
-                                aria-hidden="true"
-                            />
-                            <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-                            <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
-                        </Stack>
-                    ) : (
-                        <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}}>
-                            {answers.map((answer, index) => (
-                                <>
-                                    {answer.role === "user" ? (
+            {showAuthMessage ? (
+                <Stack className={styles.chatEmptyState}>
+                    <ErrorCircleRegular className={styles.chatIcon} style={{color: 'crimson'}}/>
+                    <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
+                    <h2 className={styles.chatEmptyStateSubtitle}>This app does not have authentication configured. Please add an identity provider.</h2>
+                    <h2 className={styles.chatEmptyStateSubtitle}>
+                        Go to your app in the 
+                        <a href="https://portal.azure.com/" target="_blank"> Azure Portal </a>
+                         and follow 
+                         <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</a>.
+                    </h2>
+                </Stack>
+            ) : (
+                <Stack horizontal className={styles.chatRoot}>
+                    <div className={styles.chatContainer}>
+                        {!lastQuestionRef.current ? (
+                            <Stack className={styles.chatEmptyState}>
+                                <img
+                                    src={Azure}
+                                    className={styles.chatIcon}
+                                    aria-hidden="true"
+                                />
+                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+                            </Stack>
+                        ) : (
+                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}}>
+                                {answers.map((answer, index) => (
+                                    <>
+                                        {answer.role === "user" ? (
+                                            <div className={styles.chatMessageUser}>
+                                                <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                                            </div>
+                                        ) : (
+                                            answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                                                <Answer
+                                                    answer={{
+                                                        answer: answer.content,
+                                                        citations: parseCitationFromMessage(answers[index - 1]),
+                                                    }}
+                                                    onCitationClicked={c => onShowCitation(c)}
+                                                />
+                                            </div> : null
+                                        )}
+                                    </>
+                                ))}
+                                {showLoadingMessage && (
+                                    <>
                                         <div className={styles.chatMessageUser}>
-                                            <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                                            <div className={styles.chatMessageUserMessage}>{lastQuestionRef.current}</div>
                                         </div>
-                                    ) : (
-                                        answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                                        <div className={styles.chatMessageGpt}>
                                             <Answer
                                                 answer={{
-                                                    answer: answer.content,
-                                                    citations: parseCitationFromMessage(answers[index - 1]),
+                                                    answer: "Generating answer...",
+                                                    citations: []
                                                 }}
-                                                onCitationClicked={c => onShowCitation(c)}
+                                                onCitationClicked={() => null}
                                             />
-                                        </div> : null
-                                    )}
-                                </>
-                            ))}
-                            {showLoadingMessage && (
-                                <>
-                                    <div className={styles.chatMessageUser}>
-                                        <div className={styles.chatMessageUserMessage}>{lastQuestionRef.current}</div>
-                                    </div>
-                                    <div className={styles.chatMessageGpt}>
-                                        <Answer
-                                            answer={{
-                                                answer: "Generating answer...",
-                                                citations: []
-                                            }}
-                                            onCitationClicked={() => null}
-                                        />
-                                    </div>
-                                </>
-                            )}
-                            <div ref={chatMessageStreamEnd} />
-                        </div>
-                    )}
-
-                    <Stack horizontal className={styles.chatInput}>
-                        {isLoading && (
-                            <Stack 
-                                horizontal
-                                className={styles.stopGeneratingContainer}
-                                role="button"
-                                aria-label="Stop generating"
-                                tabIndex={0}
-                                onClick={stopGenerating}
-                                onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
-                                >
-                                    <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
-                                    <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
-                            </Stack>
+                                        </div>
+                                    </>
+                                )}
+                                <div ref={chatMessageStreamEnd} />
+                            </div>
                         )}
-                        <BroomRegular
-                            className={styles.clearChatBroom}
-                            style={{ background: isLoading || answers.length === 0 ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)", 
-                                     cursor: isLoading || answers.length === 0 ? "" : "pointer"}}
-                            onClick={clearChat}
-                            onKeyDown={e => e.key === "Enter" || e.key === " " ? clearChat() : null}
-                            aria-label="Clear session"
-                            role="button"
-                            tabIndex={0}
+
+                        <Stack horizontal className={styles.chatInput}>
+                            {isLoading && (
+                                <Stack 
+                                    horizontal
+                                    className={styles.stopGeneratingContainer}
+                                    role="button"
+                                    aria-label="Stop generating"
+                                    tabIndex={0}
+                                    onClick={stopGenerating}
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
+                                    >
+                                        <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
+                                        <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
+                                </Stack>
+                            )}
+                            <BroomRegular
+                                className={styles.clearChatBroom}
+                                style={{ background: isLoading || answers.length === 0 ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)", 
+                                        cursor: isLoading || answers.length === 0 ? "" : "pointer"}}
+                                onClick={clearChat}
+                                onKeyDown={e => e.key === "Enter" || e.key === " " ? clearChat() : null}
+                                aria-label="Clear session"
+                                role="button"
+                                tabIndex={0}
+                            />
+                            <QuestionInput
+                                clearOnSend
+                                placeholder="Type a new question..."
+                                disabled={isLoading}
+                                onSend={question => makeApiRequest(question)}
+                            />
+                        </Stack>
+                    </div>
+                    {answers.length > 0 && isCitationPanelOpen && activeCitation && (
+                    <Stack.Item className={styles.citationPanel}>
+                        <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
+                            <span className={styles.citationPanelHeader}>Citations</span>
+                            <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
+                        </Stack>
+                        <h5 className={styles.citationPanelTitle}>{activeCitation[2]}</h5>
+                        <ReactMarkdown 
+                            linkTarget="_blank"
+                            className={styles.citationPanelContent}
+                            children={activeCitation[0]} 
+                            remarkPlugins={[remarkGfm]} 
+                            rehypePlugins={[rehypeRaw]}
                         />
-                        <QuestionInput
-                            clearOnSend
-                            placeholder="Type a new question..."
-                            disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
-                        />
-                    </Stack>
-                </div>
-                {answers.length > 0 && isCitationPanelOpen && activeCitation && (
-                <Stack.Item className={styles.citationPanel}>
-                    <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                        <span className={styles.citationPanelHeader}>Citations</span>
-                        <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
-                    </Stack>
-                    <h5 className={styles.citationPanelTitle}>{activeCitation[2]}</h5>
-                    <ReactMarkdown className={styles.citationPanelContent} children={activeCitation[0]} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}/>
-                </Stack.Item>
+                    </Stack.Item>
+                )}
+                </Stack>
             )}
-            </Stack>
-            
         </div>
     );
 };
