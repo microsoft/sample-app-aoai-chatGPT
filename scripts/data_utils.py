@@ -172,7 +172,7 @@ class HTMLParser(BaseParser):
 
         # Collect all text nodes and anchor tags in a list
         elements = []
-        skip_elements = []
+        skip_elements = set()
         for elem in soup.descendants:
             if elem in skip_elements:
                 continue
@@ -181,13 +181,9 @@ class HTMLParser(BaseParser):
                 if page_element.name in ['title', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'code']:
                     if isinstance(page_element, Tag):
                         del page_element['id']
-                        skip_elements += list(page_element.descendants)
+                        skip_elements.update(list(page_element.descendants))
                     elements.append(page_element)
-                if isinstance(page_element, str) and \
-                        (
-                                (not elements) or
-                                (isinstance(elements[-1], Tag) and (page_element not in elements[-1].descendants))
-                        ):
+                if isinstance(page_element, str):
                     elements.append(process_text(page_element))
                 elif page_element.name == 'a':
                     elements.append(process_anchor_tag(page_element))

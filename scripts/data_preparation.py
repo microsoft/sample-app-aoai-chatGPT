@@ -153,7 +153,6 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "name": "id",
                 "type": "Edm.String",
                 "searchable": True,
-                "analyzer": "en.lucene",
                 "key": True,
             },
             {
@@ -163,7 +162,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": f"{language}.lucene",
+                "analyzer": f"{language}.lucene" if language else None,
             },
             {
                 "name": "title",
@@ -172,7 +171,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": f"{language}.lucene",
+                "analyzer": f"{language}.lucene" if language else None,
             },
             {
                 "name": "filepath",
@@ -308,11 +307,14 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     resource_group = config["resource_group"]
     location = config["location"]
     index_name = config["index_name"]
-    language = config.get("language", "en")
+    language = config.get("language", None)
 
-    if language not in SUPPORTED_LANGUAGE_CODES:
-        print(f"ERROR: Ingestion does not support {language} documents")
-        print(f"Please use one of {SUPPORTED_LANGUAGE_CODES}. Language is set as two letter code for e.g. 'en' for English.")
+    if language and language not in SUPPORTED_LANGUAGE_CODES:
+        raise Exception(f"ERROR: Ingestion does not support {language} documents. "
+                        f"Please use one of {SUPPORTED_LANGUAGE_CODES}."
+                        f"Language is set as two letter code for e.g. 'en' for English."
+                        f"If you donot want to set a language just remove this prompt config or set as None")
+
 
     # check if search service exists, create if not
     if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
