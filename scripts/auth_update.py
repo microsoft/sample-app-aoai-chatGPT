@@ -5,10 +5,6 @@ import urllib3
 
 
 def update_redirect_uris(credential, app_id, uri):
-    redirect_uris = [
-                    "http://localhost:5000/.auth/login/aad/callback",
-                    f"{uri}/.auth/login/aad/callback",
-                ]
     urllib3.request(
         "PATCH",
         f"https://graph.microsoft.com/v1.0/applications/{app_id}",
@@ -18,7 +14,10 @@ def update_redirect_uris(credential, app_id, uri):
         },
         json={
             "web": {
-                "redirectUris": redirect_uris
+                "redirectUris": [
+                    "http://localhost:5000/.auth/login/aad/callback",
+                    f"{uri}/.auth/login/aad/callback",
+                ]
             }
         },
     )
@@ -43,5 +42,7 @@ if __name__ == "__main__":
 
     credential = AzureDeveloperCliCredential()
 
-    print(f"Updating application registration {args.appid} with redirect URI for {args.uri}")
+    print(
+        f"Updating application registration {args.appid} with redirect URI for {args.uri}"
+    )
     update_redirect_uris(credential, args.appid, args.uri)
