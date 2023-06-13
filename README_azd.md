@@ -2,24 +2,34 @@
 
 ## Deploying with the Azure Developer CLI
 
-> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/cognitive-search/) to get some free Azure credits to get you started.
+> **IMPORTANT:** In order to deploy and run this example, you'll need an **Azure subscription with access enabled for the Azure OpenAI service**. You can request access [here](https://aka.ms/oaiapply). You can also visit [here](https://azure.microsoft.com/free/cognitive-search/) to get some free Azure credits to get you started. Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
 
 > **AZURE RESOURCE COSTS** by default this sample will create Azure App Service and Azure Cognitive Search resources that have a monthly cost, as well as Form Recognizer resource that has cost per document page. You can switch them to free versions of each of them if you want to avoid this cost by changing the parameters file under the infra folder (though there are some limits to consider; for example, you can have up to 1 free Cognitive Search resource per subscription, and the free Form Recognizer resource only analyzes the first 2 pages of each document.)
 
-### Prerequisites
+## Opening the project
 
-If you open this project in GitHub Codespaces or a local Dev Container, these will be available in the environment.
-Otherwise, you need to install them locally.
+This project has [Dev Container support](https://code.visualstudio.com/docs/devcontainers/containers), so it will be be setup automatically if you open it in Github Codespaces or in local VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
-- [Azure Developer CLI](https://aka.ms/azure-dev/install)
-- [Python 3+](https://www.python.org/downloads/)
-    - **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
-- [Node.js](https://nodejs.org/en/download/)
-- [Git](https://git-scm.com/downloads)
-- [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
-   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
+If you're not using one of those options for opening the project, then you'll need to:
 
->NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).  
+1. Install prerequisites:
+
+    - [Azure Developer CLI](https://aka.ms/azure-dev/install)
+    - [Python 3+](https://www.python.org/downloads/)
+        - **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
+    - [Node.js](https://nodejs.org/en/download/)
+    - [Git](https://git-scm.com/downloads)
+    - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
+    - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
+
+2. Create a [Python virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments) and activate it.
+
+3. Install the Python requirements:
+
+    ```shell
+    python3 -m pip install -r requirements-dev.txt
+    ```
+
 
 ### Starting from scratch:
 

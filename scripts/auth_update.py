@@ -1,11 +1,14 @@
 import argparse
-import subprocess
 
 from azure.identity import AzureDeveloperCliCredential
 import urllib3
 
 
 def update_redirect_uris(credential, app_id, uri):
+    redirect_uris = [
+                    "http://localhost:5000/.auth/login/aad/callback",
+                    f"{uri}/.auth/login/aad/callback",
+                ]
     urllib3.request(
         "PATCH",
         f"https://graph.microsoft.com/v1.0/applications/{app_id}",
@@ -15,10 +18,7 @@ def update_redirect_uris(credential, app_id, uri):
         },
         json={
             "web": {
-                "redirectUris": [
-                    "http://localhost:5000/.auth/login/aad/callback",
-                    f"{uri}/.auth/login/aad/callback",
-                ]
+                "redirectUris": redirect_uris
             }
         },
     )
@@ -26,8 +26,8 @@ def update_redirect_uris(credential, app_id, uri):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Prepare documents by extracting content from PDFs, splitting content into sections and indexing in a search index.",
-        epilog="Example: prepdocs.py --searchservice mysearch --index myindex",
+        description="Add a redirect URI to a registered application",
+        epilog="Example: auth_update.py --appid 123 --uri https://abc.azureservices.net",
     )
     parser.add_argument(
         "--appid",
@@ -42,4 +42,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     credential = AzureDeveloperCliCredential()
+
+    print(f"Updating application registration {args.appid} with redirect URI for {args.uri}")
     update_redirect_uris(credential, args.appid, args.uri)
