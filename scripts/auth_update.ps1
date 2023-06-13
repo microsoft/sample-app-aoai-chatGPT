@@ -6,5 +6,5 @@ if (-not $pythonCmd) {
   $pythonCmd = Get-Command python3 -ErrorAction SilentlyContinue
 }
 
-Write-Host 'Running "auth_init.py"'
-Start-Process -FilePath ($pythonCmd).Source -ArgumentList "./scripts/auth_init.py --appid $env:AUTH_APP_ID" -Wait -NoNewWindow
+Write-Host 'Running "auth_update.py"'
+Start-Process -FilePath ($pythonCmd).Source -ArgumentList "./scripts/auth_update.py --appid $env:AUTH_APP_ID --uri $env:BACKEND_URI" -Wait -NoNewWindow
