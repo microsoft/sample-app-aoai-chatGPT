@@ -72,7 +72,8 @@ If you change any of the Bicep files in the infra folder, then you should re-run
 ### Running locally:
 
 1. Run `azd auth login`
-3. Run `./start.cmd` or `./start.sh` to start the project locally.
+2. Run `./start.cmd` or `./start.sh` to start the project locally.
+3. Navigate to `http://127.0.0.1:5000` in your browser. The deployed code requires authentication, but the local app should allow access as long as it's access from `127.0.0.1`.
 
 ### Note
 

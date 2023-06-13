@@ -1,10 +1,9 @@
-azure-identity==1.13.0b4
-azure-search-documents==11.4.0b3
+-r requirements.txt
 azure-ai-formrecognizer==3.2.1
-markdown
-requests
-tqdm
-tiktoken
-langchain
-bs4
-urllib3
+Markdown==3.4.3
+requests==2.31.0
+tqdm==4.65.0
+tiktoken==0.4.0
+langchain==0.0.199
+bs4==0.0.1
+urllib3==2.0.3
