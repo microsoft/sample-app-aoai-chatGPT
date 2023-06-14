@@ -26,9 +26,9 @@
 ## Create Indexes and Ingest Data
 Disclaimer: Make sure there are no duplicate pages in your data. That could impact the quality of the responses you get in a negative way.
 
-- Run the data preparation script, passing in your config file.
+- Run the data preparation script, passing in your config file. You can set njobs for parallel parsing of your files.
 
-     `python data_preparation.py --config config.json`
+     `python data_preparation.py --config config.json --njobs=4`
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
@@ -44,8 +44,8 @@ If your data is in PDF format, you'll first need to convert from PDF to .txt for
 ### Create Indexes and Ingest Data from PDF with Form Recognizer
 Pass in your Form Recognizer resource name and key when running the data preparation script:
 
-`python data_preparation.py --config config.json --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
+`python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
 
 This will use the Form Recognizer Read model by default. If your documents have a lot of tables and relevant layout information, you can use the Form Recognizer Layout model, which is more costly and slower to run but will preserve table information with better quality. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
 
-`python data_preparation.py --config config.json --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key> --form-rec-use-layout`
+`python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key> --form-rec-use-layout`
