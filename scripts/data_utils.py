@@ -413,27 +413,33 @@ def chunk_content_helper(
 
     parser = parser_factory(file_format)
     doc = parser.parse(content, file_name=file_name)
-    if file_format == "markdown":
-        splitter = MarkdownTextSplitter.from_tiktoken_encoder(
-            chunk_size=num_tokens, chunk_overlap=token_overlap)
-        chunked_content_list = splitter.split_text(
-            content)  # chunk the original content
-        for chunked_content, chunk_size in merge_chunks_serially(chunked_content_list, num_tokens):
-            chunk_doc = parser.parse(chunked_content, file_name=file_name)
-            chunk_doc.title = doc.title
-            yield chunk_doc.content, chunk_size, chunk_doc
+
+    # if the original doc after parsing is < num_tokens return as it is
+    doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
+    if doc_content_size < num_tokens:
+        yield doc.content, doc_content_size, doc
     else:
-        if file_format == "python":
-            splitter = PythonCodeTextSplitter.from_tiktoken_encoder(
+        if file_format == "markdown":
+            splitter = MarkdownTextSplitter.from_tiktoken_encoder(
                 chunk_size=num_tokens, chunk_overlap=token_overlap)
+            chunked_content_list = splitter.split_text(
+                content)  # chunk the original content
+            for chunked_content, chunk_size in merge_chunks_serially(chunked_content_list, num_tokens):
+                chunk_doc = parser.parse(chunked_content, file_name=file_name)
+                chunk_doc.title = doc.title
+                yield chunk_doc.content, chunk_size, chunk_doc
         else:
-            splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                separators=SENTENCE_ENDINGS + WORDS_BREAKS,
-                chunk_size=num_tokens, chunk_overlap=token_overlap)
-        chunked_content_list = splitter.split_text(doc.content)
-        for chunked_content in chunked_content_list:
-            chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
-            yield chunked_content, chunk_size, doc
+            if file_format == "python":
+                splitter = PythonCodeTextSplitter.from_tiktoken_encoder(
+                    chunk_size=num_tokens, chunk_overlap=token_overlap)
+            else:
+                splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+                    separators=SENTENCE_ENDINGS + WORDS_BREAKS,
+                    chunk_size=num_tokens, chunk_overlap=token_overlap)
+            chunked_content_list = splitter.split_text(doc.content)
+            for chunked_content in chunked_content_list:
+                chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
+                yield chunked_content, chunk_size, doc
 
 def chunk_content(
     content: str,
