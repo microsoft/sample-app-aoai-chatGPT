@@ -22,7 +22,8 @@ FILE_FORMAT_DICT = {
         "shtml": "html",
         "htm": "html",
         "py": "python",
-        "pdf": "pdf"
+        "pdf": "pdf",
+        "xlsx": "pdf"
     }
 
 SENTENCE_ENDINGS = [".", "!", "?"]

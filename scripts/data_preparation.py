@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     print("Data preparation script started")
     if args.form_rec_resource and args.form_rec_key:
-        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", api_version="2023-02-28-preview", credential=AzureKeyCredential(args.form_rec_key))
         print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
     for index_config in config:
