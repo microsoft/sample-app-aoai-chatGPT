@@ -1,17 +1,19 @@
 """Data Preparation Script for an Azure Cognitive Search Index."""
 import argparse
-import json
-import logging
-import time
-import requests
-import subprocess
 import dataclasses
-from tqdm import tqdm
+import json
+import os
+import subprocess
+
+import requests
+import time
+from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
-from data_utils import chunk_directory
 from azure.search.documents import SearchClient
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from tqdm import tqdm
+
+from data_utils import chunk_directory
 
 SUPPORTED_LANGUAGE_CODES = {
     "ar": "Arabic",
@@ -153,7 +155,6 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "name": "id",
                 "type": "Edm.String",
                 "searchable": True,
-                "analyzer": "en.lucene",
                 "key": True,
             },
             {
@@ -163,7 +164,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": f"{language}.lucene",
+                "analyzer": f"{language}.lucene" if language else None,
             },
             {
                 "name": "title",
@@ -172,7 +173,7 @@ def create_or_update_search_index(service_name, subscription_id, resource_group,
                 "sortable": False,
                 "facetable": False,
                 "filterable": False,
-                "analyzer": f"{language}.lucene",
+                "analyzer": f"{language}.lucene" if language else None,
             },
             {
                 "name": "filepath",
@@ -302,17 +303,20 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential, form_recognizer_client=None, use_layout=False):
+def create_index(config, credential, form_recognizer_client=None, use_layout=False, njobs=4):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
     location = config["location"]
     index_name = config["index_name"]
-    language = config.get("language", "en")
+    language = config.get("language", None)
 
-    if language not in SUPPORTED_LANGUAGE_CODES:
-        print(f"ERROR: Ingestion does not support {language} documents")
-        print(f"Please use one of {SUPPORTED_LANGUAGE_CODES}. Language is set as two letter code for e.g. 'en' for English.")
+    if language and language not in SUPPORTED_LANGUAGE_CODES:
+        raise Exception(f"ERROR: Ingestion does not support {language} documents. "
+                        f"Please use one of {SUPPORTED_LANGUAGE_CODES}."
+                        f"Language is set as two letter code for e.g. 'en' for English."
+                        f"If you donot want to set a language just remove this prompt config or set as None")
+
 
     # check if search service exists, create if not
     if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
@@ -327,7 +331,7 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     
     # chunk directory
     print("Chunking directory...")
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout)
+    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
@@ -346,12 +350,20 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     validate_index(service_name, subscription_id, resource_group, index_name)
     print("Index validation completed")
 
+
+def valid_range(n):
+    n = int(n)
+    if n < 1 or n > 32:
+        raise argparse.ArgumentTypeError("njobs must be an Integer between 1 and 32.")
+    return n
+
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, help="Path to config file containing settings for data preparation")
     parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
     parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
     parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
+    parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -362,12 +374,15 @@ if __name__ == "__main__":
 
     print("Data preparation script started")
     if args.form_rec_resource and args.form_rec_key:
-        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+        os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
+        os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
+        if args.njobs==1:
+            form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
         print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout)
+        create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
