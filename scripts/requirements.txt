@@ -1,9 +1,0 @@
-azure-identity==1.13.0b4
-azure-search-documents==11.4.0b3
-azure-ai-formrecognizer==3.2.1
-markdown
-requests
-tqdm
-tiktoken
-langchain
-bs4
