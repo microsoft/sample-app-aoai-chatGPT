@@ -58,10 +58,10 @@ def prepare_body_headers_with_data(request):
 
     body = {
         "messages": request_messages,
-        "temperature": AZURE_OPENAI_TEMPERATURE,
-        "max_tokens": AZURE_OPENAI_MAX_TOKENS,
-        "top_p": AZURE_OPENAI_TOP_P,
-        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else [],
+        "temperature": float(AZURE_OPENAI_TEMPERATURE),
+        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
+        "top_p": float(AZURE_OPENAI_TOP_P),
+        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
         "stream": SHOULD_STREAM,
         "dataSources": [
             {
