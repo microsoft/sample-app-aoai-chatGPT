@@ -25,7 +25,8 @@ FILE_FORMAT_DICT = {
         "shtml": "html",
         "htm": "html",
         "py": "python",
-        "pdf": "pdf"
+        "pdf": "pdf",
+        "json": "json",
     }
 
 SENTENCE_ENDINGS = [".", "!", "?"]
@@ -235,13 +236,52 @@ class PythonParser(BaseParser):
     def __init__(self) -> None:
         super().__init__()
 
+class JSONParser(BaseParser):
+    """Parses JSON content."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.token_estimator = TokenEstimator()
+
+    def parse(self, content: str, file_name: Optional[str] = None) -> Document:
+        """Parses the given JSON content.
+        Args:
+            content (str): The JSON content to parse.
+            file_name (str): The file name associated with the content.
+        Returns:
+            Document: The parsed document.
+        """
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            # Handle JSON decoding error
+            print(f"Error decoding JSON: {str(e)}")
+            return Document(content="", title=file_name)
+
+        # Extract the title
+        title = ""
+        if "title" in data:
+            title = data["title"]
+        elif "name" in data:
+            title = data["name"]
+
+        if title is None or title == "":
+            # If title is still not found, use the file name
+            title = file_name
+
+        # Parse the content
+        result = json.dumps(data)
+
+        return Document(content=result, title=str(title))
+
 class ParserFactory:
     def __init__(self):
         self._parsers = {
             "html": HTMLParser(),
             "text": TextParser(),
             "markdown": MarkdownParser(),
-            "python": PythonParser()
+            "python": PythonParser(),
+            "json": JSONParser()
         }
 
     @property
@@ -410,12 +450,14 @@ def chunk_content_helper(
 ) -> Generator[Tuple[str, int, Document], None, None]:
     if num_tokens is None:
         num_tokens = 1000000000
-
+    print("chunk_content_helper")
+    print("file_format", file_format)
     parser = parser_factory(file_format)
     doc = parser.parse(content, file_name=file_name)
-
+    print(doc,"chunk_content_helper doc")
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
+    print(doc_content_size)
     if doc_content_size < num_tokens:
         yield doc.content, doc_content_size, doc
     else:
@@ -445,7 +487,7 @@ def chunk_content(
     content: str,
     file_name: Optional[str] = None,
     url: Optional[str] = None,
-    ignore_errors: bool = True,
+    ignore_errors: bool = False,
     num_tokens: int = 256,
     min_chunk_size: int = 10,
     token_overlap: int = 0,
@@ -467,14 +509,18 @@ def chunk_content(
     """
 
     try:
+        print(file_name,"file_name chunk_content")
+        print(cracked_pdf,"cracked_pdf chunk_content")
         if file_name is None or cracked_pdf:
+            print("inside if chunk_content")
             file_format = "text"
         else:
+            print("in side else chunk_content")
             file_format = _get_file_format(file_name, extensions_to_process)
             if file_format is None:
                 raise Exception(
                     f"{file_name} is not supported")
-
+        print("chunk_content")
         chunked_context = chunk_content_helper(
             content=content,
             file_name=file_name,
@@ -516,7 +562,7 @@ def chunk_content(
 
 def chunk_file(
     file_path: str,
-    ignore_errors: bool = True,
+    ignore_errors: bool = False,
     num_tokens=256,
     min_chunk_size=10,
     url = None,
@@ -531,8 +577,11 @@ def chunk_file(
     Returns:
         List[Document]: List of chunked documents.
     """
+    print(extensions_to_process,"extensions_to_process>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print(file_path,"file_path?????????")
     file_name = os.path.basename(file_path)
     file_format = _get_file_format(file_name, extensions_to_process)
+    print(file_format,"file_format")
     if not file_format:
         if ignore_errors:
             return ChunkingResult(
@@ -540,7 +589,7 @@ def chunk_file(
             )
         else:
             raise UnsupportedFormatError(f"{file_name} is not supported")
-
+    print("after if")
     cracked_pdf = False
     if file_format == "pdf":
         if form_recognizer_client is None:
@@ -548,8 +597,12 @@ def chunk_file(
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
     else:
+        print("IN file read if")
+        print("file_path>>> ", file_path)
         with open(file_path, "r", encoding="utf8") as f:
             content = f.read()
+            print(content)
+            
     return chunk_content(
         content=content,
         file_name=file_name,
@@ -586,7 +639,7 @@ def process_file(
         if url_prefix:
             url_path = url_prefix + rel_file_path
             url_path = convert_escaped_to_posix(url_path)
-
+        print("process_file")
         result = chunk_file(
             file_path,
             ignore_errors=ignore_errors,
@@ -649,8 +702,7 @@ def chunk_directory(
     all_files_directory = get_files_recursively(directory_path)
     files_to_process = [file_path for file_path in all_files_directory if os.path.isfile(file_path)]
     print(f"Total files to process={len(files_to_process)} out of total directory size={len(all_files_directory)}")
-
-
+    print(files_to_process[0])
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
         for file_path in tqdm(files_to_process):
