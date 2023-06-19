@@ -85,6 +85,7 @@ def prepare_body_headers_with_data(request):
             }
         ]
     }
+
     chatgpt_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}"
     if is_chat_model():
         chatgpt_url += "/chat/completions?api-version=2023-03-15-preview"
@@ -137,6 +138,7 @@ def stream_with_data(body, headers, endpoint):
                         deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
                         if deltaText != "[DONE]":
                             response["choices"][0]["messages"][1]["content"] += deltaText
+
                     yield json.dumps(response).replace("\n", "\\n") + "\n"
     except Exception as e:
         yield json.dumps({"error": str(e)}).replace("\n", "\\n") + "\n"
