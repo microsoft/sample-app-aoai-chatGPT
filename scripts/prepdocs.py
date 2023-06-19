@@ -120,6 +120,7 @@ def create_and_populate_index(
         form_recognizer_client=form_recognizer_client,
         use_layout=True,
         ignore_errors=False,
+        njobs=1,
     )
 
     if len(result.chunks) == 0:
