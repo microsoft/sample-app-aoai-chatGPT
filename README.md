@@ -2,12 +2,9 @@
 
 This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Note: some portions of the app use preview APIs.
 
-## Run the app
-Update the environment variables listed in `app.py`. At minimum, you need to specify `AZURE_OPENAI_RESOURCE`, `AZURE_OPENAI_MODEL`, and `AZURE_OPENAI_KEY`.
-Start the app with `start.cmd`.
-This will build the frontend, install backend dependencies, and then start the app.
-You can see the local running app at http://127.0.0.1:5000.
-Note: this app is under construction!
+## Prerequisites
+- An existing Azure OpenAI resource and model deployment of a chat model (e.g. `gpt-35-turbo`, `gpt-4`)
+- To use Azure OpenAI on your data: an existing Azure Cognitive Search resource and index.
 
 ## Deploy the app
 Please see the [section below](#add-an-identity-provider) for important information about adding authentication to your app.
@@ -22,6 +19,49 @@ Please be aware that you need:
 
 ### Deploy from your local machine
 
+#### Local Setup: Basic Chat Experience
+1. Update the environment variables listed in `app.py`. 
+    
+    These variables are required:
+    - `AZURE_OPENAI_RESOURCE`: the name of your Azure OpenAI resource
+    - `AZURE_OPENAI_MODEL`: the name of your Azure OpenAI model deployment
+    - `AZURE_OPENAI_KEY`: one of the API keys of your Azure OpenAI resource
+
+    These variables are optional:
+    - `AZURE_OPENAI_TEMPERATURE`: What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\nWe generally recommend altering this or top_p but not both.
+    - `AZURE_OPENAI_TOP_P`: An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered. We generally recommend altering this or temperature but not both.
+    - `AZURE_OPENAI_MAX_TOKENS`: The maximum number of tokens allowed for the generated answer.
+    - `AZURE_OPENAI_STOP_SEQUENCE`: Up to 4 sequences where the API will stop generating further tokens. Represent these as a string joined with "|", e.g. `"stop1|stop2|stop3"`.
+    - `AZURE_OPENAI_SYSTEM_MESSAGE`: A brief description of the role and tone the model should use, e.g. "You are an AI assistant that helps people find information."
+
+    See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
+
+2. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
+
+3. You can see the local running app at http://127.0.0.1:5000.
+
+#### Local Setup: Chat with your data
+1. Update the `AZURE_OPENAI_*` environment variables as described above. 
+2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
+
+    These variables are required when adding your data:
+    - `AZURE_SEARCH_SERVICE`: the name of your Azure Cognitive Search resource
+    - `AZURE_SEARCH_INDEX`: the name of your Azure Cognitive Search Index.
+    - `AZURE_SEARCH_KEY`: an **admin key** for your Azure Cognitive Search resource.
+
+    These variables are optional:
+    - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`: Whether or not to use semantic search
+    - `AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG`: The name of the semantic search configuration to use if using semantic search.
+    - `AZURE_SEARCH_INDEX_TOP_K`: The number of documents to retrieve from Azure Cognitive Search.
+    - `AZURE_SEARCH_ENABLE_IN_DOMAIN`: Limits responses to only queries relating to your data.
+    - `AZURE_SEARCH_CONTENT_COLUMNS`: List of fields in your Azure Cognitive Search index that contains the text content of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`
+    - `AZURE_SEARCH_FILENAME_COLUMN`: Field from your Azure Cognitive Search index that gives a unique idenitfier of the source of your data to display in the UI.
+    - `AZURE_SEARCH_TITLE_COLUMN`: Field from your Azure Cognitive Search index that gives a relevant title or header for your data content to display in the UI.
+    - `AZURE_SEARCH_URL_COLUMN`: Field from your Azure Cognitive Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.
+3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
+4. You can see the local running app at http://127.0.0.1:5000.
+
+#### Deploy with the Azure CLI
 You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. Make sure you have version 2.48.1 or later.
 
 If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following command from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
