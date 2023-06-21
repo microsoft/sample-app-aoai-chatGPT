@@ -34,7 +34,12 @@ const Chat = () => {
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
-        setShowAuthMessage(false);
+        if (userInfoList.length === 0 ) {
+            setShowAuthMessage(true);
+        }
+        else {
+            setShowAuthMessage(false);
+        }
     }
 
     const makeApiRequest = async (question: string) => {
