@@ -7,8 +7,9 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
 - To use Azure OpenAI on your data: an existing Azure Cognitive Search resource and index.
 
 ## Deploy the app
-### Deploy with Azure Developer tools
-Please see README_azd.md for detailed instructions.
+
+### Deploy with Azure Developer CLI
+Please see [README_azd.md](./README_azd.md) for detailed instructions.
 
 ### One click Azure deployment
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fmain%2Finfrastructure%2Fdeployment.json)

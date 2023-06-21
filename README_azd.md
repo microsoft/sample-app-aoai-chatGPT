@@ -22,16 +22,8 @@ If you're not using one of those options for opening the project, then you'll ne
     - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
     - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
-2. Create a [Python virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments) and activate it.
 
-3. Install the Python requirements:
-
-    ```shell
-    python3 -m pip install -r requirements-dev.txt
-    ```
-
-
-### Starting from scratch:
+### Deploying from scratch:
 
 If you don't have any pre-existing Azure services (i.e. OpenAI or Cognitive Search service), then you can provision
 all resources from scratch by following these steps:
@@ -41,7 +33,7 @@ all resources from scratch by following these steps:
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.
     > NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
 
-### Use existing resources:
+### Using existing resources:
 
 If you have existing Azure resources that you want to reuse, then you must first set `azd` environment variables _before_ running `azd up`.
 

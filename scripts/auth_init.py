@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
     credential = AzureDeveloperCliCredential()
 
-    if args.appid:
+    if args.appid and args.appid != "no-id":
         print(f"Checking if application {args.appid} exists")
         if check_for_application(credential, args.appid):
             print("Application already exists, not creating new one.")

@@ -1,10 +1,11 @@
-. ./loadenv.ps1
+. ./scripts/loadenv.ps1
 
-$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-if (-not $pythonCmd) {
-  # fallback to python3 if python not found
-  $pythonCmd = Get-Command python3 -ErrorAction SilentlyContinue
+$venvPythonPath = "./.venv/scripts/python.exe"
+if (Test-Path -Path "/usr") {
+  # fallback to Linux venv path
+  $venvPythonPath = "./.venv/bin/python"
 }
 
 Write-Host 'Running "auth_init.py"'
-Start-Process -FilePath ($pythonCmd).Source -ArgumentList "./scripts/auth_init.py --appid $env:AUTH_APP_ID" -Wait -NoNewWindow
+$appId = $env:AUTH_APP_ID ?? "no-id"
+Start-Process -FilePath $venvPythonPath -ArgumentList "./scripts/auth_init.py --appid $appId" -Wait -NoNewWindow
