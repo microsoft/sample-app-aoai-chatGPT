@@ -171,7 +171,7 @@ const Chat = () => {
                                 {answers.map((answer, index) => (
                                     <>
                                         {answer.role === "user" ? (
-                                            <div className={styles.chatMessageUser} aria-readonly="true" tabIndex={0}>
+                                            <div className={styles.chatMessageUser} tabIndex={0}>
                                                 <div className={styles.chatMessageUserMessage}>{answer.content}</div>
                                             </div>
                                         ) : (
