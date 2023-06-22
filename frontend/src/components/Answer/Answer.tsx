@@ -55,7 +55,7 @@ export const Answer = ({
 
     return (
         <>
-            <Stack className={styles.answerContainer}>
+            <Stack className={styles.answerContainer}  aria-readonly="true" tabIndex={0}>
                 <Stack.Item grow>
                     <ReactMarkdown
                         linkTarget="_blank"
@@ -66,12 +66,16 @@ export const Answer = ({
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
                 {!!parsedAnswer.citations.length && (
-                    <Stack.Item aria-label="References">
+                    <Stack.Item>
                         <Stack style={{width: "100%"}} >
                             <Stack horizontal horizontalAlign='start' verticalAlign='center'>
                                 <Text
                                     className={styles.accordionTitle}
                                     onClick={toggleIsRefAccordionOpen}
+                                    aria-readonly="true"
+                                    aria-label="Open references"
+                                    tabIndex={0}
+                                    role="button"
                                 >
                                 <span>{parsedAnswer.citations.length > 1 ? parsedAnswer.citations.length + " references" : "1 reference"}</span>
                                 </Text>
@@ -91,7 +95,15 @@ export const Answer = ({
                     <div style={{ marginTop: 8, display: "flex", flexFlow: "wrap column", maxHeight: "150px", gap: "4px" }}>
                         {parsedAnswer.citations.map((citation, idx) => {
                             return (
-                                <span title={createCitationFilepath(citation, ++idx)} key={idx} onClick={() => onCitationClicked(citation)} className={styles.citationContainer}>
+                                <span 
+                                    title={createCitationFilepath(citation, ++idx)} 
+                                    tabIndex={0} 
+                                    role="link" 
+                                    key={idx} 
+                                    onClick={() => onCitationClicked(citation)} 
+                                    className={styles.citationContainer}
+                                    aria-label={createCitationFilepath(citation, idx)}
+                                >
                                     <div className={styles.citation}>{idx}</div>
                                     {createCitationFilepath(citation, idx, true)}
                                 </span>);
