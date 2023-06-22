@@ -55,7 +55,7 @@ export const Answer = ({
 
     return (
         <>
-            <Stack className={styles.answerContainer}  aria-readonly="true" tabIndex={0}>
+            <Stack className={styles.answerContainer} tabIndex={0}>
                 <Stack.Item grow>
                     <ReactMarkdown
                         linkTarget="_blank"
@@ -72,7 +72,6 @@ export const Answer = ({
                                 <Text
                                     className={styles.accordionTitle}
                                     onClick={toggleIsRefAccordionOpen}
-                                    aria-readonly="true"
                                     aria-label="Open references"
                                     tabIndex={0}
                                     role="button"
