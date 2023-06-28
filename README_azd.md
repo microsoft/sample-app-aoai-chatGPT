@@ -30,6 +30,7 @@ all resources from scratch by following these steps:
 
 1. Run `azd auth login` to login to your Azure account.
 1. Run `azd up` to provision Azure resources and deploy this sample to those resources. This also runs a script to build the search index based on files in the `./data` folder.
+    * For the target location, the regions that currently support the models used in this sample are **East US** or **South Central US**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.
     > NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
 
