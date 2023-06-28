@@ -248,7 +248,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
 
 // For doc prep
 module docPrepResources 'docprep.bicep' = {
-  name: 'docprep-resources'
+  name: 'docprep-resources${resourceToken}'
   params: {
     location: location
     resourceToken: resourceToken
