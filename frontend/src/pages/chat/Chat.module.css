@@ -110,6 +110,33 @@
     display: flex;
 }
 
+.chatMessageError {
+    padding: 20px;
+    /* background: #EDF5FD; */
+    border-radius: 8px;
+    box-shadow: rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px;
+    
+    color: #242424;
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    
+    max-width: 800px;
+    /* filter: drop-shadow(rgba(182, 52, 67, 1) 1px 1px 2px) drop-shadow(rgba(182, 52, 67, 1) 0px 0px 1px); */
+}
+
+.chatMessageErrorContent {
+    font-family: "Segoe UI";
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    gap: 12px;
+    align-items: center;
+}
+
 .chatInput {
     position: sticky;
     flex: 0 0 100px;

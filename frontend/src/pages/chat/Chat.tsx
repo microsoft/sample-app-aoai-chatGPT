@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { Stack } from "@fluentui/react";
-import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular } from "@fluentui/react-icons";
+import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
@@ -56,7 +56,7 @@ const Chat = () => {
         };
 
         const request: ConversationRequest = {
-            messages: [...answers, userMessage]
+            messages: [...answers.filter((answer) => answer.role !== "error"), userMessage]
         };
 
         let result = {} as ChatResponse;
@@ -88,11 +88,21 @@ const Chat = () => {
             
         } catch ( e )  {
             if (!abortController.signal.aborted) {
-                console.error(e);
                 console.error(result);
-                alert("An error occurred. Please try again. If the problem persists, please contact the site administrator.")
+                let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
+                if (result.error?.message) {
+                    errorMessage = result.error.message;
+                }
+                else if (typeof result.error === "string") {
+                    errorMessage = result.error;
+                }
+                setAnswers([...answers, userMessage, {
+                    role: "error",
+                    content: errorMessage
+                }]);
+            } else {
+                setAnswers([...answers, userMessage]);
             }
-            setAnswers([...answers, userMessage]);
         } finally {
             setIsLoading(false);
             setShowLoadingMessage(false);
@@ -183,6 +193,12 @@ const Chat = () => {
                                                     }}
                                                     onCitationClicked={c => onShowCitation(c)}
                                                 />
+                                            </div> : answer.role === "error" ? <div className={styles.chatMessageError}>
+                                                <Stack horizontal className={styles.chatMessageErrorContent}>
+                                                    <ErrorCircleRegular className={styles.errorIcon} style={{color: "rgba(182, 52, 67, 1)"}} />
+                                                    <span>Error</span>
+                                                </Stack>
+                                                <span className={styles.chatMessageErrorContent}>{answer.content}</span>
                                             </div> : null
                                         )}
                                     </>
