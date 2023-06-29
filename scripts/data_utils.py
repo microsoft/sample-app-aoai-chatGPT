@@ -474,7 +474,8 @@ def chunk_content(
     min_chunk_size: int = 10,
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
-    cracked_pdf = False
+    cracked_pdf = False,
+    use_layout = False
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -491,7 +492,7 @@ def chunk_content(
     """
 
     try:
-        if file_name is None:
+        if file_name is None or (cracked_pdf and not use_layout):
             file_format = "text"
         elif cracked_pdf:
             file_format = "html"
@@ -585,7 +586,8 @@ def chunk_file(
         url=url,
         token_overlap=max(0, token_overlap),
         extensions_to_process=extensions_to_process,
-        cracked_pdf=cracked_pdf
+        cracked_pdf=cracked_pdf,
+        use_layout=use_layout
     )
 
 
