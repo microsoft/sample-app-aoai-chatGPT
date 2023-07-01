@@ -123,7 +123,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_SEARCH_TITLE_COLUMN: searchTitleColumn
       AZURE_SEARCH_URL_COLUMN: searchUrlColumn
       // openai
-      AZURE_OPENAI_RESOURCE: openAi.outputs.name
+      AZURE_OPENAI_HOST: openAi.outputs.name
       AZURE_OPENAI_MODEL: openAIModel
       AZURE_OPENAI_MODEL_NAME: openAIModelName
       AZURE_OPENAI_KEY: openAi.outputs.key
@@ -283,8 +283,8 @@ output AZURE_SEARCH_TITLE_COLUMN string = searchTitleColumn
 output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
 
 // openai
-output AZURE_OPENAI_RESOURCE string = openAi.outputs.name
-output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
+output AZURE_OPENAI_HOST string = openAi.outputs.name
+output AZURE_OPENAI_HOST_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_MODEL string = openAIModel
 output AZURE_OPENAI_MODEL_NAME string = openAIModelName
 output AZURE_OPENAI_SKU_NAME string = openAi.outputs.skuName
