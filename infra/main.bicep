@@ -284,7 +284,7 @@ output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
 
 // openai
 output AZURE_OPENAI_HOST string = openAi.outputs.name
-output AZURE_OPENAI_HOST_GROUP string = openAiResourceGroup.name
+output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_MODEL string = openAIModel
 output AZURE_OPENAI_MODEL_NAME string = openAIModelName
 output AZURE_OPENAI_SKU_NAME string = openAi.outputs.skuName
