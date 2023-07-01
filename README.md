@@ -24,7 +24,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
 1. Update the environment variables listed in `app.py` as described in the [Environment variables](#environment-variables) section.
     
     These variables are required:
-    - `AZURE_OPENAI_RESOURCE`
+    - `AZURE_OPENAI_HOST`
     - `AZURE_OPENAI_MODEL`
     - `AZURE_OPENAI_KEY`
 
@@ -114,7 +114,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_SEARCH_FILENAME_COLUMN||`AZURE_SEARCH_FILENAME_COLUMN`: Field from your Azure Cognitive Search index that gives a unique idenitfier of the source of your data to display in the UI.|
 |AZURE_SEARCH_TITLE_COLUMN||Field from your Azure Cognitive Search index that gives a relevant title or header for your data content to display in the UI.|
 |AZURE_SEARCH_URL_COLUMN||Field from your Azure Cognitive Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
-|AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
+|AZURE_OPENAI_HOST|| url of your Azure OpenAI resource or your APIM|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
 |AZURE_OPENAI_MODEL_NAME|gpt-35-turbo|The name of the model|
 |AZURE_OPENAI_KEY||One of the API keys of your Azure OpenAI resource|
