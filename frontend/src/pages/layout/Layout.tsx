@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
-import Azure from "../../assets/Azure.svg";
+import Azure from "../../assets/Mint.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField } from "@fluentui/react";
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ const Layout = () => {
 
     const handleSharePanelDismiss = () => {
         setIsSharePanelOpen(false);
-        setCopyClicked(false);
+        setCopyClicked(false);  
         setCopyText("Copy URL");
     };
 
