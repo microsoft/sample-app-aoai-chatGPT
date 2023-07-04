@@ -4,7 +4,8 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     const response = await fetch("/conversation", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "CognitiveServices-Search-Index": options.searchIndex || ""
         },
         body: JSON.stringify({
             messages: options.messages
@@ -22,6 +23,12 @@ export async function getUserInfo(): Promise<UserInfo[]> {
         return [];
     }
 
+    const payload = await response.json();
+    return payload;
+}
+
+export async function getSearchIndexes(): Promise<string[]> {
+    const response = await fetch('/search-indexes');
     const payload = await response.json();
     return payload;
 }

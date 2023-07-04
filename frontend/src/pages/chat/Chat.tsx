@@ -20,6 +20,7 @@ import {
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
+import useAppStore from "../../stores/appStore";
 
 const Chat = () => {
     const lastQuestionRef = useRef<string>("");
@@ -31,6 +32,8 @@ const Chat = () => {
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
+
+    const selectedSearchIndex = useAppStore((state) => state.searchIndex);
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
@@ -56,7 +59,8 @@ const Chat = () => {
         };
 
         const request: ConversationRequest = {
-            messages: [...answers.filter((answer) => answer.role !== "error"), userMessage]
+            messages: [...answers.filter((answer) => answer.role !== "error"), userMessage],
+            searchIndex: selectedSearchIndex
         };
 
         let result = {} as ChatResponse;
