@@ -1,6 +1,8 @@
 import json
 import os
 import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+
 import requests
 import openai
 from flask import Flask, Response, request, jsonify
@@ -9,6 +11,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler())
 
 @app.route("/", defaults={"path": "index.html"})
 @app.route("/<path:path>")
@@ -180,6 +185,7 @@ def stream_without_data(response):
             }]
         }
         yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
+    logger.warning(f"response_text: {responseText}")
 
 
 def conversation_without_data(request):
@@ -201,6 +207,8 @@ def conversation_without_data(request):
             "role": message["role"] ,
             "content": message["content"]
         })
+
+    logger.warning(f"request_text: {[message for message in request_messages if message['role'] == 'user'][-1]['content']}")
 
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
