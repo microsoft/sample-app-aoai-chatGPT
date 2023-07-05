@@ -3,9 +3,10 @@
 // Path: frontend/src/pages/upload/Upload.tsx
 
 import styles from "./Upload.module.css";
-import { IIconProps, List, PrimaryButton, Spinner, SpinnerSize, MessageBar, MessageBarType } from "@fluentui/react";
+import { IIconProps, List, PrimaryButton, Spinner, SpinnerSize, MessageBar, MessageBarType, Stack } from "@fluentui/react";
 import { ChangeEvent, useRef, useState } from "react";
 import { uploadFiles } from "../../api";
+import { Outlet } from "react-router-dom";
 
 export interface IButtonExampleProps {
     // These are set based on the toggles shown above the examples (not needed in real code)
@@ -76,48 +77,51 @@ const Upload: React.FunctionComponent<IButtonExampleProps> = (props) => {
     const isDisabled = isUploading || files?.length < 1;
 
     return (
-        <div className={styles.container + "ms-depth-4"}>
-            <div className={styles.uploadContainer}>
-                <input type="file" onChange={handleFileChange} multiple/>
-                <PrimaryButton iconProps={isUploading ? undefined : uploadIcon} onClick={handleUpload} allowDisabledFocus disabled={isDisabled} checked={checked}>
-                    {
-                        isUploading ? (
-                            <Spinner size={SpinnerSize.small} />
-                        ) : "Upload"
-                    }
-                </PrimaryButton>
-                {
-                    error && (
-                        <div>
-                            <MessageBar
-                                delayedRender={false}
-                                messageBarType={MessageBarType.error}
-                            >
-                                { error }
-                            </MessageBar>
-                        </div>
-                    )
-                }
+        <div className={styles.container} role="main">
+                <Stack horizontal className={styles.uploadRoot}>
+                        <div className={styles.uploadContainer}>
+                        <input type="file" onChange={handleFileChange} multiple className={styles.fileInput}/>
+                        <Outlet />
+                        <PrimaryButton iconProps={isUploading ? undefined : uploadIcon} onClick={handleUpload} allowDisabledFocus disabled={isDisabled} checked={checked}>
+                            {
+                                isUploading ? (
+                                    <Spinner size={SpinnerSize.small} />
+                                ) : "Upload"
+                            }
+                        </PrimaryButton>
+                        {
+                            error && (
+                                <div>
+                                    <MessageBar
+                                        delayedRender={false}
+                                        messageBarType={MessageBarType.error}
+                                    >
+                                        { error }
+                                    </MessageBar>
+                                </div>
+                            )
+                        }
 
-                {
-                    uploadResponseMsg && (
+                        {
+                            uploadResponseMsg && (
+                                <div>
+                                    <MessageBar
+                                        delayedRender={false}
+                                        messageBarType={MessageBarType.success}
+                                    >
+                                        { uploadResponseMsg }
+                                    </MessageBar>
+                                </div>
+                            )
+                        }
                         <div>
-                            <MessageBar
-                                delayedRender={false}
-                                messageBarType={MessageBarType.success}
-                            >
-                                { uploadResponseMsg }
-                            </MessageBar>
-                        </div>
-                    )
-                }
-                <div>
-                    <List
-                        items={files}
-                        onRenderCell={onRenderCell}
-                    />
+                        <List
+                            items={files}
+                            onRenderCell={onRenderCell}
+                        />
+                    </div>
                 </div>
-            </div>
+                </Stack>
         </div>
     );
 }

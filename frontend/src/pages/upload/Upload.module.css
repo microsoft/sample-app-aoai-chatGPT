@@ -2,19 +2,32 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 20px
+}
+
+.uploadRoot {
+    flex: 1;
+    display: flex;
+    margin-top: 0px;
+    margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
     gap: 20px;
-    padding: 20px;
-    margin: 0 auto;
 }
 
 .uploadContainer {
-    border: 1px solid #cdcdcd;
-    border-radius: 5px;
-    background-color: white;
-    min-height: 50vh;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    gap: 20px;
+    background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+    justify-content: center;
+}
+
+.fileInput {
+    margin-bottom: 20px;
 }
