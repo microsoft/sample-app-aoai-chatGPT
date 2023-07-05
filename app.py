@@ -17,7 +17,7 @@ def static_file(path):
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
-AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
+# AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
 AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY")
 AZURE_SEARCH_USE_SEMANTIC_SEARCH = os.environ.get("AZURE_SEARCH_USE_SEMANTIC_SEARCH", "false")
 AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG = os.environ.get("AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG", "default")
@@ -49,12 +49,16 @@ def is_chat_model():
     return False
 
 def should_use_data():
-    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
+    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_KEY:
         return True
     return False
 
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
+    request_searchIndex = request.headers["CognitiveServices-Search-Index"]
+
+    if not request_searchIndex:
+        raise Exception("No search index provided")
 
     body = {
         "messages": request_messages,
@@ -69,7 +73,7 @@ def prepare_body_headers_with_data(request):
                 "parameters": {
                     "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
                     "key": AZURE_SEARCH_KEY,
-                    "indexName": AZURE_SEARCH_INDEX,
+                    "indexName": request_searchIndex,
                     "fieldsMapping": {
                         "contentField": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
                         "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
@@ -245,5 +249,28 @@ def conversation():
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/search-indexes", methods=["GET"])
+def getSearchIndexes():
+    try:
+        search_url = f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/indexes?api-version=2020-06-30"
+        headers = {
+            'Content-Type': 'application/json',
+            'api-key': AZURE_SEARCH_KEY,
+        }
+        r = requests.get(search_url, headers=headers)
+        status_code = r.status_code
+        r = r.json()
+
+        if not r:
+            return Response(json.dumps({"error": "No search indexes found"}).replace("\n", "\\n"), status=404)
+        else:
+            r = list(map(lambda x: x["name"], r["value"]))
+
+        return Response(json.dumps(r).replace("\n", "\\n"), status=status_code)
+    except Exception as e:
+        logging.exception("Exception in /search-indexes")
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
-    app.run()
+    app.run(port=8000, debug=True)
