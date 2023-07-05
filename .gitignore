@@ -1,6 +1,8 @@
 .venv
 frontend/node_modules
+frontend/package-lock.json
 .env
 static
 .azure/
 __pycache__/
+tmp/
