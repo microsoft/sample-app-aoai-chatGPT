@@ -11,6 +11,7 @@
   "dependencies": {
     "@fluentui/react": "^8.105.3",
     "@fluentui/react-icons": "^2.0.195",
+    "axios": "^1.4.0",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "react": "^18.2.0",

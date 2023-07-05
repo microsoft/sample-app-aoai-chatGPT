@@ -3,8 +3,10 @@ import os
 import logging
 import requests
 import openai
+import threading
 from flask import Flask, Response, request, jsonify
 from dotenv import load_dotenv
+from azure.storage.blob import BlobServiceClient, ContentSettings
 
 load_dotenv()
 
@@ -42,6 +44,20 @@ AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
+
+# Azure Blob Storage Settings
+AZURE_BLOB_STORAGE_CONNECTION_STRING = os.environ.get("AZURE_BLOB_STORAGE_CONNECTION_STRING")
+
+# MAX SIZE UPLOAD
+UPLOAD_MAX_FILE_SIZE = int(os.environ.get("UPLOAD_MAX_FILE_SIZE")) if os.environ.get("UPLOAD_MAX_FILE_SIZE") else 10000000 # 1GB
+UPLOAD_MAX_TOTAL_SIZE = int(os.environ.get("UPLOAD_MAX_TOTAL_SIZE") if os.environ.get("UPLOAD_MAX_TOTAL_SIZE") else 100000000) # 1GB
+UPLOAD_ALLOWED_FILE_TYPES = os.environ.get("UPLOAD_ALLOWED_FILE_TYPES").split(",") if os.environ.get("UPLOAD_ALLOWED_FILE_TYPES") else ['txt']
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") if os.environ.get("UPLOAD_FOLDER") else "uploads"
+
+DEFAULT_CONTAINER_NAME = "ai-interview-analysis"
+
+blob_service_client = BlobServiceClient.from_connection_string(conn_str=AZURE_BLOB_STORAGE_CONNECTION_STRING)
+
 
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
@@ -237,6 +253,65 @@ def conversation_without_data(request):
         else:
             return Response(None, mimetype='text/event-stream')
 
+# Create container if it doesn't exist
+def create_container_if_not_exists(container_name):
+    # Create the container if it doesn't exist
+    container_exists = blob_service_client.get_container_client(container_name).exists()
+    if not container_exists:
+        blob_service_client.create_container(container_name)
+        print(f"Container '{container_name}' created.")
+    else:
+        print(f"Container '{container_name}' already exists.")
+
+# Function to upload a file to Azure Blob Storage
+def upload_file_to_blob(container_client, file_path, container_name):
+    upload_status = "success"
+    try:
+        # Get the file name from the path
+        file_name = file_path.split("/")[-1]
+
+        # Create a BlobClient object for the file
+        blob_client = container_client.get_blob_client(file_name)
+
+        # Open the file and set content type (optional)
+        with open(file_path, "rb") as data:
+            blob_client.upload_blob(data, overwrite=True, content_settings=ContentSettings(content_type='text/plain'))
+    except Exception as e:
+        logging.exception("Exception in upload_file_to_blob")
+        upload_status = "failure"
+
+    return {"file_name": file_name, "container_name": container_name, "status": upload_status }
+
+# Write a function to validate file upload base on security rules on OWASP
+def validate_file_upload(file_path):
+    # Check if the file is empty
+    if os.stat(file_path).st_size == 0:
+        print('File is empty ' + file_path)
+        return False
+
+    # Check if the file is too large
+    if os.stat(file_path).st_size > UPLOAD_MAX_FILE_SIZE:
+        print('File size exceeds the limit ' + str(os.stat(file_path).st_size) + " " + str(UPLOAD_MAX_FILE_SIZE) + ' bytes + '  + file_path)
+        return False
+
+    # Check if the file is an allowed type
+    if not allowed_file(file_path):
+        print('File type not allow '  + file_path)
+        return False
+
+    return True
+
+# Function to check allowed file types
+def allowed_file(file_path):
+    return '.' in file_path and file_path.rsplit('.', 1)[1].lower() in UPLOAD_ALLOWED_FILE_TYPES
+
+# Function to calculate total file size of uploading files in a request
+def get_total_file_size(files):
+    total_size = 0
+    for file in files:
+        total_size += file.content_length
+    return total_size
+
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
     try:
@@ -247,6 +322,55 @@ def conversation():
             return conversation_without_data(request)
     except Exception as e:
         logging.exception("Exception in /conversation")
+        return jsonify({"error": str(e)}), 500
+
+# Handle file upload
+@app.route("/upload", methods=["POST"])
+def upload():
+    try:
+        if not os.path.isdir(UPLOAD_FOLDER):
+            os.mkdir(UPLOAD_FOLDER)
+
+        files = request.files.getlist("files")
+        print(files)
+        # Check if total files size is too large
+        if get_total_file_size(files) > UPLOAD_MAX_TOTAL_SIZE:
+            return jsonify({"error": "Total files size is too large", "maxFileSize": UPLOAD_MAX_FILE_SIZE}), 400
+        
+        # Init blob service client
+        container_name = DEFAULT_CONTAINER_NAME if not request.form.get("container") else request.form.get("container")
+        # Create container if not exists
+        create_container_if_not_exists(container_name)
+        # Get container client
+        container_client = blob_service_client.get_container_client(container_name)
+
+        # Upload files to blob storage
+        threads = []
+        for file in files:
+            file_name = file.filename
+            tmp_path = os.path.join(UPLOAD_FOLDER, file_name)
+            file.save(tmp_path)
+            if (not validate_file_upload(tmp_path)):
+                print("Invalid file " + file_name)
+                return jsonify({"error": "Invalid file"}), 400
+            thread = threading.Thread(target=upload_file_to_blob, args=(container_client, tmp_path, container_name))
+            thread.start()
+            threads.append(thread)
+
+        # Wait for all threads to complete
+        print("Run threads " + str(len(threads)))
+        for thread in threads:
+            thread.join()
+
+        # Clean up tmp files
+        for file in files:
+            file_name = file.filename
+            tmp_path = os.path.join(UPLOAD_FOLDER, file_name)
+            os.remove(tmp_path)
+
+        return jsonify({"message": "Files uploaded successfully"}), 200
+    except Exception as e:
+        logging.exception("Exception in /upload")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/search-indexes", methods=["GET"])
@@ -270,7 +394,6 @@ def getSearchIndexes():
     except Exception as e:
         logging.exception("Exception in /search-indexes")
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(port=8000, debug=True)
