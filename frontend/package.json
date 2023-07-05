@@ -20,7 +20,8 @@
     "react-router-dom": "^6.8.1",
     "rehype-raw": "^6.1.1",
     "remark-gfm": "^3.0.1",
-    "remark-supersub": "^1.0.0"
+    "remark-supersub": "^1.0.0",
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.7",

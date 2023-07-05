@@ -6,7 +6,8 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
     const response = await fetch("/conversation", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "CognitiveServices-Search-Index": options.searchIndex || ""
         },
         body: JSON.stringify({
             messages: options.messages
@@ -28,6 +29,7 @@ export async function getUserInfo(): Promise<UserInfo[]> {
     return payload;
 }
 
+
 // Create function to post upload mulitple files to /upload
 export async function uploadFiles(files: File[], abortSignal: AbortSignal): Promise<AxiosResponse> {
     const formData = new FormData();
@@ -44,4 +46,9 @@ export async function uploadFiles(files: File[], abortSignal: AbortSignal): Prom
     });
 
     return response;
+
+export async function getSearchIndexes(): Promise<string[]> {
+    const response = await fetch('/search-indexes');
+    const payload = await response.json();
+    return payload;
 }
