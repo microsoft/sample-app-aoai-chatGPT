@@ -1,28 +1,27 @@
 # Import everything here
 import os
+import sys
 # import subprocess
 import locale
-import moviepy.editor as mp
-from pydub import AudioSegment
 #import webvtt
 import json
 from datetime import timedelta
 # used to load an individual file (TextLoader) or multiple files (DirectoryLoader)
-from langchain.document_loaders import TextLoader, DirectoryLoader
+# from langchain.document_loaders import TextLoader, DirectoryLoader
 # used to split the text within documents and chunk the data
-from langchain.text_splitter import CharacterTextSplitter
+# from langchain.text_splitter import CharacterTextSplitter
 # use embedding from OpenAI (but others available)
-from langchain.embeddings import OpenAIEmbeddings
+# from langchain.embeddings import OpenAIEmbeddings
 # using Chroma database to store our vector embeddings
-from langchain.vectorstores import Chroma
+# from langchain.vectorstores import Chroma
 # use this to configure the Chroma database
-from chromadb.config import Settings
+# from chromadb.config import Settings
 # we'll use the chain that allows Question and Answering and provides source of where it got the data from. This is useful if you have multiple files. If you don't need the source, you can use RetrievalQA
-from langchain.chains import RetrievalQAWithSourcesChain, RetrievalQA
+# from langchain.chains import RetrievalQAWithSourcesChain, RetrievalQA
 # we'll use the OpenAI Chat model to interact with the embeddings. This is the model that allows us to query in a similar way to ChatGPT
-from langchain.chat_models import AzureChatOpenAI
-from langchain.llms import AzureOpenAI
-from langchain.chains.question_answering import load_qa_chain
+# from langchain.chat_models import AzureChatOpenAI
+# from langchain.llms import AzureOpenAI
+# from langchain.chains.question_answering import load_qa_chain
 from pathlib import Path
 import global_var
 
@@ -33,6 +32,12 @@ from grouping import grouping_segments, save_audio_parts
 from transcript import run_whisper, generate_txt_files
 
 locale.getpreferredencoding = lambda: "UTF-8"
+
+if len(sys.argv) > 1:
+  global_var.video_file_names = sys.argv[1:]
+  print(global_var.video_file_names)
+else:
+  print("No parameters provided")
 
 def main():
   for n in global_var.video_file_names:
@@ -51,4 +56,4 @@ def main():
   run_whisper()
   generate_txt_files()
 
-main()
+# main()
