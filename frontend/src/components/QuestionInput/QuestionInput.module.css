@@ -26,14 +26,14 @@
 }
 
 .questionInputSendButton {
-    width: 24px;
-    height: 23px;
+    width: 34px;
+    height: 33px;
 }
 
 .questionInputSendButtonDisabled {
     /* opacity: 0.4; */
-    width: 24px;
-    height: 23px;
+    width: 34px;
+    height: 33px;
     background: none;
     color: #424242;
 }
