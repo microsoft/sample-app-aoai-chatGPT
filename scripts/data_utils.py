@@ -391,11 +391,13 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
                 position = page_offset + idx
                 if position in roles_start.keys():
                     role = roles_start[position]
-                    page_text += f"<{PDF_HEADERS[role]}>"
+                    if role in PDF_HEADERS:
+                        page_text += f"<{PDF_HEADERS[role]}>"
                 if position in roles_end.keys():
                     role = roles_end[position]
-                    page_text += f"</{PDF_HEADERS[role]}>"
-                
+                    if role in PDF_HEADERS:
+                        page_text += f"</{PDF_HEADERS[role]}>"
+
                 page_text += form_recognizer_results.content[page_offset + idx]
                 
             elif not table_id in added_tables:
