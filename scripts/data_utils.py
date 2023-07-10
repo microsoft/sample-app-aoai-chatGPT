@@ -361,16 +361,12 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
     # (if using layout) mark all the positions of headers
     roles_start = {}
     roles_end = {}
-    try:
-        for paragraph in form_recognizer_results.paragraphs:
-            if paragraph.role!=None:
-                para_start = paragraph.spans[0].offset
-                para_end = paragraph.spans[0].offset + paragraph.spans[0].length
-                roles_start[para_start] = paragraph.role
-                roles_end[para_end] = paragraph.role
-    except:
-        import pdb; pdb.set_trace()
-        print("Error in paragraph role")
+    for paragraph in form_recognizer_results.paragraphs:
+        if paragraph.role!=None:
+            para_start = paragraph.spans[0].offset
+            para_end = paragraph.spans[0].offset + paragraph.spans[0].length
+            roles_start[para_start] = paragraph.role
+            roles_end[para_end] = paragraph.role
 
     for page_num, page in enumerate(form_recognizer_results.pages):
         tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
@@ -401,7 +397,7 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
                     role = roles_end[position]
                     if role in PDF_HEADERS:
                         page_text += f"</{PDF_HEADERS[role]}>"
-                
+
                 page_text += form_recognizer_results.content[page_offset + idx]
                 
             elif not table_id in added_tables:
