@@ -29,7 +29,7 @@ AZURE_SEARCH_TITLE_COLUMN = os.environ.get("AZURE_SEARCH_TITLE_COLUMN")
 AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 
 # AOAI Integration Settings
-AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
+AZURE_OPENAI_HOST = os.environ.get("AZURE_OPENAI_HOST")
 AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
 AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
 AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
@@ -86,7 +86,7 @@ def prepare_body_headers_with_data(request):
         ]
     }
 
-    chatgpt_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}"
+    chatgpt_url = f"https://{AZURE_OPENAI_HOST}/openai/deployments/{AZURE_OPENAI_MODEL}"
     if is_chat_model():
         chatgpt_url += "/chat/completions?api-version=2023-03-15-preview"
     else:
@@ -146,7 +146,7 @@ def stream_with_data(body, headers, endpoint):
 
 def conversation_with_data(request):
     body, headers = prepare_body_headers_with_data(request)
-    endpoint = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+    endpoint = f"https://{AZURE_OPENAI_HOST}/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
     
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
@@ -184,7 +184,7 @@ def stream_without_data(response):
 
 def conversation_without_data(request):
     openai.api_type = "azure"
-    openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+    openai.api_base = f"https://{AZURE_OPENAI_HOST}/"
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
 
