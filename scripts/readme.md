@@ -46,6 +46,8 @@ Pass in your Form Recognizer resource name and key when running the data prepara
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
 
-This will use the Form Recognizer Read model by default. If your documents have a lot of tables and relevant layout information, you can use the Form Recognizer Layout model, which is more costly and slower to run but will preserve table information with better quality. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
+This will use the Form Recognizer Read model by default. 
+
+If your documents have a lot of tables and relevant layout information, you can use the Form Recognizer Layout model, which is more costly and slower to run but will preserve table information with better quality. The Layout model will also help preserve some of the formatting information in your document such as titles and sub-headings, which will make the citations more readable. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key> --form-rec-use-layout`

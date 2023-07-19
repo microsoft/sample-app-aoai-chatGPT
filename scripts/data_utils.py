@@ -31,6 +31,11 @@ FILE_FORMAT_DICT = {
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
 
+PDF_HEADERS = {
+    "title": "h1",
+    "sectionHeading": "h2"
+}
+
 @dataclass
 class Document(object):
     """A data class for storing documents
@@ -353,6 +358,16 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
         poller = form_recognizer_client.begin_analyze_document(model, document = f)
     form_recognizer_results = poller.result()
 
+    # (if using layout) mark all the positions of headers
+    roles_start = {}
+    roles_end = {}
+    for paragraph in form_recognizer_results.paragraphs:
+        if paragraph.role!=None:
+            para_start = paragraph.spans[0].offset
+            para_end = paragraph.spans[0].offset + paragraph.spans[0].length
+            roles_start[para_start] = paragraph.role
+            roles_end[para_end] = paragraph.role
+
     for page_num, page in enumerate(form_recognizer_results.pages):
         tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
 
@@ -368,12 +383,23 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
                     if idx >=0 and idx < page_length:
                         table_chars[idx] = table_id
 
-        # build page text by replacing charcters in table spans with table html if using layout
+        # build page text by replacing charcters in table spans with table html and replace the characters corresponding to headers with html headers, if using layout
         page_text = ""
         added_tables = set()
         for idx, table_id in enumerate(table_chars):
             if table_id == -1:
+                position = page_offset + idx
+                if position in roles_start.keys():
+                    role = roles_start[position]
+                    if role in PDF_HEADERS:
+                        page_text += f"<{PDF_HEADERS[role]}>"
+                if position in roles_end.keys():
+                    role = roles_end[position]
+                    if role in PDF_HEADERS:
+                        page_text += f"</{PDF_HEADERS[role]}>"
+
                 page_text += form_recognizer_results.content[page_offset + idx]
+                
             elif not table_id in added_tables:
                 page_text += table_to_html(tables_on_page[table_id])
                 added_tables.add(table_id)
@@ -450,7 +476,8 @@ def chunk_content(
     min_chunk_size: int = 10,
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
-    cracked_pdf = False
+    cracked_pdf = False,
+    use_layout = False
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -467,8 +494,10 @@ def chunk_content(
     """
 
     try:
-        if file_name is None or cracked_pdf:
+        if file_name is None or (cracked_pdf and not use_layout):
             file_format = "text"
+        elif cracked_pdf:
+            file_format = "html"
         else:
             file_format = _get_file_format(file_name, extensions_to_process)
             if file_format is None:
@@ -559,7 +588,8 @@ def chunk_file(
         url=url,
         token_overlap=max(0, token_overlap),
         extensions_to_process=extensions_to_process,
-        cracked_pdf=cracked_pdf
+        cracked_pdf=cracked_pdf,
+        use_layout=use_layout
     )
 
 
