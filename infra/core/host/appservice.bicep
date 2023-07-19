@@ -108,6 +108,11 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
             clientSecretSettingName: 'AUTH_CLIENT_SECRET'
             openIdIssuer: authIssuerUri
           }
+          validation: {
+            defaultAuthorizationPolicy: {
+              allowedApplications: [ ]
+            }
+          }
         }
       }
       login: {
