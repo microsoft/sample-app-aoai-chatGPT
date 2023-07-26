@@ -4,7 +4,7 @@ import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCi
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
-import rehypeRaw from "rehype-raw"; 
+import rehypeRaw from "rehype-raw";
 
 import styles from "./Chat.module.css";
 import Azure from "../../assets/Azure.svg";
@@ -31,7 +31,7 @@ const Chat = () => {
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
-    
+
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
         if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
@@ -56,18 +56,23 @@ const Chat = () => {
         };
 
         const request: ConversationRequest = {
-            messages: [...answers.filter((answer) => answer.role !== "error"), userMessage]
+            messages: [
+                ...answers
+                    .filter((answer) => answer.role !== "error")
+                    .slice(-3), // Only send the last 3 messages
+                userMessage
+            ]
         };
 
         let result = {} as ChatResponse;
         try {
             const response = await conversationApi(request, abortController.signal);
             if (response?.body) {
-                
+
                 const reader = response.body.getReader();
                 let runningText = "";
                 while (true) {
-                    const {done, value} = await reader.read();
+                    const { done, value } = await reader.read();
                     if (done) break;
 
                     var text = new TextDecoder("utf-8").decode(value);
@@ -85,8 +90,8 @@ const Chat = () => {
                 }
                 setAnswers([...answers, userMessage, ...result.choices[0].messages]);
             }
-            
-        } catch ( e )  {
+
+        } catch (e) {
             if (!abortController.signal.aborted) {
                 console.error(result);
                 let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
@@ -152,16 +157,16 @@ const Chat = () => {
         <div className={styles.container} role="main">
             {showAuthMessage ? (
                 <Stack className={styles.chatEmptyState}>
-                    <ShieldLockRegular className={styles.chatIcon} style={{color: 'darkorange', height: "200px", width: "200px"}}/>
+                    <ShieldLockRegular className={styles.chatIcon} style={{ color: 'darkorange', height: "200px", width: "200px" }} />
                     <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
                     <h2 className={styles.chatEmptyStateSubtitle}>
-                        This app does not have authentication configured. Please add an identity provider by finding your app in the 
+                        This app does not have authentication configured. Please add an identity provider by finding your app in the
                         <a href="https://portal.azure.com/" target="_blank"> Azure Portal </a>
-                        and following 
-                         <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</a>.
+                        and following
+                        <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</a>.
                     </h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>Authentication configuration takes a few minutes to apply. </strong></h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></h2>
+                    <h2 className={styles.chatEmptyStateSubtitle} style={{ fontSize: "20px" }}><strong>Authentication configuration takes a few minutes to apply. </strong></h2>
+                    <h2 className={styles.chatEmptyStateSubtitle} style={{ fontSize: "20px" }}><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></h2>
                 </Stack>
             ) : (
                 <Stack horizontal className={styles.chatRoot}>
@@ -173,11 +178,11 @@ const Chat = () => {
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+                                <h1 className={styles.chatEmptyStateTitle}>チャットを始めましょう！</h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}>このチャットボットはあなたの質問に答えるために作成されました！</h2>
                             </Stack>
                         ) : (
-                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
+                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">
                                 {answers.map((answer, index) => (
                                     <>
                                         {answer.role === "user" ? (
@@ -195,7 +200,7 @@ const Chat = () => {
                                                 />
                                             </div> : answer.role === "error" ? <div className={styles.chatMessageError}>
                                                 <Stack horizontal className={styles.chatMessageErrorContent}>
-                                                    <ErrorCircleRegular className={styles.errorIcon} style={{color: "rgba(182, 52, 67, 1)"}} />
+                                                    <ErrorCircleRegular className={styles.errorIcon} style={{ color: "rgba(182, 52, 67, 1)" }} />
                                                     <span>Error</span>
                                                 </Stack>
                                                 <span className={styles.chatMessageErrorContent}>{answer.content}</span>
@@ -211,7 +216,7 @@ const Chat = () => {
                                         <div className={styles.chatMessageGpt}>
                                             <Answer
                                                 answer={{
-                                                    answer: "Generating answer...",
+                                                    answer: "回答を考えていますー...",
                                                     citations: []
                                                 }}
                                                 onCitationClicked={() => null}
@@ -225,17 +230,17 @@ const Chat = () => {
 
                         <Stack horizontal className={styles.chatInput}>
                             {isLoading && (
-                                <Stack 
+                                <Stack
                                     horizontal
                                     className={styles.stopGeneratingContainer}
                                     role="button"
-                                    aria-label="Stop generating"
+                                    aria-label="生成を停止させます"
                                     tabIndex={0}
                                     onClick={stopGenerating}
                                     onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
-                                    >
-                                        <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
-                                        <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
+                                >
+                                    <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true" />
+                                    <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
                                 </Stack>
                             )}
                             <div
@@ -243,42 +248,44 @@ const Chat = () => {
                                 tabIndex={0}
                                 onClick={clearChat}
                                 onKeyDown={e => e.key === "Enter" || e.key === " " ? clearChat() : null}
-                                aria-label="Clear session"
-                                >
+                                aria-label="セッションをクリアします"
+                            >
                                 <BroomRegular
                                     className={styles.clearChatBroom}
-                                    style={{ background: isLoading || answers.length === 0 ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)", 
-                                            cursor: isLoading || answers.length === 0 ? "" : "pointer"}}
+                                    style={{
+                                        background: isLoading || answers.length === 0 ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                                        cursor: isLoading || answers.length === 0 ? "" : "pointer"
+                                    }}
                                     aria-hidden="true"
                                 />
                             </div>
                             <QuestionInput
                                 clearOnSend
-                                placeholder="Type a new question..."
+                                placeholder="質問をどうぞー..."
                                 disabled={isLoading}
                                 onSend={question => makeApiRequest(question)}
                             />
                         </Stack>
                     </div>
                     {answers.length > 0 && isCitationPanelOpen && activeCitation && (
-                    <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                        <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                            <span className={styles.citationPanelHeader}>Citations</span>
-                            <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
-                        </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
-                        <div tabIndex={0}> 
-                        <ReactMarkdown 
-                            linkTarget="_blank"
-                            className={styles.citationPanelContent}
-                            children={activeCitation[0]} 
-                            remarkPlugins={[remarkGfm]} 
-                            rehypePlugins={[rehypeRaw]}
-                        />
-                        </div>
-                        
-                    </Stack.Item>
-                )}
+                        <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
+                            <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
+                                <span className={styles.citationPanelHeader}>Citations</span>
+                                <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)} />
+                            </Stack>
+                            <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
+                            <div tabIndex={0}>
+                                <ReactMarkdown
+                                    linkTarget="_blank"
+                                    className={styles.citationPanelContent}
+                                    children={activeCitation[0]}
+                                    remarkPlugins={[remarkGfm]}
+                                    rehypePlugins={[rehypeRaw]}
+                                />
+                            </div>
+
+                        </Stack.Item>
+                    )}
                 </Stack>
             )}
         </div>

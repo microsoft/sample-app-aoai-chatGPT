@@ -87,7 +87,7 @@ export const Answer = ({
                     </Stack.Item>
                 )}
                 <Stack.Item className={styles.answerDisclaimerContainer}>
-                    <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+                    <span className={styles.answerDisclaimer}>AI が生成したメッセージは間違っている可能性がありますー</span>
                 </Stack.Item>
                 </Stack>
                 {chevronIsExpanded && 
