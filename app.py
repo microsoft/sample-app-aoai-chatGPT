@@ -3,17 +3,26 @@ import os
 import logging
 import requests
 import openai
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
-@app.route("/", defaults={"path": "index.html"})
-@app.route("/<path:path>")
-def static_file(path):
-    return app.send_static_file(path)
+# Static Files
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+@app.route("/favicon.ico")
+def favicon():
+    return app.send_static_file('favicon.ico')
+
+@app.route("/assets/<path:path>")
+def assets(path):
+    return send_from_directory("static/assets", path)
+
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
