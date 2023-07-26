@@ -15,7 +15,7 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 logger.addHandler(AzureLogHandler())
 
-LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+logger.setLevel(logging.INFO)
 
 @app.route("/", defaults={"path": "index.html"})
 @app.route("/<path:path>")
