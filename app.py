@@ -15,6 +15,8 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 logger.addHandler(AzureLogHandler())
 
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+
 @app.route("/", defaults={"path": "index.html"})
 @app.route("/<path:path>")
 def static_file(path):
@@ -185,7 +187,7 @@ def stream_without_data(response):
             }]
         }
         yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
-    logger.warning(f"response_text: {responseText}")
+    logger.info(f"response_text: {responseText}")
 
 
 def conversation_without_data(request):
@@ -208,7 +210,7 @@ def conversation_without_data(request):
             "content": message["content"]
         })
 
-    logger.warning(f"request_text: {[message for message in request_messages if message['role'] == 'user'][-1]['content']}")
+    logger.info(f"request_text: {[message for message in request_messages if message['role'] == 'user'][-1]['content']}")
 
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
