@@ -1,4 +1,4 @@
-azure-identity==1.13.0b4
+azure-identity==1.14.0b2
 Flask==2.3.2
 openai==0.27.7
 azure-search-documents==11.4.0b6
