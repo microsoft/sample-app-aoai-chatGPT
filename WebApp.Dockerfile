@@ -10,7 +10,7 @@ COPY --chown=node:node ./static/ ./static
 WORKDIR /home/node/app/frontend
 RUN npm run build
   
-FROM python:3.11 
+FROM python:3.11-alpine 
 RUN apk add --no-cache --virtual .build-deps \  
     build-base \  
     libffi-dev \  
