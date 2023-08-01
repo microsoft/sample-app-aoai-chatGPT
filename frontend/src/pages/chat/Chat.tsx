@@ -40,6 +40,7 @@ const Chat = () => {
         else {
             setShowAuthMessage(false);
         }
+        setShowAuthMessage(false);
     }
 
     const makeApiRequest = async (question: string) => {
