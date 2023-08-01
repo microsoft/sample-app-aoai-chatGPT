@@ -30,10 +30,10 @@ const Chat = () => {
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const abortFuncs = useRef([] as AbortController[]);
-    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
     
     const getUserInfoList = async () => {
-        //setShowAuthMessage(false);
+        setShowAuthMessage(false);
         // const userInfoList = await getUserInfo();
         // if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
         //     setShowAuthMessage(true);
