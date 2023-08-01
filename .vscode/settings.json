@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/b0727074-8d1f-476c-922b-0012e143b3b4/resourceGroups/rg-expidxai-search-qna-dev/providers/Microsoft.Web/sites/Experience-Index-QnA",
+    "appService.deploySubpath": "."
+}
