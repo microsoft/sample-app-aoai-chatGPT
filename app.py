@@ -10,14 +10,17 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="static")
 
+
 # Static Files
 @app.route("/")
 def index():
     return app.send_static_file("index.html")
 
+
 @app.route("/favicon.ico")
 def favicon():
     return app.send_static_file('favicon.ico')
+
 
 @app.route("/assets/<path:path>")
 def assets(path):
@@ -45,22 +48,28 @@ AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
-AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE",
+                                             "You are an AI assistant that helps people find information.")
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
-AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
+AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME",
+                                         "gpt-35-turbo")  # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
+
 def is_chat_model():
-    if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
+    if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k',
+                                                                                         'gpt-35-turbo-16k']:
         return True
     return False
+
 
 def should_use_data():
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
         return True
     return False
+
 
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
@@ -138,7 +147,7 @@ def stream_with_data(body, headers, endpoint):
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
                     if role == "tool":
                         response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
-                    elif role == "assistant": 
+                    elif role == "assistant":
                         response["choices"][0]["messages"].append({
                             "role": "assistant",
                             "content": ""
@@ -156,7 +165,7 @@ def stream_with_data(body, headers, endpoint):
 def conversation_with_data(request):
     body, headers = prepare_body_headers_with_data(request)
     endpoint = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
-    
+
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
@@ -168,6 +177,7 @@ def conversation_with_data(request):
             return Response(stream_with_data(body, headers, endpoint), mimetype='text/event-stream')
         else:
             return Response(None, mimetype='text/event-stream')
+
 
 def stream_without_data(response):
     responseText = ""
@@ -207,13 +217,13 @@ def conversation_without_data(request):
 
     for message in request_messages:
         messages.append({
-            "role": message["role"] ,
+            "role": message["role"],
             "content": message["content"]
         })
 
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
-        messages = messages,
+        messages=messages,
         temperature=float(AZURE_OPENAI_TEMPERATURE),
         max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
         top_p=float(AZURE_OPENAI_TOP_P),
@@ -242,6 +252,7 @@ def conversation_without_data(request):
         else:
             return Response(None, mimetype='text/event-stream')
 
+
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
     try:
@@ -253,6 +264,7 @@ def conversation():
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run()
