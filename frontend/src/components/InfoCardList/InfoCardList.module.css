@@ -1,6 +1,7 @@
 @import '../../styles/variables/colors.css';
 @import '../../styles/variables/typography.css';
 
+
 .cardListContainer {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
