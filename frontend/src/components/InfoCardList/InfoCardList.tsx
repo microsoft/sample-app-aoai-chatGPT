@@ -2,7 +2,7 @@ import InfoCard, { IInfoCard } from "../InfoCard/InfoCard";
 import Sparkle from "../../assets/Sparkle.svg";
 import Zap from "../../assets/Zap.svg";
 import Exclamation from "../../assets/Exclamation.svg";
-import Send from "../../assets/Send.svg";
+import RightArrow from "../../assets/RightArrow.svg";
 import styles from "./InfoCardList.module.css";
 
 
@@ -20,17 +20,17 @@ const cardList: IInfoCard[] = [
         details: [
             { 
                 info: '"Is alternate side street parking in effect?"',
-                icon: Send,
+                icon: RightArrow,
                 emitQuestion: true,
             },
             { 
                 info: '"I\'d like to start a new cafe and bakery in Manhattan"',
-                icon: Send,
+                icon: RightArrow,
                 emitQuestion: true,
             },
             { 
                 info: 'How do I file a pothole complaint?',
-                icon: Send,
+                icon: RightArrow,
                 emitQuestion: true,
             }
         ]

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, Icon } from "semantic-ui-react";
+import { Card } from "semantic-ui-react";
 import styles from "./InfoCard.module.css";
 import 'semantic-ui-css/semantic.min.css';
 
@@ -46,7 +46,7 @@ export const InfoCard = ({ title, icon, details, onSendQuestion, isFirstCard }: 
                         onClick={() => handleDetailClick(detail)}
                         >
                             <span>{detail.info}</span>
-                            {detail.icon && <img className={styles.imageItem} src={detail.icon} alt="Icon"/>}
+                            {detail.icon && <img className={styles.descriptionImage} src={detail.icon} alt="Icon"/>}
 
                         </div>
                     ))}
