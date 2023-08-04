@@ -1,5 +1,7 @@
 import InfoCard, { IInfoCard } from "../InfoCard/InfoCard";
-import Azure from "../../assets/Azure.svg";
+import Sparkle from "../../assets/Sparkle.svg";
+import Zap from "../../assets/Zap.svg";
+import Exclamation from "../../assets/Exclamation.svg";
 import Send from "../../assets/Send.svg";
 import styles from "./InfoCardList.module.css";
 
@@ -11,7 +13,7 @@ interface IInfoCardList {
 const cardList: IInfoCard[] = [
     {
         title: 'Examples',
-        icon: Azure,
+        icon: Sparkle,
         onSendQuestion: (question: string) => {
             return;
         },
@@ -36,7 +38,7 @@ const cardList: IInfoCard[] = [
     },
     {
         title: 'Capabilities',
-        icon: Azure,
+        icon: Zap,
         details: [
             { 
                 info: 'Your conversations are kept private and confidental.',
@@ -52,7 +54,7 @@ const cardList: IInfoCard[] = [
     },
     {
         title: 'Limitations',
-        icon: Azure,
+        icon: Exclamation,
         details: [
             { 
                 info: 'May occasionally generate incorrect information.',

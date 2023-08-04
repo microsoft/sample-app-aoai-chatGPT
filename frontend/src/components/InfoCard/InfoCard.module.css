@@ -11,6 +11,14 @@
     color: var(--theme-color-neutral-10);
     margin-bottom: 25px;
     font-weight: var(--theme-typography-front-weight-mid);
+    position: relative;
+}
+
+.cardHeaderIcon {
+    position: absolute;
+    width: 93px;
+    top: -8px;
+    left: 5px;
 }
 
 .firstCardHeader {
