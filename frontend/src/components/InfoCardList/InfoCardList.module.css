@@ -4,4 +4,13 @@
     gap: 20px;
     padding: 20px;
     height: 350px;
+
+}
+
+@media(max-width: 800px) {
+    .cardListContainer {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
 }

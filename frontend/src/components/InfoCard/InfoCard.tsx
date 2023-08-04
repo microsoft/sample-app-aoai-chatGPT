@@ -28,7 +28,7 @@ export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) =>
     };
 
     return (
-        <Card className={styles.cardContainer} style={{ marginTop: 'unset'}}>
+        <Card className={styles.cardContainer} style={{ marginTop: 'unset', height: '350px'}}>
             <Card.Content>
                 <Card.Header>
                     {icon && <Icon name="image"/>}
