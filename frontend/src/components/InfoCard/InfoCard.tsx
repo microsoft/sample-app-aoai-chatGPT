@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, Icon } from "semantic-ui-react";
+import styles from "./InfoCard.module.css";
 
 export interface IInfoCard {
     title: string;
@@ -11,20 +12,23 @@ export interface IInfoCard {
 interface Detail {
     info: string;
     icon?: string;
+    emitQuestion?: boolean;
 }
 
 export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) => {
     const [question, setQuestion] = useState<string>("");
 
-    const handleDetailClick = (info: string) => {
-        setQuestion(info);
-        if (typeof onSendQuestion === 'function') {
-            onSendQuestion(info);
+    const handleDetailClick = (detail: Detail) => {
+        if (typeof onSendQuestion !== 'function' || !detail.emitQuestion) {
+            return;
         }
+        setQuestion(detail.info);
+        onSendQuestion(detail.info);
+
     };
 
     return (
-        <Card>
+        <Card className={styles.cardContainer} style={{ marginTop: 'unset'}}>
             <Card.Content>
                 <Card.Header>
                     {icon && <Icon name="image"/>}
@@ -35,7 +39,7 @@ export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) =>
                         <div 
                         key={index} 
                         className="info-item"
-                        onClick={() => handleDetailClick(detail.info)}
+                        onClick={() => handleDetailClick(detail)}
                         >
                             <span>{detail.info}</span>
                             {detail.icon && <img src={detail.icon} alt="Icon"/>}

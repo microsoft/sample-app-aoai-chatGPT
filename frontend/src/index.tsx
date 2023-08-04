@@ -4,6 +4,8 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { initializeIcons } from "@fluentui/react";
 
 import "./index.css";
+import 'semantic-ui-css/semantic.min.css';
+
 
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";

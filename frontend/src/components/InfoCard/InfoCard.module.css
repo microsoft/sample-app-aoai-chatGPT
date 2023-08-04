@@ -1,24 +1,6 @@
-:host {
-    
-    .cardContainer {
-        height: 120px;
-        position: absolute;
-        left: 6.5%;
-        right: 0%;
-        top: 0%;
-        bottom: 0%;
-        background: #FFFFFF;
-        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-        border-radius: 8px;
-    }
-    
-    .detailContainer {
-    
-    }
-    
-    .headerContainer {
-    
-    }
-
+.cardContainer {
+    height: 100%;
 }
+
+
 

@@ -1,6 +1,7 @@
 import InfoCard, { IInfoCard } from "../InfoCard/InfoCard";
 import Azure from "../../assets/Azure.svg";
 import Send from "../../assets/Send.svg";
+import styles from "./InfoCardList.module.css";
 
 
 interface IInfoCardList {
@@ -18,14 +19,17 @@ const cardList: IInfoCard[] = [
             { 
                 info: '"Is alternate side street parking in effect?"',
                 icon: Send,
+                emitQuestion: true,
             },
             { 
                 info: '"I\'d like to start a new cafe and bakery in Manhattan"',
                 icon: Send,
+                emitQuestion: true,
             },
             { 
                 info: 'How do I file a pothole complaint?',
                 icon: Send,
+                emitQuestion: true,
             }
         ]
 
@@ -70,7 +74,7 @@ export const InfoCardList = ({ onQuestionReceived }: IInfoCardList) => {
     }
 
     return (
-       <div className="">
+       <div className={styles.cardListContainer}>
         {cardList.map((card, index) => (
             <InfoCard
                 key={index}

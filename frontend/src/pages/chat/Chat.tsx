@@ -169,12 +169,6 @@ const Chat = () => {
                     <div className={styles.chatContainer}>
                         {!lastQuestionRef.current ? (
                             <Stack className={styles.chatEmptyState}>
-                                <img
-                                    src={Azure}
-                                    className={styles.chatIcon}
-                                    aria-hidden="true"
-                                />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
 
                                 <InfoCardList onQuestionReceived={makeApiRequest}/>
                             </Stack>
