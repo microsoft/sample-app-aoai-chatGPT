@@ -1,26 +1,22 @@
 import { useState } from "react";
-import { Stack, TextField } from "@fluentui/react";
-import { SendRegular } from "@fluentui/react-icons";
-import Send from "../../assets/Send.svg";
-import styles from "./InfoCard.module.css";
 import { Card, Icon } from "semantic-ui-react";
 
-interface Props {
+export interface IInfoCard {
     title: string;
     icon?: string;
     details: Detail[];
+    onSendQuestion?: (question: string) => void;
 }
 
 interface Detail {
     info: string;
     icon?: string;
-    onSendQuestion?: (question: string) => void;
 }
 
-export const InfoCard = ({ title, icon, details }: Props) => {
+export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) => {
     const [question, setQuestion] = useState<string>("");
 
-    const handleDetailClick = (info: string, onSendQuestion?: (question: string) => void) => {
+    const handleDetailClick = (info: string) => {
         setQuestion(info);
         if (typeof onSendQuestion === 'function') {
             onSendQuestion(info);
@@ -39,7 +35,7 @@ export const InfoCard = ({ title, icon, details }: Props) => {
                         <div 
                         key={index} 
                         className="info-item"
-                        onClick={() => handleDetailClick(detail.info, detail.onSendQuestion)}
+                        onClick={() => handleDetailClick(detail.info)}
                         >
                             <span>{detail.info}</span>
                             {detail.icon && <img src={detail.icon} alt="Icon"/>}
