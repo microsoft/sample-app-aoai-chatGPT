@@ -1,6 +1,46 @@
+@import '../../styles/variables/colors.css';
+@import '../../styles/variables/typography.css';
+
 .cardContainer {
-    height: 100%;
+    box-shadow: var(--theme-color-box-shadow) !important;
 }
 
+.cardHeader {
+    text-align: center !important;
+    margin-top: 20px !important;
+    color: var(--theme-color-neutral-10);
+    margin-bottom: 25px;
+    font-weight: var(--theme-typography-front-weight-mid);
+}
 
+.firstCardHeader {
+    color: var(--theme-color-neutral-5) !important;
+}
+
+.cardDescription {
+    display: flex;
+    background-color: var(--theme-color-neutral-30);
+    padding: 10px 20px;
+    border-radius: 8px;
+    height: 64px;
+    margin-top: 15px;
+    color: var(--theme-color-neutral-10);
+    font-weight: var(--theme-typography-front-weight-mid);
+}
+
+.imageItem {
+    height: 24px;
+    width: 24px;
+    margin-top: 10px;
+}
+
+.firstCardDetails {
+    background-color: var(--theme-color-tertiary-20);
+    color: var(--theme-color-neutral-5);
+}
+
+.firstCardDetails:hover {
+    background-color: var(--theme-color-tertiary-10);
+    cursor: pointer;
+}
 

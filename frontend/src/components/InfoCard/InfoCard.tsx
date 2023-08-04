@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Card, Icon } from "semantic-ui-react";
 import styles from "./InfoCard.module.css";
+import 'semantic-ui-css/semantic.min.css';
 
 export interface IInfoCard {
     title: string;
     icon?: string;
     details: Detail[];
     onSendQuestion?: (question: string) => void;
+    isFirstCard?: boolean;
 }
 
 interface Detail {
@@ -15,7 +17,7 @@ interface Detail {
     emitQuestion?: boolean;
 }
 
-export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) => {
+export const InfoCard = ({ title, icon, details, onSendQuestion, isFirstCard }: IInfoCard) => {
     const [question, setQuestion] = useState<string>("");
 
     const handleDetailClick = (detail: Detail) => {
@@ -30,7 +32,7 @@ export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) =>
     return (
         <Card className={styles.cardContainer} style={{ marginTop: 'unset', height: '350px'}}>
             <Card.Content>
-                <Card.Header>
+                <Card.Header className={`${styles.cardHeader} ${isFirstCard ? styles.firstCardHeader : ''}`}>
                     {icon && <Icon name="image"/>}
                     {title}
                 </Card.Header>
@@ -38,11 +40,11 @@ export const InfoCard = ({ title, icon, details, onSendQuestion }: IInfoCard) =>
                     {details.map((detail, index) => (
                         <div 
                         key={index} 
-                        className="info-item"
+                        className={`${styles.cardDescription} ${isFirstCard ? styles.firstCardDetails : ''}`}
                         onClick={() => handleDetailClick(detail)}
                         >
                             <span>{detail.info}</span>
-                            {detail.icon && <img src={detail.icon} alt="Icon"/>}
+                            {detail.icon && <img className={styles.imageItem} src={detail.icon} alt="Icon"/>}
 
                         </div>
                     ))}

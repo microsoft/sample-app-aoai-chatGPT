@@ -1,3 +1,5 @@
+@import '../../styles/variables/colors.css';
+
 .container {
     flex: 1;
     display: flex;
@@ -273,3 +275,4 @@ a {
     padding-left: 5px;
     padding-right: 5px;
 }
+

@@ -81,6 +81,7 @@ export const InfoCardList = ({ onQuestionReceived }: IInfoCardList) => {
                 title={card.title}
                 icon={card.icon}
                 details={card.details}
+                isFirstCard={index === 0}
                 onSendQuestion={handleSendQuestion}
             />
         ))}
