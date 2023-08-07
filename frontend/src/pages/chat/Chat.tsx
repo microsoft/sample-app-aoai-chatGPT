@@ -167,10 +167,10 @@ const Chat = () => {
       citation.id,
       citation.title ?? "",
       citation.filepath ?? "",
-      "",
+      citation.url ?? "",
       "",
     ]);
-    setIsCitationPanelOpen(true);
+    window.open(citation.url ?? '', '_blank')?.focus();
   };
 
   const parseCitationFromMessage = (message: ChatMessage) => {
