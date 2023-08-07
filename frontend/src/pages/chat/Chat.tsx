@@ -27,6 +27,7 @@ import {
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
+import { InfoCardList } from "../../components/InfoCardList";
 
 const Chat = () => {
   const lastQuestionRef = useRef<string>("");
@@ -237,7 +238,7 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img
                   src={MyCityTitle}
-                  className={styles.chatIcon}
+                  className={styles.titleIcon}
                   aria-hidden="true"
                 />
                 <h2 className={styles.chatEmptyStateSubtitle}>
@@ -245,6 +246,7 @@ const Chat = () => {
                   information on a wide range of topics, offer suggestions, and
                   engage in discussions.
                 </h2>
+                <InfoCardList onQuestionReceived={makeApiRequest}/>
               </Stack>
             ) : (
               <div

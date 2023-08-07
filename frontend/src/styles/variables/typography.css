@@ -1,0 +1,14 @@
+:root {
+    --theme-typography-font-weight-normal: 400;
+    --theme-typography-front-weight-mid: 600;
+    --theme-typography-front-weight-bold: 700;
+
+    --theme-typography-font-size-xx-small: 10px;
+    --theme-typography-font-size-x-small: 12px;
+    --theme-typography-font-size-small: 14px;
+    --theme-typography-font-size-normal: 16px;
+    --theme-typography-font-size-large: 18px;
+    --theme-typography-font-size-x-large: 20px;
+    --theme-typography-font-size-xx-large: 22px;
+
+}

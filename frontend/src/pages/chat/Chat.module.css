@@ -1,3 +1,5 @@
+@import '../../styles/variables/colors.css';
+
 .container {
   flex: 1;
   display: flex;
@@ -81,6 +83,11 @@
   width: 299px;
 }
 
+.titleIcon {
+    height: 30px;
+    width: 299px;
+    margin-top: 5%;
+  }
 .chatUserAvatarIcon {
   height: 40px;
   width: 40px;
@@ -320,6 +327,7 @@
 }
 
 a {
-  padding-left: 5px;
-  padding-right: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
+

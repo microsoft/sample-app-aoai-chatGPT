@@ -1,0 +1,12 @@
+:root {
+    --black-shadow: 6px 17px 16px 0px #b7b7b730;
+
+    --theme-color-box-shadow: var(--black-shadow);
+
+    --theme-color-tertiary-20: #fef2f4;
+    --theme-color-tertiary-10: #fae0f0;
+
+    --theme-color-neutral-30: #f5f5f5;
+    --theme-color-neutral-10: #1c1c1c;
+    --theme-color-neutral-5: #080707;
+}

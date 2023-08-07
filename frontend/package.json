@@ -19,7 +19,9 @@
     "react-router-dom": "^6.8.1",
     "rehype-raw": "^6.1.1",
     "remark-gfm": "^3.0.1",
-    "remark-supersub": "^1.0.0"
+    "remark-supersub": "^1.0.0",
+    "semantic-ui-css": "^2.5.0",
+    "semantic-ui-react": "^2.1.4"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.7",
