@@ -83,6 +83,11 @@
   width: 299px;
 }
 
+.titleIcon {
+    height: 30px;
+    width: 299px;
+    margin-top: 5%;
+  }
 .chatUserAvatarIcon {
   height: 40px;
   width: 40px;

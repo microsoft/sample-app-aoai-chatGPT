@@ -238,7 +238,7 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img
                   src={MyCityTitle}
-                  className={styles.chatIcon}
+                  className={styles.titleIcon}
                   aria-hidden="true"
                 />
                 <h2 className={styles.chatEmptyStateSubtitle}>
