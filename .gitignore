@@ -1,7 +1,10 @@
 .venv
+.idea
 frontend/node_modules
 .env
+.env-*
 static
 .azure/
 __pycache__/
 node_modules
+*.iml

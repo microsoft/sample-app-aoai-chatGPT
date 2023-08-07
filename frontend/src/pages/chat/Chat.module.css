@@ -1,275 +1,325 @@
 @import '../../styles/variables/colors.css';
 
 .container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .chatRoot {
-    flex: 1;
-    display: flex;
-    margin-top: 0px;
-    margin-bottom: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
-    gap: 20px;
+  flex: 1;
+  display: flex;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  gap: 20px;
 }
 
 .chatContainer {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%);
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-    border-radius: 8px;
-    overflow-y: auto;
-    max-height: calc(100vh - 100px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fafafa;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
 }
 
 .chatEmptyState {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .chatEmptyStateTitle {
-    font-style: normal;
-    font-weight: 700;
-    font-size: 36px;
-    display: flex;
-    align-items: flex-end;
-    text-align: center;
-    line-height: 24px;
-    margin-top: 36px;
-    margin-bottom: 0px;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 32px;
+  display: flex;
+  align-items: flex-end;
+  text-align: center;
+  line-height: 24px;
+  margin-top: 36px;
+  margin-bottom: 0px;
 }
 
 .chatEmptyStateSubtitle {
-    margin-top: 20px;
+  margin-top: 20px;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 150%;
+  display: flex;
+  align-items: flex-end;
+  text-align: center;
+  letter-spacing: -0.01em;
+  color: #1c1c1c;
+  width: 60%;
+}
+
+@media only screen and (max-width: 600px) {
+  .chatEmptyStateSubtitle {
+    padding: 24px;
     font-style: normal;
-    font-weight: 400;
+    font-weight: 600;
     font-size: 16px;
-    line-height: 150%;
+    line-height: 130%;
     display: flex;
     align-items: flex-end;
     text-align: center;
     letter-spacing: -0.01em;
-    color: #616161;
+    color: #1c1c1c;
+    width: 100%;
+  }
+}
+.chatIcon {
+  height: 30px;
+  width: 299px;
 }
 
-.chatIcon {
-    height: 62px;
-    width: 62px;
+.chatUserAvatarIcon {
+  height: 40px;
+  width: 40px;
 }
 
 .chatMessageStream {
-    flex-grow: 1;
-    max-width: 1028px;
-    width: 100%;
-    overflow-y: auto;
-    padding-left: 24px;
-    padding-right: 24px;
-    display: flex;
-    flex-direction: column;
-    margin-top: 24px;
+  flex-grow: 1;
+  max-width: 1028px;
+  width: 100%;
+  overflow-y: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 24px;
 }
 
 .chatMessageUser {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 12px;
+  display: flex;
+  justify-content: start;
+  margin-bottom: 12px;
+}
+
+.chatMessageUserWrapper {
+  display: flex;
 }
 
 .chatMessageUserMessage {
-    padding: 20px;
-    background: #EDF5FD;
-    border-radius: 8px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 22px;
-    color: #242424;
-    flex: none;
-    order: 0;
-    flex-grow: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    max-width: 800px;
+  display: inline-flex;
+  height: 60px;
+  padding: 0px 544px 0px 22px;
+  align-items: center;
+  flex-shrink: 0;
+
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: var(--white, #fff);
+
+  color: #0d0c0c;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 100%; /* 16px */
 }
 
 .chatMessageGpt {
-    margin-bottom: 12px;
-    max-width: 80%;
-    display: flex;
+  display: flex;
+  width: 940px;
+  padding: 22px 22px 73px 22px;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 6px 17px 16px 4px rgba(183, 183, 183, 0.19);
+
+  color: #0d0c0c;
+  font-family: Lora;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px; /* 150% */
 }
 
 .chatMessageError {
-    padding: 20px;
-    /* background: #EDF5FD; */
-    border-radius: 8px;
-    box-shadow: rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px;
-    
-    color: #242424;
-    flex: none;
-    order: 0;
-    flex-grow: 0;
-    
-    max-width: 800px;
-    /* filter: drop-shadow(rgba(182, 52, 67, 1) 1px 1px 2px) drop-shadow(rgba(182, 52, 67, 1) 0px 0px 1px); */
+  padding: 20px;
+  /* background: #EDF5FD; */
+  border-radius: 8px;
+  box-shadow: rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px;
+
+  color: #242424;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+
+  max-width: 800px;
+  /* filter: drop-shadow(rgba(182, 52, 67, 1) 1px 1px 2px) drop-shadow(rgba(182, 52, 67, 1) 0px 0px 1px); */
 }
 
 .chatMessageErrorContent {
-    font-family: "Segoe UI";
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 22px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    gap: 12px;
-    align-items: center;
+  font-family: "Segoe UI";
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  gap: 12px;
+  align-items: center;
 }
 
 .chatInput {
-    position: sticky;
-    flex: 0 0 100px;
-    padding-top: 12px;
-    padding-bottom: 24px;
-    padding-left: 24px;
-    padding-right: 24px;
-    width: calc(100% - 100px);
+  position: sticky;
+  flex: 0 0 100px;
+  padding-top: 12px;
+  padding-bottom: 24px;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: calc(100% - 100px);
+  max-width: 1028px;
+  margin-bottom: 50px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media only screen and (max-width: 600px) {
+  .chatInput {
+    padding-top: 6px;
+    padding-bottom: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
     max-width: 1028px;
     margin-bottom: 50px;
     margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
 }
 
-.clearChatBroom {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 8px;
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    left: 12px;
-    top: 66px;
-    color: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 20px;
-    z-index: 1;
+.chatDisclaimer {
+  margin-top: 24px;
+  color: #727478;
+  text-align: center;
+  font-family: Montserrat;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 100%; /* 12px */
 }
 
 .stopGeneratingContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 16px;
-    gap: 4px;
-    position: absolute;
-    width: 161px;
-    height: 32px;
-    left: calc(50% - 161px/2 + 25.8px);
-    bottom: 116px;
-    border: 1px solid #D1D1D1;
-    border-radius: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 16px;
+  gap: 4px;
+  position: absolute;
+  width: 161px;
+  height: 32px;
+  left: calc(50% - 161px / 2 + 25.8px);
+  bottom: 116px;
+  border: 1px solid #d1d1d1;
+  border-radius: 16px;
 }
 
 .stopGeneratingIcon {
-    width: 14px;
-    height: 14px;
-    color: #424242;
+  width: 14px;
+  height: 14px;
+  color: #424242;
 }
 
 .stopGeneratingText {
-    width: 103px;
-    height: 20px;
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #242424;
-    flex: none;
-    order: 0;
-    flex-grow: 0;
+  width: 103px;
+  height: 20px;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #242424;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
 }
 
 .citationPanel {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 16px 16px;
-    gap: 8px;
-    background: #FFFFFF;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-    border-radius: 8px;
-    flex: auto;
-    order: 0;
-    align-self: stretch;
-    flex-grow: 0.3;
-    max-width: 30%;
-    overflow-y: scroll;
-    max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 16px 16px;
+  gap: 8px;
+  background: #ffffff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  flex: auto;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0.3;
+  max-width: 30%;
+  overflow-y: scroll;
+  max-height: calc(100vh - 100px);
 }
 
 .citationPanelHeaderContainer {
-    width: 100%;
+  width: 100%;
 }
 
 .citationPanelHeader {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 18px;
-    line-height: 24px;
-    color: #000000;
-    flex: none;
-    order: 0;
-    flex-grow: 0;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  color: #000000;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
 }
 
 .citationPanelDismiss {
-    width: 18px;
-    height: 18px;
-    color: #424242;
+  width: 18px;
+  height: 18px;
+  color: #424242;
 }
 
 .citationPanelDismiss:hover {
-    background-color: #D1D1D1;
-    cursor: pointer;
+  background-color: #d1d1d1;
+  cursor: pointer;
 }
 
 .citationPanelTitle {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 16px;
-    line-height: 22px;
-    color: #323130;
-    margin-top: 12px;
-    margin-bottom: 12px;
-} 
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  color: #323130;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
 
 .citationPanelContent {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: #000000;
-    flex: none;
-    order: 1;
-    align-self: stretch;
-    flex-grow: 0;
-} 
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #000000;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
 
 a {
     padding-left: 5px;
