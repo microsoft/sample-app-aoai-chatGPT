@@ -19,6 +19,11 @@ from bs4 import BeautifulSoup
 from langchain.text_splitter import MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
 
+import traceback
+from random import random
+import functools
+import time
+
 FILE_FORMAT_DICT = {
         "md": "markdown",
         "txt": "text",
@@ -36,6 +41,33 @@ PDF_HEADERS = {
     "title": "h1",
     "sectionHeading": "h2"
 }
+
+
+def retry_with_exponential_backoff(max_retries: int = 50, delay_factor: float = 2.0, max_delay: float = 300.0, jitter: bool = True, verbose: bool = True):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries <= max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if retries == max_retries:
+                        raise e
+
+                    sleep_time = delay_factor ** retries
+                    if jitter:
+                        sleep_time = sleep_time * (0.5 + random())  # Add random jitter
+
+                    sleep_time = min(sleep_time, max_delay)
+                    if verbose:
+                        print("Exception occurred:\n", traceback.format_exc())
+                        print(f"Failed due to {e} for {func}\n. Attempting retry number {retries} after {round(sleep_time, 3)} seconds")
+                    time.sleep(sleep_time)
+                    retries += 1
+        return wrapper
+    return decorator
+
 
 @dataclass
 class Document(object):
@@ -56,8 +88,8 @@ class Document(object):
     filepath: Optional[str] = None
     url: Optional[str] = None
     metadata: Optional[Dict] = None
-    contentVector: Optional[List[float]] = None,
-    titleVector: Optional[List[float]] = None
+    contentVector: Optional[List[float]] = None
+
 
 def cleanup_content(content: str) -> str:
     """Cleans up the given content using regexes
@@ -432,6 +464,7 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
+@retry_with_exponential_backoff(max_retries=10, delay_factor=30)
 def get_embedding(text):
     endpoint = os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = os.environ.get("EMBEDDING_MODEL_KEY")
@@ -543,8 +576,8 @@ def chunk_content(
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
                     # print('getting embeddings...')
-                    doc.contentVector = get_embedding(chunk)
-                    doc.titleVector = get_embedding(doc.title)
+                    doc.contentVector = get_embedding(doc.title+"\n\n"+chunk)
+                    # doc.titleVector = get_embedding(doc.title)
 
                 # print(doc)
                 chunks.append(
@@ -552,8 +585,7 @@ def chunk_content(
                         content=chunk,
                         title=doc.title,
                         url=url,
-                        contentVector=doc.contentVector,
-                        titleVector=doc.titleVector
+                        contentVector=doc.contentVector
                     )
                 )
             else:
@@ -788,3 +820,5 @@ class SingletonFormRecognizerClient:
     def __setstate__(self, state):
         url, key = state
         self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key))
+
+

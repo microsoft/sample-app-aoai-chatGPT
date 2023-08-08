@@ -227,14 +227,7 @@ def create_or_update_search_index(
             "dimensions": 1536,
             "vectorSearchConfiguration": "default"
         })
-        body["fields"].append({
-            "name": "titleVector",
-            "type": "Collection(Edm.Single)",
-            "searchable": True,
-            "retrievable": True,
-            "dimensions": 1536,
-            "vectorSearchConfiguration": "default"
-        })
+
 
         body["vectorSearch"] = {
             "algorithmConfigurations": [
