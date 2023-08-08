@@ -46,6 +46,7 @@ AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+AZURE_OPENAI_API_VERSION  = os.environ.get("AZURE_OPENAI_API_VERSION", "2023-03-15-preview")
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
@@ -97,9 +98,9 @@ def prepare_body_headers_with_data(request):
 
     chatgpt_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}"
     if is_chat_model():
-        chatgpt_url += "/chat/completions?api-version=2023-03-15-preview"
+        chatgpt_url += f"/chat/completions?api-version={AZURE_OPENAI_API_VERSION}"
     else:
-        chatgpt_url += "/completions?api-version=2023-03-15-preview"
+        chatgpt_url += f"/completions?api-version={AZURE_OPENAI_API_VERSION}"
 
     headers = {
         'Content-Type': 'application/json',
@@ -194,7 +195,7 @@ def stream_without_data(response):
 def conversation_without_data(request):
     openai.api_type = "azure"
     openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
-    openai.api_version = "2023-03-15-preview"
+    openai.api_version = AZURE_OPENAI_API_VERSION
     openai.api_key = AZURE_OPENAI_KEY
 
     request_messages = request.json["messages"]
