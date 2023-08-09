@@ -87,7 +87,7 @@ export const Answer = ({
                     </Stack.Item>
                 )}
                 <Stack.Item className={styles.answerDisclaimerContainer}>
-                    <span className={styles.answerDisclaimer}>Netikėk viskuo ką AI suoks.</span>
+                    <span className={styles.answerDisclaimer}>(Netikėk ką AI suoks)</span>
                 </Stack.Item>
                 </Stack>
                 {chevronIsExpanded && 
