@@ -1,6 +1,6 @@
 -r requirements.txt
 azure-ai-formrecognizer==3.2.1
-Markdown==3.4.3
+Markdown==3.4.4
 requests==2.31.0
 tqdm==4.65.0
 tiktoken==0.4.0
