@@ -4,6 +4,6 @@ Markdown==3.4.3
 requests==2.31.0
 tqdm==4.65.0
 tiktoken==0.4.0
-langchain==0.0.226
+langchain==0.0.254
 bs4==0.0.1
 urllib3==2.0.4
