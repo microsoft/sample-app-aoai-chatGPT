@@ -1,0 +1,14 @@
+.container {
+    margin: 10;
+    padding: 10;
+}
+/* itemContent: [
+    theme.fonts.medium,
+    normalize,
+    {
+        position: 'relative',
+        display: 'block',
+        padding: 27,
+        maxWidth: '700px'
+    },
+], */

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useContext } from "react";
 import { Stack } from "@fluentui/react";
 import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 
@@ -20,8 +20,11 @@ import {
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
+import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
+import { AppStateContext } from "../../state/AppProvider";
 
 const Chat = () => {
+    const appStateContext = useContext(AppStateContext)
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -279,6 +282,7 @@ const Chat = () => {
                         
                     </Stack.Item>
                 )}
+                {appStateContext?.state.isChatHistoryOpen && <ChatHistoryPanel/>}
                 </Stack>
             )}
         </div>
