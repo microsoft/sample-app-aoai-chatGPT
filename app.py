@@ -193,7 +193,7 @@ def stream_without_data(response):
                 }]
             }]
         }
-        yield format_as_ndjson(response_obj) + "\n"
+        yield format_as_ndjson(response_obj)
 
 
 def conversation_without_data(request):
