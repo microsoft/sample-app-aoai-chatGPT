@@ -15,7 +15,7 @@ const groupByMonth = (entries: ChatEntry[]) => {
   
     entries.forEach((entry) => {
         const date = new Date(entry.date);
-        const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' })
         const existingGroup = groups.find((group) => group.month === monthYear);
   
         if (existingGroup) {

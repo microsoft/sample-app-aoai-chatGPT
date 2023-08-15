@@ -1,4 +1,4 @@
-import { CommandBar, CommandBarButton, ContextualMenu, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, Stack, StackItem, Text } from "@fluentui/react";
+import { CommandBar, CommandBarButton, ContextualMenu, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, SearchBox, Stack, StackItem, Text } from "@fluentui/react";
 import { useConst } from '@fluentui/react-hooks';
 
 import styles from "./ChatHistoryPanel.module.css"
@@ -49,8 +49,9 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
         <section className={styles.container} data-is-scrollable aria-label={"history"}>
             <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap>
                 <StackItem>
-                    <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "10px" }}>Chat history</Text>
+                    <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "auto", paddingLeft: "20px" }}>Chat history</Text>
                 </StackItem>
+                <Stack verticalAlign="start">
                 <Stack horizontal styles={commandBarButtonStyle}>
                     <CommandBarButton
                         iconProps={{ iconName: 'More' }}
@@ -77,6 +78,19 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                         styles={commandBarStyle}
                         role="button"
                     />
+                </Stack>
+                {/* <SearchBox
+                    styles={{ root: { width: 200 } }}
+                    placeholder="Search"
+                    onEscape={ev => {
+                    console.log('Custom onEscape Called');
+                    }}
+                    onClear={ev => {
+                    console.log('Custom onClear Called');
+                    }}
+                    onChange={(_, newValue) => console.log('SearchBox onChange fired: ' + newValue)}
+                    onSearch={newValue => console.log('SearchBox onSearch fired: ' + newValue)}
+                /> */}
                 </Stack>
             </Stack>
                 <Stack aria-label="Chat History"

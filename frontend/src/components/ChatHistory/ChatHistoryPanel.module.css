@@ -1,6 +1,5 @@
 .container {
-    margin: 10;
-    padding: 10;
+    width: 300px;
 }
 /* itemContent: [
     theme.fonts.medium,

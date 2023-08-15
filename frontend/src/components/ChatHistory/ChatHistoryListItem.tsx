@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { ITheme, IconButton, List, Separator, getFocusStyle, getTheme, mergeStyleSets } from '@fluentui/react';
-import { ChatEntry } from '../../state/AppProvider'; // Adjust the import path
+import { ITheme, IconButton, List, Separator, Stack, getFocusStyle, getTheme, mergeStyleSets } from '@fluentui/react';
+import { AppStateContext, ChatEntry } from '../../state/AppProvider'; // Adjust the import path
 import { GroupedChatHistory } from './ChatHistoryList'; // Adjust the import path
 
 interface ChatHistoryListItemCellProps {
@@ -16,17 +16,20 @@ interface ChatHistoryListItemGroupsProps {
 const styles = mergeStyleSets({
   chatGroup: {
     // borderBottom: '1px solid #ccc',
+    margin: 'auto 5px',
+    width: '100%'
   },
   chatEntry: {
     padding: 4,
   },
-  chatDate: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    margin: '16px 0',
+  chatMonth: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: '5px',
+    paddingLeft: '15px'
   },
   chatMessages: {
-    marginLeft: 16,
+    // marginLeft: 16,
   },
   chatMessage: {
     marginBottom: 8,
@@ -34,7 +37,7 @@ const styles = mergeStyleSets({
 });
 
 const formatMonth = (month: string) => {
-  return month.toUpperCase();
+  return month // month.toUpperCase();
 };
 
 export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = ({
@@ -42,13 +45,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
   isSelected,
   onSelect,
 }) => {
+    const appStateContext = React.useContext(AppStateContext)
   if (!item) {
     return null; // Do not render the cell if item is undefined
   }
 
   const cellStyles = mergeStyleSets({
     chatEntry: {
-      padding: 4,
+      paddingLeft: 15,
       backgroundColor: isSelected ? '#e6e6e6' : 'transparent', // Highlight on selection
       cursor: 'pointer',
       '&:hover': {
@@ -56,8 +60,16 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
       }
     },
     buttons: {
-      display: isSelected ? 'block' : 'none',
-      marginTop: 8,
+    //   display: isSelected ? 'block' : 'none',
+    //   marginTop: 8,
+    },
+    chatTitle: {
+    //   display: isSelected ? 'block' : 'none',
+    //   marginTop: 8,
+    width: '100%',
+    overFlow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
     },
 });
 
@@ -68,84 +80,75 @@ const classNames = mergeStyleSets({
   itemCell: [
     getFocusStyle(theme, { inset: -1 }),
     {
-      minHeight: 54,
-      padding: 10,
+      minHeight: '32px',
+      cursor: 'pointer',
+      paddingLeft: '15px',
       boxSizing: 'border-box',
+      borderRadius: '5px',
     //   borderBottom: `1px solid ${semanticColors.bodyDivider}`,
       display: 'flex',
       selectors: {
-        '&:hover': { background: palette.neutralLight },
+        '&:hover': { background: '#E6E6E6' },
       },
     },
   ],
-  itemImage: {
-    flexShrink: 0,
-  },
-  itemContent: {
-    marginLeft: 10,
-    overflow: 'hidden',
-    flexGrow: 1,
-  },
-  itemName: [
-    fonts.xLarge,
-    {
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-    },
-  ],
-  itemIndex: {
-    fontSize: fonts.small.fontSize,
-    color: palette.neutralTertiary,
-    marginBottom: 10,
-  },
-  chevron: {
-    alignSelf: 'center',
-    marginLeft: 10,
-    color: palette.neutralTertiary,
-    fontSize: fonts.large.fontSize,
-    flexShrink: 0,
-  },
 });
 
-  const onDelete = () => {
-    // Implement your delete logic here
-    console.log(`Delete item with title: ${item.title}`);
-  };
+    const onDelete = () => {
+        // Implement your delete logic here
+        console.log(`Delete item with title: ${item.title}`);
+    };
 
-  const onEdit = () => {
-    // Implement your edit logic here
-    console.log(`Edit item with title: ${item.title}`);
-  };
+    const onEdit = () => {
+        // Implement your edit logic here
+        console.log(`Edit item with title: ${item.title}`);
+    };
+
+    const handleSelectItem = () => {
+        onSelect(item)
+        console.log("IsSelected: ", isSelected)
+        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: item } )
+    }
+
+    const truncatedTitle = item.title.length > 25 ? `${item.title.substring(0, 25)}...` : item.title;
 
   return (
-    <div className={classNames.itemCell} onClick={() => onSelect(item)}>
-      <div>{item.title}</div>
-      <div className={cellStyles.buttons}>
+    <Stack className={classNames.itemCell} onClick={() => handleSelectItem()} verticalAlign='center' horizontal>
+        <Stack.Item style={{ width: '100%' }}>
+            <div className={cellStyles.chatTitle}>{truncatedTitle}</div>
+        </Stack.Item>
+        {(item === appStateContext?.state.currentChat) && <Stack className={cellStyles.buttons} horizontal horizontalAlign='end'>
         <IconButton iconProps={{ iconName: 'Delete' }} title="Delete" onClick={onDelete} />
         <IconButton iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} />
-      </div>
-    </div>
+      </Stack>}
+    </Stack>
   );
 };
 
 export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps> = ({ groupedChatHistory }) => {
   const [selectedItem, setSelectedItem] = React.useState<ChatEntry | null>(null);
 
+  const handleSelectHistory = (item?: ChatEntry) => {
+    console.log("item clicked: ", item)
+    if(item){
+        setSelectedItem(item)
+    }
+  }
+
   const onRenderCell = (item?: ChatEntry) => {
     return (
-      <ChatHistoryListItemCell item={item} isSelected={item === selectedItem} onSelect={setSelectedItem} />
+      <ChatHistoryListItemCell item={item} isSelected={item === selectedItem} onSelect={() => handleSelectHistory(item)} />
     );
   };
 
   return (
     <div>
       {groupedChatHistory.map((group) => (
-        <div key={group.month} className={styles.chatGroup}>
-          <div className={styles.chatDate}>{formatMonth(group.month)}</div>
-          <List items={group.entries} onRenderCell={onRenderCell} />
+        <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup}>
+          <Stack className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
+          <List items={group.entries} onRenderCell={onRenderCell} style={{width: '100%'}} />
           <Separator />
-        </div>
+        </Stack>
       ))}
     </div>
   );

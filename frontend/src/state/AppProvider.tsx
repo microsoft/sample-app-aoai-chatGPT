@@ -10,12 +10,12 @@ export interface ChatEntry {
     }[];
     date: string; // Date string, e.g., "2023-08-10T07:55:00Z"
   }
-  
+
 
 
   const chatHistory = [
     {
-      "title": "Customer Support",
+      "title": "Customer Support Issue And Resolution and Customer Support",
       "messages": [
         {
           "role": "user",
@@ -110,14 +110,17 @@ export interface ChatEntry {
 export interface AppState {
     isChatHistoryOpen: boolean;
     chatHistory: ChatEntry[];
+    currentChat: ChatEntry | null;
   }
 
 export type Action =
     | { type: 'TOGGLE_CHAT_HISTORY' } // | { type: 'NEW_TYPE' };
+    | { type: 'UPDATE_CURRENT_CHAT', payload: ChatEntry }
 
 const initialState: AppState = {
     isChatHistoryOpen: true,
-    chatHistory: chatHistory
+    chatHistory: chatHistory,
+    currentChat: null
 };
 
 export const AppStateContext = createContext<{
