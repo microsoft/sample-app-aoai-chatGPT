@@ -142,7 +142,6 @@ def stream_with_data(body, headers, endpoint):
 
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
                     if role == "tool":
-                        print(lineJson)
                         response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
                     elif role == "assistant": 
                         response["choices"][0]["messages"].append({
