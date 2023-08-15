@@ -1,13 +1,59 @@
 .container {
     width: 300px;
 }
-/* itemContent: [
-    theme.fonts.medium,
-    normalize,
-    {
-        position: 'relative',
-        display: 'block',
-        padding: 27,
-        maxWidth: '700px'
-    },
-], */
+
+.itemCell {
+    min-height: 32px;
+    cursor: pointer;
+    padding-left: 15px;
+    padding-right: 10px;
+    padding-top: 2.5px;
+    padding-bottom: 2.5px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    display: flex;
+}
+
+.itemCell:hover {
+    background: #E6E6E6;
+}
+
+.itemButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d1d1d1;
+    border-radius: 5px;
+    background-color: white;
+    margin: auto 2.5px;
+    cursor: pointer;
+}
+
+.itemButton:hover {
+    background-color: #E6E6E6;
+}
+
+.chatGroup {
+    margin: auto 5px;
+    width: 100%;
+}
+
+.chatList {
+    width: 100%;
+}
+
+.chatMonth {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    padding-left: 15px;
+}
+
+.chatTitle {
+    width: 80%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

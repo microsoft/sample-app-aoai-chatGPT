@@ -1,5 +1,5 @@
-import { CommandBar, CommandBarButton, ContextualMenu, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, SearchBox, Stack, StackItem, Text } from "@fluentui/react";
-import { useConst } from '@fluentui/react-hooks';
+import { CommandBar, CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, PrimaryButton, SearchBox, Stack, StackItem, Text } from "@fluentui/react";
+import { useBoolean, useConst } from '@fluentui/react-hooks';
 
 import styles from "./ChatHistoryPanel.module.css"
 import { useContext } from "react";
@@ -29,6 +29,21 @@ const commandBarButtonStyle: Partial<IStackStyles> = { root: { height: '50px' } 
 export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     const appStateContext = useContext(AppStateContext)
     const [showContextualMenu, setShowContextualMenu] = React.useState(false);
+    const [hideClearAllDialog, { toggle: toggleClearAllDialog }] = useBoolean(true);
+
+    const dialogContentProps = {
+        type: DialogType.close,
+        title: 'Are you sure you want to clear all chat history?',
+        closeButtonAriaLabel: 'Close',
+        subText: 'All chat history will be permanently removed.',
+    };
+
+    const modalProps = {
+        titleAriaId: 'labelId',
+        subtitleAriaId: 'subTextId',
+        isBlocking: true,
+        styles: { main: { maxWidth: 450 } },
+    }
 
     const menuItems: IContextualMenuItem[] = [
         { key: 'clearAll', text: 'Clear all chat history', iconProps: { iconName: 'Delete' }},
@@ -44,6 +59,11 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     }, []);
 
     const onHideContextualMenu = React.useCallback(() => setShowContextualMenu(false), []);
+
+    const onClearAllChatHistory = () => {
+        appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
+        toggleClearAllDialog();
+    }
 
     return (
         <section className={styles.container} data-is-scrollable aria-label={"history"}>
@@ -66,7 +86,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                         items={menuItems}
                         hidden={!showContextualMenu}
                         target={"#moreButton"}
-                        onItemClick={onHideContextualMenu}
+                        onItemClick={toggleClearAllDialog}
                         onDismiss={onHideContextualMenu}
                     />
                     <CommandBarButton
@@ -114,6 +134,17 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                         <ChatHistoryList/>
                     </Stack>
                 </Stack>
+            <Dialog
+                hidden={hideClearAllDialog}
+                onDismiss={toggleClearAllDialog}
+                dialogContentProps={dialogContentProps}
+                modalProps={modalProps}
+            >
+                <DialogFooter>
+                <PrimaryButton onClick={onClearAllChatHistory} text="Clear All" />
+                <DefaultButton onClick={toggleClearAllDialog} text="Cancel" />
+                </DialogFooter>
+            </Dialog>
         </section>
     );
 }

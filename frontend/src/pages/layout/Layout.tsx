@@ -78,22 +78,6 @@ const Layout = () => {
                         <Link to="/" className={styles.headerTitleContainer}>
                             <h1 className={styles.headerTitle}>Azure AI</h1>
                         </Link>
-                        {/* <Stack horizontal className={styles.menuButtonContainer}>
-                            <CommandBarButton
-                                iconProps={{ iconName: 'Add' }}
-                                text="New item"
-                                // disabled={disabled}
-                            />
-                            <CommandBarButton 
-                                iconProps={{ iconName: 'Mail' }}
-                                text="Send mail"
-                                // disabled={disabled}
-                            />
-                        </Stack> */}
-                        {/* <div className={styles.shareButtonContainer} role="button" tabIndex={1} aria-label="Share" onClick={handleShareClick} onKeyDown={e => e.key === "Enter" || e.key === " " ? handleShareClick() : null}>
-                            <ShareRegular className={styles.shareButton} />
-                            <span className={styles.shareButtonText}>Share</span>
-                        </div> */}
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
                             <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>

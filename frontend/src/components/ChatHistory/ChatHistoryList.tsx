@@ -24,23 +24,32 @@ const groupByMonth = (entries: ChatEntry[]) => {
             groups.push({ month: monthYear, entries: [entry] });
         }
     });
+
+    groups.sort((a, b) => {
+        const dateA = new Date(a.entries[0].date);
+        const dateB = new Date(b.entries[0].date);
+        return dateB.getTime() - dateA.getTime();
+    });
   
     return groups;
 };
 
 const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
-  const appStateContext = useContext(AppStateContext);
-  const chatHistory = appStateContext?.state.chatHistory;
-  let groupedChatHistory;
-  if(chatHistory){
-    groupedChatHistory = groupByMonth(chatHistory);
-  }else{
-    return <div>No history</div>
-  }
-  
-  return (
-    <ChatHistoryListItemGroups groupedChatHistory={groupedChatHistory}/>
-  );
+    const appStateContext = useContext(AppStateContext);
+    const chatHistory = appStateContext?.state.chatHistory;
+
+    React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
+    
+    let groupedChatHistory;
+    if(chatHistory && chatHistory.length > 0){
+        groupedChatHistory = groupByMonth(chatHistory);
+    }else{
+        return <div>No history</div>
+    }
+    
+    return (
+        <ChatHistoryListItemGroups groupedChatHistory={groupedChatHistory}/>
+    );
 };
 
 export default ChatHistoryList;

@@ -1,20 +1,9 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { appStateReducer } from './AppReducer';
 
-export interface ChatEntry {
-    title: string;
-    messages: {
-      role: string; // can be user or bot
-      content: string; // question or answer
-      date: string; // Date string, e.g., "2023-08-10T08:00:00Z"
-    }[];
-    date: string; // Date string, e.g., "2023-08-10T07:55:00Z"
-  }
-
-
-
-  const chatHistory = [
+const chatHistory = [
     {
+      "id": "1",
       "title": "Customer Support Issue And Resolution and Customer Support",
       "messages": [
         {
@@ -31,6 +20,7 @@ export interface ChatEntry {
       "date": "2023-08-10T07:55:00Z"
     },
     {
+      "id": "2",
       "title": "Order Inquiry",
       "messages": [
         {
@@ -57,6 +47,7 @@ export interface ChatEntry {
       "date": "2023-07-09T15:25:00Z"
     },
     {
+      "id": "3",
       "title": "August Entry 1",
       "messages": [
         {
@@ -73,6 +64,7 @@ export interface ChatEntry {
       "date": "2023-08-20T12:25:00Z"
     },
     {
+      "id": "4",
       "title": "August Entry 2",
       "messages": [
         {
@@ -89,6 +81,7 @@ export interface ChatEntry {
       "date": "2023-08-15T09:40:00Z"
     },
     {
+      "id": "5",
       "title": "June Entry 1",
       "messages": [
         {
@@ -106,6 +99,16 @@ export interface ChatEntry {
     },
     // ... (additional entries)
   ];
+export interface ChatEntry {
+    id: string;
+    title: string;
+    messages: {
+      role: string; // can be user or bot
+      content: string; // question or answer
+      date: string; // Date string, e.g., "2023-08-10T08:00:00Z"
+    }[];
+    date: string; // Date string, e.g., "2023-08-10T07:55:00Z"
+  }
   
 export interface AppState {
     isChatHistoryOpen: boolean;
@@ -116,6 +119,9 @@ export interface AppState {
 export type Action =
     | { type: 'TOGGLE_CHAT_HISTORY' } // | { type: 'NEW_TYPE' };
     | { type: 'UPDATE_CURRENT_CHAT', payload: ChatEntry }
+    | { type: 'UPDATE_CHAT_TITLE', payload: ChatEntry }
+    | { type: 'DELETE_CHAT_ENTRY', payload: string }
+    | { type: 'DELETE_CHAT_HISTORY'}
 
 const initialState: AppState = {
     isChatHistoryOpen: true,
