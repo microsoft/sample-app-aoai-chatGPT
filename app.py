@@ -3,8 +3,12 @@ import os
 import logging
 import requests
 import openai
+from azure.identity import DefaultAzureCredential
 from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
+
+from backend.auth.auth_utils import get_authenticated_user_details
+from backend.history.cosmosdbservice import CosmosConversationClient
 
 load_dotenv()
 
@@ -52,6 +56,30 @@ AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turb
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
+# CosmosDB Integration Settings
+AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")
+AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
+AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
+AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
+
+# Initialize a CosmosDB client with AAD auth and containers
+cosmos_conversation_client = None
+if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
+    cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
+
+    if not AZURE_COSMOSDB_ACCOUNT_KEY:
+        credential = DefaultAzureCredential()
+    else:
+        credential = AZURE_COSMOSDB_ACCOUNT_KEY
+
+    cosmos_conversation_client = CosmosConversationClient(
+        cosmosdb_endpoint=cosmos_endpoint, 
+        credential=credential, 
+        database_name=AZURE_COSMOSDB_DATABASE,
+        container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+    )
+
+
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
         return True
@@ -62,8 +90,8 @@ def should_use_data():
         return True
     return False
 
-def prepare_body_headers_with_data(request):
-    request_messages = request.json["messages"]
+def prepare_body_headers_with_data(request_body):
+    request_messages = request_body["messages"]
 
     body = {
         "messages": request_messages,
@@ -112,7 +140,7 @@ def prepare_body_headers_with_data(request):
     return body, headers
 
 
-def stream_with_data(body, headers, endpoint):
+def stream_with_data(body, headers, endpoint, conversation_id=None):
     s = requests.Session()
     response = {
         "id": "",
@@ -121,7 +149,8 @@ def stream_with_data(body, headers, endpoint):
         "object": "",
         "choices": [{
             "messages": []
-        }]
+        }],
+        'conversation_id': conversation_id
     }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
@@ -153,23 +182,23 @@ def stream_with_data(body, headers, endpoint):
         yield json.dumps({"error": str(e)}).replace("\n", "\\n") + "\n"
 
 
-def conversation_with_data(request):
-    body, headers = prepare_body_headers_with_data(request)
+def conversation_with_data(request_body):
+    body, headers = prepare_body_headers_with_data(request_body)
     endpoint = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
-    
+    conversation_id = request_body.get("conversation_id", None)
+
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
+        r['conversation_id'] = conversation_id
 
         return Response(json.dumps(r).replace("\n", "\\n"), status=status_code)
     else:
-        if request.method == "POST":
-            return Response(stream_with_data(body, headers, endpoint), mimetype='text/event-stream')
-        else:
-            return Response(None, mimetype='text/event-stream')
+        return Response(stream_with_data(body, headers, endpoint, conversation_id), mimetype='text/event-stream')
 
-def stream_without_data(response):
+
+def stream_without_data(response, conversation_id=None):
     responseText = ""
     for line in response:
         deltaText = line["choices"][0]["delta"].get('content')
@@ -186,18 +215,19 @@ def stream_without_data(response):
                     "role": "assistant",
                     "content": responseText
                 }]
-            }]
+            }],
+            "conversation_id": conversation_id
         }
         yield json.dumps(response_obj).replace("\n", "\\n") + "\n"
 
 
-def conversation_without_data(request):
+def conversation_without_data(request_body):
     openai.api_type = "azure"
     openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
 
-    request_messages = request.json["messages"]
+    request_messages = request_body["messages"]
     messages = [
         {
             "role": "system",
@@ -221,6 +251,9 @@ def conversation_without_data(request):
         stream=SHOULD_STREAM
     )
 
+    conversation_id = request_body.get("conversation_id", None)
+    print(conversation_id)
+
     if not SHOULD_STREAM:
         response_obj = {
             "id": response,
@@ -232,27 +265,96 @@ def conversation_without_data(request):
                     "role": "assistant",
                     "content": response.choices[0].message.content
                 }]
-            }]
+            }],
+            "conversation_id": conversation_id
         }
 
         return jsonify(response_obj), 200
     else:
-        if request.method == "POST":
-            return Response(stream_without_data(response), mimetype='text/event-stream')
-        else:
-            return Response(None, mimetype='text/event-stream')
+        return Response(stream_without_data(response, conversation_id), mimetype='text/event-stream')
+
 
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
+    request_body = request.json
+    return conversation_internal(request_body)
+
+def conversation_internal(request_body):
     try:
         use_data = should_use_data()
         if use_data:
-            return conversation_with_data(request)
+            return conversation_with_data(request_body)
         else:
-            return conversation_without_data(request)
+            return conversation_without_data(request_body)
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
+
+## Conversation History API ## 
+@app.route("/history/generate", methods=["POST"])
+def add_conversation():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+
+    ## check request for conversation_id
+    conversation_id = request.json.get("conversation_id", None)
+
+    try:
+        # make sure cosmos is configured
+        if not cosmos_conversation_client:
+            raise Exception("CosmosDB is not configured")
+
+        # check for the conversation_id, if the conversation is not set, we will create a new one
+        if not conversation_id:
+            title = generate_title(request.json["messages"])
+            conversation_dict = cosmos_conversation_client.create_conversation(user_id=user_id, title=title)
+            conversation_id = conversation_dict['id']
+            
+        ## Format the incoming message object in the "chat/completions" messages format
+        ## then write it to the conversation history in cosmos
+        messages = request.json["messages"]
+        if len(messages) > 0 and messages[-1]['role'] == "user":
+            cosmos_conversation_client.create_message(
+                conversation_id=conversation_id,
+                user_id=user_id,
+                input_message=messages[-1]
+            )
+        else:
+            raise Exception("No user message found")
+        
+        # Submit request to Chat Completions for response
+        request_body = request.json
+        request_body['conversation_id'] = conversation_id
+        return conversation_internal(request_body)
+       
+    except Exception as e:
+        logging.exception("Exception in /history/add")
+        return jsonify({"error": str(e)}), 500
+
+def generate_title(conversation_messages):
+    ## make sure the messages are sorted by _ts descending
+    title_prompt = 'Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Respond with a json object in the format {{"title": string}}. Do not include any other commentary or description.'
+
+    messages = conversation_messages.copy()
+    messages.append({'role': 'user', 'content': title_prompt})
+
+    try:
+        ## Submit prompt to Chat Completions for response
+        openai.api_type = "azure"
+        openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+        openai.api_version = "2023-03-15-preview"
+        openai.api_key = AZURE_OPENAI_KEY
+        completion = openai.ChatCompletion.create(    
+            engine=AZURE_OPENAI_MODEL,
+            messages=messages,
+            temperature=1,
+            max_tokens=64 
+        )
+        title = json.loads(completion['choices'][0]['message']['content'])['title']
+        print(title)
+        return title
+    except:
+        return messages[-2]['content']
 
 if __name__ == "__main__":
     app.run()
