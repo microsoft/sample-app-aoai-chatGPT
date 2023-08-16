@@ -72,13 +72,19 @@ If this is your first time deploying the app, you can use [az webapp up](https:/
 
 `az webapp up --runtime PYTHON:3.10 --sku B1 --name <new-app-name> --resource-group <resource-group-name> --location <azure-region> --subscription <subscription-name>`
 
-If you've deployed the app previously from the AOAI studio, first run this command to update the appsettings to allow local code deployment:
+If you've deployed the app previously, first run this command to update the appsettings to allow local code deployment:
 
 `az webapp config appsettings set -g <resource-group-name> -n <existing-app-name> --settings WEBSITE_WEBDEPLOY_USE_SCM=false`
 
+Check the runtime stack for your app by viewing the app service resource in the Azure Portal. If it shows "Python - 3.10", use `PYTHON:3.10` in the runtime argument below. If it shows "Python - 3.11", use `PYTHON:3.11` in the runtime argument below. 
+
+**Note:** If the runtime is "DOCKER|fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest" from One-Click Azure Deployment, redeploying with `az webapp up` is not compatible. Use the command above to create a new app.
+
+Check the SKU in the same way. Use the abbreviated SKU name in the argument below, e.g. for "Basic (B1)" the SKU is `B1`. 
+
 Then, use the `az webapp up` command to deploy your local code to the existing app:
 
-`az webapp up --runtime PYTHON:3.10 --sku B1 --name <existing-app-name> --resource-group <resource-group-name>`
+`az webapp up --runtime <runtime-stack> --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
 
 Make sure that the app name and resource group match exactly for the app that was previously deployed.
 
@@ -87,7 +93,12 @@ Deployment will take several minutes. When it completes, you should be able to n
 ### Add an identity provider
 After deployment, you will need to add an identity provider to provide authentication support in your app. See [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) for more information.
 
-If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. To remove this restriction, or add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`.
+If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. To remove this restriction, or add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. For example, disable the authorization check like so:
+```
+const getUserInfoList = async () => {
+        setShowAuthMessage(false);
+}
+```
 
 ## Best Practices
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to expose some of the settings in `app.py` in the UI for users to try out different behaviors. We recommend keeping these best practices in mind:
