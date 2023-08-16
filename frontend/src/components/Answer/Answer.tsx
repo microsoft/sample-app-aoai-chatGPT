@@ -66,7 +66,9 @@ export const Answer = ({
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
                 {!!parsedAnswer.citations.length && (
-                    <Stack.Item>
+                    <Stack.Item
+                        onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleIsRefAccordionOpen() : null}
+                    >
                         <Stack style={{width: "100%"}} >
                             <Stack horizontal horizontalAlign='start' verticalAlign='center'>
                                 <Text
@@ -100,6 +102,7 @@ export const Answer = ({
                                     role="link" 
                                     key={idx} 
                                     onClick={() => onCitationClicked(citation)} 
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? onCitationClicked(citation) : null}
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >

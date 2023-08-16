@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Stack } from "@fluentui/react";
+import { IconButton, Stack } from "@fluentui/react";
 import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 
 import ReactMarkdown from "react-markdown";
@@ -262,9 +262,9 @@ const Chat = () => {
                     </div>
                     {answers.length > 0 && isCitationPanelOpen && activeCitation && (
                     <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                        <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                            <span className={styles.citationPanelHeader}>Citations</span>
-                            <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
+                        <Stack aria-label="Citations Panel Header Container" horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
+                            <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
+                            <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
                         </Stack>
                         <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
                         <div tabIndex={0}> 
