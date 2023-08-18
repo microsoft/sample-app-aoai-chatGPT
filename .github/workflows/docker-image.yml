@@ -1,3 +1,4 @@
+"""
 name: Docker Image CI
 
 on:
@@ -30,3 +31,4 @@ jobs:
         docker push fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
         docker push fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest;
       
+"""
