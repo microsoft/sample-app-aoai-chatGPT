@@ -1,16 +1,17 @@
 import { GroupedList, IGroup, IGroupHeaderProps, IRenderFunction, List, mergeStyleSets } from '@fluentui/react';
 import React, { useContext } from 'react';
-import { AppStateContext, ChatEntry } from '../../state/AppProvider';
+import { AppStateContext } from '../../state/AppProvider';
 import { ChatHistoryListItemGroups } from './ChatHistoryListItem';
+import { Conversation } from '../../api/models';
 
 interface ChatHistoryListProps {}
 
 export interface GroupedChatHistory {
     month: string;
-    entries: ChatEntry[]
+    entries: Conversation[]
 }
 
-const groupByMonth = (entries: ChatEntry[]) => {
+const groupByMonth = (entries: Conversation[]) => {
     const groups: GroupedChatHistory[] = [];
   
     entries.forEach((entry) => {

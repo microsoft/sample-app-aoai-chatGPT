@@ -66,8 +66,8 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     }
 
     return (
-        <section className={styles.container} data-is-scrollable aria-label={"history"}>
-            <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap>
+        <section className={styles.container} data-is-scrollable aria-label={"chat history panel"}>
+            <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap aria-label="chat history header">
                 <StackItem>
                     <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "auto", paddingLeft: "20px" }}>Chat history</Text>
                 </StackItem>
@@ -113,7 +113,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                 /> */}
                 </Stack>
             </Stack>
-                <Stack aria-label="Chat History"
+                <Stack aria-label="chat history panel content"
                     styles={{
                         root: {
                             display: "flex",

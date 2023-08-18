@@ -1,15 +1,16 @@
 import * as React from 'react';
 import { DefaultButton, Dialog, DialogFooter, DialogType, ITheme, IconButton, List, PrimaryButton, Separator, Stack, TextField, getFocusStyle, getTheme, mergeStyleSets } from '@fluentui/react';
 
-import { AppStateContext, ChatEntry } from '../../state/AppProvider';
+import { AppStateContext } from '../../state/AppProvider';
 import { GroupedChatHistory } from './ChatHistoryList';
 
 import styles from "./ChatHistoryPanel.module.css"
 import { useBoolean } from '@fluentui/react-hooks';
+import { Conversation } from '../../api/models';
 
 interface ChatHistoryListItemCellProps {
-  item?: ChatEntry;
-  onSelect: (item: ChatEntry | null) => void;
+  item?: Conversation;
+  onSelect: (item: Conversation | null) => void;
 }
 
 interface ChatHistoryListItemGroupsProps {
@@ -40,7 +41,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     const [hideDeleteDialog, { toggle: toggleDeleteDialog }] = useBoolean(true);
     
     const appStateContext = React.useContext(AppStateContext)
-    const isSelected = item === appStateContext?.state.currentChat;
+    const isSelected = item?.id === appStateContext?.state.currentChat?.id;
     const dialogContentProps = {
         type: DialogType.close,
         title: 'Are you sure you want to delete this item?',
@@ -79,7 +80,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         e.preventDefault();
         setEdit(false)
         // make api call to save
-        appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as ChatEntry })
+        appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as Conversation })
     }
 
     const chatHistoryTitleOnChange = (e: any) => {
@@ -88,8 +89,12 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 
     return (
         <Stack
+            role='listitem'
+            tabIndex={0}
+            aria-label='chat history item'
             className={styles.itemCell}
             onClick={() => handleSelectItem()}
+            onKeyDown={e => e.key === "Enter" || e.key === " " ? handleSelectItem() : null}
             verticalAlign='center'
             horizontal
             onMouseEnter={() => setIsHovered(true)}
@@ -103,7 +108,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             {edit ? <>
                 <Stack.Item style={{ width: '100%' }}>
                     <form onSubmit={(e) => handleSaveEdit(e)}>
-                        <TextField value={editTitle} placeholder={item.title} onChange={chatHistoryTitleOnChange}/>
+                        <TextField value={editTitle} placeholder={item.title} onChange={chatHistoryTitleOnChange} autoFocus/>
                     </form>
                 </Stack.Item>
             </> : <>
@@ -111,8 +116,8 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                     <div className={styles.chatTitle}>{truncatedTitle}</div>
                 </Stack.Item>
                 {(isSelected || isHovered) && <Stack horizontal horizontalAlign='end'>
-                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="Delete" onClick={toggleDeleteDialog}/>
-                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} />
+                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null}/>
+                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null}/>
                 </Stack>}
             </>
             }
@@ -132,15 +137,15 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 };
 
 export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps> = ({ groupedChatHistory }) => {
-  const [ , setSelectedItem] = React.useState<ChatEntry | null>(null);
+  const [ , setSelectedItem] = React.useState<Conversation | null>(null);
 
-  const handleSelectHistory = (item?: ChatEntry) => {
+  const handleSelectHistory = (item?: Conversation) => {
     if(item){
         setSelectedItem(item)
     }
   }
 
-  const onRenderCell = (item?: ChatEntry) => {
+  const onRenderCell = (item?: Conversation) => {
     return (
       <ChatHistoryListItemCell item={item} onSelect={() => handleSelectHistory(item)} />
     );
@@ -149,9 +154,9 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
   return (
     <div>
       {groupedChatHistory.map((group) => (
-        <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup}>
-          <Stack className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
-          <List items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
+        <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
+          <Stack aria-label={group.month} className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
+          <List aria-label={`chat history list`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
           <Separator styles={{
             root: {
                 width: '100%',

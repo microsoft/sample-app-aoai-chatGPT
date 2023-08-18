@@ -1,4 +1,4 @@
-import { CommandBarButton, DefaultButton, IButtonProps, IButtonStyles, ICommandBarStyles, Stack } from "@fluentui/react";
+import { CommandBarButton, DefaultButton, IButtonProps, IButtonStyles, ICommandBarStyles } from "@fluentui/react";
 
 interface ShareButtonProps extends IButtonProps {
     onClick: () => void;
