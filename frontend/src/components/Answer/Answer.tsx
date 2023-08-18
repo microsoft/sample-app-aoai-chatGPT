@@ -89,7 +89,7 @@ export const Answer = ({
                     </Stack.Item>
                 )}
                 <Stack.Item className={styles.answerDisclaimerContainer}>
-                    <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+                    <span className={styles.answerDisclaimer}>This AI chatbot will try the best response based on its data. If you find it strange, reach out to a human!</span>
                 </Stack.Item>
                 </Stack>
                 {chevronIsExpanded && 
