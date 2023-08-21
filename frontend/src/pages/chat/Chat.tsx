@@ -44,7 +44,6 @@ const Chat = () => {
 
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
-    const [isNewChat, setIsNewChat] = useState<boolean>(true)
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
@@ -70,7 +69,6 @@ const Chat = () => {
         };
         let conversation: Conversation | undefined;
         if(!conversationId){
-            setIsNewChat(true)
             conversation = {
                 id: conversationId ?? uuid(),
                 title: question,
@@ -78,7 +76,6 @@ const Chat = () => {
                 date: new Date().toISOString(),
             }
         }else{
-            setIsNewChat(false)
             conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
             if(!conversation){
                 console.error("Conversation not found.");
@@ -175,7 +172,6 @@ const Chat = () => {
 
     const newChat = () => {
         setProcessMessages(messageStatus.Processing)
-        console.log("new chat clicked")
         setMessages([])
         let conversation = {
             id: uuid(),
@@ -194,20 +190,15 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        console.log("re rendered triggered")
-        if (appStateContext && appStateContext.state.currentChat) {
-            console.log("re rendered updated messages")
-            setIsNewChat(false)
+        if (appStateContext?.state.currentChat) {
             setMessages(appStateContext.state.currentChat.messages)
         }else{
-            setIsNewChat(true)
+            setMessages([])
         }
     }, [appStateContext?.state.currentChat]);
     
     useEffect(() => {
         if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
-            console.log("Saving to chat history:  ", appStateContext.state.currentChat)
-    
             appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
             setMessages(appStateContext.state.currentChat.messages)
             setProcessMessages(messageStatus.NotRunning)

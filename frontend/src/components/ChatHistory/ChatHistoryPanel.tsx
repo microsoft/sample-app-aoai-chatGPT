@@ -62,8 +62,37 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
 
     const onClearAllChatHistory = () => {
         appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
+        setSearchText('')
         toggleClearAllDialog();
     }
+
+    const [searchText, setSearchText] = React.useState('');
+    const onSearchChange = (ev: any) => {
+        if(!ev?.target?.value){
+            setSearchText('')
+            appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
+            return
+        }
+        const newValue = ev.target.value;
+        setSearchText(newValue);
+        if(!newValue){
+            appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
+        }
+        
+        if(appStateContext?.state.chatHistory){
+            const filtered = appStateContext?.state.chatHistory.filter(conversation =>
+                conversation.title.toLowerCase().includes(newValue.toLowerCase())
+            );
+            
+            if(filtered.length > 0){
+                appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: filtered })
+            }else{
+                appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: [] })
+            }
+        }
+    }
+
+    React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
 
     return (
         <section className={styles.container} data-is-scrollable aria-label={"chat history panel"}>
@@ -72,68 +101,68 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "auto", paddingLeft: "20px" }}>Chat history</Text>
                 </StackItem>
                 <Stack verticalAlign="start">
-                <Stack horizontal styles={commandBarButtonStyle}>
-                    <CommandBarButton
-                        iconProps={{ iconName: 'More' }}
-                        title={"Clear all chat history"}
-                        onClick={onShowContextualMenu}
-                        aria-label={"clear all chat history"}
-                        styles={commandBarStyle}
-                        role="button"
-                        id="moreButton"
-                    />
-                    <ContextualMenu
-                        items={menuItems}
-                        hidden={!showContextualMenu}
-                        target={"#moreButton"}
-                        onItemClick={toggleClearAllDialog}
-                        onDismiss={onHideContextualMenu}
-                    />
-                    <CommandBarButton
-                        iconProps={{ iconName: 'Cancel' }}
-                        title={"Hide"}
-                        onClick={handleHistoryClick}
-                        aria-label={"hide button"}
-                        // hidden={}
-                        styles={commandBarStyle}
-                        role="button"
-                    />
-                </Stack>
-                {/* <SearchBox
-                    styles={{ root: { width: 200 } }}
-                    placeholder="Search"
-                    onEscape={ev => {
-                    console.log('Custom onEscape Called');
-                    }}
-                    onClear={ev => {
-                    console.log('Custom onClear Called');
-                    }}
-                    onChange={(_, newValue) => console.log('SearchBox onChange fired: ' + newValue)}
-                    onSearch={newValue => console.log('SearchBox onSearch fired: ' + newValue)}
-                /> */}
+                    <Stack horizontal styles={commandBarButtonStyle}>
+                        <CommandBarButton
+                            iconProps={{ iconName: 'More' }}
+                            title={"Clear all chat history"}
+                            onClick={onShowContextualMenu}
+                            aria-label={"clear all chat history"}
+                            styles={commandBarStyle}
+                            role="button"
+                            id="moreButton"
+                        />
+                        <ContextualMenu
+                            items={menuItems}
+                            hidden={!showContextualMenu}
+                            target={"#moreButton"}
+                            onItemClick={toggleClearAllDialog}
+                            onDismiss={onHideContextualMenu}
+                        />
+                        <CommandBarButton
+                            iconProps={{ iconName: 'Cancel' }}
+                            title={"Hide"}
+                            onClick={handleHistoryClick}
+                            aria-label={"hide button"}
+                            styles={commandBarStyle}
+                            role="button"
+                        />
+                    </Stack>
                 </Stack>
             </Stack>
-                <Stack aria-label="chat history panel content"
-                    styles={{
-                        root: {
-                            display: "flex",
-                            flexGrow: 1,
-                            flexDirection: "column",
-                            paddingTop: '2.5px',
-                            maxWidth: "100%"
-                        },
+            <Stack >
+                <SearchBox
+                    value={searchText}
+                    className={styles.searchBox}
+                    placeholder="Search"
+                    onClear={ev => {
+                        setSearchText('')
+                        // set filter groups to null
+                        appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
                     }}
-                    style={{
+                    onChange={(ev) => onSearchChange(ev)}
+                />
+            </Stack>
+            <Stack aria-label="chat history panel content"
+                styles={{
+                    root: {
                         display: "flex",
                         flexGrow: 1,
                         flexDirection: "column",
-                        flexWrap: "wrap",
-                        padding: "1px"
-                    }}>
-                    <Stack>
-                        <ChatHistoryList/>
-                    </Stack>
+                        paddingTop: '2.5px',
+                        maxWidth: "100%"
+                    },
+                }}
+                style={{
+                    display: "flex",
+                    flexGrow: 1,
+                    flexDirection: "column",
+                    flexWrap: "wrap",
+                    padding: "1px"
+                }}>
+                <Stack className={styles.chatHistoryListContainer}>
+                    <ChatHistoryList/>
                 </Stack>
+            </Stack>
             <Dialog
                 hidden={hideClearAllDialog}
                 onDismiss={toggleClearAllDialog}

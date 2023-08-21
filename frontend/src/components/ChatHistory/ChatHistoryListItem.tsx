@@ -37,7 +37,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
     const [edit, setEdit] = React.useState(false);
-    const [editTitle, setEditTitle] = React.useState(item?.title ?? " ");
+    const [editTitle, setEditTitle] = React.useState("");
     const [hideDeleteDialog, { toggle: toggleDeleteDialog }] = useBoolean(true);
     
     const appStateContext = React.useContext(AppStateContext)
@@ -67,6 +67,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 
     const onEdit = () => {
         setEdit(true)
+        setEditTitle(item?.title)
     };
 
     const handleSelectItem = () => {
@@ -79,16 +80,23 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     const handleSaveEdit = (e: any) => {
         e.preventDefault();
         setEdit(false)
-        // make api call to save
         appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as Conversation })
+        setEditTitle("");
     }
 
     const chatHistoryTitleOnChange = (e: any) => {
         setEditTitle(e.target.value);
     };
 
+    const handleKeyPressEdit = (e: any) => {
+        if(e.key === "Enter" || e.key === " "){
+            return handleSaveEdit(e)
+        }
+    }
+
     return (
         <Stack
+            key={item.id}
             role='listitem'
             tabIndex={0}
             aria-label='chat history item'
@@ -108,7 +116,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             {edit ? <>
                 <Stack.Item style={{ width: '100%' }}>
                     <form onSubmit={(e) => handleSaveEdit(e)}>
-                        <TextField value={editTitle} placeholder={item.title} onChange={chatHistoryTitleOnChange} autoFocus/>
+                        <TextField value={editTitle} placeholder={item.title} onChange={chatHistoryTitleOnChange} onKeyDown={handleKeyPressEdit} autoFocus/>
                     </form>
                 </Stack.Item>
             </> : <>
@@ -138,7 +146,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 
 export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps> = ({ groupedChatHistory }) => {
   const [ , setSelectedItem] = React.useState<Conversation | null>(null);
-
+ 
   const handleSelectHistory = (item?: Conversation) => {
     if(item){
         setSelectedItem(item)
@@ -152,9 +160,9 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
   };
 
   return (
-    <div>
+    <div className={styles.listContainer}>
       {groupedChatHistory.map((group) => (
-        <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
+        group.entries.length > 0 && <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
           <Stack aria-label={group.month} className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
           <List aria-label={`chat history list`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
           <Separator styles={{

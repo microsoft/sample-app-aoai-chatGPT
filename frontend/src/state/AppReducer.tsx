@@ -8,6 +8,9 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, isChatHistoryOpen: !state.isChatHistoryOpen };
         case 'UPDATE_CURRENT_CHAT':
             return { ...state, currentChat: action.payload };
+        case 'UPDATE_FILTERED_CHAT_HISTORY':
+            let isFilter = action.payload ? true : false;
+            return { ...state, filteredChatHistory: action.payload, filterHistory: isFilter };
         case 'UPDATE_CHAT_HISTORY':
             if(!state.chatHistory || !state.currentChat){
                 return state;
@@ -28,6 +31,9 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             }
             let updatedChats = state.chatHistory.map(chat => {
                 if (chat.id === action.payload.id) {
+                    if(state.currentChat?.id === action.payload.id){
+                        state.currentChat.title = action.payload.title;
+                    }
                     //TODO: make api call to save new title to DB
                     return { ...chat, title: action.payload.title };
                 }
@@ -44,7 +50,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, chatHistory: filteredChat };
         case 'DELETE_CHAT_HISTORY':
             //TODO: make api call to delete all conversations from DB
-            return { ...state, chatHistory: [] };
+            return { ...state, chatHistory: [], filteredChatHistory: [], filterHistory: false, currentChat: null };
         case 'DELETE_CURRENT_CHAT_MESSAGES':
             //TODO: make api call to delete current conversation messages from DB
             if(!state.currentChat){

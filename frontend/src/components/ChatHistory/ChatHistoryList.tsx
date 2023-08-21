@@ -12,24 +12,46 @@ export interface GroupedChatHistory {
 }
 
 const groupByMonth = (entries: Conversation[]) => {
-    const groups: GroupedChatHistory[] = [];
+    const groups: GroupedChatHistory[] = [{ month: "Recent", entries: [] }];
+    const currentDate = new Date();
   
     entries.forEach((entry) => {
         const date = new Date(entry.date);
+        const daysDifference = (currentDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
         const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' })
         const existingGroup = groups.find((group) => group.month === monthYear);
-  
-        if (existingGroup) {
-            existingGroup.entries.push(entry);
-        } else {
-            groups.push({ month: monthYear, entries: [entry] });
+        
+        if(daysDifference <= 7){
+            groups[0].entries.push(entry);
+        }else{
+            if (existingGroup) {
+                existingGroup.entries.push(entry);
+            } else {
+                groups.push({ month: monthYear, entries: [entry] });
+            }
         }
     });
 
     groups.sort((a, b) => {
+        // Check if either group has no entries and handle it
+        if (a.entries.length === 0 && b.entries.length === 0) {
+            return 0; // No change in order
+        } else if (a.entries.length === 0) {
+            return 1; // Move 'a' to a higher index (bottom)
+        } else if (b.entries.length === 0) {
+            return -1; // Move 'b' to a higher index (bottom)
+        }
         const dateA = new Date(a.entries[0].date);
         const dateB = new Date(b.entries[0].date);
         return dateB.getTime() - dateA.getTime();
+    });
+
+    groups.forEach((group) => {
+        group.entries.sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB.getTime() - dateA.getTime();
+        });
     });
   
     return groups;
@@ -37,15 +59,19 @@ const groupByMonth = (entries: Conversation[]) => {
 
 const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
     const appStateContext = useContext(AppStateContext);
-    const chatHistory = appStateContext?.state.chatHistory;
+    const chatHistory = (appStateContext?.state.filterHistory) ? appStateContext?.state.filteredChatHistory : appStateContext?.state.chatHistory;
 
-    React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
+    React.useEffect(() => {}, [appStateContext?.state.chatHistory, appStateContext?.state.filteredChatHistory]);
     
     let groupedChatHistory;
     if(chatHistory && chatHistory.length > 0){
         groupedChatHistory = groupByMonth(chatHistory);
     }else{
-        return <div>No history</div>
+        if(appStateContext?.state.filterHistory){
+            return <div>No results matching search query.</div>
+        }else{
+            return <div>No chat history.</div>
+        }
     }
     
     return (

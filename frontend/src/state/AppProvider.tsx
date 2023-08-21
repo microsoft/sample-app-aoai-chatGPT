@@ -7,12 +7,15 @@ import { Conversation } from '../api';
 export interface AppState {
     isChatHistoryOpen: boolean;
     chatHistory: Conversation[] | null;
+    filteredChatHistory: Conversation[] | null;
+    filterHistory: boolean;
     currentChat: Conversation | null;
 }
 
 export type Action =
     | { type: 'TOGGLE_CHAT_HISTORY' }
     | { type: 'UPDATE_CURRENT_CHAT', payload: Conversation }
+    | { type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: Conversation[] | null }
     | { type: 'UPDATE_CHAT_HISTORY', payload: Conversation }
     | { type: 'UPDATE_CHAT_TITLE', payload: Conversation }
     | { type: 'DELETE_CHAT_ENTRY', payload: string }
@@ -23,7 +26,9 @@ export type Action =
 const initialState: AppState = {
     isChatHistoryOpen: true,
     chatHistory: null,
-    currentChat: null
+    filteredChatHistory: null,
+    filterHistory: false,
+    currentChat: null,
 };
 
 export const AppStateContext = createContext<{
