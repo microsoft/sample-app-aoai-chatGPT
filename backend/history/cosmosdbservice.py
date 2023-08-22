@@ -77,13 +77,9 @@ class CosmosConversationClient():
             {
                 'name': '@userId',
                 'value': user_id
-            },
-            {
-                'name': '@sortOrder',
-                'value': sort_order
             }
         ]
-        query = f"SELECT * FROM c where c.userId = @userId and c.type='conversation' order by c.updatedAt @sortOrder"
+        query = f"SELECT * FROM c where c.userId = @userId and c.type='conversation' order by c.updatedAt {sort_order}"
         conversations = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                                enable_cross_partition_query =True))
         ## if no conversations are found, return None

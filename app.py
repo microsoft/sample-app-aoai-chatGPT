@@ -592,13 +592,14 @@ def generate_title(conversation_messages):
     ## make sure the messages are sorted by _ts descending
     title_prompt = 'Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Respond with a json object in the format {{"title": string}}. Do not include any other commentary or description.'
 
-    messages = conversation_messages.copy()
+    messages = [{'role': msg['role'], 'content': msg['content']} for msg in conversation_messages]
     messages.append({'role': 'user', 'content': title_prompt})
 
     try:
         ## Submit prompt to Chat Completions for response
+        base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
         openai.api_type = "azure"
-        openai.api_base = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+        openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
         openai.api_key = AZURE_OPENAI_KEY
         completion = openai.ChatCompletion.create(    
@@ -608,9 +609,8 @@ def generate_title(conversation_messages):
             max_tokens=64 
         )
         title = json.loads(completion['choices'][0]['message']['content'])['title']
-        print(title)
         return title
-    except:
+    except Exception as e:
         return messages[-2]['content']
 
 if __name__ == "__main__":
