@@ -21,10 +21,19 @@ export type ToolMessageContent = {
 }
 
 export type ChatMessage = {
+    id: string;
     role: string;
     content: string;
     end_turn?: boolean;
+    date: string;
 };
+
+export type Conversation = {
+    id: string;
+    title: string;
+    messages: ChatMessage[];
+    date: string;
+}
 
 export enum ChatCompletionType {
     ChatCompletion = "chat.completion",

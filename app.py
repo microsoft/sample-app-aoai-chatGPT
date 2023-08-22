@@ -244,11 +244,12 @@ def stream_with_data(body, headers, endpoint, conversation_id=None):
         yield format_as_ndjson({"error": str(e)})
 
 
-def conversation_with_data(request):
+def conversation_with_data(request_body):
     body, headers = prepare_body_headers_with_data(request)
     base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
-    
+    conversation_id = request_body.get("conversation_id", None)
+
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
