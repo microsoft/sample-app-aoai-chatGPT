@@ -1,4 +1,4 @@
-import { UserInfo, ConversationRequest, Conversation, ChatMessage } from "./models";
+import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
@@ -38,12 +38,9 @@ export const fetchChatHistoryInit = (): Conversation[] | null => {
 export const fetchHistoryList = async (): Promise<Conversation[]> => {
     try {
         const response = await fetch("/history/list", {
-            method: "POST",
-            body: null,
-            headers: {
-                "Content-Type": "application/json"
-            },
+            method: "GET",
         });
+
         const payload = await response.json();
         const conversations: Conversation[] = await Promise.all(payload.map(async (conv: any) => {
             const conversation: Conversation = {
@@ -72,6 +69,12 @@ export const fetchMessagesList = async (convId: string): Promise<ChatMessage[]> 
                 "Content-Type": "application/json"
             },
         });
+        if(!response.ok){
+            let error = await response.json()
+            console.error("Error: ", error, response)
+            return []
+        }
+
         const payload = await response.json();
         let messages: ChatMessage[] = [];
         if(payload?.messages){
@@ -123,7 +126,7 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
     }
 }
 
-export const historyUpdate = async (messages: ChatMessage[], convId?: string): Promise<any> => {
+export const historyUpdate = async (messages: ChatMessage[], convId: string): Promise<any> => {
     const response = await fetch("/history/update", {
         method: "POST",
         body: JSON.stringify({
@@ -134,5 +137,81 @@ export const historyUpdate = async (messages: ChatMessage[], convId?: string): P
             "Content-Type": "application/json"
         },
     });
+    if(!response.ok){
+        let error = await response.json()
+        console.error("Error: ", error, response)
+        return
+    }
+}
+
+export const historyDelete = async (convId: string) : Promise<any> => {
+    const response = await fetch("/history/delete", {
+        method: "DELETE",
+        body: JSON.stringify({
+            conversation_id: convId,
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+}
+
+export const historyDeleteAll = async () : Promise<any> => {
+    const response = await fetch("/history/delete_all", {
+        method: "DELETE",
+        body: JSON.stringify({}),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+}
+
+export const historyClear = async (convId: string) : Promise<any> => {
+    const response = await fetch("/history/clear", {
+        method: "POST",
+        body: JSON.stringify({
+            conversation_id: convId,
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+    if(!response.ok){
+        let error = await response.json()
+        console.error("Error: ", error, response)
+        return
+    }
+}
+
+export const historyRename = async (convId: string, title: string) : Promise<any> => {
+    const response = await fetch("/history/rename", {
+        method: "POST",
+        body: JSON.stringify({
+            conversation_id: convId,
+            title: title
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+}
+
+export const historyEnsure = async (): Promise<CosmosDBStatus> => {
+    const response = await fetch("/history/ensure", {
+        method: "GET",
+    })
+    if(!response.ok){
+        let respJson = await response.json();
+        return {
+            'cosmosDB': false,
+            'status': respJson?.error
+        }
+    }else{
+        let respJson = await response.json();
+        return {
+            'cosmosDB': true,
+            'status': respJson?.message
+        }
+    }
 }
 

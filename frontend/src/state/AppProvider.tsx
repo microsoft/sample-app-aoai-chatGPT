@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
 import { chatHistorySampleData } from '../constants/chatHistory';
-import { ChatMessage, fetchChatHistoryInit, fetchHistoryList, fetchMessagesList } from '../api';
+import { ChatMessage, CosmosDBStatus, fetchChatHistoryInit, fetchHistoryList, fetchMessagesList, historyEnsure } from '../api';
 import { Conversation } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
+    isCosmosDBAvailable: CosmosDBStatus;
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
     filterHistory: boolean;
@@ -14,6 +15,7 @@ export interface AppState {
 
 export type Action =
     | { type: 'TOGGLE_CHAT_HISTORY' }
+    | { type: 'SET_COSMOSDB_STATUS', payload: CosmosDBStatus }
     | { type: 'UPDATE_CURRENT_CHAT', payload: Conversation | null }
     | { type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: Conversation[] | null }
     | { type: 'UPDATE_CHAT_HISTORY', payload: Conversation } // API Call
@@ -29,6 +31,10 @@ const initialState: AppState = {
     filteredChatHistory: null,
     filterHistory: false,
     currentChat: null,
+    isCosmosDBAvailable: {
+        cosmosDB: false,
+        status: "",
+    }
 };
 
 export const AppStateContext = createContext<{
@@ -45,10 +51,6 @@ type AppStateProviderProps = {
 
     useEffect(() => {
         // Fetch initial data here
-        fetchMessagesList("30224227-32ef-4a4e-a82b-2c4af94387b7")
-        // let chatHistoryData = fetchChatHistoryInit();
-        // dispatch({ type: 'FETCH_CHAT_HISTORY', payload: chatHistoryData });
-
         const fetchChatHistory = async () => {
             try {
                 const chatHistoryData = await fetchHistoryList();
@@ -58,8 +60,23 @@ type AppStateProviderProps = {
             }
         };
 
-        fetchChatHistory();
+        const getHistoryEnsure = async () => {
+            historyEnsure().then((response) => {
+                console.log("response: ", response)
+                if(response.cosmosDB){
+                    fetchChatHistory()
+                }
+                dispatch({ type: 'SET_COSMOSDB_STATUS', payload: response });
+            })
+            .catch((err) => {
+                console.log("FAILED ON INIT: ", err)
 
+                dispatch({ type: 'SET_COSMOSDB_STATUS', payload: {cosmosDB: false, status: 'Error'} });
+            })
+        }
+
+        // fetchChatHistory();
+        getHistoryEnsure();
     }, []);
   
     return (

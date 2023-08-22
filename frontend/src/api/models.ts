@@ -66,3 +66,8 @@ export type UserInfo = {
     user_claims: any[];
     user_id: string;
 };
+
+export type CosmosDBStatus = {
+    cosmosDB: boolean,
+    status: string
+}

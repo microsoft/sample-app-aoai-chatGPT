@@ -7,6 +7,7 @@ import { GroupedChatHistory } from './ChatHistoryList';
 import styles from "./ChatHistoryPanel.module.css"
 import { useBoolean } from '@fluentui/react-hooks';
 import { Conversation } from '../../api/models';
+import { historyDelete, historyRename } from '../../api';
 
 interface ChatHistoryListItemCellProps {
   item?: Conversation;
@@ -60,8 +61,13 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         return null;
     }
 
-    const onDelete = () => {
-        appStateContext?.dispatch({ type: 'DELETE_CHAT_ENTRY', payload: item.id })
+    const onDelete = async () => {
+        try {
+            await historyDelete(item.id)
+            appStateContext?.dispatch({ type: 'DELETE_CHAT_ENTRY', payload: item.id })
+        } catch (error) {
+            console.error("Error: ", error)
+        }
         toggleDeleteDialog();
     };
 
@@ -77,10 +83,15 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 
     const truncatedTitle = (item?.title?.length > 28) ? `${item.title.substring(0, 28)} ...` : item.title;
 
-    const handleSaveEdit = (e: any) => {
+    const handleSaveEdit = async (e: any) => {
         e.preventDefault();
-        setEdit(false)
-        appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as Conversation })
+        try {
+            await historyRename(item.id, editTitle)
+            setEdit(false)
+            appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as Conversation })
+        } catch (error) {
+            console.error("Error: ", error)
+        }
         setEditTitle("");
     }
 
@@ -89,7 +100,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     };
 
     const handleKeyPressEdit = (e: any) => {
-        if(e.key === "Enter" || e.key === " "){
+        if(e.key === "Enter"){
             return handleSaveEdit(e)
         }
     }

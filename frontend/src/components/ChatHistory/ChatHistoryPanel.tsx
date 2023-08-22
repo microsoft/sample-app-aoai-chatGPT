@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
+import { historyDeleteAll } from "../../api";
 
 interface ChatHistoryPanelProps {
 
@@ -60,9 +61,14 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
 
     const onHideContextualMenu = React.useCallback(() => setShowContextualMenu(false), []);
 
-    const onClearAllChatHistory = () => {
-        appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
-        setSearchText('')
+    const onClearAllChatHistory = async () => {
+        try {
+            await historyDeleteAll()
+            appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
+            setSearchText('')
+        } catch (error) {
+            console.error("Error: ", error)
+        }
         toggleClearAllDialog();
     }
 

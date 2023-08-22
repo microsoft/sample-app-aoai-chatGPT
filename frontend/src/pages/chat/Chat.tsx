@@ -21,7 +21,8 @@ import {
     Conversation,
     historyGenerate,
     fetchHistoryList,
-    historyUpdate
+    historyUpdate,
+    historyClear
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -294,6 +295,12 @@ const Chat = () => {
                 }else{
                     let resultConversations = await fetchHistoryList()
                     resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                    // resultConversation  : conversation = {
+                    //     id: result.conversation_id
+                    //     title: result.title,
+                    //     messages: [],
+                    //     date: result.date
+                    // }
                 }
                 if(!resultConversation){
                     console.error("Conversation not found.");
@@ -319,13 +326,16 @@ const Chat = () => {
 
     }
 
-    const clearChat = () => {
-        setProcessMessages(messageStatus.Processing)
-        if(appStateContext?.state.currentChat){
-            appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
+    const clearChat = async () => {
+        try {
+            if(appStateContext?.state.currentChat?.id){
+                await historyClear(appStateContext?.state.currentChat.id)
+                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
+            }
+            setActiveCitation(undefined);
+        } catch (error) {
+            
         }
-        setActiveCitation(undefined);
-        setProcessMessages(messageStatus.Done)
     };
 
     const newChat = () => {
@@ -530,9 +540,9 @@ const Chat = () => {
                     </div>
                     {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
                     <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                        <Stack aria-label="Citations Panel Header Container" horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                            <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
-                            <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
+                        <Stack horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
+                            <span className={styles.citationPanelHeader}>Citations</span>
+                            <DismissRegular className={styles.citationPanelDismiss} onClick={() => setIsCitationPanelOpen(false)}/>
                         </Stack>
                         <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
                         <div tabIndex={0}> 
