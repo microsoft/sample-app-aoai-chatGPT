@@ -65,19 +65,23 @@ AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
-    cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
+    try :
+        cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
-    if not AZURE_COSMOSDB_ACCOUNT_KEY:
-        credential = DefaultAzureCredential()
-    else:
-        credential = AZURE_COSMOSDB_ACCOUNT_KEY
+        if not AZURE_COSMOSDB_ACCOUNT_KEY:
+            credential = DefaultAzureCredential()
+        else:
+            credential = AZURE_COSMOSDB_ACCOUNT_KEY
 
-    cosmos_conversation_client = CosmosConversationClient(
-        cosmosdb_endpoint=cosmos_endpoint, 
-        credential=credential, 
-        database_name=AZURE_COSMOSDB_DATABASE,
-        container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
-    )
+        cosmos_conversation_client = CosmosConversationClient(
+            cosmosdb_endpoint=cosmos_endpoint, 
+            credential=credential, 
+            database_name=AZURE_COSMOSDB_DATABASE,
+            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+        )
+    except Exception as e:
+        logging.exception("Exception in CosmosDB initialization", e)
+        cosmos_conversation_client = None
 
 
 def is_chat_model():
@@ -377,7 +381,7 @@ def update_conversation():
         logging.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/history/delete", methods=["POST"])
+@app.route("/history/delete", methods=["DELETE"])
 def delete_conversation():
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
@@ -400,7 +404,7 @@ def delete_conversation():
         logging.exception("Exception in /history/delete")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/history/list", methods=["POST"])
+@app.route("/history/list", methods=["GET"])
 def list_conversations():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -465,6 +469,64 @@ def rename_conversation():
     updated_conversation = cosmos_conversation_client.upsert_conversation(conversation)
 
     return jsonify(updated_conversation), 200
+
+@app.route("/history/delete_all", methods=["DELETE"])
+def delete_all_conversations():
+    ## get the user id from the request headers
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+
+    # get conversations for user
+    try:
+        conversations = cosmos_conversation_client.get_conversations(user_id)
+        if not conversations:
+            return jsonify({"error": f"No conversations for {user_id} were found"}), 404
+        
+        # delete each conversation
+        for conversation in conversations:
+            ## delete the conversation messages from cosmos first
+            deleted_messages = cosmos_conversation_client.delete_messages(conversation['id'], user_id)
+
+            ## Now delete the conversation 
+            deleted_conversation = cosmos_conversation_client.delete_conversation(user_id, conversation['id'])
+
+        return jsonify({"message": f"Successfully deleted conversation and messages for user {user_id}"}), 200
+    
+    except Exception as e:
+        logging.exception("Exception in /history/delete_all")
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/history/clear", methods=["POST"])
+def clear_messages():
+    ## get the user id from the request headers
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+    
+    ## check request for conversation_id
+    conversation_id = request.json.get("conversation_id", None)
+    try: 
+        if not conversation_id:
+            return jsonify({"error": "conversation_id is required"}), 400
+        
+        ## delete the conversation messages from cosmos
+        deleted_messages = cosmos_conversation_client.delete_messages(conversation_id, user_id)
+
+        return jsonify({"message": "Successfully deleted messages in conversation", "conversation_id": conversation_id}), 200
+    except Exception as e:
+        logging.exception("Exception in /history/clear_messages")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/history/ensure", methods=["GET"])
+def ensure_cosmos():
+    if not AZURE_COSMOSDB_ACCOUNT:
+        return jsonify({"error": "CosmosDB is not configured"}), 404
+    
+    if not cosmos_conversation_client or not cosmos_conversation_client.ensure():
+        return jsonify({"error": "CosmosDB is not working"}), 500
+
+    return jsonify({"message": "CosmosDB is configured and working"}), 200
+
 
 def generate_title(conversation_messages):
     ## make sure the messages are sorted by _ts descending
