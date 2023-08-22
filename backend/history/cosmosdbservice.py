@@ -73,8 +73,18 @@ class CosmosConversationClient():
 
 
     def get_conversations(self, user_id, sort_order = 'DESC'):
-        query = f"SELECT * FROM c where c.userId = '{user_id}' and c.type='conversation' order by c.updatedAt {sort_order}"
-        conversations = list(self.container_client.query_items(query=query,
+        parameters = [
+            {
+                'name': '@userId',
+                'value': user_id
+            },
+            {
+                'name': '@sortOrder',
+                'value': sort_order
+            }
+        ]
+        query = f"SELECT * FROM c where c.userId = @userId and c.type='conversation' order by c.updatedAt @sortOrder"
+        conversations = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                                enable_cross_partition_query =True))
         ## if no conversations are found, return None
         if len(conversations) == 0:
@@ -83,8 +93,18 @@ class CosmosConversationClient():
             return conversations
 
     def get_conversation(self, user_id, conversation_id):
-        query = f"SELECT * FROM c where c.id = '{conversation_id}' and c.type='conversation' and c.userId = '{user_id}'"
-        conversation = list(self.container_client.query_items(query=query,
+        parameters = [
+            {
+                'name': '@conversationId',
+                'value': conversation_id
+            },
+            {
+                'name': '@userId',
+                'value': user_id
+            }
+        ]
+        query = f"SELECT * FROM c where c.id = @conversationId and c.type='conversation' and c.userId = @userId"
+        conversation = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                                enable_cross_partition_query =True))
         ## if no conversations are found, return None
         if len(conversation) == 0:
@@ -117,12 +137,22 @@ class CosmosConversationClient():
 
 
     def get_messages(self, user_id, conversation_id):
-        query = f"SELECT * FROM c WHERE c.conversationId = '{conversation_id}' AND c.type='message' AND c.userId = '{user_id}' ORDER BY c.timestamp ASC"
-        messages = list(self.container_client.query_items(query=query,
+        parameters = [
+            {
+                'name': '@conversationId',
+                'value': conversation_id
+            },
+            {
+                'name': '@userId',
+                'value': user_id
+            }
+        ]
+        query = f"SELECT * FROM c WHERE c.conversationId = @conversationId AND c.type='message' AND c.userId = @userId ORDER BY c.timestamp ASC"
+        messages = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                      enable_cross_partition_query =True))
         ## if no messages are found, return false
         if len(messages) == 0:
-            return None
+            return []
         else:
             return messages
 

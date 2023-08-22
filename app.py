@@ -202,7 +202,7 @@ def prepare_body_headers_with_data(request):
     return body, headers
 
 
-def stream_with_data(body, headers, endpoint, conversation_id=None):
+def stream_with_data(body, headers, endpoint, history_metadata={}):
     s = requests.Session()
     response = {
         "id": "",
@@ -212,7 +212,7 @@ def stream_with_data(body, headers, endpoint, conversation_id=None):
         "choices": [{
             "messages": []
         }],
-        'conversation_id': conversation_id
+        'history_metadata': history_metadata
     }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
@@ -248,20 +248,20 @@ def conversation_with_data(request_body):
     body, headers = prepare_body_headers_with_data(request)
     base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
-    conversation_id = request_body.get("conversation_id", None)
+    history_metadata = request_body.get("history_metadata", {})
 
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
-        r['conversation_id'] = conversation_id
+        r['history_metadata'] = history_metadata
 
         return Response(format_as_ndjson(r), status=status_code)
     else:
-        return Response(stream_with_data(body, headers, endpoint, conversation_id), mimetype='text/event-stream')
+        return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
 
 
-def stream_without_data(response, conversation_id=None):
+def stream_without_data(response, history_metadata={}):
     responseText = ""
     for line in response:
         deltaText = line["choices"][0]["delta"].get('content')
@@ -279,7 +279,7 @@ def stream_without_data(response, conversation_id=None):
                     "content": responseText
                 }]
             }],
-            "conversation_id": conversation_id
+            "history_metadata": history_metadata
         }
         yield format_as_ndjson(response_obj)
 
@@ -314,8 +314,7 @@ def conversation_without_data(request_body):
         stream=SHOULD_STREAM
     )
 
-    conversation_id = request_body.get("conversation_id", None)
-    print(conversation_id)
+    history_metadata = request_body.get("history_metadata", {})
 
     if not SHOULD_STREAM:
         response_obj = {
@@ -329,12 +328,12 @@ def conversation_without_data(request_body):
                     "content": response.choices[0].message.content
                 }]
             }],
-            "conversation_id": conversation_id
+            "history_metadata": history_metadata
         }
 
         return jsonify(response_obj), 200
     else:
-        return Response(stream_without_data(response, conversation_id), mimetype='text/event-stream')
+        return Response(stream_without_data(response, history_metadata), mimetype='text/event-stream')
 
 
 @app.route("/conversation", methods=["GET", "POST"])
@@ -368,10 +367,13 @@ def add_conversation():
             raise Exception("CosmosDB is not configured")
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
+        history_metadata = {}
         if not conversation_id:
             title = generate_title(request.json["messages"])
             conversation_dict = cosmos_conversation_client.create_conversation(user_id=user_id, title=title)
             conversation_id = conversation_dict['id']
+            history_metadata['title'] = title
+            history_metadata['date'] = conversation_dict['createdAt']
             
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
@@ -387,7 +389,8 @@ def add_conversation():
         
         # Submit request to Chat Completions for response
         request_body = request.json
-        request_body['conversation_id'] = conversation_id
+        history_metadata['conversation_id'] = conversation_id
+        request_body['history_metadata'] = history_metadata
         return conversation_internal(request_body)
        
     except Exception as e:
@@ -496,8 +499,6 @@ def get_conversation():
     
     # get the messages for the conversation from cosmos
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
-    if not conversation_messages:
-        return jsonify({"error": f"No messages for {conversation_id} were found"}), 404
 
     ## format the messages in the bot frontend format
     messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt']} for msg in conversation_messages]
