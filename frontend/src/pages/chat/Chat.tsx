@@ -18,7 +18,8 @@ import {
     ToolMessageContent,
     ChatResponse,
     getUserInfo,
-    Conversation
+    Conversation,
+    historyGenerate
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -67,6 +68,28 @@ const Chat = () => {
             content: question,
             date: new Date().toISOString(),
         };
+
+        //api call here (generate)
+        if(conversationId){
+            let conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+            if(!conversation){
+                console.error("Conversation not found.");
+                setIsLoading(false);
+                setShowLoadingMessage(false);
+                abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                return;
+            }else{
+                conversation.messages.push(userMessage);
+                historyGenerate([...conversation.messages.filter((answer) => answer.role !== "error")], abortController.signal, conversationId)
+            }
+        }else{
+            historyGenerate([userMessage], abortController.signal)
+        }
+
+        // if new conversation, pass user message 
+
+        // if exisiting, pass existing and new message and convo id
+
         let conversation: Conversation | undefined;
         if(!conversationId){
             conversation = {
@@ -161,6 +184,39 @@ const Chat = () => {
         return abortController.abort();
     };
 
+    const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+        setIsLoading(true);
+        setShowLoadingMessage(true);
+        const abortController = new AbortController();
+        abortFuncs.current.unshift(abortController);
+
+        const userMessage: ChatMessage = {
+            id: uuid(),
+            role: "user",
+            content: question,
+            date: new Date().toISOString(),
+        };
+
+        //api call here (generate)
+        if(conversationId){
+            let conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+            if(!conversation){
+                console.error("Conversation not found.");
+                setIsLoading(false);
+                setShowLoadingMessage(false);
+                abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                return;
+            }else{
+                conversation.messages.push(userMessage);
+                historyGenerate([...conversation.messages.filter((answer) => answer.role !== "error")], abortController.signal, conversationId)
+            }
+        }else{
+            historyGenerate([userMessage].filter((answer) => answer.role !== "error"), abortController.signal)
+        }
+
+
+    }
+
     const clearChat = () => {
         setProcessMessages(messageStatus.Processing)
         if(appStateContext?.state.currentChat){
@@ -190,7 +246,10 @@ const Chat = () => {
     }
 
     useEffect(() => {
+        console.log("re render triggered")
         if (appStateContext?.state.currentChat) {
+            console.log("updated messages: ", appStateContext.state.currentChat.messages)
+
             setMessages(appStateContext.state.currentChat.messages)
         }else{
             setMessages([])
@@ -358,7 +417,8 @@ const Chat = () => {
                                 clearOnSend
                                 placeholder="Type a new question..."
                                 disabled={isLoading}
-                                onSend={(question, id) => makeApiRequest(question, id)}
+                                // onSend={(question, id) => makeApiRequest(question, id)}
+                                onSend={(question, id) => makeApiRequestWithCosmosDB(question, id)}
                                 conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                             />
                         </Stack>

@@ -149,6 +149,7 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
  
   const handleSelectHistory = (item?: Conversation) => {
     if(item){
+        console.log("item: ", item)
         setSelectedItem(item)
     }
   }

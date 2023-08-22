@@ -129,7 +129,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     </Stack>
                 </Stack>
             </Stack>
-            <Stack >
+            {/* <Stack >
                 <SearchBox
                     value={searchText}
                     className={styles.searchBox}
@@ -141,7 +141,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     }}
                     onChange={(ev) => onSearchChange(ev)}
                 />
-            </Stack>
+            </Stack> */}
             <Stack aria-label="chat history panel content"
                 styles={{
                     root: {

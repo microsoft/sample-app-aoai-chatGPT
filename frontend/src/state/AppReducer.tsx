@@ -1,4 +1,4 @@
-import { Conversation, fetchChatHistoryInit } from '../api';
+import { Conversation, fetchChatHistoryInit, fetchHistoryList } from '../api';
 import { Action, AppState } from './AppProvider';
 
 // Define the reducer function
@@ -7,6 +7,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
         case 'TOGGLE_CHAT_HISTORY':
             return { ...state, isChatHistoryOpen: !state.isChatHistoryOpen };
         case 'UPDATE_CURRENT_CHAT':
+            console.log("item to update: ", action.payload)
             return { ...state, currentChat: action.payload };
         case 'UPDATE_FILTERED_CHAT_HISTORY':
             let isFilter = action.payload ? true : false;
@@ -65,8 +66,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
                 currentChat: updatedCurrentChat
             };
         case 'FETCH_CHAT_HISTORY':
-            let chatHistoryData = fetchChatHistoryInit();
-            return { ...state, chatHistory: chatHistoryData };
+            return { ...state, chatHistory: action.payload };
         default:
             return state;
       }
