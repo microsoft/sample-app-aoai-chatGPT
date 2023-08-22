@@ -50,6 +50,7 @@ export type ChatResponse = {
     created: number;
     object: ChatCompletionType;
     choices: ChatResponseChoice[];
+    conversation_id: string;
     error?: any;
 }
 
