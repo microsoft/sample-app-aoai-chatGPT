@@ -14,7 +14,7 @@ export interface AppState {
 
 export type Action =
     | { type: 'TOGGLE_CHAT_HISTORY' }
-    | { type: 'UPDATE_CURRENT_CHAT', payload: Conversation }
+    | { type: 'UPDATE_CURRENT_CHAT', payload: Conversation | null }
     | { type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: Conversation[] | null }
     | { type: 'UPDATE_CHAT_HISTORY', payload: Conversation } // API Call
     | { type: 'UPDATE_CHAT_TITLE', payload: Conversation } // API Call

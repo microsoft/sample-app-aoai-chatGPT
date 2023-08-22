@@ -33,13 +33,8 @@ export const fetchChatHistoryInit = (): Conversation[] | null => {
 
     // return null;
     return chatHistorySampleData;
-
-    // const response = await fetch('api_endpoint');
-    // const data = await response.json();
-    // return data;
 }
 
-// export const fetchHistoryList = async (): Promise<any> => {
 export const fetchHistoryList = async (): Promise<Conversation[]> => {
     try {
         const response = await fetch("/history/list", {
@@ -59,7 +54,6 @@ export const fetchHistoryList = async (): Promise<Conversation[]> => {
             };
             return conversation;
         }));
-        console.log("final conversations: ", conversations)
         return conversations;
     } catch (error) {
         console.error(error);
@@ -95,25 +89,25 @@ export const fetchMessagesList = async (convId: string): Promise<ChatMessage[]> 
             return [];
         }
     } catch (error) {
-        console.log(error)
+        console.log(typeof(error))
+        console.error(error)
         return []
     }
 }
 
-export const historyGenerate = async (messages: ChatMessage[], abortSignal: AbortSignal, convId?: string): Promise<any> => {
+export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, convId?: string): Promise<Response> => {
     try {
         let body;
         if(convId){
             body = JSON.stringify({
                 conversation_id: convId,
-                messages: messages
+                messages: options.messages
             })
         }else{
             body = JSON.stringify({
-                messages: messages
+                messages: options.messages
             })
         }
-        console.log("body", body)
         const response = await fetch("/history/generate", {
             method: "POST",
             headers: {
@@ -122,27 +116,23 @@ export const historyGenerate = async (messages: ChatMessage[], abortSignal: Abor
             body: body,
             signal: abortSignal
         });
-        console.log("response: ", response)
-        const payload = await response.json();
-        console.log("payload: ", payload)
-        // let messages: ChatMessage[] = [];
-        // if(payload?.messages){
-        //     payload.messages.forEach((msg: any) => {
-        //         const message: ChatMessage = {
-        //             id: msg.id,
-        //             role: msg.role,
-        //             date: msg.createdAt,
-        //             content: msg.content,
-        //         }
-        //         messages.push(message)
-        //     });
-        //     return messages;
-        // }else{
-        //     return [];
-        // }
+        return response;
     } catch (error) {
         console.log(error)
-        return []
+        return new Response
     }
+}
+
+export const historyUpdate = async (messages: ChatMessage[], convId?: string): Promise<any> => {
+    const response = await fetch("/history/update", {
+        method: "POST",
+        body: JSON.stringify({
+            conversation_id: convId,
+            messages: messages
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
 }
 

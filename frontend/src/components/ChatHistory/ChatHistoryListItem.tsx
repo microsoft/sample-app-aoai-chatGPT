@@ -75,7 +75,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: item } )
     }
 
-    const truncatedTitle = item.title.length > 28 ? `${item.title.substring(0, 28)} ...` : item.title;
+    const truncatedTitle = (item?.title?.length > 28) ? `${item.title.substring(0, 28)} ...` : item.title;
 
     const handleSaveEdit = (e: any) => {
         e.preventDefault();
@@ -149,7 +149,6 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
  
   const handleSelectHistory = (item?: Conversation) => {
     if(item){
-        console.log("item: ", item)
         setSelectedItem(item)
     }
   }

@@ -7,7 +7,6 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
         case 'TOGGLE_CHAT_HISTORY':
             return { ...state, isChatHistoryOpen: !state.isChatHistoryOpen };
         case 'UPDATE_CURRENT_CHAT':
-            console.log("item to update: ", action.payload)
             return { ...state, currentChat: action.payload };
         case 'UPDATE_FILTERED_CHAT_HISTORY':
             let isFilter = action.payload ? true : false;

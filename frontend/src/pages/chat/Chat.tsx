@@ -19,7 +19,9 @@ import {
     ChatResponse,
     getUserInfo,
     Conversation,
-    historyGenerate
+    historyGenerate,
+    fetchHistoryList,
+    historyUpdate
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -70,21 +72,6 @@ const Chat = () => {
         };
 
         //api call here (generate)
-        if(conversationId){
-            let conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-            if(!conversation){
-                console.error("Conversation not found.");
-                setIsLoading(false);
-                setShowLoadingMessage(false);
-                abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                return;
-            }else{
-                conversation.messages.push(userMessage);
-                historyGenerate([...conversation.messages.filter((answer) => answer.role !== "error")], abortController.signal, conversationId)
-            }
-        }else{
-            historyGenerate([userMessage], abortController.signal)
-        }
 
         // if new conversation, pass user message 
 
@@ -197,9 +184,11 @@ const Chat = () => {
             date: new Date().toISOString(),
         };
 
-        //api call here (generate)
+        //api call params set here (generate)
+        let request: ConversationRequest;
+        let conversation;
         if(conversationId){
-            let conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+            conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
             if(!conversation){
                 console.error("Conversation not found.");
                 setIsLoading(false);
@@ -208,12 +197,125 @@ const Chat = () => {
                 return;
             }else{
                 conversation.messages.push(userMessage);
-                historyGenerate([...conversation.messages.filter((answer) => answer.role !== "error")], abortController.signal, conversationId)
+                request = {
+                    messages: [...conversation.messages.filter((answer) => answer.role !== "error")]
+                };
+                // historyGenerate(request, abortController.signal, conversationId)
             }
         }else{
-            historyGenerate([userMessage].filter((answer) => answer.role !== "error"), abortController.signal)
+            request = {
+                messages: [userMessage].filter((answer) => answer.role !== "error")
+            };
+            // historyGenerate(request, abortController.signal)
+            setMessages(request.messages)
         }
 
+        let result = {} as ChatResponse;
+        try {
+            const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
+            if (response?.body) {
+                const reader = response.body.getReader();
+                let runningText = "";
+
+                while (true) {
+                    setProcessMessages(messageStatus.Processing)
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    var text = new TextDecoder("utf-8").decode(value);
+                    const objects = text.split("\n");
+                    objects.forEach((obj) => {
+                        try {
+                            runningText += obj;
+                            result = JSON.parse(runningText);
+                            result.choices[0].messages.forEach((obj) => {
+                                obj.id = uuid();
+                                obj.date = new Date().toISOString();
+                            })
+                            setShowLoadingMessage(false);
+                            setMessages([...messages, userMessage, ...result.choices[0].messages]);
+                            runningText = "";
+                        }
+                        catch { }
+                    });
+                }
+
+                let resultConversation;
+                if(conversationId){
+                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+                    if(!resultConversation){
+                        console.error("Conversation not found.");
+                        setIsLoading(false);
+                        setShowLoadingMessage(false);
+                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                        return;
+                    }
+                }else{
+                    let resultConversations = await fetchHistoryList()
+                    resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                }
+                if(!resultConversation){
+                    console.error("Conversation not found.");
+                    setIsLoading(false);
+                    setShowLoadingMessage(false);
+                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                    return;
+                }
+                resultConversation.messages.push(...result.choices[0].messages);
+                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
+                setMessages([...messages, ...result.choices[0].messages]);
+            }
+            
+        } catch ( e )  {
+            if (!abortController.signal.aborted) {
+                let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
+                if (result.error?.message) {
+                    errorMessage = result.error.message;
+                }
+                else if (typeof result.error === "string") {
+                    errorMessage = result.error;
+                }
+                let errorChatMsg: ChatMessage = {
+                    id: uuid(),
+                    role: "error",
+                    content: errorMessage,
+                    date: new Date().toISOString()
+                }
+                let resultConversation;
+                if(conversationId){
+                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+                    if(!resultConversation){
+                        console.error("Conversation not found.");
+                        setIsLoading(false);
+                        setShowLoadingMessage(false);
+                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                        return;
+                    }
+                }else{
+                    let resultConversations = await fetchHistoryList()
+                    resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                }
+                if(!resultConversation){
+                    console.error("Conversation not found.");
+                    setIsLoading(false);
+                    setShowLoadingMessage(false);
+                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                    return;
+                }
+                resultConversation.messages.push(errorChatMsg);
+                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
+                setMessages([...messages, errorChatMsg]);
+            } else {
+                setMessages([...messages, userMessage])
+            }
+        } finally {
+            setIsLoading(false);
+            setShowLoadingMessage(false);
+            abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+            setProcessMessages(messageStatus.Done)
+        }
+
+        return abortController.abort();
 
     }
 
@@ -229,13 +331,13 @@ const Chat = () => {
     const newChat = () => {
         setProcessMessages(messageStatus.Processing)
         setMessages([])
-        let conversation = {
-            id: uuid(),
-            title: "New chat",
-            messages: [],
-            date: new Date().toISOString(),
-        }
-        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
+        // let conversation = {
+        //     id: uuid(),
+        //     title: "New chat",
+        //     messages: [],
+        //     date: new Date().toISOString(),
+        // }
+        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
         setProcessMessages(messageStatus.Done)
     };
 
@@ -246,9 +348,7 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        console.log("re render triggered")
         if (appStateContext?.state.currentChat) {
-            console.log("updated messages: ", appStateContext.state.currentChat.messages)
 
             setMessages(appStateContext.state.currentChat.messages)
         }else{
@@ -258,8 +358,13 @@ const Chat = () => {
     
     useEffect(() => {
         if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
-            appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
-            setMessages(appStateContext.state.currentChat.messages)
+            try {
+                historyUpdate(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
+                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
+                setMessages(appStateContext.state.currentChat.messages)
+            } catch (error) {
+                console.log("Error: ", error)
+            }
             setProcessMessages(messageStatus.NotRunning)
         }
     }, [processMessages]);
