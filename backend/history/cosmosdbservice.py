@@ -16,6 +16,19 @@ class CosmosConversationClient():
         self.database_client = self.cosmosdb_client.get_database_client(database_name)
         self.container_client = self.database_client.get_container_client(container_name)
 
+    def ensure(self):
+        try:
+            if not self.cosmosdb_client or not self.database_client or not self.container_client:
+                return False
+            
+            container_info = self.container_client.read()
+            if not container_info:
+                return False
+            
+            return True
+        except:
+            return False
+
     def create_conversation(self, user_id, title = ''):
         conversation = {
             'id': str(uuid.uuid4()),  
