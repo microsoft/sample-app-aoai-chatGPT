@@ -437,7 +437,7 @@ def get_conversation():
         return jsonify({"error": f"No messages for {conversation_id} were found"}), 404
 
     ## format the messages in the bot frontend format
-    messages = [{'role': msg['role'], 'content': msg['content']} for msg in conversation_messages]
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt']} for msg in conversation_messages]
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
