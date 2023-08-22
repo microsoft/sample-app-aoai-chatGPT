@@ -32,8 +32,8 @@ echo.
 echo Starting backend
 echo.
 cd ..
-start http://127.0.0.1:5000
-call python ./app.py
+start http://127.0.0.1:5000 
+call python -m flask --app ./app.py --debug run
 if "%errorlevel%" neq "0" (
     echo Failed to start backend
     exit /B %errorlevel%
