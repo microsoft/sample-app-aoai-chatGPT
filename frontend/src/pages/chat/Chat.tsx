@@ -252,8 +252,14 @@ const Chat = () => {
                         return;
                     }
                 }else{
-                    let resultConversations = await fetchHistoryList()
-                    resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                    // let resultConversations = await fetchHistoryList()
+                    // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                    resultConversation = {
+                        id: result.conversation_id,
+                        title: result.history_metadata.title,
+                        messages: [],
+                        date: result.history_metadata.date
+                    }
                 }
                 if(!resultConversation){
                     console.error("Conversation not found.");
@@ -293,14 +299,14 @@ const Chat = () => {
                         return;
                     }
                 }else{
-                    let resultConversations = await fetchHistoryList()
-                    resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
-                    // resultConversation  : conversation = {
-                    //     id: result.conversation_id
-                    //     title: result.title,
-                    //     messages: [],
-                    //     date: result.date
-                    // }
+                    // let resultConversations = await fetchHistoryList()
+                    // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                    resultConversation = {
+                        id: result.conversation_id,
+                        title: result.history_metadata.title,
+                        messages: [],
+                        date: result.history_metadata.date
+                    }
                 }
                 if(!resultConversation){
                     console.error("Conversation not found.");

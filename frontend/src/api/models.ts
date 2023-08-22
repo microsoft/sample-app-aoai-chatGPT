@@ -51,6 +51,10 @@ export type ChatResponse = {
     object: ChatCompletionType;
     choices: ChatResponseChoice[];
     conversation_id: string;
+    history_metadata: {
+        'title': string,
+        'date': string
+    }
     error?: any;
 }
 
