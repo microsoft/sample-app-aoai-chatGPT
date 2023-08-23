@@ -1,4 +1,4 @@
-import { GroupedList, IGroup, IGroupHeaderProps, IRenderFunction, List, mergeStyleSets } from '@fluentui/react';
+import { GroupedList, IGroup, IGroupHeaderProps, IRenderFunction, List, Stack, StackItem, Text } from '@fluentui/react';
 import React, { useContext } from 'react';
 import { AppStateContext } from '../../state/AppProvider';
 import { ChatHistoryListItemGroups } from './ChatHistoryListItem';
@@ -70,9 +70,21 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
         groupedChatHistory = groupByMonth(chatHistory);
     }else{
         if(appStateContext?.state.filterHistory){
-            return <div>No results matching search query.</div>
+            return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                <StackItem>
+                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                        <span>No results matching search query.</span>
+                    </Text>
+                </StackItem>
+            </Stack>
         }else{
-            return <div>No chat history.</div>
+            return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                <StackItem>
+                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                        <span>No chat history.</span>
+                    </Text>
+                </StackItem>
+            </Stack>
         }
     }
     

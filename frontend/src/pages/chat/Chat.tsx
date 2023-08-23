@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
 import { CommandBarButton, Stack } from "@fluentui/react";
 import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular, AddRegular } from "@fluentui/react-icons";
 
@@ -48,6 +48,7 @@ const Chat = () => {
 
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
+    const [clearingChat, setClearingChat] = useState<boolean>(false);
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
@@ -251,15 +252,17 @@ const Chat = () => {
                         abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                         return;
                     }
+                    resultConversation.messages.push(...result.choices[0].messages);
                 }else{
                     // let resultConversations = await fetchHistoryList()
                     // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
                     resultConversation = {
-                        id: result.conversation_id,
+                        id: result.history_metadata.conversation_id,
                         title: result.history_metadata.title,
-                        messages: [],
+                        messages: [userMessage],
                         date: result.history_metadata.date
                     }
+                    resultConversation.messages.push(...result.choices[0].messages);
                 }
                 if(!resultConversation){
                     console.error("Conversation not found.");
@@ -268,7 +271,6 @@ const Chat = () => {
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                     return;
                 }
-                resultConversation.messages.push(...result.choices[0].messages);
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
                 setMessages([...messages, ...result.choices[0].messages]);
             }
@@ -298,15 +300,17 @@ const Chat = () => {
                         abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                         return;
                     }
+                    resultConversation.messages.push(errorChatMsg);
                 }else{
                     // let resultConversations = await fetchHistoryList()
                     // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
                     resultConversation = {
-                        id: result.conversation_id,
+                        id: result.history_metadata.conversation_id,
                         title: result.history_metadata.title,
-                        messages: [],
+                        messages: [userMessage],
                         date: result.history_metadata.date
                     }
+                    resultConversation.messages.push(errorChatMsg);
                 }
                 if(!resultConversation){
                     console.error("Conversation not found.");
@@ -315,7 +319,7 @@ const Chat = () => {
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                     return;
                 }
-                resultConversation.messages.push(errorChatMsg);
+                // resultConversation.messages.push(errorChatMsg);
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
                 setMessages([...messages, errorChatMsg]);
             } else {
@@ -333,6 +337,7 @@ const Chat = () => {
     }
 
     const clearChat = async () => {
+        setClearingChat(true)
         try {
             if(appStateContext?.state.currentChat?.id){
                 await historyClear(appStateContext?.state.currentChat.id)
@@ -342,17 +347,12 @@ const Chat = () => {
         } catch (error) {
             
         }
+        setClearingChat(false)
     };
 
     const newChat = () => {
         setProcessMessages(messageStatus.Processing)
         setMessages([])
-        // let conversation = {
-        //     id: uuid(),
-        //     title: "New chat",
-        //     messages: [],
-        //     date: new Date().toISOString(),
-        // }
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
         setProcessMessages(messageStatus.Done)
     };
@@ -372,14 +372,14 @@ const Chat = () => {
         }
     }, [appStateContext?.state.currentChat]);
     
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
             try {
                 historyUpdate(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
                 appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
                 setMessages(appStateContext.state.currentChat.messages)
             } catch (error) {
-                console.log("Error: ", error)
+                console.error("Error: ", error)
             }
             setProcessMessages(messageStatus.NotRunning)
         }
@@ -389,7 +389,7 @@ const Chat = () => {
         getUserInfoList();
     }, []);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
     }, [showLoadingMessage, processMessages]);
 
@@ -524,14 +524,14 @@ const Chat = () => {
                                         },
                                         root: {
                                             color: '#FFFFFF',
-                                            background: isLoading || (messages && messages.length === 0) ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                                            cursor: isLoading || (messages && messages.length === 0) ? "" : "pointer"
+                                            background: isLoading || (messages && messages.length === 0) || clearingChat ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                                            cursor: isLoading || (messages && messages.length === 0) || clearingChat ? "" : "pointer"
                                         },
                                     }}
                                     className={styles.clearChatBroom}
                                     iconProps={{ iconName: 'Broom' }}
                                     onClick={clearChat}
-                                    disabled={(isLoading || (messages && messages.length === 0))}
+                                    disabled={(isLoading || (messages && messages.length === 0) || clearingChat)}
                                 />
                             </Stack>
                             <QuestionInput

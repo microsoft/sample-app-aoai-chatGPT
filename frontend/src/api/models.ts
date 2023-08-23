@@ -50,10 +50,10 @@ export type ChatResponse = {
     created: number;
     object: ChatCompletionType;
     choices: ChatResponseChoice[];
-    conversation_id: string;
     history_metadata: {
-        'title': string,
-        'date': string
+        conversation_id: string;
+        title: string;
+        date: string;
     }
     error?: any;
 }
@@ -74,4 +74,11 @@ export type UserInfo = {
 export type CosmosDBStatus = {
     cosmosDB: boolean,
     status: string
+}
+
+export enum ChatHistoryLoadingState {
+    Loading = "loading",
+    Success = "success",
+    Fail = "fail",
+    NotStarted = "notStarted"
 }

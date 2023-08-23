@@ -1,4 +1,4 @@
-import { CommandBar, CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, PrimaryButton, SearchBox, Stack, StackItem, Text } from "@fluentui/react";
+import { CommandBar, CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, PrimaryButton, SearchBox, Spinner, SpinnerSize, Stack, StackItem, Text } from "@fluentui/react";
 import { useBoolean, useConst } from '@fluentui/react-hooks';
 
 import styles from "./ChatHistoryPanel.module.css"
@@ -6,7 +6,7 @@ import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
-import { historyDeleteAll } from "../../api";
+import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
 
 interface ChatHistoryPanelProps {
 
@@ -31,6 +31,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     const appStateContext = useContext(AppStateContext)
     const [showContextualMenu, setShowContextualMenu] = React.useState(false);
     const [hideClearAllDialog, { toggle: toggleClearAllDialog }] = useBoolean(true);
+    const [clearing, setClearing] = React.useState(false)
 
     const dialogContentProps = {
         type: DialogType.close,
@@ -62,6 +63,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     const onHideContextualMenu = React.useCallback(() => setShowContextualMenu(false), []);
 
     const onClearAllChatHistory = async () => {
+        setClearing(true)
         try {
             await historyDeleteAll()
             appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
@@ -70,6 +72,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
             console.error("Error: ", error)
         }
         toggleClearAllDialog();
+        setClearing(false)
     }
 
     const [searchText, setSearchText] = React.useState('');
@@ -166,18 +169,43 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     padding: "1px"
                 }}>
                 <Stack className={styles.chatHistoryListContainer}>
-                    <ChatHistoryList/>
+                    {(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Success && appStateContext?.state.isCosmosDBAvailable.cosmosDB) && <ChatHistoryList/>}
+                    {appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && <>
+                        <Stack>
+                            <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                                <StackItem>
+                                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                                        <span>Error loading chat history</span>
+                                    </Text>
+                                </StackItem>
+                            </Stack>
+                        </Stack>
+                    </>}
+                    {appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading && <>
+                        <Stack>
+                            <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                                <StackItem style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                    <Spinner style={{ alignSelf: "flex-start", height: "100%", marginRight: "5px" }} size={SpinnerSize.medium} />
+                                </StackItem>
+                                <StackItem>
+                                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                                        <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
+                                    </Text>
+                                </StackItem>
+                            </Stack>
+                        </Stack>
+                    </>}
                 </Stack>
             </Stack>
             <Dialog
                 hidden={hideClearAllDialog}
-                onDismiss={toggleClearAllDialog}
+                onDismiss={clearing ? ()=>{} : toggleClearAllDialog}
                 dialogContentProps={dialogContentProps}
                 modalProps={modalProps}
             >
                 <DialogFooter>
-                <PrimaryButton onClick={onClearAllChatHistory} text="Clear All" />
-                <DefaultButton onClick={toggleClearAllDialog} text="Cancel" />
+                <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />
+                <DefaultButton onClick={toggleClearAllDialog} disabled={clearing} text="Cancel" />
                 </DialogFooter>
             </Dialog>
         </section>

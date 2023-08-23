@@ -8,6 +8,8 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, isChatHistoryOpen: !state.isChatHistoryOpen };
         case 'UPDATE_CURRENT_CHAT':
             return { ...state, currentChat: action.payload };
+        case 'UPDATE_CHAT_HISTORY_LOADING_STATE':
+            return { ...state, chatHistoryLoadingState: action.payload };
         case 'UPDATE_FILTERED_CHAT_HISTORY':
             let isFilter = action.payload ? true : false;
             return { ...state, filteredChatHistory: action.payload, filterHistory: isFilter };

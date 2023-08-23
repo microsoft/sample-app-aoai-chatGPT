@@ -39,7 +39,7 @@ export const fetchHistoryList = async (): Promise<Conversation[]> => {
     try {
         const response = await fetch("/history/list", {
             method: "GET",
-        });
+        })
 
         const payload = await response.json();
         const conversations: Conversation[] = await Promise.all(payload.map(async (conv: any) => {
@@ -69,11 +69,6 @@ export const fetchMessagesList = async (convId: string): Promise<ChatMessage[]> 
                 "Content-Type": "application/json"
             },
         });
-        if(!response.ok){
-            let error = await response.json()
-            console.error("Error: ", error, response)
-            return []
-        }
 
         const payload = await response.json();
         let messages: ChatMessage[] = [];
@@ -137,11 +132,6 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
             "Content-Type": "application/json"
         },
     });
-    if(!response.ok){
-        let error = await response.json()
-        console.error("Error: ", error, response)
-        return
-    }
 }
 
 export const historyDelete = async (convId: string) : Promise<any> => {
@@ -176,11 +166,6 @@ export const historyClear = async (convId: string) : Promise<any> => {
             "Content-Type": "application/json"
         },
     });
-    if(!response.ok){
-        let error = await response.json()
-        console.error("Error: ", error, response)
-        return
-    }
 }
 
 export const historyRename = async (convId: string, title: string) : Promise<any> => {
