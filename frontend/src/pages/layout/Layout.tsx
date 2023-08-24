@@ -6,6 +6,7 @@ import { CommandBarButton, Dialog, Stack, TextField, ICommandBarStyles, IButtonS
 import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
+import { CosmosDBStatus } from "../../api";
 
 const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
     root: {
@@ -80,7 +81,9 @@ const Layout = () => {
                         </Link>
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
-                            <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>
+                            {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && 
+                                <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
+                            }
                             <ShareButton onClick={handleShareClick} />
                     </Stack>
 

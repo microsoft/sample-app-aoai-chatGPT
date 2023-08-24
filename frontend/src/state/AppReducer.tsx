@@ -1,4 +1,4 @@
-import { Conversation, fetchChatHistoryInit, fetchHistoryList } from '../api';
+import { Conversation, fetchChatHistoryInit, historyList } from '../api';
 import { Action, AppState } from './AppProvider';
 
 // Define the reducer function

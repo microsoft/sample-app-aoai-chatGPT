@@ -71,7 +71,13 @@ export type UserInfo = {
     user_id: string;
 };
 
-export type CosmosDBStatus = {
+export enum CosmosDBStatus {
+    NotConfigured = "CosmosDB is not configured",
+    NotWorking = "CosmosDB is not working",
+    Working = "CosmosDB is configured and working",
+}
+
+export type CosmosDBHealth = {
     cosmosDB: boolean,
     status: string
 }

@@ -1,4 +1,4 @@
-import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBStatus } from "./models";
+import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
@@ -35,42 +35,53 @@ export const fetchChatHistoryInit = (): Conversation[] | null => {
     return chatHistorySampleData;
 }
 
-export const fetchHistoryList = async (): Promise<Conversation[]> => {
-    try {
-        const response = await fetch("/history/list", {
-            method: "GET",
-        })
-
-        const payload = await response.json();
+export const historyList = async (): Promise<Conversation[] | null> => {
+    const response = await fetch("/history/list", {
+        method: "GET",
+    }).then(async (res) => {
+        const payload = await res.json();
         const conversations: Conversation[] = await Promise.all(payload.map(async (conv: any) => {
+            let convMessages: ChatMessage[] = [];
+            convMessages = await historyRead(conv.id)
+            .then((res) => {
+                return res
+            })
+            .catch((err) => {
+                console.error("error fetching messages: ", err)
+                return []
+            })
             const conversation: Conversation = {
                 id: conv.id,
                 title: conv.title,
                 date: conv.createdAt,
-                messages: await fetchMessagesList(conv.id)
+                messages: convMessages
             };
             return conversation;
         }));
         return conversations;
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
+    }).catch((err) => {
+        console.error(err)
+        return null
+    })
+
+    return response
 }
 
-export const fetchMessagesList = async (convId: string): Promise<ChatMessage[]> => {
-    try {
-        const response = await fetch("/history/read", {
-            method: "POST",
-            body: JSON.stringify({
-                conversation_id: convId
-            }),
-            headers: {
-                "Content-Type": "application/json"
-            },
-        });
-
-        const payload = await response.json();
+export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
+    const response = await fetch("/history/read", {
+        method: "POST",
+        body: JSON.stringify({
+            conversation_id: convId
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then(async (res) => {
+        if(!res){
+            return []
+        }
+        const payload = await res.json();
         let messages: ChatMessage[] = [];
         if(payload?.messages){
             payload.messages.forEach((msg: any) => {
@@ -82,46 +93,45 @@ export const fetchMessagesList = async (convId: string): Promise<ChatMessage[]> 
                 }
                 messages.push(message)
             });
-            return messages;
-        }else{
-            return [];
         }
-    } catch (error) {
-        console.log(typeof(error))
-        console.error(error)
+        return messages;
+    }).catch((err) => {
+        console.error("Error: ", err)
         return []
-    }
+    })
+    return response
 }
 
 export const historyGenerate = async (options: ConversationRequest, abortSignal: AbortSignal, convId?: string): Promise<Response> => {
-    try {
-        let body;
-        if(convId){
-            body = JSON.stringify({
-                conversation_id: convId,
-                messages: options.messages
-            })
-        }else{
-            body = JSON.stringify({
-                messages: options.messages
-            })
-        }
-        const response = await fetch("/history/generate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: body,
-            signal: abortSignal
-        });
-        return response;
-    } catch (error) {
-        console.log(error)
-        return new Response
+    let body;
+    if(convId){
+        body = JSON.stringify({
+            conversation_id: convId,
+            messages: options.messages
+        })
+    }else{
+        body = JSON.stringify({
+            messages: options.messages
+        })
     }
+    const response = await fetch("/history/generate", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: body,
+        signal: abortSignal
+    }).then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("Error: ", err)
+        return new Response;
+    })
+    return response
 }
 
-export const historyUpdate = async (messages: ChatMessage[], convId: string): Promise<any> => {
+export const historyUpdate = async (messages: ChatMessage[], convId: string): Promise<Response> => {
     const response = await fetch("/history/update", {
         method: "POST",
         body: JSON.stringify({
@@ -131,7 +141,19 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
         headers: {
             "Content-Type": "application/json"
         },
-    });
+    }).then(async (res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("Error: ", err)
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response
 }
 
 export const historyDelete = async (convId: string) : Promise<any> => {
@@ -181,22 +203,41 @@ export const historyRename = async (convId: string, title: string) : Promise<any
     });
 }
 
-export const historyEnsure = async (): Promise<CosmosDBStatus> => {
+export const historyEnsure = async (): Promise<CosmosDBHealth> => {
     const response = await fetch("/history/ensure", {
         method: "GET",
     })
-    if(!response.ok){
-        let respJson = await response.json();
-        return {
-            'cosmosDB': false,
-            'status': respJson?.error
+    .then(async res => {
+        let respJson = await res.json();
+        let formattedResponse;
+        if(respJson.message){
+            formattedResponse = CosmosDBStatus.Working
+        }else{
+            if(res.status === 500){
+                formattedResponse = CosmosDBStatus.NotWorking
+            }else{
+                formattedResponse = CosmosDBStatus.NotConfigured
+            }
         }
-    }else{
-        let respJson = await response.json();
-        return {
-            'cosmosDB': true,
-            'status': respJson?.message
+        if(!res.ok){
+            return {
+                cosmosDB: false,
+                status: formattedResponse
+            }
+        }else{
+            return {
+                cosmosDB: true,
+                status: formattedResponse
+            }
         }
-    }
+    })
+    .catch((err) => {
+        console.error("error: ", err)
+        return {
+            cosmosDB: false,
+            status: err
+        }
+    })
+    return response;
 }
 

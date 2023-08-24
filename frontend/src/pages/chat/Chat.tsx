@@ -20,9 +20,11 @@ import {
     getUserInfo,
     Conversation,
     historyGenerate,
-    fetchHistoryList,
+    historyList,
     historyUpdate,
-    historyClear
+    historyClear,
+    ChatHistoryLoadingState,
+    CosmosDBStatus
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -60,7 +62,7 @@ const Chat = () => {
         }
     }
 
-    const makeApiRequest = async (question: string, conversationId?: string) => {
+    const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
         setIsLoading(true);
         setShowLoadingMessage(true);
         const abortController = new AbortController();
@@ -73,13 +75,7 @@ const Chat = () => {
             date: new Date().toISOString(),
         };
 
-        //api call here (generate)
-
-        // if new conversation, pass user message 
-
-        // if exisiting, pass existing and new message and convo id
-
-        let conversation: Conversation | undefined;
+        let conversation: Conversation | null | undefined;
         if(!conversationId){
             conversation = {
                 id: conversationId ?? uuid(),
@@ -88,7 +84,7 @@ const Chat = () => {
                 date: new Date().toISOString(),
             }
         }else{
-            conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+            conversation = appStateContext?.state?.currentChat
             if(!conversation){
                 console.error("Conversation not found.");
                 setIsLoading(false);
@@ -100,9 +96,9 @@ const Chat = () => {
             }
         }
 
-        setMessages(conversation.messages)
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
-
+        setMessages(conversation.messages)
+        
         const request: ConversationRequest = {
             messages: [...conversation.messages.filter((answer) => answer.role !== "error")]
             // messages: [...conversation.messages.filter((answer) => answer.role === "error")]
@@ -131,7 +127,7 @@ const Chat = () => {
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            setMessages([...messages, userMessage, ...result.choices[0].messages]);
+                            setMessages([...messages, ...result.choices[0].messages]);
                             runningText = "";
                         }
                         catch { }
@@ -202,19 +198,46 @@ const Chat = () => {
                 request = {
                     messages: [...conversation.messages.filter((answer) => answer.role !== "error")]
                 };
-                // historyGenerate(request, abortController.signal, conversationId)
             }
         }else{
             request = {
                 messages: [userMessage].filter((answer) => answer.role !== "error")
             };
-            // historyGenerate(request, abortController.signal)
             setMessages(request.messages)
         }
 
         let result = {} as ChatResponse;
         try {
             const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
+            if(!response?.ok){
+                let errorChatMsg: ChatMessage = {
+                    id: uuid(),
+                    role: "error",
+                    content: "There was an error generating a response. Chat history can't be saved at this time. If the problem persists, please contact the site administrator.",
+                    date: new Date().toISOString()
+                }
+                let resultConversation;
+                if(conversationId){
+                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
+                    if(!resultConversation){
+                        console.error("Conversation not found.");
+                        setIsLoading(false);
+                        setShowLoadingMessage(false);
+                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                        return;
+                    }
+                    resultConversation.messages.push(errorChatMsg);
+                }else{
+                    setMessages([...messages, userMessage, errorChatMsg])
+                    setIsLoading(false);
+                    setShowLoadingMessage(false);
+                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                    return;
+                }
+                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
+                setMessages([...resultConversation.messages]);
+                return;
+            }
             if (response?.body) {
                 const reader = response.body.getReader();
                 let runningText = "";
@@ -254,8 +277,6 @@ const Chat = () => {
                     }
                     resultConversation.messages.push(...result.choices[0].messages);
                 }else{
-                    // let resultConversations = await fetchHistoryList()
-                    // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
                     resultConversation = {
                         id: result.history_metadata.conversation_id,
                         title: result.history_metadata.title,
@@ -265,7 +286,6 @@ const Chat = () => {
                     resultConversation.messages.push(...result.choices[0].messages);
                 }
                 if(!resultConversation){
-                    console.error("Conversation not found.");
                     setIsLoading(false);
                     setShowLoadingMessage(false);
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
@@ -302,8 +322,13 @@ const Chat = () => {
                     }
                     resultConversation.messages.push(errorChatMsg);
                 }else{
-                    // let resultConversations = await fetchHistoryList()
-                    // resultConversation = resultConversations.find((conv) => conv.id === result.conversation_id)
+                    if(!result.history_metadata){
+                        console.error("Error retrieving data.", result);
+                        setIsLoading(false);
+                        setShowLoadingMessage(false);
+                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
+                        return;
+                    }
                     resultConversation = {
                         id: result.history_metadata.conversation_id,
                         title: result.history_metadata.title,
@@ -313,13 +338,11 @@ const Chat = () => {
                     resultConversation.messages.push(errorChatMsg);
                 }
                 if(!resultConversation){
-                    console.error("Conversation not found.");
                     setIsLoading(false);
                     setShowLoadingMessage(false);
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                     return;
                 }
-                // resultConversation.messages.push(errorChatMsg);
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
                 setMessages([...messages, errorChatMsg]);
             } else {
@@ -339,11 +362,12 @@ const Chat = () => {
     const clearChat = async () => {
         setClearingChat(true)
         try {
-            if(appStateContext?.state.currentChat?.id){
+            if(appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB){
                 await historyClear(appStateContext?.state.currentChat.id)
-                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
             }
+            appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
             setActiveCitation(undefined);
+            setIsCitationPanelOpen(false);
         } catch (error) {
             
         }
@@ -353,6 +377,7 @@ const Chat = () => {
     const newChat = () => {
         setProcessMessages(messageStatus.Processing)
         setMessages([])
+        setIsCitationPanelOpen(false);
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
         setProcessMessages(messageStatus.Done)
     };
@@ -373,14 +398,51 @@ const Chat = () => {
     }, [appStateContext?.state.currentChat]);
     
     useLayoutEffect(() => {
+        const saveToDB = async (messages: ChatMessage[], id: string) => {
+            const response = await historyUpdate(messages, id)
+            return response
+        }
+
         if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
-            try {
-                historyUpdate(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
+                if(appStateContext.state.isCosmosDBAvailable.cosmosDB){
+                    if(!appStateContext?.state.currentChat?.messages){
+                        console.error("Failure fetching current chat state.")
+                        return 
+                    }
+                    saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
+                    .then((res) => {
+                        if(!res.ok){
+                            let errorMessage = "An error occurred. Answers can't be saved at this time. If the problem persists, please contact the site administrator.";
+                            let errorChatMsg: ChatMessage = {
+                                id: uuid(),
+                                role: "error",
+                                content: errorMessage,
+                                date: new Date().toISOString()
+                            }
+                            if(!appStateContext?.state.currentChat?.messages){
+                                let err: Error = {
+                                    ...new Error,
+                                    message: "Failure fetching current chat state."
+                                }
+                                throw err
+                            }
+                            setMessages([...appStateContext?.state.currentChat?.messages, errorChatMsg])
+                        }
+                        return res as Response
+                    })
+                    .catch((err) => {
+                        console.error("Error: ", err)
+                        let errRes: Response = {
+                            ...new Response,
+                            ok: false,
+                            status: 500,
+                        }
+                        return errRes;
+                    })
+                }else{
+                }
                 appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
                 setMessages(appStateContext.state.currentChat.messages)
-            } catch (error) {
-                console.error("Error: ", error)
-            }
             setProcessMessages(messageStatus.NotRunning)
         }
     }, [processMessages]);
@@ -409,6 +471,10 @@ const Chat = () => {
             }
         }
         return [];
+    }
+
+    const disabledButton = () => {
+        return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     }
 
     return (
@@ -499,7 +565,7 @@ const Chat = () => {
                                 </Stack>
                             )}
                             <Stack>
-                                <CommandBarButton
+                                {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <CommandBarButton
                                     styles={{ 
                                         icon: { 
                                             color: '#FFFFFF',
@@ -515,8 +581,8 @@ const Chat = () => {
                                     className={styles.newChatIcon}
                                     iconProps={{ iconName: 'Add' }}
                                     onClick={newChat}
-                                    disabled={isLoading || (messages && messages.length === 0)}
-                                />
+                                    disabled={disabledButton()}
+                                />}
                                 <CommandBarButton
                                     styles={{ 
                                         icon: { 
@@ -524,22 +590,23 @@ const Chat = () => {
                                         },
                                         root: {
                                             color: '#FFFFFF',
-                                            background: isLoading || (messages && messages.length === 0) || clearingChat ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                                            cursor: isLoading || (messages && messages.length === 0) || clearingChat ? "" : "pointer"
+                                            background: disabledButton() ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                                            cursor: disabledButton() ? "" : "pointer"
                                         },
                                     }}
                                     className={styles.clearChatBroom}
                                     iconProps={{ iconName: 'Broom' }}
                                     onClick={clearChat}
-                                    disabled={(isLoading || (messages && messages.length === 0) || clearingChat)}
+                                    disabled={disabledButton()}
                                 />
                             </Stack>
                             <QuestionInput
                                 clearOnSend
                                 placeholder="Type a new question..."
                                 disabled={isLoading}
-                                // onSend={(question, id) => makeApiRequest(question, id)}
-                                onSend={(question, id) => makeApiRequestWithCosmosDB(question, id)}
+                                onSend={(question, id) => {
+                                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
+                                }}
                                 conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                             />
                         </Stack>
@@ -563,7 +630,7 @@ const Chat = () => {
                         
                     </Stack.Item>
                 )}
-                {appStateContext?.state.isChatHistoryOpen && <ChatHistoryPanel/>}
+                {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}
                 </Stack>
             )}
         </div>

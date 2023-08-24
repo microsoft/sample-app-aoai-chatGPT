@@ -6,7 +6,7 @@ import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
-import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
+import { ChatHistoryLoadingState, CosmosDBStatus, historyDeleteAll } from "../../api";
 
 interface ChatHistoryPanelProps {
 
@@ -67,7 +67,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
         try {
             await historyDeleteAll()
             appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
-            setSearchText('')
+            // setSearchText('')
         } catch (error) {
             console.error("Error: ", error)
         }
@@ -75,31 +75,31 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
         setClearing(false)
     }
 
-    const [searchText, setSearchText] = React.useState('');
-    const onSearchChange = (ev: any) => {
-        if(!ev?.target?.value){
-            setSearchText('')
-            appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
-            return
-        }
-        const newValue = ev.target.value;
-        setSearchText(newValue);
-        if(!newValue){
-            appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
-        }
+    // const [searchText, setSearchText] = React.useState('');
+    // const onSearchChange = (ev: any) => {
+    //     if(!ev?.target?.value){
+    //         setSearchText('')
+    //         appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
+    //         return
+    //     }
+    //     const newValue = ev.target.value;
+    //     setSearchText(newValue);
+    //     if(!newValue){
+    //         appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
+    //     }
         
-        if(appStateContext?.state.chatHistory){
-            const filtered = appStateContext?.state.chatHistory.filter(conversation =>
-                conversation.title.toLowerCase().includes(newValue.toLowerCase())
-            );
+    //     if(appStateContext?.state.chatHistory){
+    //         const filtered = appStateContext?.state.chatHistory.filter(conversation =>
+    //             conversation.title.toLowerCase().includes(newValue.toLowerCase())
+    //         );
             
-            if(filtered.length > 0){
-                appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: filtered })
-            }else{
-                appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: [] })
-            }
-        }
-    }
+    //         if(filtered.length > 0){
+    //             appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: filtered })
+    //         }else{
+    //             appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: [] })
+    //         }
+    //     }
+    // }
 
     React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
 
@@ -170,12 +170,19 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                 }}>
                 <Stack className={styles.chatHistoryListContainer}>
                     {(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Success && appStateContext?.state.isCosmosDBAvailable.cosmosDB) && <ChatHistoryList/>}
-                    {appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && <>
+                    {(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && appStateContext?.state.isCosmosDBAvailable) && <>
                         <Stack>
-                            <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                            <Stack horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+                                <StackItem>
+                                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 16 }}>
+                                        {appStateContext?.state.isCosmosDBAvailable?.status && <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>}
+                                        {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
+                                        
+                                    </Text>
+                                </StackItem>
                                 <StackItem>
                                     <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                                        <span>Error loading chat history</span>
+                                        <span>Chat history can't be saved at this time</span>
                                     </Text>
                                 </StackItem>
                             </Stack>
