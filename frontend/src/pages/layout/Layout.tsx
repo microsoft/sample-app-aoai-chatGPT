@@ -64,6 +64,8 @@ const Layout = () => {
         }
     }, [copyClicked]);
 
+    useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status]);
+
     return (
         <div className={styles.layout}>
             <header className={styles.header} role={"banner"}>
