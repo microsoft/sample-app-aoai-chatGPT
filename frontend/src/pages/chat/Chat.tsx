@@ -594,7 +594,7 @@ const Chat = () => {
                                             cursor: disabledButton() ? "" : "pointer"
                                         },
                                     }}
-                                    className={styles.clearChatBroom}
+                                    className={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? styles.clearChatBroom : styles.clearChatBroomNoCosmos}
                                     iconProps={{ iconName: 'Broom' }}
                                     onClick={clearChat}
                                     disabled={disabledButton()}

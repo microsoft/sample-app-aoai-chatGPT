@@ -59,33 +59,21 @@ const groupByMonth = (entries: Conversation[]) => {
 
 const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
     const appStateContext = useContext(AppStateContext);
-    // const chatHistory = (appStateContext?.state.filterHistory) ? appStateContext?.state.filteredChatHistory : appStateContext?.state.chatHistory;
     const chatHistory = appStateContext?.state.chatHistory;
 
-    // React.useEffect(() => {}, [appStateContext?.state.chatHistory, appStateContext?.state.filteredChatHistory]);
     React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
     
     let groupedChatHistory;
     if(chatHistory && chatHistory.length > 0){
         groupedChatHistory = groupByMonth(chatHistory);
     }else{
-        if(appStateContext?.state.filterHistory){
-            return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-                <StackItem>
-                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                        <span>No results matching search query.</span>
-                    </Text>
-                </StackItem>
-            </Stack>
-        }else{
-            return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-                <StackItem>
-                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                        <span>No chat history.</span>
-                    </Text>
-                </StackItem>
-            </Stack>
-        }
+        return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
+            <StackItem>
+                <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                    <span>No chat history.</span>
+                </Text>
+            </StackItem>
+        </Stack>
     }
     
     return (

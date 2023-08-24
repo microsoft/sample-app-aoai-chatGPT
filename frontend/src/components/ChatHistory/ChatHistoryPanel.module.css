@@ -9,12 +9,6 @@
     max-height: calc(90vh - 105px);
 }
 
-.searchBox {
-    width: 100%;
-    margin-left: 5px;
-    margin-bottom: 15px;
-}
-
 .itemCell {
     max-width: 270px;
     min-height: 32px;

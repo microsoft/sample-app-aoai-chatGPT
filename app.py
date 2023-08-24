@@ -509,7 +509,7 @@ def get_conversation():
 def rename_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
-
+    
     ## check request for conversation_id
     conversation_id = request.json.get("conversation_id", None)
     

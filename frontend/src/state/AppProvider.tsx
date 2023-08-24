@@ -9,7 +9,6 @@ export interface AppState {
     isCosmosDBAvailable: CosmosDBHealth;
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
-    filterHistory: boolean;
     currentChat: Conversation | null;
 }
 
@@ -31,7 +30,6 @@ const initialState: AppState = {
     chatHistoryLoadingState: ChatHistoryLoadingState.Loading,
     chatHistory: null,
     filteredChatHistory: null,
-    filterHistory: false,
     currentChat: null,
     isCosmosDBAvailable: {
         cosmosDB: false,

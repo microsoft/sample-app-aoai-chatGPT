@@ -156,7 +156,7 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
     return response
 }
 
-export const historyDelete = async (convId: string) : Promise<any> => {
+export const historyDelete = async (convId: string) : Promise<Response> => {
     const response = await fetch("/history/delete", {
         method: "DELETE",
         body: JSON.stringify({
@@ -165,7 +165,20 @@ export const historyDelete = async (convId: string) : Promise<any> => {
         headers: {
             "Content-Type": "application/json"
         },
-    });
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("Error: ", err)
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
 }
 
 export const historyDeleteAll = async () : Promise<any> => {
@@ -190,7 +203,7 @@ export const historyClear = async (convId: string) : Promise<any> => {
     });
 }
 
-export const historyRename = async (convId: string, title: string) : Promise<any> => {
+export const historyRename = async (convId: string, title: string) : Promise<Response> => {
     const response = await fetch("/history/rename", {
         method: "POST",
         body: JSON.stringify({
@@ -200,7 +213,20 @@ export const historyRename = async (convId: string, title: string) : Promise<any
         headers: {
             "Content-Type": "application/json"
         },
-    });
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("Error: ", err)
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
 }
 
 export const historyEnsure = async (): Promise<CosmosDBHealth> => {

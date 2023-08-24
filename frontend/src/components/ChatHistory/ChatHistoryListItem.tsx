@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DefaultButton, Dialog, DialogFooter, DialogType, ITheme, IconButton, List, PrimaryButton, Separator, Stack, TextField, getFocusStyle, getTheme, mergeStyleSets } from '@fluentui/react';
+import { DefaultButton, Dialog, DialogFooter, DialogType, Text, IconButton, List, PrimaryButton, Separator, Stack, TextField, getFocusStyle, getTheme, mergeStyleSets, ITextField } from '@fluentui/react';
 
 import { AppStateContext } from '../../state/AppProvider';
 import { GroupedChatHistory } from './ChatHistoryList';
@@ -8,6 +8,7 @@ import styles from "./ChatHistoryPanel.module.css"
 import { useBoolean } from '@fluentui/react-hooks';
 import { Conversation } from '../../api/models';
 import { historyDelete, historyRename } from '../../api';
+import { useEffect, useRef, useState } from 'react';
 
 interface ChatHistoryListItemCellProps {
   item?: Conversation;
@@ -37,9 +38,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
   onSelect,
 }) => {
     const [isHovered, setIsHovered] = React.useState(false);
-    const [edit, setEdit] = React.useState(false);
-    const [editTitle, setEditTitle] = React.useState("");
+    const [edit, setEdit] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
     const [hideDeleteDialog, { toggle: toggleDeleteDialog }] = useBoolean(true);
+    const [errorDelete, setErrorDelete] = useState(false);
+    const [renameLoading, setRenameLoading] = useState(false);
+    const [errorRename, setErrorRename] = useState<string | undefined>(undefined);
+    const [textFieldFocused, setTextFieldFocused] = useState(false);
+    const textFieldRef = useRef<ITextField | null>(null);
     
     const appStateContext = React.useContext(AppStateContext)
     const isSelected = item?.id === appStateContext?.state.currentChat?.id;
@@ -61,18 +67,36 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         return null;
     }
 
+    useEffect(() => {
+        if (textFieldFocused && textFieldRef.current) {
+            textFieldRef.current.focus();
+            setTextFieldFocused(false);
+        }
+    }, [textFieldFocused]);
+
+    useEffect(() => {
+        if (appStateContext?.state.currentChat?.id !== item?.id) {
+            setEdit(false);
+            setEditTitle('')
+        }
+    }, [appStateContext?.state.currentChat?.id, item?.id]);
+
     const onDelete = async () => {
-        try {
-            await historyDelete(item.id)
+        let response = await historyDelete(item.id)
+        if(!response.ok){
+            setErrorDelete(true)
+            setTimeout(() => {
+                setErrorDelete(false);
+            }, 5000);
+        }else{
             appStateContext?.dispatch({ type: 'DELETE_CHAT_ENTRY', payload: item.id })
-        } catch (error) {
-            console.error("Error: ", error)
         }
         toggleDeleteDialog();
     };
 
     const onEdit = () => {
         setEdit(true)
+        setTextFieldFocused(true)
         setEditTitle(item?.title)
     };
 
@@ -85,14 +109,37 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 
     const handleSaveEdit = async (e: any) => {
         e.preventDefault();
-        try {
-            await historyRename(item.id, editTitle)
+        if(errorRename || renameLoading){
+            return;
+        }
+        if(editTitle == item.title){
+            setErrorRename("Error: Enter a new title to proceed.")
+            setTimeout(() => {
+                setErrorRename(undefined);
+                setTextFieldFocused(true);
+                if (textFieldRef.current) {
+                    textFieldRef.current.focus();
+                }
+            }, 5000);
+            return
+        }
+        setRenameLoading(true)
+        let response = await historyRename(item.id, editTitle);
+        if(!response.ok){
+            setErrorRename("Error: could not rename item")
+            setTimeout(() => {
+                setTextFieldFocused(true);
+                setErrorRename(undefined);
+                if (textFieldRef.current) {
+                    textFieldRef.current.focus();
+                }
+            }, 5000);
+        }else{
+            setRenameLoading(false)
             setEdit(false)
             appStateContext?.dispatch({ type: 'UPDATE_CHAT_TITLE', payload: { ...item, title: editTitle } as Conversation })
-        } catch (error) {
-            console.error("Error: ", error)
+            setEditTitle("");
         }
-        setEditTitle("");
     }
 
     const chatHistoryTitleOnChange = (e: any) => {
@@ -102,6 +149,11 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     const handleKeyPressEdit = (e: any) => {
         if(e.key === "Enter"){
             return handleSaveEdit(e)
+        }
+        if(e.key === "Escape"){
+            setEdit(false)
+            setEditTitle("");
+            return
         }
     }
 
@@ -113,9 +165,13 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             aria-label='chat history item'
             className={styles.itemCell}
             onClick={() => handleSelectItem()}
+            onBlur={() => {
+                setEditTitle('')
+                setEdit(false)
+            }}
             onKeyDown={e => e.key === "Enter" || e.key === " " ? handleSelectItem() : null}
             verticalAlign='center'
-            horizontal
+            // horizontal
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             styles={{
@@ -127,19 +183,37 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             {edit ? <>
                 <Stack.Item style={{ width: '100%' }}>
                     <form onSubmit={(e) => handleSaveEdit(e)}>
-                        <TextField value={editTitle} placeholder={item.title} onChange={chatHistoryTitleOnChange} onKeyDown={handleKeyPressEdit} autoFocus/>
+                        <TextField
+                            componentRef={textFieldRef}
+                            autoFocus={textFieldFocused}
+                            value={editTitle}
+                            placeholder={item.title}
+                            onChange={chatHistoryTitleOnChange}
+                            onKeyDown={handleKeyPressEdit}
+                            errorMessage={errorRename}
+                            disabled={errorRename ? true : false}
+                        />
                     </form>
                 </Stack.Item>
             </> : <>
-                <Stack.Item style={{ width: '100%' }}>
+                <Stack horizontal verticalAlign={'center'} style={{ width: '100%' }}>
                     <div className={styles.chatTitle}>{truncatedTitle}</div>
-                </Stack.Item>
-                {(isSelected || isHovered) && <Stack horizontal horizontalAlign='end'>
-                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null}/>
-                    <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null}/>
-                </Stack>}
+                    {(isSelected || isHovered) && <Stack horizontal horizontalAlign='end'>
+                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Delete' }} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null}/>
+                        <IconButton className={styles.itemButton} iconProps={{ iconName: 'Edit' }} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null}/>
+                    </Stack>}
+                </Stack>
             </>
             }
+            {errorDelete && (
+                <Text
+                    styles={{
+                        root: { color: 'red', marginTop: 5, fontSize: 14 }
+                    }}
+                >
+                    Error: could not delete item
+                </Text>
+            )}
             <Dialog
                 hidden={hideDeleteDialog}
                 onDismiss={toggleDeleteDialog}

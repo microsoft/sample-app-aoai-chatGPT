@@ -67,39 +67,12 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
         try {
             await historyDeleteAll()
             appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
-            // setSearchText('')
         } catch (error) {
             console.error("Error: ", error)
         }
         toggleClearAllDialog();
         setClearing(false)
     }
-
-    // const [searchText, setSearchText] = React.useState('');
-    // const onSearchChange = (ev: any) => {
-    //     if(!ev?.target?.value){
-    //         setSearchText('')
-    //         appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
-    //         return
-    //     }
-    //     const newValue = ev.target.value;
-    //     setSearchText(newValue);
-    //     if(!newValue){
-    //         appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
-    //     }
-        
-    //     if(appStateContext?.state.chatHistory){
-    //         const filtered = appStateContext?.state.chatHistory.filter(conversation =>
-    //             conversation.title.toLowerCase().includes(newValue.toLowerCase())
-    //         );
-            
-    //         if(filtered.length > 0){
-    //             appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: filtered })
-    //         }else{
-    //             appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: [] })
-    //         }
-    //     }
-    // }
 
     React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
 
@@ -138,19 +111,6 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     </Stack>
                 </Stack>
             </Stack>
-            {/* <Stack >
-                <SearchBox
-                    value={searchText}
-                    className={styles.searchBox}
-                    placeholder="Search"
-                    onClear={ev => {
-                        setSearchText('')
-                        // set filter groups to null
-                        appStateContext?.dispatch({ type: 'UPDATE_FILTERED_CHAT_HISTORY', payload: null })
-                    }}
-                    onChange={(ev) => onSearchChange(ev)}
-                />
-            </Stack> */}
             <Stack aria-label="chat history panel content"
                 styles={{
                     root: {

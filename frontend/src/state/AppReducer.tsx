@@ -10,9 +10,6 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, currentChat: action.payload };
         case 'UPDATE_CHAT_HISTORY_LOADING_STATE':
             return { ...state, chatHistoryLoadingState: action.payload };
-        case 'UPDATE_FILTERED_CHAT_HISTORY':
-            let isFilter = action.payload ? true : false;
-            return { ...state, filteredChatHistory: action.payload, filterHistory: isFilter };
         case 'UPDATE_CHAT_HISTORY':
             if(!state.chatHistory || !state.currentChat){
                 return state;
@@ -52,7 +49,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, chatHistory: filteredChat };
         case 'DELETE_CHAT_HISTORY':
             //TODO: make api call to delete all conversations from DB
-            return { ...state, chatHistory: [], filteredChatHistory: [], filterHistory: false, currentChat: null };
+            return { ...state, chatHistory: [], filteredChatHistory: [], currentChat: null };
         case 'DELETE_CURRENT_CHAT_MESSAGES':
             //TODO: make api call to delete current conversation messages from DB
             if(!state.currentChat){
