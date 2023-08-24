@@ -566,6 +566,7 @@ const Chat = () => {
                             )}
                             <Stack>
                                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <CommandBarButton
+                                    role="button"
                                     styles={{ 
                                         icon: { 
                                             color: '#FFFFFF',
@@ -582,8 +583,10 @@ const Chat = () => {
                                     iconProps={{ iconName: 'Add' }}
                                     onClick={newChat}
                                     disabled={disabledButton()}
+                                    aria-label="start a new chat button"
                                 />}
                                 <CommandBarButton
+                                    role="button"
                                     styles={{ 
                                         icon: { 
                                             color: '#FFFFFF',
@@ -598,6 +601,7 @@ const Chat = () => {
                                     iconProps={{ iconName: 'Broom' }}
                                     onClick={clearChat}
                                     disabled={disabledButton()}
+                                    aria-label="clear chat button"
                                 />
                             </Stack>
                             <QuestionInput

@@ -160,7 +160,6 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     return (
         <Stack
             key={item.id}
-            role='listitem'
             tabIndex={0}
             aria-label='chat history item'
             className={styles.itemCell}
