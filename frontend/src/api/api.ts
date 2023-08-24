@@ -39,9 +39,7 @@ export const historyList = async (): Promise<Conversation[] | null> => {
     const response = await fetch("/history/list", {
         method: "GET",
     }).then(async (res) => {
-        console.log("res: ", res)
         const payload = await res.json();
-        console.log("payload: ", payload)
         if (!Array.isArray(payload)) {
             console.error("Unexpected payload format:", payload);
             return null;

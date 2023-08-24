@@ -473,8 +473,8 @@ def list_conversations():
 
     ## get the conversations from cosmos
     conversations = cosmos_conversation_client.get_conversations(user_id)
-    if not conversations:
-        return jsonify({"error": f"No conversations for {user_id} were found"}), 404
+    # if not conversations:
+    #     return jsonify({"error": f"No conversations for {user_id} were found"}), 404
 
     ## return the conversation ids
 

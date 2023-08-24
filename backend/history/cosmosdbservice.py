@@ -84,7 +84,7 @@ class CosmosConversationClient():
                                                                                enable_cross_partition_query =True))
         ## if no conversations are found, return None
         if len(conversations) == 0:
-            return None
+            return []
         else:
             return conversations
 
