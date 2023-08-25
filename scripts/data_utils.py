@@ -56,8 +56,7 @@ class Document(object):
     filepath: Optional[str] = None
     url: Optional[str] = None
     metadata: Optional[Dict] = None
-    contentVector: Optional[List[float]] = None,
-    titleVector: Optional[List[float]] = None
+    contentVector: Optional[List[float]] = None
 
 def cleanup_content(content: str) -> str:
     """Cleans up the given content using regexes
@@ -544,7 +543,6 @@ def chunk_content(
                 if add_embeddings:
                     # print('getting embeddings...')
                     doc.contentVector = get_embedding(chunk)
-                    doc.titleVector = get_embedding(doc.title)
 
                 # print(doc)
                 chunks.append(
@@ -552,8 +550,7 @@ def chunk_content(
                         content=chunk,
                         title=doc.title,
                         url=url,
-                        contentVector=doc.contentVector,
-                        titleVector=doc.titleVector
+                        contentVector=doc.contentVector
                     )
                 )
             else:
