@@ -18,7 +18,8 @@
         "chunk_size": 1024, // set to null to disable chunking before ingestion
         "token_overlap": 128 // number of tokens to overlap between chunks
         "semantic_config_name": "default",
-        "language": "en" // setting to set language of your documents. Change if your documents are not in English. Look in data_preparation.py for SUPPORTED_LANGUAGE_CODES
+        "language": "en" // setting to set language of your documents. Change if your documents are not in English. Look in data_preparation.py for SUPPORTED_LANGUAGE_CODES,
+        "vector_config_name": "default" // used if adding vectors to index
     }
 ]
 ```
@@ -29,6 +30,16 @@ Disclaimer: Make sure there are no duplicate pages in your data. That could impa
 - Run the data preparation script, passing in your config file. You can set njobs for parallel parsing of your files.
 
      `python data_preparation.py --config config.json --njobs=4`
+
+## Optional: Add vector embeddings
+Azure Cognitive Search supports vector search in public preview. See [the docs](https://learn.microsoft.com/en-us/azure/search/vector-search-overview) for more information.
+
+To add vectors to your index, you will first need an [Azure OpenAI resource](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) with an [Ada embedding model deployment](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#embeddings-models). The `text-embedding-ada-002` model is supported.
+
+- Get the endpoint and API key for embedding model deployment. The API key can be found in the Azure Portal under Resource Management for your Azure OpenAI resource, you can use either Key 1 or Key 2. The endpoint will generally be of the format `https://<azure openai resource name>.openai.azure.com/openai/deployments/<ada deployment name>/embeddings?api-version=2023-06-01-preview`.
+- Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
+
+      `python data_preparation.py --config config.json --embedding-model-endpoint "<embedding endpoint>" --embedding-model-key "<azure openai resource key>"`
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 

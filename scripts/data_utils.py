@@ -1,9 +1,11 @@
 """Data utilities for index preparation."""
 import ast
+from asyncio import sleep
 import html
 import json
 import os
 import re
+import requests
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -27,6 +29,8 @@ FILE_FORMAT_DICT = {
         "py": "python",
         "pdf": "pdf"
     }
+
+RETRY_COUNT = 5
 
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
@@ -55,6 +59,7 @@ class Document(object):
     filepath: Optional[str] = None
     url: Optional[str] = None
     metadata: Optional[Dict] = None
+    contentVector: Optional[List[float]] = None
 
 def cleanup_content(content: str) -> str:
     """Cleans up the given content using regexes
@@ -429,6 +434,28 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
+def get_embedding(text):
+    endpoint = os.environ.get("EMBEDDING_MODEL_ENDPOINT")
+    key = os.environ.get("EMBEDDING_MODEL_KEY")
+    if endpoint is None or key is None:
+        raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
+    
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": key
+    }
+
+    body = {
+        "input": text
+    }
+
+    response = requests.post(endpoint, headers=headers, json=body)
+    if response.status_code != 200:
+        raise Exception(f"Error getting embedding for text={text} with status_code={response.status_code} and response={response.text}")
+    response = response.json()
+    return response['data'][0]['embedding']
+
+
 def chunk_content_helper(
         content: str, file_format: str, file_name: Optional[str],
         token_overlap: int,
@@ -477,7 +504,8 @@ def chunk_content(
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
     cracked_pdf = False,
-    use_layout = False
+    use_layout = False,
+    add_embeddings = False
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -515,11 +543,23 @@ def chunk_content(
         skipped_chunks = 0
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
+                if add_embeddings:
+                    for _ in RETRY_COUNT:
+                        try:
+                            doc.contentVector = get_embedding(chunk)
+                            break
+                        except:
+                            sleep(30)
+                    if doc.contentVector is None:
+                        raise Exception(f"Error getting embedding for chunk={chunk}")
+                    
+
                 chunks.append(
                     Document(
                         content=chunk,
                         title=doc.title,
                         url=url,
+                        contentVector=doc.contentVector
                     )
                 )
             else:
@@ -552,7 +592,8 @@ def chunk_file(
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
     form_recognizer_client = None,
-    use_layout = False
+    use_layout = False,
+    add_embeddings=False
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -589,7 +630,8 @@ def chunk_file(
         token_overlap=max(0, token_overlap),
         extensions_to_process=extensions_to_process,
         cracked_pdf=cracked_pdf,
-        use_layout=use_layout
+        use_layout=use_layout,
+        add_embeddings=add_embeddings
     )
 
 
@@ -603,7 +645,8 @@ def process_file(
         token_overlap: int = 0,
         extensions_to_process: List[str] = FILE_FORMAT_DICT.keys(),
         form_recognizer_client = None,
-        use_layout = False
+        use_layout = False,
+        add_embeddings = False
     ):
 
     if not form_recognizer_client:
@@ -626,7 +669,8 @@ def process_file(
             token_overlap=token_overlap,
             extensions_to_process=extensions_to_process,
             form_recognizer_client=form_recognizer_client,
-            use_layout=use_layout
+            use_layout=use_layout,
+            add_embeddings=add_embeddings
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
@@ -650,7 +694,8 @@ def chunk_directory(
         extensions_to_process: List[str] = list(FILE_FORMAT_DICT.keys()),
         form_recognizer_client = None,
         use_layout = False,
-        njobs=4
+        njobs=4,
+        add_embeddings = False
 ):
     """
     Chunks the given directory recursively
@@ -666,6 +711,7 @@ def chunk_directory(
         extensions_to_process (List[str]): The list of extensions to process. 
         form_recognizer_client: Optional form recognizer client to use for pdf files.
         use_layout (bool): If true, uses Layout model for pdf files. Otherwise, uses Read.
+        add_embeddings (bool): If true, adds a vector embedding to each chunk using the embedding model endpoint and key.
 
     Returns:
         List[Document]: List of chunked documents.
@@ -690,7 +736,7 @@ def chunk_directory(
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
-                                       form_recognizer_client=form_recognizer_client, use_layout=use_layout)
+                                       form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -705,7 +751,7 @@ def chunk_directory(
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
-                                       form_recognizer_client=None, use_layout=use_layout)
+                                       form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:
