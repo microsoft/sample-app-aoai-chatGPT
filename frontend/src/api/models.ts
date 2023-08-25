@@ -88,3 +88,8 @@ export enum ChatHistoryLoadingState {
     Fail = "fail",
     NotStarted = "notStarted"
 }
+
+export type ErrorMessage = {
+    title: string,
+    subtitle: string
+}

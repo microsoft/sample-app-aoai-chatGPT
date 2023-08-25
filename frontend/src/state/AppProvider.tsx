@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
 import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus } from '../api';
 import { Conversation } from '../api';
@@ -54,10 +54,8 @@ type AppStateProviderProps = {
         const fetchChatHistory = async (): Promise<Conversation[] | null> => {
             const result = await historyList().then((response) => {
                 if(response){
-                    dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Success });
                     dispatch({ type: 'FETCH_CHAT_HISTORY', payload: response });
                 }else{
-                    dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail });
                     dispatch({ type: 'FETCH_CHAT_HISTORY', payload: null });
                 }
                 return response
@@ -65,7 +63,7 @@ type AppStateProviderProps = {
             .catch((err) => {
                 dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Fail });
                 dispatch({ type: 'FETCH_CHAT_HISTORY', payload: null });
-                console.error('Error fetching data:', err);
+                console.error("There was an issue fetching your data.");
                 return null
             })
             return result

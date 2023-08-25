@@ -1,12 +1,12 @@
-import { CommandBar, CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, IButtonProps, ICommandBarItemProps, ICommandBarStyles, IContextualMenuItem, IContextualMenuProps, IStackStyles, Pivot, PivotItem, PrimaryButton, SearchBox, Spinner, SpinnerSize, Stack, StackItem, Text } from "@fluentui/react";
-import { useBoolean, useConst } from '@fluentui/react-hooks';
+import { CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, ICommandBarStyles, IContextualMenuItem, IStackStyles, PrimaryButton, Spinner, SpinnerSize, Stack, StackItem, Text } from "@fluentui/react";
+import { useBoolean } from '@fluentui/react-hooks';
 
 import styles from "./ChatHistoryPanel.module.css"
 import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
-import { ChatHistoryLoadingState, CosmosDBStatus, historyDeleteAll } from "../../api";
+import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
 
 interface ChatHistoryPanelProps {
 
@@ -32,14 +32,15 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     const [showContextualMenu, setShowContextualMenu] = React.useState(false);
     const [hideClearAllDialog, { toggle: toggleClearAllDialog }] = useBoolean(true);
     const [clearing, setClearing] = React.useState(false)
+    const [clearingError, setClearingError] = React.useState(false)
 
-    const dialogContentProps = {
+    const clearAllDialogContentProps = {
         type: DialogType.close,
-        title: 'Are you sure you want to clear all chat history?',
+        title: !clearingError? 'Are you sure you want to clear all chat history?' : 'Error deleting all of chat history',
         closeButtonAriaLabel: 'Close',
-        subText: 'All chat history will be permanently removed.',
+        subText: !clearingError ? 'All chat history will be permanently removed.' : 'Please try again. If the problem persists, please contact the site administrator.',
     };
-
+    
     const modalProps = {
         titleAriaId: 'labelId',
         subtitleAriaId: 'subTextId',
@@ -64,17 +65,24 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
 
     const onClearAllChatHistory = async () => {
         setClearing(true)
-        try {
-            await historyDeleteAll()
+        let response = await historyDeleteAll()
+        if(!response.ok){
+            setClearingError(true)
+        }else{
             appStateContext?.dispatch({ type: 'DELETE_CHAT_HISTORY' })
-        } catch (error) {
-            console.error("Error: ", error)
+            toggleClearAllDialog();
         }
-        toggleClearAllDialog();
-        setClearing(false)
+        setClearing(false);
     }
 
-    React.useEffect(() => {}, [appStateContext?.state.chatHistory]);
+    const onHideClearAllDialog = () => {
+        toggleClearAllDialog()
+        setTimeout(() => {
+            setClearingError(false)
+        }, 2000);
+    }
+
+    React.useEffect(() => {}, [appStateContext?.state.chatHistory, clearingError]);
 
     return (
         <section className={styles.container} data-is-scrollable aria-label={"chat history panel"}>
@@ -166,13 +174,13 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
             </Stack>
             <Dialog
                 hidden={hideClearAllDialog}
-                onDismiss={clearing ? ()=>{} : toggleClearAllDialog}
-                dialogContentProps={dialogContentProps}
+                onDismiss={clearing ? ()=>{} : onHideClearAllDialog}
+                dialogContentProps={clearAllDialogContentProps}
                 modalProps={modalProps}
             >
                 <DialogFooter>
-                <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />
-                <DefaultButton onClick={toggleClearAllDialog} disabled={clearing} text="Cancel" />
+                {!clearingError && <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />}
+                <DefaultButton onClick={onHideClearAllDialog} disabled={clearing} text={!clearingError ? "Cancel" : "Close"} />
                 </DialogFooter>
             </Dialog>
         </section>

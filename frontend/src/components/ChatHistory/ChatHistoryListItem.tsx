@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DefaultButton, Dialog, DialogFooter, DialogType, Text, IconButton, List, PrimaryButton, Separator, Stack, TextField, getFocusStyle, getTheme, mergeStyleSets, ITextField } from '@fluentui/react';
+import { DefaultButton, Dialog, DialogFooter, DialogType, Text, IconButton, List, PrimaryButton, Separator, Stack, TextField, ITextField } from '@fluentui/react';
 
 import { AppStateContext } from '../../state/AppProvider';
 import { GroupedChatHistory } from './ChatHistoryList';
@@ -146,13 +146,17 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         setEditTitle(e.target.value);
     };
 
+    const cancelEditTitle = () => {
+        setEdit(false)
+        setEditTitle("");
+    }
+
     const handleKeyPressEdit = (e: any) => {
         if(e.key === "Enter"){
             return handleSaveEdit(e)
         }
         if(e.key === "Escape"){
-            setEdit(false)
-            setEditTitle("");
+            cancelEditTitle();
             return
         }
     }
@@ -164,10 +168,6 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             aria-label='chat history item'
             className={styles.itemCell}
             onClick={() => handleSelectItem()}
-            onBlur={() => {
-                setEditTitle('')
-                setEdit(false)
-            }}
             onKeyDown={e => e.key === "Enter" || e.key === " " ? handleSelectItem() : null}
             verticalAlign='center'
             // horizontal
@@ -180,18 +180,33 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             }}
         >
             {edit ? <>
-                <Stack.Item style={{ width: '100%' }}>
-                    <form onSubmit={(e) => handleSaveEdit(e)}>
-                        <TextField
-                            componentRef={textFieldRef}
-                            autoFocus={textFieldFocused}
-                            value={editTitle}
-                            placeholder={item.title}
-                            onChange={chatHistoryTitleOnChange}
-                            onKeyDown={handleKeyPressEdit}
-                            errorMessage={errorRename}
-                            disabled={errorRename ? true : false}
-                        />
+                <Stack.Item 
+                    style={{ width: '100%' }}
+                >
+                    <form aria-label='edit title form' onSubmit={(e) => handleSaveEdit(e)} style={{padding: '5px 0px'}}>
+                        <Stack horizontal verticalAlign={'start'}>
+                            <Stack.Item>
+                                <TextField
+                                    componentRef={textFieldRef}
+                                    autoFocus={textFieldFocused}
+                                    value={editTitle}
+                                    placeholder={item.title}
+                                    onChange={chatHistoryTitleOnChange}
+                                    onKeyDown={handleKeyPressEdit}
+                                    // errorMessage={errorRename}
+                                    disabled={errorRename ? true : false}
+                                />
+                            </Stack.Item>
+                            {editTitle && (<Stack.Item>
+                                <Stack aria-label='action button group' horizontal verticalAlign={'center'}>
+                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' iconProps={{iconName: 'CheckMark'}} styles={{ root: { color: 'green', marginLeft: '5px' } }} />
+                                    <IconButton role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' iconProps={{iconName: 'Cancel'}} styles={{ root: { color: 'red', marginLeft: '5px' } }} />
+                                </Stack>
+                            </Stack.Item>)}
+                        </Stack>
+                        {errorRename && (
+                            <Text role='alert' aria-label={errorRename} style={{fontSize: 12, fontWeight: 400, color: 'rgb(164,38,44)'}}>{errorRename}</Text>
+                        )}
                     </form>
                 </Stack.Item>
             </> : <>

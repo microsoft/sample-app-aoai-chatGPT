@@ -41,7 +41,7 @@ export const historyList = async (): Promise<Conversation[] | null> => {
     }).then(async (res) => {
         const payload = await res.json();
         if (!Array.isArray(payload)) {
-            console.error("Unexpected payload format:", payload);
+            console.error("There was an issue fetching your data.");
             return null;
         }
         const conversations: Conversation[] = await Promise.all(payload.map(async (conv: any) => {
@@ -64,7 +64,7 @@ export const historyList = async (): Promise<Conversation[] | null> => {
         }));
         return conversations;
     }).catch((err) => {
-        console.error(err)
+        console.error("There was an issue fetching your data.");
         return null
     })
 
@@ -100,7 +100,7 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
         }
         return messages;
     }).catch((err) => {
-        console.error("Error: ", err)
+        console.error("There was an issue fetching your data.");
         return []
     })
     return response
@@ -129,7 +129,7 @@ export const historyGenerate = async (options: ConversationRequest, abortSignal:
         return res
     })
     .catch((err) => {
-        console.error("Error: ", err)
+        console.error("There was an issue fetching your data.");
         return new Response;
     })
     return response
@@ -149,7 +149,7 @@ export const historyUpdate = async (messages: ChatMessage[], convId: string): Pr
         return res
     })
     .catch((err) => {
-        console.error("Error: ", err)
+        console.error("There was an issue fetching your data.");
         let errRes: Response = {
             ...new Response,
             ok: false,
@@ -174,7 +174,7 @@ export const historyDelete = async (convId: string) : Promise<Response> => {
         return res
     })
     .catch((err) => {
-        console.error("Error: ", err)
+        console.error("There was an issue fetching your data.");
         let errRes: Response = {
             ...new Response,
             ok: false,
@@ -185,17 +185,30 @@ export const historyDelete = async (convId: string) : Promise<Response> => {
     return response;
 }
 
-export const historyDeleteAll = async () : Promise<any> => {
+export const historyDeleteAll = async () : Promise<Response> => {
     const response = await fetch("/history/delete_all", {
         method: "DELETE",
         body: JSON.stringify({}),
         headers: {
             "Content-Type": "application/json"
         },
-    });
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue fetching your data.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
 }
 
-export const historyClear = async (convId: string) : Promise<any> => {
+export const historyClear = async (convId: string) : Promise<Response> => {
     const response = await fetch("/history/clear", {
         method: "POST",
         body: JSON.stringify({
@@ -204,7 +217,20 @@ export const historyClear = async (convId: string) : Promise<any> => {
         headers: {
             "Content-Type": "application/json"
         },
-    });
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue fetching your data.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
 }
 
 export const historyRename = async (convId: string, title: string) : Promise<Response> => {
@@ -222,7 +248,7 @@ export const historyRename = async (convId: string, title: string) : Promise<Res
         return res
     })
     .catch((err) => {
-        console.error("Error: ", err)
+        console.error("There was an issue fetching your data.");
         let errRes: Response = {
             ...new Response,
             ok: false,
@@ -262,7 +288,7 @@ export const historyEnsure = async (): Promise<CosmosDBHealth> => {
         }
     })
     .catch((err) => {
-        console.error("error: ", err)
+        console.error("There was an issue fetching your data.");
         return {
             cosmosDB: false,
             status: err

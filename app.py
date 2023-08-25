@@ -473,8 +473,8 @@ def list_conversations():
 
     ## get the conversations from cosmos
     conversations = cosmos_conversation_client.get_conversations(user_id)
-    # if not conversations:
-    #     return jsonify({"error": f"No conversations for {user_id} were found"}), 404
+    if not isinstance(conversations, list):
+        return jsonify({"error": f"No conversations for {user_id} were found"}), 404
 
     ## return the conversation ids
 
@@ -509,7 +509,7 @@ def get_conversation():
 def rename_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
-    
+
     ## check request for conversation_id
     conversation_id = request.json.get("conversation_id", None)
     

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { CommandBarButton, Stack } from "@fluentui/react";
-import { BroomRegular, DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular, AddRegular } from "@fluentui/react-icons";
+import { CommandBarButton, Dialog, DialogType, Stack } from "@fluentui/react";
+import { DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
@@ -20,17 +20,17 @@ import {
     getUserInfo,
     Conversation,
     historyGenerate,
-    historyList,
     historyUpdate,
     historyClear,
     ChatHistoryLoadingState,
-    CosmosDBStatus
+    CosmosDBStatus,
+    ErrorMessage
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
-import { root } from "mdast-util-to-markdown/lib/handle/root";
+import { useBoolean } from "@fluentui/react-hooks";
 
 const enum messageStatus {
     NotRunning = "Not Running",
@@ -47,10 +47,43 @@ const Chat = () => {
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const abortFuncs = useRef([] as AbortController[]);
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
-
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
     const [clearingChat, setClearingChat] = useState<boolean>(false);
+    const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
+    const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+
+    const errorDialogContentProps = {
+        type: DialogType.close,
+        title: errorMsg?.title,
+        closeButtonAriaLabel: 'Close',
+        subText: errorMsg?.subtitle,
+    };
+
+    const modalProps = {
+        titleAriaId: 'labelId',
+        subtitleAriaId: 'subTextId',
+        isBlocking: true,
+        styles: { main: { maxWidth: 450 } },
+    }
+
+    useEffect(() => {
+        if(appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && hideErrorDialog){
+            let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
+            setErrorMsg({
+                title: "Chat history is not enabled",
+                subtitle: subtitle
+            })
+            toggleErrorDialog();
+        }
+    }, [appStateContext?.state.isCosmosDBAvailable]);
+
+    const handleErrorDialogClose = () => {
+        toggleErrorDialog()
+        setTimeout(() => {
+            setErrorMsg(null)
+        }, 500);
+    }
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
@@ -361,15 +394,19 @@ const Chat = () => {
 
     const clearChat = async () => {
         setClearingChat(true)
-        try {
-            if(appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB){
-                await historyClear(appStateContext?.state.currentChat.id)
+        if(appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB){
+            let response = await historyClear(appStateContext?.state.currentChat.id)
+            if(!response.ok){
+                setErrorMsg({
+                    title: "Error clearing current chat",
+                    subtitle: "Please try again. If the problem persists, please contact the site administrator.",
+                })
+                toggleErrorDialog();
+            }else{
+                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
+                setActiveCitation(undefined);
+                setIsCitationPanelOpen(false);
             }
-            appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
-            setActiveCitation(undefined);
-            setIsCitationPanelOpen(false);
-        } catch (error) {
-            
         }
         setClearingChat(false)
     };
@@ -603,6 +640,13 @@ const Chat = () => {
                                     disabled={disabledButton()}
                                     aria-label="clear chat button"
                                 />
+                                <Dialog
+                                    hidden={hideErrorDialog}
+                                    onDismiss={handleErrorDialogClose}
+                                    dialogContentProps={errorDialogContentProps}
+                                    modalProps={modalProps}
+                                >
+                                </Dialog>
                             </Stack>
                             <QuestionInput
                                 clearOnSend
