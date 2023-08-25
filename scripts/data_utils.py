@@ -1,5 +1,6 @@
 """Data utilities for index preparation."""
 import ast
+from asyncio import sleep
 import html
 import json
 import os
@@ -28,6 +29,8 @@ FILE_FORMAT_DICT = {
         "py": "python",
         "pdf": "pdf"
     }
+
+RETRY_COUNT = 5
 
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
@@ -541,10 +544,16 @@ def chunk_content(
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    # print('getting embeddings...')
-                    doc.contentVector = get_embedding(chunk)
+                    for _ in RETRY_COUNT:
+                        try:
+                            doc.contentVector = get_embedding(chunk)
+                            break
+                        except:
+                            sleep(30)
+                    if doc.contentVector is None:
+                        raise Exception(f"Error getting embedding for chunk={chunk}")
+                    
 
-                # print(doc)
                 chunks.append(
                     Document(
                         content=chunk,
