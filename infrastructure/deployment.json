@@ -283,6 +283,9 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', parameters('HostingPlanName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "serverFarmId": "[parameters('HostingPlanName')]",
                 "siteConfig": {
