@@ -25,7 +25,7 @@ param searchIndexName string = 'gptkbindex'
 param searchUseSemanticSearch bool = false
 param searchSemanticSearchConfig string = 'default'
 param searchTopK int = 5
-param searchEnableInDomain bool = false
+param searchEnableInDomain bool = true
 param searchContentColumns string = 'content'
 param searchFilenameColumn string = 'filepath'
 param searchTitleColumn string = 'title'
@@ -88,7 +88,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
     location: location
     tags: tags
     sku: {
-      name: 'P1V2' // Upgrade to Premium v2 plan (for production purpose) from 'B1'
+      name: 'B1'
       capacity: 1
     }
     kind: 'linux'
