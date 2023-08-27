@@ -5,6 +5,9 @@
     "environmentName": {
       "value": "${AZURE_ENV_NAME}"
     },
+    "resourceGroupName": {
+      "value": "${AZURE_RG_NAME}"
+    },
     "location": {
       "value": "${AZURE_LOCATION}"
     },
@@ -20,6 +23,23 @@
     "openAiSkuName": {
       "value": "${AZURE_OPENAI_SKU_NAME}"
     },
+
+    "openAIModelDeployment": {
+      "value": "${AZURE_OPENAI_MODEL_NAME}"
+    },
+
+    "openAIModelVersion": {
+      "value": "${AZURE_OPENAI_MODEL_VERSION}"
+    },
+
+    "openAIModelLabel": {
+      "value": "${AZURE_OPENAI_MODEL_LABEL}"
+    },
+
+    "openAIModelCapacity": {
+      "value": "${AZURE_OPENAI_MODEL_CAPACITY}"
+    },
+
     "searchServiceName": {
       "value": "${AZURE_SEARCH_SERVICE}"
     },
