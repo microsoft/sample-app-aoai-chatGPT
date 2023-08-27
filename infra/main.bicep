@@ -8,6 +8,10 @@ param environmentName string
 @minLength(1)
 @description('Primary location for all resources')
 param location string
+param openAIModelDeployment string
+param openAIModelVersion string
+param openAIModelLabel string
+param openAIModelCapacity int
 
 param appServicePlanName string = ''
 param backendServiceName string = ''
@@ -21,7 +25,7 @@ param searchIndexName string = 'gptkbindex'
 param searchUseSemanticSearch bool = false
 param searchSemanticSearchConfig string = 'default'
 param searchTopK int = 5
-param searchEnableInDomain bool = true
+param searchEnableInDomain bool = false
 param searchContentColumns string = 'content'
 param searchFilenameColumn string = 'filepath'
 param searchTitleColumn string = 'title'
@@ -31,8 +35,8 @@ param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
 param openAiResourceGroupLocation string = location
 param openAiSkuName string = ''
-param openAIModel string = 'turbo'
-param openAIModelName string = 'gpt-35-turbo'
+param openAIModel string = empty(openAIModelLabel) ? 'turbo' : openAIModelLabel
+param openAIModelName string = empty(openAIModelDeployment) ? 'gpt-35-turbo' : openAIModelDeployment
 param openAITemperature int = 0
 param openAITopP int = 1
 param openAIMaxTokens int = 1000
@@ -84,7 +88,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
     location: location
     tags: tags
     sku: {
-      name: 'B1'
+      name: 'P1V2' // Upgrade to Premium v2 plan (for production purpose) from 'B1'
       capacity: 1
     }
     kind: 'linux'
@@ -112,8 +116,8 @@ module backend 'core/host/appservice.bicep' = {
     appSettings: {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
-      AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_SEARCH_KEY: searchService.outputs.adminKey
+      AZURE_SEARCH_SERVICE: (!empty(searchServiceName)) ? searchService.outputs.name : ''
+      AZURE_SEARCH_KEY: (!empty(searchServiceName)) ? searchService.outputs.adminKey : ''
       AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
       AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
       AZURE_SEARCH_TOP_K: searchTopK
@@ -155,15 +159,15 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: openAIModelName
-          version: '0301'
+          version: empty(openAIModelVersion) ? '0301' : openAIModelVersion
         }
-        capacity: 30
+        capacity: openAIModelCapacity > 0 ? openAIModelCapacity : 30
       }
     ]
   }
 }
 
-module searchService 'core/search/search-services.bicep' = {
+module searchService 'core/search/search-services.bicep' = if (!empty(searchServiceName)) {
   name: 'search-service'
   scope: searchServiceResourceGroup
   params: {
@@ -247,7 +251,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
 }
 
 // For doc prep
-module docPrepResources 'docprep.bicep' = {
+module docPrepResources 'docprep.bicep' = if (!empty(searchServiceName)) {
   name: 'docprep-resources${resourceToken}'
   params: {
     location: location
@@ -269,10 +273,10 @@ output BACKEND_URI string = backend.outputs.uri
 
 // search
 output AZURE_SEARCH_INDEX string = searchIndexName
-output AZURE_SEARCH_SERVICE string = searchService.outputs.name
+output AZURE_SEARCH_SERVICE string = (!empty(searchServiceName)) ? searchService.outputs.name : ''
 output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.name
-output AZURE_SEARCH_SKU_NAME string = searchService.outputs.skuName
-output AZURE_SEARCH_KEY string = searchService.outputs.adminKey
+output AZURE_SEARCH_SKU_NAME string = (!empty(searchServiceName)) ? searchService.outputs.skuName : ''
+output AZURE_SEARCH_KEY string = (!empty(searchServiceName)) ? searchService.outputs.adminKey : ''
 output AZURE_SEARCH_USE_SEMANTIC_SEARCH bool = searchUseSemanticSearch
 output AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG string = searchSemanticSearchConfig
 output AZURE_SEARCH_TOP_K int = searchTopK
