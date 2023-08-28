@@ -618,8 +618,16 @@ def chunk_file(
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
     else:
-        with open(file_path, "r", encoding="utf8") as f:
-            content = f.read()
+        try:
+            with open(file_path, "r", encoding="utf8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            from chardet import detect
+            with open(file_path, "rb") as f:
+                binary_content = f.read()
+                encoding = detect(binary_content).get('encoding', 'utf8')
+                content = binary_content.decode(encoding)
+        
     return chunk_content(
         content=content,
         file_name=file_name,

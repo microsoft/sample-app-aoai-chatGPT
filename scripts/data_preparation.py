@@ -258,6 +258,8 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         d = dataclasses.asdict(document)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
+        if "contentVector" in d and d["contentVector"] is None:
+            del d["contentVector"]
         to_upload_dicts.append(d)
         id += 1
     
@@ -416,7 +418,7 @@ if __name__ == "__main__":
 
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        if index_config["vector_config_name"] and not (args.embedding_model_endpoint and args.embedding_model_key):
+        if index_config.get("vector_config_name") and not (args.embedding_model_endpoint and args.embedding_model_key):
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
         create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)
