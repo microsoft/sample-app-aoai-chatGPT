@@ -238,7 +238,6 @@ const Chat = () => {
             };
             setMessages(request.messages)
         }
-
         let result = {} as ChatResponse;
         try {
             const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
@@ -291,7 +290,11 @@ const Chat = () => {
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            setMessages([...messages, userMessage, ...result.choices[0].messages]);
+                            if(!conversationId){
+                                setMessages([...messages, userMessage, ...result.choices[0].messages]);
+                            }else{
+                                setMessages([...messages, ...result.choices[0].messages]);
+                            }
                             runningText = "";
                         }
                         catch { }
@@ -403,9 +406,11 @@ const Chat = () => {
                 })
                 toggleErrorDialog();
             }else{
-                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES' });
+                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: appStateContext?.state.currentChat.id});
+                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat});
                 setActiveCitation(undefined);
                 setIsCitationPanelOpen(false);
+                setMessages([])
             }
         }
         setClearingChat(false)
@@ -415,6 +420,7 @@ const Chat = () => {
         setProcessMessages(messageStatus.Processing)
         setMessages([])
         setIsCitationPanelOpen(false);
+        setActiveCitation(undefined);
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
         setProcessMessages(messageStatus.Done)
     };

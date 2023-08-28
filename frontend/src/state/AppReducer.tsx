@@ -18,10 +18,8 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             if (conversationIndex !== -1) {
                 let updatedChatHistory = [...state.chatHistory];
                 updatedChatHistory[conversationIndex] = state.currentChat
-                // TODO: make api call to update existing chat history
                 return {...state, chatHistory: updatedChatHistory}
             } else {
-                // TODO: make api call to add/create new chat history
                 return { ...state, chatHistory: [...state.chatHistory, action.payload] };
             }
         case 'UPDATE_CHAT_TITLE':
@@ -52,7 +50,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, chatHistory: [], filteredChatHistory: [], currentChat: null };
         case 'DELETE_CURRENT_CHAT_MESSAGES':
             //TODO: make api call to delete current conversation messages from DB
-            if(!state.currentChat){
+            if(!state.currentChat || !state.chatHistory){
                 return state;
             }
             const updatedCurrentChat = {

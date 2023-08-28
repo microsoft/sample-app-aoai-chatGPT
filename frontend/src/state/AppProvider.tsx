@@ -22,7 +22,7 @@ export type Action =
     | { type: 'UPDATE_CHAT_TITLE', payload: Conversation } // API Call
     | { type: 'DELETE_CHAT_ENTRY', payload: string } // API Call
     | { type: 'DELETE_CHAT_HISTORY'}  // API Call
-    | { type: 'DELETE_CURRENT_CHAT_MESSAGES' }  // API Call
+    | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
 
 const initialState: AppState = {
