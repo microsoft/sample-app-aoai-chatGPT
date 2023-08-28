@@ -360,7 +360,9 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     
     # chunk directory
     print("Chunking directory...")
-    add_embeddings = config.get("vector_config_name", None) and os.environ.get("EMBEDDING_MODEL_ENDPOINT", None) and os.environ.get("EMBEDDING_MODEL_KEY", None)
+    add_embeddings = False
+    if config.get("vector_config_name") and os.environ.get("EMBEDDING_MODEL_ENDPOINT") and os.environ.get("EMBEDDING_MODEL_KEY"):
+        add_embeddings = True
     result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs, add_embeddings=add_embeddings)
 
     if len(result.chunks) == 0:
