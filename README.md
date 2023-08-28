@@ -80,6 +80,8 @@ To enable chat history, you will need to set up CosmosDB resources. The ARM temp
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:5000.
 
 #### Deploy with the Azure CLI
+**NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
+
 You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. Make sure you have version 2.48.1 or later.
 
 If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following command from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
@@ -91,8 +93,6 @@ If you've deployed the app previously, first run this command to update the apps
 `az webapp config appsettings set -g <resource-group-name> -n <existing-app-name> --settings WEBSITE_WEBDEPLOY_USE_SCM=false`
 
 Check the runtime stack for your app by viewing the app service resource in the Azure Portal. If it shows "Python - 3.10", use `PYTHON:3.10` in the runtime argument below. If it shows "Python - 3.11", use `PYTHON:3.11` in the runtime argument below. 
-
-**Note:** If the runtime is "DOCKER|fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest" from One-Click Azure Deployment, redeploying with `az webapp up` is not compatible. Use the command above to create a new app.
 
 Check the SKU in the same way. Use the abbreviated SKU name in the argument below, e.g. for "Basic (B1)" the SKU is `B1`. 
 
