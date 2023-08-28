@@ -390,7 +390,6 @@ const Chat = () => {
             abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
             setProcessMessages(messageStatus.Done)
         }
-
         return abortController.abort();
 
     }
