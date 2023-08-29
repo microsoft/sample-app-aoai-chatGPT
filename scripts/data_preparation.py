@@ -258,6 +258,8 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         d = dataclasses.asdict(document)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
+        if "contentVector" in d and d["contentVector"] is None:
+            del d["contentVector"]
         to_upload_dicts.append(d)
         id += 1
     
@@ -358,7 +360,9 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     
     # chunk directory
     print("Chunking directory...")
-    add_embeddings = config.get("vector_config_name", None) and os.environ.get("EMBEDDING_MODEL_ENDPOINT", None) and os.environ.get("EMBEDDING_MODEL_KEY", None)
+    add_embeddings = False
+    if config.get("vector_config_name") and os.environ.get("EMBEDDING_MODEL_ENDPOINT") and os.environ.get("EMBEDDING_MODEL_KEY"):
+        add_embeddings = True
     result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs, add_embeddings=add_embeddings)
 
     if len(result.chunks) == 0:
@@ -416,7 +420,7 @@ if __name__ == "__main__":
 
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        if index_config["vector_config_name"] and not (args.embedding_model_endpoint and args.embedding_model_key):
+        if index_config.get("vector_config_name") and not (args.embedding_model_endpoint and args.embedding_model_key):
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
         create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)

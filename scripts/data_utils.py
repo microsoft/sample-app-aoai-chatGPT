@@ -6,6 +6,7 @@ import json
 import os
 import re
 import requests
+import openai
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -439,21 +440,22 @@ def get_embedding(text):
     key = os.environ.get("EMBEDDING_MODEL_KEY")
     if endpoint is None or key is None:
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
-    
-    headers = {
-        "Content-Type": "application/json",
-        "api-key": key
-    }
 
-    body = {
-        "input": text
-    }
+    try:
+        endpoint_parts = endpoint.split("/openai/deployments/")
+        base_url = endpoint_parts[0]
+        deployment_id = endpoint_parts[1].split("/embeddings")[0]
 
-    response = requests.post(endpoint, headers=headers, json=body)
-    if response.status_code != 200:
-        raise Exception(f"Error getting embedding for text={text} with status_code={response.status_code} and response={response.text}")
-    response = response.json()
-    return response['data'][0]['embedding']
+        openai.api_version = '2023-05-15'
+        openai.api_base = base_url
+        openai.api_type = 'azure'
+        openai.api_key = os.environ.get("EMBEDDING_MODEL_KEY")
+
+        embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
+        return embeddings['data'][0]["embedding"]
+
+    except Exception as e:
+        raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
 
 
 def chunk_content_helper(
@@ -544,7 +546,7 @@ def chunk_content(
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    for _ in RETRY_COUNT:
+                    for _ in range(RETRY_COUNT):
                         try:
                             doc.contentVector = get_embedding(chunk)
                             break
@@ -618,8 +620,16 @@ def chunk_file(
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
     else:
-        with open(file_path, "r", encoding="utf8") as f:
-            content = f.read()
+        try:
+            with open(file_path, "r", encoding="utf8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            from chardet import detect
+            with open(file_path, "rb") as f:
+                binary_content = f.read()
+                encoding = detect(binary_content).get('encoding', 'utf8')
+                content = binary_content.decode(encoding)
+        
     return chunk_content(
         content=content,
         file_name=file_name,
