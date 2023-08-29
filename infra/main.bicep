@@ -52,6 +52,9 @@ param authClientId string
 @secure()
 param authClientSecret string
 
+// Used for Cosmos DB
+param cosmosAccountName string = ''
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -93,7 +96,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 
 // The application frontend
 var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
-var authIssuerUri = 'https://login.microsoftonline.com/${tenant().tenantId}/v2.0'
+var authIssuerUri = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
@@ -155,7 +158,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: openAIModelName
-          version: '0301'
+          version: '0613'
         }
         capacity: 30
       }
@@ -182,6 +185,17 @@ module searchService 'core/search/search-services.bicep' = {
   }
 }
 
+// The application database
+module cosmos 'db.bicep' = {
+  name: 'cosmos'
+  scope: resourceGroup
+  params: {
+    accountName: !empty(cosmosAccountName) ? cosmosAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
+    location: location
+    tags: tags
+    principalId: backend.outputs.identityPrincipalId
+  }
+}
 
 
 // USER ROLES
@@ -301,5 +315,10 @@ output AZURE_OPENAI_STREAM bool = openAIStream
 output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SERVICE
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
 output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
+
+// cosmos
+output AZURE_COSMOSDB_ACCOUNT string = cosmos.outputs.accountName
+output AZURE_COSMOSDB_DATABASE string = cosmos.outputs.databaseName
+output AZURE_COSMOSDB_CONVERSATIONS_CONTAINER string = cosmos.outputs.containerName
 
 output AUTH_ISSUER_URI string = authIssuerUri

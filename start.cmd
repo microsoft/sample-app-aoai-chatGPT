@@ -33,7 +33,7 @@ echo Starting backend
 echo.
 cd ..
 start http://127.0.0.1:5000
-call python ./app.py
+call ./.venv/bin/python -m flask run --port=5000 --host=127.0.0.1 --reload --debug
 if "%errorlevel%" neq "0" (
     echo Failed to start backend
     exit /B %errorlevel%

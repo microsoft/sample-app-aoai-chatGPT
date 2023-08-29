@@ -8,11 +8,16 @@ from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
     SearchableField,
+    SearchField,
+    SearchFieldDataType,
     SemanticField,
     SemanticSettings,
     SemanticConfiguration,
     SearchIndex,
     PrioritizedFields,
+    VectorSearch,
+    VectorSearchAlgorithmConfiguration,
+    HnswParameters
 )
 from azure.search.documents import SearchClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
@@ -24,6 +29,9 @@ from data_utils import chunk_directory
 def create_search_index(index_name, index_client):
     print(f"Ensuring search index {index_name} exists")
     if index_name not in index_client.list_index_names():
+
+                        
+    
         index = SearchIndex(
             name=index_name,
             fields=[
@@ -37,6 +45,9 @@ def create_search_index(index_name, index_client):
                 SearchableField(name="filepath", type="Edm.String"),
                 SearchableField(name="url", type="Edm.String"),
                 SearchableField(name="metadata", type="Edm.String"),
+                SearchField(name="contentVector", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
+                            hidden=False, searchable=True, filterable=False, sortable=False, facetable=False,
+                            vector_search_dimensions=1536, vector_search_configuration="default"),
             ],
             semantic_settings=SemanticSettings(
                 configurations=[
@@ -51,6 +62,15 @@ def create_search_index(index_name, index_client):
                     )
                 ]
             ),
+            vector_search=VectorSearch(
+                algorithm_configurations=[
+                    VectorSearchAlgorithmConfiguration(
+                        name="default",
+                        kind="hnsw",
+                        hnsw_parameters=HnswParameters(metric="cosine")
+                    )
+                ]
+            )
         )
         print(f"Creating {index_name} search index")
         index_client.create_index(index)
