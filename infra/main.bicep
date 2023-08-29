@@ -31,8 +31,8 @@ param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
 param openAiResourceGroupLocation string = location
 param openAiSkuName string = ''
-param openAIModel string = 'turbo'
-param openAIModelName string = 'gpt-35-turbo'
+param openAIModel string = 'turbo16k'
+param openAIModelName string = 'gpt-35-turbo-16k'
 param openAITemperature int = 0
 param openAITopP int = 1
 param openAIMaxTokens int = 1000
@@ -40,6 +40,8 @@ param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
 param openAIApiVersion string = '2023-06-01-preview'
 param openAIStream bool = true
+param embeddingDeploymentName string = 'embedding'
+param embeddingModelName string = 'text-embedding-ada-002'
 
 // Used by prepdocs.py: Form recognizer
 param formRecognizerServiceName string = ''
@@ -162,6 +164,15 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         }
         capacity: 30
       }
+      {
+        name: embeddingDeploymentName
+        model: {
+          format: 'OpenAI'
+          name: embeddingModelName
+          version: '2'
+        }
+        capacity: 30
+      }
     ]
   }
 }
@@ -191,9 +202,9 @@ module cosmos 'db.bicep' = {
   scope: resourceGroup
   params: {
     accountName: !empty(cosmosAccountName) ? cosmosAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
-    location: location
+    location: 'eastus'
     tags: tags
-    principalId: backend.outputs.identityPrincipalId
+    principalIds: [principalId, backend.outputs.identityPrincipalId]
   }
 }
 
@@ -299,10 +310,13 @@ output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
 // openai
 output AZURE_OPENAI_RESOURCE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
+output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 output AZURE_OPENAI_MODEL string = openAIModel
 output AZURE_OPENAI_MODEL_NAME string = openAIModelName
 output AZURE_OPENAI_SKU_NAME string = openAi.outputs.skuName
 output AZURE_OPENAI_KEY string = openAi.outputs.key
+output AZURE_OPENAI_EMBEDDING_KEY string = openAi.outputs.key
+output AZURE_OPENAI_EMBEDDING_ENDPOINT string = '${openAi.outputs.endpoint}/openai/deployments/${embeddingDeploymentName}/embeddings?api-version=2023-06-01-preview'
 output AZURE_OPENAI_TEMPERATURE int = openAITemperature
 output AZURE_OPENAI_TOP_P int = openAITopP
 output AZURE_OPENAI_MAX_TOKENS int = openAIMaxTokens

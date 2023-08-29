@@ -4,7 +4,7 @@ param tags object = {}
 
 param databaseName string = 'db_conversation_history'
 param collectionName string = 'conversations'
-param principalId string = ''
+param principalIds array = []
 
 param containers array = [
   {
@@ -22,7 +22,7 @@ module cosmos 'core/database/cosmos/sql/cosmos-sql-db.bicep' = {
     location: location
     containers: containers
     tags: tags
-    principalIds: [principalId]
+    principalIds: principalIds
   }
 }
 
