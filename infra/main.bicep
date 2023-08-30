@@ -59,6 +59,12 @@ var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 
+// used for History DB (enabled by default)
+var historyDbName = '${abbrs.documentDBDatabaseAccounts}history-${resourceToken}'
+var cosmosdb_database_name = 'db_conversation_history'
+var cosmosdb_container_name = 'conversations'
+param WebAppEnableChatHistory bool = true
+
 // Organize resources in a resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
@@ -134,10 +140,29 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_SYSTEM_MESSAGE: openAISystemMessage
       AZURE_OPENAI_PREVIEW_API_VERSION: openAIApiVersion
       AZURE_OPENAI_STREAM: openAIStream
+      // history
+      AZURE_COSMOSDB_ACCOUNT: WebAppEnableChatHistory ? historyDbName : ''
+      AZURE_COSMOSDB_DATABASE: cosmosdb_database_name
+      AZURE_COSMOSDB_CONVERSATIONS_CONTAINER: cosmosdb_container_name
     }
   }
 }
 
+module historyDb 'core/host/cosmosdb.bicep' = if (WebAppEnableChatHistory) {
+  name: 'historydb'
+  scope: resourceGroup
+  params: {
+    name: historyDbName
+    cosmosdb_container_name: cosmosdb_container_name
+    cosmosdb_database_name: cosmosdb_database_name
+    appServiceName: appServiceName
+    appServicePrincipal: backend.outputs.identityPrincipalId
+    location: location
+  }
+  dependsOn: [
+    backend
+  ]
+}
 
 module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
