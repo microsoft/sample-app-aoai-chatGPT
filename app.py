@@ -76,7 +76,6 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
         cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
         if not AZURE_COSMOSDB_ACCOUNT_KEY:
-            app.logger.info("Using DefaultAzureCredential for CosmosDB")
             credential = DefaultAzureCredential()
         else:
             credential = AZURE_COSMOSDB_ACCOUNT_KEY
