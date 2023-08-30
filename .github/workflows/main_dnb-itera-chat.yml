@@ -53,10 +53,6 @@ jobs:
         with:
           name: python-app
           path: .
-
-      - name: Azure Login
-        uses: Azure/login@v1
-            
           
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
@@ -64,4 +60,4 @@ jobs:
         with:
           app-name: 'dnb-itera-chat'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6071AED8606B43369DE624ED04777296 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_72A385C7596B41D9B62C9407B39FE85E }}
