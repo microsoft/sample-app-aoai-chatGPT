@@ -1,0 +1,16 @@
+[
+    {
+        "data_path": "D:\\Wed\\Doc\\testdata",
+        "location": "East US",
+        "subscription_id": "e54a2925-af7f-4b05-9ba1-2155c5fe8a8e",
+        "resource_group": "rawantest",
+        "account_name": "rawan-wed-test",
+        "database_name": "vectordb",
+        "collection_name": "testdata",
+        "chunk_size": 1024,
+        "token_overlap": 128,
+        "language": "en",
+        "index_name": "vectorsearch",
+        "vector_field": "contentvector"
+    }
+]
