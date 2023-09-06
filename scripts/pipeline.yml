@@ -10,11 +10,11 @@ settings:
 inputs:
   config_file: 
     type: uri_file
-    path: aml_config.json
+    path: aml_config.json # your config file name here
   input_data_path:
     type: uri_folder
-    # path: ../data
-    path: azureml://datastores/sawidder_test_ds/paths/premera
+    # path: ../data # uncomment this to use local data
+    path: azureml://datastores/<datastore name>/paths/<path> # substitute your datastore name and path here
     mode: ro_mount
 
 jobs:

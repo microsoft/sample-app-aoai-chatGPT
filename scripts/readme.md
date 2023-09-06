@@ -1,5 +1,50 @@
 # Data Preparation
 
+# Use AML to Prepare Data
+## Setup 
+- Install the [Azure ML CLI v2](https://learn.microsoft.com/en-us/azure/machine-learning/concept-v2?view=azureml-api-2)
+
+## Prerequisites
+- Azure Machine Learning (AML) Workspace with associated Keyvault
+- Azure Cognitive Search (ACS) resource
+- (Optional if processing PDF) [Azure AI Document Intelligence](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/overview?view=doc-intel-3.1.0) resource
+- (Optional if adding embeddings for vector search) Azure OpenAI resource with Ada (text-embedding-ada-002) deployment
+- (Optional) Azure Blob Storage account
+
+## Configure
+- Create secrets in the AML keyvault for the Azure Cognitive Search resource admin key, Document Intelligence access key, and Azure OpenAI API key (if using)
+- Create a config file like `aml_config.json`. The format can be a single JSON object or a list of them, with each object specifying a configuration of Keyvault secrets, chunking settings, and index configuration.
+```
+{
+        "chunk_size": 1024,
+        "token_overlap": 128,
+        "keyvault_url": "https://<keyvault name>.vault.azure.net/",
+        "document_intelligence_secret_name": "myDocIntelligenceKey",
+        "document_intelligence_endpoint": "https://<document intelligence resource name>.cognitiveservices.azure.com/",
+        "embedding_key_secret_name": "myAzureOpenAIKey",
+        "embedding_endpoint": "https:/<azure openai resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-06-01-preview",
+        "index_name": "<new index name>",
+        "search_service_name": "<search service name>",
+        "search_key_secret_name": "mySearchServiceKey"
+}
+```
+
+## Optional: Create an AML Datastore
+If your data is in Azure Blob Storage, you can first create an AML Datastore that will be used to connect to your data during ingestion. Update `datastore.yml` with your storage account information including the account key. Then run this command, using the resource group and workspace name of your AML workspace:
+
+```
+az ml datastore create --resource-group <workspace resource group> --workspace-name <workspace name> --file datastore.yml
+```
+
+## Submit the data processing pipeline job
+In `pipeline.yml`, update the inputs to point to your config file name and the datastore you created. If you're using data stored locally, comment out the datastore path and uncomment the local path, updating to point to your local data location. Then submit the pipeline job to your AML workspace:
+
+```
+az ml job create --resource-group <workspace resource group> --workspace-name <workspace name> --file pipeline.yml
+```
+
+# Prepare Data Locally
+
 ## Setup
 - Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
 
