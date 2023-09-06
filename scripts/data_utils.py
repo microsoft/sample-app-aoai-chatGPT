@@ -435,9 +435,10 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
-def get_embedding(text):
-    endpoint = os.environ.get("EMBEDDING_MODEL_ENDPOINT")
-    key = os.environ.get("EMBEDDING_MODEL_KEY")
+def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None):
+    endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
+    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
+    
     if endpoint is None or key is None:
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
@@ -449,7 +450,7 @@ def get_embedding(text):
         openai.api_version = '2023-05-15'
         openai.api_base = base_url
         openai.api_type = 'azure'
-        openai.api_key = os.environ.get("EMBEDDING_MODEL_KEY")
+        openai.api_key = key
 
         embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
         return embeddings['data'][0]["embedding"]

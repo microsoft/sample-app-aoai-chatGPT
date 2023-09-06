@@ -1,0 +1,25 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: embed_documents
+display_name: Calculate Embeddings for Document Chunks
+version: 1
+
+inputs:
+  document_chunks_file_path:
+    type: uri_file
+  config_file:
+    type: uri_file
+
+outputs:
+  chunks_with_embeddings_file_path:
+    type: uri_file
+
+code: .
+
+environment: 
+  conda_file: conda.yml
+  image: mcr.microsoft.com/azureml/curated/python-sdk-v2:latest
+
+command: >-
+  python embed_documents.py --input_data_path ${{inputs.document_chunks_file_path}} --config_file ${{inputs.config_file}} --output_file_path ${{outputs.chunks_with_embeddings_file_path}}

@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/azureBlob.schema.json
+name: sawidder_test_ds 
+type: azure_blob
+description: Test file (Premera) for data ingestion.
+account_name: gptdevbenchdata 
+container_name: premera 
+credentials: 
+  account_key: # account key here
