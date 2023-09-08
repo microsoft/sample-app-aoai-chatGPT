@@ -201,10 +201,64 @@
             "metadata": {
                 "description": "Whether or not to stream responses from Azure OpenAI"
             }
+        },
+        "AzureSearchQueryType": {
+            "type": "string",
+            "defaultValue": "simple",
+            "allowedValues": [
+                "simple",
+                "semantic",
+                "vector",
+                "vectorSimpleHybrid",
+                "vectorSemanticHybrid"
+            ],
+            "metadata": {
+                "description": "Azure Search Query Type"
+            }
+        },
+        "AzureSearchVectorFields": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Search Vector Fields"
+            }
+        },
+        "AzureSearchPermittedGroupsField": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Search Permitted Groups Field"
+            }
+        },
+        "AzureOpenAIEmbeddingEndpoint": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure OpenAI Embedding Endpoint"
+            }
+        },
+        "AzureOpenAIEmbeddingKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure OpenAI Embedding Key"
+            }
+        },
+        "WebAppEnableChatHistory": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable chat history by deploying a Cosmos DB instance"
+            }
         }
     },
     "variables": {
-        "WebAppImageName": "DOCKER|fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest"
+        "WebAppImageName": "DOCKER|fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest",
+        "cosmosdb_account_name": "[format('db-{0}', parameters('WebsiteName'))]",
+        "cosmosdb_database_name": "db_conversation_history",
+        "cosmosdb_container_name": "conversations",
+        "roleDefinitionId": "00000000-0000-0000-0000-000000000002", // Cosmos DB Built-in Data Contributor Role
+        "roleAssignmentId": "[guid(variables('roleDefinitionId'), parameters('WebsiteName'), resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name')))]"
     },
     "resources": [
         {
@@ -229,6 +283,9 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', parameters('HostingPlanName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "serverFarmId": "[parameters('HostingPlanName')]",
                 "siteConfig": {
@@ -328,7 +385,43 @@
                         {
                             "name": "AZURE_OPENAI_STREAM",
                             "value": "[parameters('AzureOpenAIStream')]"
-                        }                        
+                        },
+                        {
+                            "name": "AZURE_SEARCH_QUERY_TYPE",
+                            "value": "[parameters('AzureSearchQueryType')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_VECTOR_COLUMNS",
+                            "value": "[parameters('AzureSearchVectorFields')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN",
+                            "value": "[parameters('AzureSearchPermittedGroupsField')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+                            "value": "[parameters('AzureOpenAIEmbeddingEndpoint')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_EMBEDDING_KEY",
+                            "value": "[parameters('AzureOpenAIEmbeddingKey')]"
+                        },
+                        {
+                            "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                            "value": "true"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_ACCOUNT",
+                            "value": "[if(parameters('WebAppEnableChatHistory'), variables('cosmosdb_account_name'), '')]"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_DATABASE",
+                            "value": "[variables('cosmosdb_database_name')]"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER",
+                            "value": "[variables('cosmosdb_container_name')]"
+                        }
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"
                 }
@@ -346,6 +439,96 @@
                 "Application_Type": "web"
             },
             "kind": "web"
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2023-04-15",
+            "name": "[variables('cosmosdb_account_name')]",
+            "location": "[resourceGroup().location]",
+            "kind": "GlobalDocumentDB",
+            "properties": {
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session"
+                },
+                "locations": [
+                    {
+                        "locationName": "[resourceGroup().location]",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "databaseAccountOfferType": "Standard",
+                "enableAutomaticFailover": false,
+                "enableMultipleWriteLocations": false
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables('cosmosdb_database_name')]"
+                }
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'), '/conversations')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosdb_account_name'), variables('cosmosdb_database_name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "conversations",
+                    "indexingPolicy": {
+                        "indexingMode": "consistent",
+                        "automatic": true,
+                        "includedPaths": [
+                            {
+                                "path": "/*"
+                            }
+                        ],
+                        "excludedPaths": [
+                            {
+                                "path": "/\"_etag\"/?"
+                            }
+                        ]
+                    },
+                    "partitionKey": {
+                        "paths": [
+                            "/userId"
+                        ],
+                        "kind": "Hash"
+                    },
+                    "conflictResolutionPolicy": {
+                        "mode": "LastWriterWins",
+                        "conflictResolutionPath": "/_ts"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+            "apiVersion": "2021-04-15",
+            "name": "[format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleAssignmentId'))]",
+            "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[0], split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[1])]",
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('WebsiteName')), '2021-02-01', 'Full').identity.principalId]",
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ]
         }
     ]
 }
