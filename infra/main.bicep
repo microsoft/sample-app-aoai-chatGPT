@@ -21,6 +21,7 @@ param searchIndexName string = 'gptkbindex'
 param searchUseSemanticSearch bool = false
 param searchSemanticSearchConfig string = 'default'
 param searchTopK int = 5
+param searchThreshold string = '0.3'
 param searchEnableInDomain bool = true
 param searchContentColumns string = 'content'
 param searchFilenameColumn string = 'filepath'
@@ -117,6 +118,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
       AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
       AZURE_SEARCH_TOP_K: searchTopK
+      AZURE_SEARCH_THRESHOLD: searchThreshold
       AZURE_SEARCH_ENABLE_IN_DOMAIN: searchEnableInDomain
       AZURE_SEARCH_CONTENT_COLUMNS: searchContentColumns
       AZURE_SEARCH_FILENAME_COLUMN: searchFilenameColumn
@@ -276,6 +278,7 @@ output AZURE_SEARCH_KEY string = searchService.outputs.adminKey
 output AZURE_SEARCH_USE_SEMANTIC_SEARCH bool = searchUseSemanticSearch
 output AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG string = searchSemanticSearchConfig
 output AZURE_SEARCH_TOP_K int = searchTopK
+output AZURE_SEARCH_THRESHOLD string = searchThreshold
 output AZURE_SEARCH_ENABLE_IN_DOMAIN bool = searchEnableInDomain
 output AZURE_SEARCH_CONTENT_COLUMNS string = searchContentColumns
 output AZURE_SEARCH_FILENAME_COLUMN string = searchFilenameColumn

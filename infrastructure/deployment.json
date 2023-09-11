@@ -244,6 +244,13 @@
                 "description": "Azure OpenAI Embedding Key"
             }
         },
+        "AzureSearchThreshold": {
+            "type": "string",
+            "defaultValue": "0.3",
+            "metadata": {
+                "description": "Azure Search Threshold"
+            }
+        },
         "WebAppEnableChatHistory": {
             "type": "bool",
             "defaultValue": false,
@@ -401,6 +408,10 @@
                         {
                             "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
                             "value": "[parameters('AzureOpenAIEmbeddingEndpoint')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_THRESHOLD",
+                            "value": "[parameters('AzureSearchThreshold')]"
                         },
                         {
                             "name": "AZURE_OPENAI_EMBEDDING_KEY",
