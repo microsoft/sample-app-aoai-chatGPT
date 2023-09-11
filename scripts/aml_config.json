@@ -1,12 +1,12 @@
 {
         "chunk_size": 1024,
-        "token_overlap": 128,
-        "keyvault_url": "https://wedneevaluatio4128351008.vault.azure.net/",
-        "document_intelligence_secret_name": "wedFormRecKey",
-        "document_intelligence_endpoint": "https://wednesday-fr.cognitiveservices.azure.com/",
-        "embedding_key_secret_name": "cluGPTModelKey",
-        "embedding_endpoint": "https://clugptmodel.openai.azure.com/openai/deployments/ada-002/embeddings?api-version=2023-06-01-preview",
-        "index_name": "sawidder-test",
-        "search_service_name": "gptdevbench-new",
-        "search_key_secret_name": "gptDevBenchNewSearchKey"
+        "token_overlap": 0,
+        "keyvault_url": "https://<keyvault name>.vault.azure.net/",
+        "document_intelligence_secret_name": "<secret name>",
+        "document_intelligence_endpoint": "https://<resource name>.cognitiveservices.azure.com/",
+        "embedding_key_secret_name": "<secret name>",
+        "embedding_endpoint": "https://<resource name>.openai.azure.com/openai/deployments/<deployment name>/embeddings?api-version=2023-06-01-preview",
+        "index_name": "<index name>",
+        "search_service_name": "<resource name>",
+        "search_key_secret_name": "<secret name>"
 }

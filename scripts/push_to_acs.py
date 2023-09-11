@@ -5,9 +5,7 @@ import json
 import os
 
 from azure.identity import DefaultAzureCredential
-from azure.core.credentials import AzureKeyCredential
 from azure.keyvault.secrets import SecretClient
-from azure.ai.formrecognizer import DocumentAnalysisClient
 
 from data_preparation import create_or_update_search_index, upload_documents_to_index
 
@@ -30,6 +28,7 @@ if __name__ == "__main__":
     
     for index_config in config:
         # Keyvault Secret Client
+        print("Connecting to keyvault...")
         keyvault_url = index_config.get("keyvault_url")
         if not keyvault_url:
             print("No keyvault url provided in config file. Secret client will not be set up.")
