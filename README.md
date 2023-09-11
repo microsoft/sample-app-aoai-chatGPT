@@ -143,7 +143,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_SEARCH_URL_COLUMN||Field from your Azure Cognitive Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
 |AZURE_SEARCH_VECTOR_COLUMNS||List of fields in your Azure Cognitive Search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
 |AZURE_SEARCH_PERMITTED_GROUPS_COLUMN||Field from your Azure Cognitive Search index that contains AAD group IDs that determine document-level access control.|
-|AZURE_SEARCH_THRESHOLD|0.3|The relevance score threshold to use during retrieval from Azure Cognitive Search. Recommended between 0-0.5|
+|AZURE_SEARCH_THRESHOLD|0.3|The threshold to use to filter documents during retrieval from Azure Cognitive Search. Recommended between 0-0.5|
 |AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
 |AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource.|
