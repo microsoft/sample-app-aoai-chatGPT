@@ -14,6 +14,7 @@ from azure.search.documents import SearchClient
 from tqdm import tqdm
 
 from data_utils import chunk_directory
+from indexer_utils import IndexerFactory
 
 SUPPORTED_LANGUAGE_CODES = {
     "ar": "Arabic",
@@ -402,8 +403,7 @@ if __name__ == "__main__":
 
     with open(args.config) as f:
         config = json.load(f)
-
-    credential = AzureCliCredential()
+    
     form_recognizer_client = None
 
     print("Data preparation script started")
@@ -419,11 +419,14 @@ if __name__ == "__main__":
         os.environ["EMBEDDING_MODEL_KEY"] = args.embedding_model_key
 
     for index_config in config:
-        print("Preparing data for index:", index_config["index_name"])
-        if index_config.get("vector_config_name") and not (args.embedding_model_endpoint and args.embedding_model_key):
-            raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
-    
-        create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)
-        print("Data preparation for index", index_config["index_name"], "completed")
+        if index_config.get("skip", False) is False:
+            indexer = IndexerFactory.create_indexer(index_config)
+            print("Preparing data for index:", index_config["index_name"])
+            if index_config.get("vector_config_name") and not (args.embedding_model_endpoint and args.embedding_model_key):
+                raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
+        
+            indexer.create_index(form_recognizer_client, args.form_rec_use_layout, njobs=args.njobs)
+            # create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)
+            print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
