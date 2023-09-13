@@ -286,7 +286,7 @@ def stream_without_data(response, history_metadata={}):
 
 def conversation_without_data(request_body):
     openai.api_type = "azure"
-    openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+    openai.api_base = "https://oai.hconeai.com""
     openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
 
@@ -602,11 +602,16 @@ def generate_title(conversation_messages):
         openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
         openai.api_key = AZURE_OPENAI_KEY
-        completion = openai.ChatCompletion.create(    
+        completion = openai.ChatCompletion.create(   
+            model="[DEPLOYMENT]", 
             engine=AZURE_OPENAI_MODEL,
             messages=messages,
             temperature=1,
-            max_tokens=64 
+            max_tokens=64,
+            headers={
+                "Helicone-Auth": "Bearer sk-helicone-tgsefri-f4fexuq-rnux5zq-ioem5na",
+                "Helicone-OpenAI-Api-Base": "https://cog-prod-utai-enterprisesearch.openai.azure.com",
+            } 
         )
         title = json.loads(completion['choices'][0]['message']['content'])['title']
         return title
