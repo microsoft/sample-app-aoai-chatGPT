@@ -493,7 +493,29 @@ def chunk_content_helper(
                     separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             chunked_content_list = splitter.split_text(doc.content)
-            for chunked_content in chunked_content_list:
+            print("Returned from text splitter. Now time to merge chunks with broken tables..")
+            new_chunked_list = []
+            unbalanced = False
+            current_id = 0
+            for chunk in chunked_content_list:
+                print(unbalanced)
+                print(current_id)
+                if unbalanced:
+                    new_chunked_list[current_id]+=chunk
+                    if not contains_broken_table(new_chunked_list[current_id]):
+                        unbalanced = False
+                        current_id +=1
+                else:
+                    if contains_broken_table(chunk):
+                        unbalanced=True
+                        new_chunked_list.append(chunk)
+                    else:
+                        new_chunked_list.append(chunk)
+                        current_id += 1
+            print(len(chunked_content_list))
+            print(len(new_chunked_list))
+            import pdb; pdb.set_trace()
+            for chunked_content in new_chunked_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
 
@@ -687,12 +709,24 @@ def process_file(
             chunk_doc.filepath = rel_file_path
             chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
     except Exception as e:
+        print(e)
         if not ignore_errors:
             raise
         print(f"File ({file_path}) failed with ", e)
         is_error = True
         result =None
     return result, is_error
+
+def contains_broken_table(s):
+    # import pdb; pdb.set_trace()
+    open_tags = len(s.split("<table>"))-1
+    close_tags = len(s.split("</table>"))-1
+    
+    if open_tags > close_tags:
+        print(f"Number of open tags: {open_tags}")
+        print(f"Number of close tags: {close_tags}")
+        return True
+    return False
 
 
 def chunk_directory(
