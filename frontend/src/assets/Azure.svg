@@ -1,23 +1,21 @@
-<svg width="100%" height="100%" viewBox="0 0 65 65" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M20.1149 7.70779C20.4813 6.62237 21.4992 5.8916 22.6447 5.8916H39.6279L22.0159 58.0753C21.6495 59.1607 20.6316 59.8915 19.4861 59.8915H6.22202C4.39538 59.8915 3.1081 58.0984 3.69222 56.3677L20.1149 7.70779Z" fill="url(#paint0_linear_2532_530598)"/>
-<path d="M47.2237 40.9922H20.5139C19.3879 40.9922 18.847 42.3738 19.6737 43.1383L37.0252 59.1825C37.5186 59.6388 38.1659 59.8922 38.8379 59.8922H53.8027L47.2237 40.9922Z" fill="#0078D4"/>
-<path d="M22.6446 5.8916C21.499 5.8916 20.4811 6.62237 20.1148 7.70779L3.69208 56.3677C3.10796 58.0984 4.39525 59.8915 6.22189 59.8915H19.4859C20.6315 59.8915 21.6494 59.1607 22.0157 58.0753L25.2833 48.3936L36.8335 59.1738C37.328 59.6352 37.979 59.8918 38.6553 59.8918H53.8029L47.2238 40.9919H27.7814L39.6277 5.8916H22.6446Z" fill="url(#paint1_linear_2532_530598)"/>
-<path d="M44.2909 7.70779C43.9245 6.62237 42.9066 5.8916 41.7611 5.8916H22.7529H22.8396C23.998 5.8916 25.0273 6.63058 25.3978 7.7282L41.8002 56.3281C42.3909 58.0783 41.0892 59.8915 39.242 59.8915H38.9529H58.1838C60.0104 59.8915 61.2977 58.0984 60.7136 56.3677L44.2909 7.70779Z" fill="url(#paint2_linear_2532_530598)"/>
-<defs>
-<linearGradient id="paint0_linear_2532_530598" x1="22.5507" y1="7.76073" x2="4.93883" y2="59.7904" gradientUnits="userSpaceOnUse">
-<stop stop-color="#114A8B"/>
-<stop offset="1" stop-color="#0669BC"/>
-</linearGradient>
-<linearGradient id="paint1_linear_2532_530598" x1="36.6217" y1="40.9974" x2="32.5513" y2="42.374" gradientUnits="userSpaceOnUse">
-<stop stop-opacity="0.3"/>
-<stop offset="0.0711768" stop-opacity="0.2"/>
-<stop offset="0.321031" stop-opacity="0.1"/>
-<stop offset="0.623053" stop-opacity="0.05"/>
-<stop offset="1" stop-opacity="0"/>
-</linearGradient>
-<linearGradient id="paint2_linear_2532_530598" x1="33.7164" y1="7.76081" x2="53.0487" y2="59.2668" gradientUnits="userSpaceOnUse">
-<stop stop-color="#3CCBF4"/>
-<stop offset="1" stop-color="#2892DF"/>
-</linearGradient>
-</defs>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.8.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 1920 1080" style="enable-background:new 0 0 1920 1080;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#E5213C;}
+	.st1{fill:#FFFFFF;}
+</style>
+<g>
+	<rect x="430" y="364.1" class="st0" width="1059.9" height="402.5"/>
+	<polygon class="st1" points="1087.5,692.8 1025.8,692.8 894.2,538.5 894.2,692.8 832.5,692.8 832.5,437.8 894.2,437.8 1025.8,592 
+		1025.8,437.8 1087.5,437.8 	"/>
+	<g>
+		<path class="st1" d="M631.3,437.8c-70.3,0-127.5,57.2-127.5,127.5v127.5h61.7v-32.5H697v32.5h61.7V565.3
+			C758.8,495,701.6,437.8,631.3,437.8z M697,598.6H565.5v-33.2c0-36.3,29.5-65.7,65.8-65.7c36.3,0,65.8,29.5,65.8,65.7V598.6z"/>
+		<path class="st1" d="M1288.7,437.8h-127.5v61.7h32.5v131.5h-32.5v61.7h127.5c70.3,0,127.5-57.2,127.5-127.5
+			C1416.2,495,1359,437.8,1288.7,437.8z M1288.7,631.1h-33.2V499.6h33.2c36.3,0,65.7,29.5,65.7,65.8
+			C1354.5,601.6,1325,631.1,1288.7,631.1z"/>
+	</g>
+</g>
 </svg>
