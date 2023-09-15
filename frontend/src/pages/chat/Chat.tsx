@@ -670,7 +670,8 @@ const Chat = () => {
                             />
                         </Stack>
                     </div>
-                    {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
+                    {/* Citation Panel */}
+                    {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && ( 
                     <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
                         <Stack aria-label="Citations Panel Header Container" horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
                             <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
@@ -692,7 +693,7 @@ const Chat = () => {
                                     aria-label={activeCitation.url}
                                 >
                                     View Source
-                                </span>
+                            </span>
                         }
 
                         <ReactMarkdown 

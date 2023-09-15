@@ -2,12 +2,12 @@
     {
         "data_paths": [
             {
-                "path": "your/path/to/data",
-                "url_prefix": "https://example.com/"
+                "path": "data/source1",
+                "url_prefix": "https://<URL for source 1>.com/"
             },
             {
-                "path": "other/path/to/data",
-                "url_prefix": "https://example2.com/"
+                "path": "data/source2",
+                "url_prefix": "https://<URL for source 2>.com/"
             }
         ],
         "subscription_id": "<subscription id>",
