@@ -634,7 +634,6 @@ def chunk_content_helper(
 
     parser = parser_factory(file_format)
     doc = parser.parse(content, file_name=file_name)
-    print(file_format)
     # import pdb; pdb.set_trace()
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
@@ -656,36 +655,13 @@ def chunk_content_helper(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
                 if file_format == "html":
-                    # import pdb; pdb.set_trace()
                     splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
                         separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                         chunk_size=num_tokens, chunk_overlap=token_overlap)
             chunked_content_list = splitter.split_text(doc.content)
-            # print("Returned from text splitter. Now time to merge chunks with broken tables..")
-            # new_chunked_list = []
-            # unbalanced = False
-            # current_id = 0
-            # for chunk in chunked_content_list:
-            #     print(unbalanced)
-            #     print(current_id)
-            #     if unbalanced:
-            #         new_chunked_list[current_id]+=chunk
-            #         if not contains_broken_table(new_chunked_list[current_id]):
-            #             unbalanced = False
-            #             current_id +=1
-            #     else:
-            #         if contains_broken_table(chunk):
-            #             unbalanced=True
-            #             new_chunked_list.append(chunk)
-            #         else:
-            #             new_chunked_list.append(chunk)
-            #             current_id += 1
-            # print(len(chunked_content_list))
-            # print(len(new_chunked_list))
-            # import pdb; pdb.set_trace()
-            # for chunked_content in new_chunked_list:
+
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
