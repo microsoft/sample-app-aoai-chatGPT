@@ -43,7 +43,7 @@ const Chat = () => {
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
-    const [activeCitation, setActiveCitation] = useState<[content: string, id: string, title: string, filepath: string, url: string, metadata: string]>();
+    const [activeCitation, setActiveCitation] = useState<Citation>();
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const abortFuncs = useRef([] as AbortController[]);
     const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
@@ -498,8 +498,14 @@ const Chat = () => {
     }, [showLoadingMessage, processMessages]);
 
     const onShowCitation = (citation: Citation) => {
-        setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
+        setActiveCitation(citation);
         setIsCitationPanelOpen(true);
+    };
+
+    const onViewSource = (citation: Citation) => {
+        if (citation.url) {
+            window.open(citation.url, "_blank");
+        }
     };
 
     const parseCitationFromMessage = (message: ChatMessage) => {
@@ -670,17 +676,33 @@ const Chat = () => {
                             <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
                             <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
                         </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
+                        <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation.title}</h5>
                         <div tabIndex={0}> 
+                        
+                        {
+                            // Display the citation URL if available and not a blob URL (blob URLs are not accessible in browser)
+                            activeCitation.url && !activeCitation.url.includes("blob.core") && 
+                            <span 
+                                    title={activeCitation.url} 
+                                    tabIndex={0} 
+                                    role="link" 
+                                    onClick={() => onViewSource(activeCitation)} 
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? onViewSource(activeCitation) : null}
+                                    className={styles.viewSourceButton}
+                                    aria-label={activeCitation.url}
+                                >
+                                    View Source
+                                </span>
+                        }
+
                         <ReactMarkdown 
                             linkTarget="_blank"
                             className={styles.citationPanelContent}
-                            children={activeCitation[0]} 
+                            children={activeCitation.content} 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw]}
                         />
                         </div>
-                        
                     </Stack.Item>
                 )}
                 {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}

@@ -358,26 +358,36 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None)):
         raise Exception(f"Failed to create or update index {index_name}")
     
+    data_configs = []
+    if "data_path" in config:
+        data_configs.append({
+            "path": config["data_path"],
+            "url_prefix": config.get("url_prefix", None),
+        })
+    if "data_paths" in config:
+        data_configs.extend(config["data_paths"])
+
+    for data_config in data_configs:
     # chunk directory
-    print("Chunking directory...")
-    add_embeddings = False
-    if config.get("vector_config_name") and embedding_model_endpoint:
-        add_embeddings = True
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
-                             azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                             add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint)
+        print(f"Chunking directory {data_config['path']}...")
+        add_embeddings = False
+        if config.get("vector_config_name") and embedding_model_endpoint:
+            add_embeddings = True
+        result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+                                azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
 
-    if len(result.chunks) == 0:
-        raise Exception("No chunks found. Please check the data path and chunk size.")
+        if len(result.chunks) == 0:
+            raise Exception("No chunks found. Please check the data path and chunk size.")
 
-    print(f"Processed {result.total_files} files")
-    print(f"Unsupported formats: {result.num_unsupported_format_files} files")
-    print(f"Files with errors: {result.num_files_with_errors} files")
-    print(f"Found {len(result.chunks)} chunks")
+        print(f"Processed {result.total_files} files")
+        print(f"Unsupported formats: {result.num_unsupported_format_files} files")
+        print(f"Files with errors: {result.num_files_with_errors} files")
+        print(f"Found {len(result.chunks)} chunks")
 
-    # upload documents to index
-    print("Uploading documents to index...")
-    upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        # upload documents to index
+        print("Uploading documents to index...")
+        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
 
     # check if index is ready/validate index
     print("Validating index...")
