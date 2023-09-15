@@ -18,8 +18,9 @@ import tiktoken
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from bs4 import BeautifulSoup
-from langchain.text_splitter import MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
+from typing import Any
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -36,11 +37,175 @@ RETRY_COUNT = 5
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
 
+HTML_TABLE_TAGS = {"table_open": "<table>", "table_close": "</table>", "row_open":"<tr>"}
+
 PDF_HEADERS = {
     "title": "h1",
     "sectionHeading": "h2"
 }
 
+class PdfTextSplitter(TextSplitter):
+    def __init__(self, separator: str = "\n\n", **kwargs: Any):
+        """Create a new TextSplitter for htmls from extracted pdfs."""
+        super().__init__(**kwargs)
+        self._table_tags = HTML_TABLE_TAGS
+        self._separators = separator or ["\n\n", "\n", " ", ""]
+
+    def extract_caption(self, s, type):
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in s:
+                separator = _s
+                break
+        # Now that we have the separator, split the text
+        if separator:
+            lines = s.split(separator)
+        else:
+            lines = list(s)
+
+        caption = ""
+        if type == "prefix": #find the last heading and the last line before the table
+            if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
+               caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
+            if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
+               caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
+            caption += lines[-1]
+        else: # find the first line after the table
+            caption += lines[0]
+        return caption
+
+    def split_text(self, text: str) -> List[str]:
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in text:
+                separator = _s
+                break
+        
+        start_tag = self._table_tags["table_open"]
+        end_tag = self._table_tags["table_close"]
+        splits = text.split(start_tag)
+        
+        chunks = [splits[0]] # the first split is before the first table tag so it is regular text
+        is_table = [0] # to keep track of regular (0) and those containing tables (1)
+        table_caption_prefix = self.extract_caption(splits[0], "prefix")
+        for part in splits[1:]:
+            table, rest = part.split(end_tag)
+            table_caption_suffix = self.extract_caption(rest, "suffix")
+            table = start_tag + table + end_tag 
+            minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
+            chunks.extend(minitables)
+            is_table.extend([1]*len(minitables))
+            
+            
+            chunks.append(rest)
+            is_table.append(0)
+            table_caption_prefix = self.extract_caption(rest, "prefix")
+
+        final_chunks = []
+        for id, item in enumerate(chunks):
+            if is_table[id]==0: # not a chunk containing table, so split and merge in the same way as RecursiveCharacterTextSplitter
+                if separator:
+                    splits = item.split(separator)
+                else:
+                    splits = list(item)
+                _good_splits = []
+                for s in splits:
+                    if self._length_function(s) < self._chunk_size:
+                        _good_splits.append(s)
+                    else:
+                        if _good_splits:
+                            merged_text = self._merge_splits(_good_splits, separator)
+                            final_chunks.extend(merged_text)
+                            _good_splits = []
+                        other_info = self.split_text(s)
+                        final_chunks.extend(other_info)
+                if _good_splits:
+                    merged_text = self._merge_splits(_good_splits, separator)
+                    final_chunks.extend(merged_text)
+            else:
+                # TO DO: Need to handle cases where chunk with table is much smaller than 1024
+                final_chunks.append(item)
+
+        return final_chunks
+        
+    def chunk_table(self, table, caption):
+        if self._length_function("\n".join([caption, table])) < self._chunk_size:
+            return ["\n".join([caption, table])]
+        else:
+            headers = ""
+            if re.search("<th.*>.*</th>", table):
+                headers += re.search("<th.*>.*</th>", table).group() # extract the header out. Opening tag may contain rowspan/colspan
+            splits = table.split(self._table_tags["row_open"]) #split by row tag
+            tables = []
+            current_table = caption
+            table_length = self._length_function(current_table)
+            for part in splits:
+                if len(part)>0:
+                    if table_length < self._chunk_size: # if current table length is within permissible limit, keep adding rows
+                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
+                            current_table += self._table_tags["row_open"]
+                        current_table += part
+                        
+                    else:
+                        # if current table size is beyond the permissible limit, complete this as a mini-table and add to final mini-tables list
+                        current_table += self._table_tags["table_close"]
+                        tables.append(current_table)
+
+                        # start a new table
+                        current_table = caption + "\n" + self._table_tags["table_open"] + headers
+                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]:
+                            current_table += self._table_tags["row_open"]
+                        current_table += part
+
+                table_length = self._length_function(current_table)
+            
+            # TO DO: fix the case where the last mini table only contain tags
+            tables.append(current_table)
+            print(f"Number of mini table chunks from one table chunk: {len(tables)}")
+            
+            return tables
+            
+        
+    def chunk_rest(self, text):
+        final_chunks = []
+        # Get appropriate separator to use
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in text:
+                separator = _s
+                break
+        # Now that we have the separator, split the text
+        if separator:
+            splits = text.split(separator)
+        else:
+            splits = list(text)
+
+        _good_splits = []
+        for s in splits:
+            if self._length_function(s) < self._chunk_size:
+                _good_splits.append(s)
+            else:
+                print(len(_good_splits))
+                if _good_splits:
+                    merged_text = self._merge_splits(_good_splits, separator)
+                    final_chunks.extend(merged_text)
+                    _good_splits = []
+                other_info = self.split_text(s)
+                final_chunks.extend(other_info)
+        if _good_splits:
+            merged_text = self._merge_splits(_good_splits, separator)
+            final_chunks.extend(merged_text)
+        return text
+    
 @dataclass
 class Document(object):
     """A data class for storing documents
@@ -469,7 +634,8 @@ def chunk_content_helper(
 
     parser = parser_factory(file_format)
     doc = parser.parse(content, file_name=file_name)
-
+    print(file_format)
+    # import pdb; pdb.set_trace()
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
     if doc_content_size < num_tokens:
@@ -489,33 +655,38 @@ def chunk_content_helper(
                 splitter = PythonCodeTextSplitter.from_tiktoken_encoder(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
-                splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                    separators=SENTENCE_ENDINGS + WORDS_BREAKS,
-                    chunk_size=num_tokens, chunk_overlap=token_overlap)
-            chunked_content_list = splitter.split_text(doc.content)
-            print("Returned from text splitter. Now time to merge chunks with broken tables..")
-            new_chunked_list = []
-            unbalanced = False
-            current_id = 0
-            for chunk in chunked_content_list:
-                print(unbalanced)
-                print(current_id)
-                if unbalanced:
-                    new_chunked_list[current_id]+=chunk
-                    if not contains_broken_table(new_chunked_list[current_id]):
-                        unbalanced = False
-                        current_id +=1
+                if file_format == "html":
+                    # import pdb; pdb.set_trace()
+                    splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
                 else:
-                    if contains_broken_table(chunk):
-                        unbalanced=True
-                        new_chunked_list.append(chunk)
-                    else:
-                        new_chunked_list.append(chunk)
-                        current_id += 1
-            print(len(chunked_content_list))
-            print(len(new_chunked_list))
-            import pdb; pdb.set_trace()
-            for chunked_content in new_chunked_list:
+                    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+                        separators=SENTENCE_ENDINGS + WORDS_BREAKS,
+                        chunk_size=num_tokens, chunk_overlap=token_overlap)
+            chunked_content_list = splitter.split_text(doc.content)
+            # print("Returned from text splitter. Now time to merge chunks with broken tables..")
+            # new_chunked_list = []
+            # unbalanced = False
+            # current_id = 0
+            # for chunk in chunked_content_list:
+            #     print(unbalanced)
+            #     print(current_id)
+            #     if unbalanced:
+            #         new_chunked_list[current_id]+=chunk
+            #         if not contains_broken_table(new_chunked_list[current_id]):
+            #             unbalanced = False
+            #             current_id +=1
+            #     else:
+            #         if contains_broken_table(chunk):
+            #             unbalanced=True
+            #             new_chunked_list.append(chunk)
+            #         else:
+            #             new_chunked_list.append(chunk)
+            #             current_id += 1
+            # print(len(chunked_content_list))
+            # print(len(new_chunked_list))
+            # import pdb; pdb.set_trace()
+            # for chunked_content in new_chunked_list:
+            for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
 
