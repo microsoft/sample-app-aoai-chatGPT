@@ -36,8 +36,12 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
     steps:
+      - uses: azure/docker-login@v1
+        with:
+          login-server: crmuratacopilot.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
       - name: Download artifact from build job
         uses: azure/webapps-deploy@v2
         with:
