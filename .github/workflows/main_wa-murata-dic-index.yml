@@ -30,3 +30,17 @@ jobs:
         docker push crmuratacopilot.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
         docker push crmuratacopilot.azurecr.io/sample-app-aoai-chatgpt:latest;
       
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'wa-murata-dic-index'
+          publish-profile: ${{ secrets.azureWebAppPublishProfile }}
+          images: 'crmuratacopilot.azurecr.io/sample-app-aoai-chatgpt:latest'
