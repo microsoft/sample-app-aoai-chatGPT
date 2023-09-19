@@ -4,3 +4,5 @@ frontend/node_modules
 # static
 .azure/
 __pycache__/
+
+**/.idea
