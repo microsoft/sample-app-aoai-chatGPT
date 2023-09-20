@@ -332,7 +332,7 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
+def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, embedding_api_key=None, use_layout=False, njobs=4):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
@@ -365,7 +365,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         add_embeddings = True
     result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                              azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                             add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint)
+                             add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, embedding_api_key=embedding_api_key)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
@@ -421,7 +421,7 @@ if __name__ == "__main__":
         if index_config.get("vector_config_name") and not args.embedding_model_endpoint:
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
-        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
+        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, embedding_api_key=args.embedding_model_key, use_layout=args.form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")

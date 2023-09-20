@@ -436,7 +436,7 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
-def get_embedding(text, azure_credential, embedding_endpoint):
+def get_embedding(text, embedding_endpoint, embedding_api_key):
     try:
         endpoint_parts = embedding_endpoint.split("/openai/deployments/")
         base_url = endpoint_parts[0]
@@ -444,13 +444,22 @@ def get_embedding(text, azure_credential, embedding_endpoint):
 
         openai.api_version = '2023-05-15'
         openai.api_base = base_url
-        openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        openai.api_type = "azure_ad"
+        openai.api_key = embedding_api_key
+        openai.api_type = "azure"
 
-        embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
-        return embeddings['data'][0]["embedding"]
-
+        # Retry while embedding requests get throttled
+        retry_count = 0
+        # while retry_count < RETRY_COUNT:
+        while True:
+            try:
+                embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
+                return embeddings['data'][0]["embedding"]
+            except openai.error.RateLimitError as throttled:
+                print(f'Retry attempt {retry_count}: Embedding API throttling, waiting for 4 second before retry...')
+                sleep(4)
+                retry_count += 1
     except Exception as e:
+        print(f'Error getting embeddings with endpoint={embedding_endpoint} with error={e}')
         raise Exception(f"Error getting embeddings with endpoint={embedding_endpoint} with error={e}")
 
 
@@ -504,8 +513,9 @@ def chunk_content(
     cracked_pdf = False,
     use_layout = False,
     add_embeddings = False,
-    azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    embadding_api_key = None
+
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -546,7 +556,7 @@ def chunk_content(
                 if add_embeddings:
                     for _ in range(RETRY_COUNT):
                         try:
-                            doc.contentVector = get_embedding(chunk, azure_credential, embedding_endpoint)
+                            doc.contentVector = get_embedding(chunk, embedding_endpoint, embadding_api_key)
                             break
                         except:
                             sleep(30)
@@ -594,8 +604,8 @@ def chunk_file(
     form_recognizer_client = None,
     use_layout = False,
     add_embeddings=False,
-    azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    embedding_api_key = None
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -642,8 +652,8 @@ def chunk_file(
         cracked_pdf=cracked_pdf,
         use_layout=use_layout,
         add_embeddings=add_embeddings,
-        azure_credential=azure_credential,
-        embedding_endpoint=embedding_endpoint
+        embedding_endpoint=embedding_endpoint,
+        embadding_api_key= embedding_api_key
     )
 
 
@@ -659,8 +669,8 @@ def process_file(
         form_recognizer_client = None,
         use_layout = False,
         add_embeddings = False,
-        azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        embedding_api_key = None
     ):
 
     if not form_recognizer_client:
@@ -685,8 +695,8 @@ def process_file(
             form_recognizer_client=form_recognizer_client,
             use_layout=use_layout,
             add_embeddings=add_embeddings,
-            azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            embedding_api_key=embedding_api_key
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
@@ -712,8 +722,8 @@ def chunk_directory(
         use_layout = False,
         njobs=4,
         add_embeddings = False,
-        azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        embedding_api_key=None
 ):
     """
     Chunks the given directory recursively
@@ -755,7 +765,7 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       embedding_endpoint=embedding_endpoint, embedding_api_key=embedding_api_key)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -771,7 +781,7 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       embedding_endpoint=embedding_endpoint, embedding_api_key=embedding_api_key)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:
@@ -779,6 +789,7 @@ def chunk_directory(
                 if is_error:
                     num_files_with_errors += 1
                     continue
+                print(f"Appending {len(result.chunks)} chunks to the chunking result.")
                 chunks.extend(result.chunks)
                 num_unsupported_format_files += result.num_unsupported_format_files
                 num_files_with_errors += result.num_files_with_errors

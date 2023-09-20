@@ -1,7 +1,10 @@
 # Data Preparation
 
 ## Setup
-- Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
+Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
+
+Install AI Document Intelligence package
+`pip install azure-ai-formrecognizer`
 
 ## Configure
 - Create a config file like `config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
@@ -39,7 +42,7 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 - Get the endpoint for embedding model deployment. The endpoint will generally be of the format `https://<azure openai resource name>.openai.azure.com/openai/deployments/<ada deployment name>/embeddings?api-version=2023-06-01-preview`.
 - Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
 
-      `python data_preparation.py --config config.json --embedding-model-endpoint "<embedding endpoint>"`
+      `python data_preparation.py --config config.json --embedding-model-endpoint <embedding endpoint> ----embedding-model-key <api_key>`
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
