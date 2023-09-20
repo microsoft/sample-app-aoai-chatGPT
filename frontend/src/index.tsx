@@ -17,6 +17,14 @@ loadTheme({
         themePrimary: "#37772F",
         themeSecondary: "#37772F",
         themeTertiary: "#37772F",
+        accent: "#37772F",
+        black: "#454545",
+        themeDarkAlt: "#37772F",
+        themeDarker: "#37772F",
+        themeDark: "#37772F",
+        themeLighterAlt: "#effded",
+        themeLighter: "#effded",
+        themeLight: "#effded",
     }
 })
 
