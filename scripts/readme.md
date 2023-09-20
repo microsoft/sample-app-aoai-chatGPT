@@ -42,7 +42,7 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 - Get the endpoint for embedding model deployment. The endpoint will generally be of the format `https://<azure openai resource name>.openai.azure.com/openai/deployments/<ada deployment name>/embeddings?api-version=2023-06-01-preview`.
 - Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
 
-      `python data_preparation.py --config config.json --embedding-model-endpoint <embedding endpoint> ----embedding-model-key <api_key>`
+      `python data_preparation.py --config config.json --embedding-model-endpoint <embedding endpoint> --embedding-model-key <api_key>`
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
