@@ -1,11 +1,12 @@
 import os
 import uuid
 from datetime import datetime
+from backend.history.abstractconversationclient import AbstractConversationClient
 from flask import Flask, request
 from azure.identity import DefaultAzureCredential  
 from azure.cosmos import CosmosClient, PartitionKey  
   
-class CosmosConversationClient():
+class CosmosConversationClient(AbstractConversationClient):
     
     def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str):
         self.cosmosdb_endpoint = cosmosdb_endpoint
@@ -151,4 +152,3 @@ class CosmosConversationClient():
             return []
         else:
             return messages
-
