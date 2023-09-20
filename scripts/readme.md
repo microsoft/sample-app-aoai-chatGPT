@@ -9,7 +9,7 @@
 ```
 [
     {
-        "data_path": "<path to data>",
+        "data_path": "<local path or blob URL>",
         "location": "<azure region, e.g. 'westus2'>", 
         "subscription_id": "<subscription id>",
         "resource_group": "<resource group name>",
@@ -24,6 +24,8 @@
 ]
 ```
 
+Note: `data_path` can be a path to files located locally on your machine, or an Azure Blob URL, e.g. of the format `"https://<storage account name>.blob.core.windows.net/<container name>/<path>/"`. If a blob URL is used, the data will first be downloaded from Blob Storage to a temporary directory on your machine before data preparation proceeds.
+
 ## Create Indexes and Ingest Data
 Disclaimer: Make sure there are no duplicate pages in your data. That could impact the quality of the responses you get in a negative way.
 
@@ -37,7 +39,7 @@ Each document can be associated with a URL that is stored with each document chu
 ```
 [
     {
-        "data_path": "<path to data>",
+        "data_path": "<local path or blob URL>",
         "url_prefix": "https://<source website URL>.com/"
         "location": "<azure region, e.g. 'westus2'>", 
         "subscription_id": "<subscription id>",

@@ -290,6 +290,11 @@
     margin-bottom: 12px;
 } 
 
+.citationPanelTitle:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .citationPanelContent {
     font-style: normal;
     font-weight: 400;
