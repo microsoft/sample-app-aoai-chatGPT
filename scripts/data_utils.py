@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Dict, Optional, Generator, Tuple
+from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
 
 import markdown
 import tiktoken
@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
 from typing import Any
+
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -44,12 +45,44 @@ PDF_HEADERS = {
     "sectionHeading": "h2"
 }
 
+class TokenEstimator(object):
+    GPT2_TOKENIZER = tiktoken.get_encoding("gpt2")
+    CHATGPT_TOKENIZER = tiktoken.get_encoding("cl100k_base")
+
+    def estimate_tokens(self, text: Union[str, List]) -> int:
+        if isinstance(text, str):
+            # print(f"The length is {len(self.GPT2_TOKENIZER.encode(text, allowed_special='all'))}")
+            return len(self.GPT2_TOKENIZER.encode(text, allowed_special="all"))
+        else:
+            # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+            tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+            tokens_per_name = -1    # if there's a name, the role is omitted
+            num_tokens = 0
+            for message in text:
+                num_tokens += tokens_per_message
+                for key, value in message.items():
+                    num_tokens += len(self.CHATGPT_TOKENIZER.encode(value))
+                    if key == "name":
+                        num_tokens += tokens_per_name
+            num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+            return num_tokens
+
+    def construct_tokens_with_size(self, tokens: str, numofTokens: int) -> str:
+        newTokens = self.GPT2_TOKENIZER.decode(
+            self.GPT2_TOKENIZER.encode(tokens, allowed_special="all")[:numofTokens]
+        )
+        return newTokens
+    
+TOKEN_ESTIMATOR = TokenEstimator()
+
+
 class PdfTextSplitter(TextSplitter):
-    def __init__(self, separator: str = "\n\n", **kwargs: Any):
+    def __init__(self, length_function: Callable[[str], int] =TOKEN_ESTIMATOR.estimate_tokens, separator: str = "\n\n", **kwargs: Any):
         """Create a new TextSplitter for htmls from extracted pdfs."""
         super().__init__(**kwargs)
         self._table_tags = HTML_TABLE_TAGS
         self._separators = separator or ["\n\n", "\n", " ", ""]
+        self._length_function = length_function
 
     def extract_caption(self, s, type):
         separator = self._separators[-1]
@@ -72,21 +105,12 @@ class PdfTextSplitter(TextSplitter):
                caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
             if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
                caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
-            caption += lines[-1]
+            caption += "\n"+ lines[-1]
         else: # find the first line after the table
             caption += lines[0]
         return caption
-
-    def split_text(self, text: str) -> List[str]:
-        separator = self._separators[-1]
-        for _s in self._separators:
-            if _s == "":
-                separator = _s
-                break
-            if _s in text:
-                separator = _s
-                break
-        
+    
+    def split_text_better(self, text: str) -> List[str]:
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
         splits = text.split(start_tag)
@@ -102,37 +126,99 @@ class PdfTextSplitter(TextSplitter):
             chunks.extend(minitables)
             is_table.extend([1]*len(minitables))
             
-            
             chunks.append(rest)
             is_table.append(0)
             table_caption_prefix = self.extract_caption(rest, "prefix")
 
-        final_chunks = []
-        for id, item in enumerate(chunks):
-            if is_table[id]==0: # not a chunk containing table, so split and merge in the same way as RecursiveCharacterTextSplitter
-                if separator:
-                    splits = item.split(separator)
+        self.final_chunks = []
+        print(f"Here are the chunk sizes before chunking regular text: {[self._length_function(x) for x in chunks]}")
+        print(f"Number of chunks before chunking regular text: {len(chunks)}")
+        
+        current = 0
+        current_chunk = ""
+        # current_is_table = is_table[current]
+        is_table_new = []
+        while current < len(chunks):
+            if self._length_function(chunks[current]) < self._chunk_size + 100: # if the i-th chunk is less than chunk size, it can be merged
+                # if is_table[current] == 0: # check if the i-th chunk is regular text chunk
+                if self._length_function("\n".join([current_chunk, chunks[current]])) < self._chunk_size + 100: # check if after merging i-th chunk with the current chunk, the size is still less than chunk size
+                    current_chunk = "\n".join([current_chunk, chunks[current]]) # merge i-th chunk with current chunk
                 else:
-                    splits = list(item)
-                _good_splits = []
-                for s in splits:
-                    if self._length_function(s) < self._chunk_size:
-                        _good_splits.append(s)
-                    else:
-                        if _good_splits:
-                            merged_text = self._merge_splits(_good_splits, separator)
-                            final_chunks.extend(merged_text)
-                            _good_splits = []
-                        other_info = self.split_text(s)
-                        final_chunks.extend(other_info)
+                    # instead of merging, first complete the current chunk by adding to list of final chunks, then i-th chunk starts the new current chunk
+                    if current_chunk!="":
+                        self.final_chunks.append(current_chunk)
+                    current_chunk = chunks[current]
+                    
+                # else: 
+                #     # since i-th chunk is a table chunk, let's not merge it. Complete the current chunk by adding to list of final chunks, also add the i-th chunk to the final chunks.
+                #     if current_chunk!="":
+                #         self.final_chunks.append(current_chunk)
+                #     self.final_chunks.append(chunks[current])
+                #     current_chunk = ""
+                    
+            else:
+                # since i-th chunk is already larger then the chunk size-
+                # if it is a table chunk, live with it and add to the final chunks as we already did the best we could for table chunks
+                # but if it is a regular text chunk, chunk further and merge to create multiple chunks (each of chunk size) to be added to the final chunks
+                if is_table[current]==0:
+                    if current_chunk!="": # if there is an ongoing current which is a table, we don't want to send it for regular text chunking
+                        # if is_table[current - 1] == 1:
+                        if start_tag in current_chunk or end_tag in current_chunk:
+                            self.final_chunks.append(current_chunk)
+                            current_chunk = ""
+                    self.final_chunks.extend(self.chunk_rest("\n".join([current_chunk, chunks[current]])))
+                    
+                else:
+                    if current_chunk!="":
+                        self.final_chunks.append(current_chunk)
+                    self.final_chunks.append(chunks[current])
+                current_chunk = ""
+            current += 1
+        
+        
+        print(f"Here are the chunk sizes after chunking/merging regular text: {[self._length_function(x) for x in self.final_chunks]}")
+        print(f"Number of chunks after chunking/merging regular text: {len(self.final_chunks)}")
+
+        print("About to do serial merge now..")
+        self.final_final_chunks = [chunk for chunk, chunk_size  in merge_chunks_serially(self.final_chunks, self._chunk_size)]
+
+        print(f"Here are the chunk sizes after final merge: {[self._length_function(x) for x in self.final_final_chunks]}")
+        print(f"Number of chunks after final merge: {len(self.final_final_chunks)}")
+
+        print(f"final serial merge done!!!")
+
+        return self.final_final_chunks
+
+    def chunk_rest(self, item):
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in item:
+                separator = _s
+                break
+        chunks = []
+        if separator:
+            splits = item.split(separator)
+        else:
+            splits = list(item)
+        _good_splits = []
+        for s in splits:
+            if self._length_function(s) < self._chunk_size:
+                _good_splits.append(s)
+            else:
                 if _good_splits:
                     merged_text = self._merge_splits(_good_splits, separator)
-                    final_chunks.extend(merged_text)
-            else:
-                # TO DO: Need to handle cases where chunk with table is much smaller than 1024
-                final_chunks.append(item)
+                    chunks.extend(merged_text)
+                    _good_splits = []
+                other_info = self.chunk_rest(s)
+                chunks.extend(other_info)
+        if _good_splits:
+            merged_text = self._merge_splits(_good_splits, separator)
+            chunks.extend(merged_text)
 
-        return final_chunks
+        return chunks
         
     def chunk_table(self, table, caption):
         if self._length_function("\n".join([caption, table])) < self._chunk_size:
@@ -158,7 +244,7 @@ class PdfTextSplitter(TextSplitter):
                         tables.append(current_table)
 
                         # start a new table
-                        current_table = caption + "\n" + self._table_tags["table_open"] + headers
+                        current_table = "\n".join([caption, self._table_tags["table_open"], headers])
                         if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]:
                             current_table += self._table_tags["row_open"]
                         current_table += part
@@ -170,41 +256,7 @@ class PdfTextSplitter(TextSplitter):
             print(f"Number of mini table chunks from one table chunk: {len(tables)}")
             
             return tables
-            
-        
-    def chunk_rest(self, text):
-        final_chunks = []
-        # Get appropriate separator to use
-        separator = self._separators[-1]
-        for _s in self._separators:
-            if _s == "":
-                separator = _s
-                break
-            if _s in text:
-                separator = _s
-                break
-        # Now that we have the separator, split the text
-        if separator:
-            splits = text.split(separator)
-        else:
-            splits = list(text)
 
-        _good_splits = []
-        for s in splits:
-            if self._length_function(s) < self._chunk_size:
-                _good_splits.append(s)
-            else:
-                print(len(_good_splits))
-                if _good_splits:
-                    merged_text = self._merge_splits(_good_splits, separator)
-                    final_chunks.extend(merged_text)
-                    _good_splits = []
-                other_info = self.split_text(s)
-                final_chunks.extend(other_info)
-        if _good_splits:
-            merged_text = self._merge_splits(_good_splits, separator)
-            final_chunks.extend(merged_text)
-        return text
     
 @dataclass
 class Document(object):
@@ -658,10 +710,12 @@ def chunk_content_helper(
                     splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                        separators=SENTENCE_ENDINGS + WORDS_BREAKS,
-                        chunk_size=num_tokens, chunk_overlap=token_overlap)
-            chunked_content_list = splitter.split_text(doc.content)
-
+                            separators=SENTENCE_ENDINGS + WORDS_BREAKS,
+                            chunk_size=num_tokens, chunk_overlap=token_overlap)
+            chunked_content_list = splitter.split_text_better(doc.content)
+            print(f"Got back from split_text_better")
+            print(f"Number of chunks: {len(chunked_content_list)}")
+            print(f"Total tokens before chunking: {TOKEN_ESTIMATOR.estimate_tokens(doc.content)}")
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
@@ -922,6 +976,7 @@ def chunk_directory(
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
         for file_path in tqdm(files_to_process):
+        # for file_path in files_to_process:
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
