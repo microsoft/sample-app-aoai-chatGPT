@@ -8,19 +8,19 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-echo "Installing yarn"
-npm install -g yarn
-if [ $? -ne 0 ]; then
-    echo "Failed to install yarn"
-    exit $?
-fi
+# echo "Installing yarn"
+# npm install -g yarn
+# if [ $? -ne 0 ]; then
+#     echo "Failed to install yarn"
+#     exit $?
+# fi
 
-echo "Installing pip"
-apt-get install -y python3-pip
-if [ $? -ne 0 ]; then
-    echo "Failed to install pip"
-    exit $?
-fi
+# echo "Installing pip"
+# apt-get install -y python3-pip
+# if [ $? -ne 0 ]; then
+#     echo "Failed to install pip"
+#     exit $?
+# fi
 
 # echo "Installing Python dependencies"
 # pip3 install -r requirements.txt
