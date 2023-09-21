@@ -1,10 +1,39 @@
 #!/bin/bash
 
-echo "Installing npm"
+echo ""
+echo "Running apt-get update"
+echo ""
 apt-get update
+if [ $? -ne 0 ]; then
+    echo "Failed to run apt-get update"
+    exit $?
+fi
+
+echo ""
+echo "Installing npm"
+echo ""
 apt-get install -y npm
 if [ $? -ne 0 ]; then
     echo "Failed to install npm"
+    exit $?
+fi
+
+echo ""
+echo "Restoring frontend npm packages"
+echo ""
+cd frontend
+npm install
+if [ $? -ne 0 ]; then
+    echo "Failed to restore frontend npm packages"
+    exit $?
+fi
+
+echo ""
+echo "Building frontend"
+echo ""
+npm run build
+if [ $? -ne 0 ]; then
+    echo "Failed to build frontend"
     exit $?
 fi
 
@@ -46,7 +75,7 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-cd ..
+# cd ..
 
 # echo "Loading environment variables"
 # . ./scripts/loadenv.sh
