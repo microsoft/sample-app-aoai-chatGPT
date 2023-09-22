@@ -70,6 +70,6 @@ jobs:
       - name: Download artifact from build job
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'wa-murata-dic-index'
+          app-name: 'wa-murata-dic-index2'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE2 }}
           images: 'crmuratacopilot.azurecr.io/sample-app-aoai-chatgpt:latest'
