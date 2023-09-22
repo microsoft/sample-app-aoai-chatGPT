@@ -47,34 +47,18 @@ PDF_HEADERS = {
 
 class TokenEstimator(object):
     GPT2_TOKENIZER = tiktoken.get_encoding("gpt2")
-    CHATGPT_TOKENIZER = tiktoken.get_encoding("cl100k_base")
 
     def estimate_tokens(self, text: Union[str, List]) -> int:
-        if isinstance(text, str):
-            # print(f"The length is {len(self.GPT2_TOKENIZER.encode(text, allowed_special='all'))}")
-            return len(self.GPT2_TOKENIZER.encode(text, allowed_special="all"))
-        else:
-            # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-            tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-            tokens_per_name = -1    # if there's a name, the role is omitted
-            num_tokens = 0
-            for message in text:
-                num_tokens += tokens_per_message
-                for key, value in message.items():
-                    num_tokens += len(self.CHATGPT_TOKENIZER.encode(value))
-                    if key == "name":
-                        num_tokens += tokens_per_name
-            num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
-            return num_tokens
+
+        return len(self.GPT2_TOKENIZER.encode(text, allowed_special="all"))
 
     def construct_tokens_with_size(self, tokens: str, numofTokens: int) -> str:
         newTokens = self.GPT2_TOKENIZER.decode(
             self.GPT2_TOKENIZER.encode(tokens, allowed_special="all")[:numofTokens]
         )
         return newTokens
-    
-TOKEN_ESTIMATOR = TokenEstimator()
 
+TOKEN_ESTIMATOR = TokenEstimator()
 
 class PdfTextSplitter(TextSplitter):
     def __init__(self, length_function: Callable[[str], int] =TOKEN_ESTIMATOR.estimate_tokens, separator: str = "\n\n", **kwargs: Any):
@@ -110,7 +94,7 @@ class PdfTextSplitter(TextSplitter):
             caption += lines[0]
         return caption
     
-    def split_text_better(self, text: str) -> List[str]:
+    def split_text(self, text: str) -> List[str]:
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
         splits = text.split(start_tag)
@@ -139,8 +123,7 @@ class PdfTextSplitter(TextSplitter):
         # current_is_table = is_table[current]
         is_table_new = []
         while current < len(chunks):
-            if self._length_function(chunks[current]) < self._chunk_size + 100: # if the i-th chunk is less than chunk size, it can be merged
-                # if is_table[current] == 0: # check if the i-th chunk is regular text chunk
+            if self._length_function(chunks[current]) < self._chunk_size: # if the i-th chunk is less than chunk size, it can be merged
                 if self._length_function("\n".join([current_chunk, chunks[current]])) < self._chunk_size + 100: # check if after merging i-th chunk with the current chunk, the size is still less than chunk size
                     current_chunk = "\n".join([current_chunk, chunks[current]]) # merge i-th chunk with current chunk
                 else:
@@ -149,12 +132,6 @@ class PdfTextSplitter(TextSplitter):
                         self.final_chunks.append(current_chunk)
                     current_chunk = chunks[current]
                     
-                # else: 
-                #     # since i-th chunk is a table chunk, let's not merge it. Complete the current chunk by adding to list of final chunks, also add the i-th chunk to the final chunks.
-                #     if current_chunk!="":
-                #         self.final_chunks.append(current_chunk)
-                #     self.final_chunks.append(chunks[current])
-                #     current_chunk = ""
                     
             else:
                 # since i-th chunk is already larger then the chunk size-
@@ -162,7 +139,6 @@ class PdfTextSplitter(TextSplitter):
                 # but if it is a regular text chunk, chunk further and merge to create multiple chunks (each of chunk size) to be added to the final chunks
                 if is_table[current]==0:
                     if current_chunk!="": # if there is an ongoing current which is a table, we don't want to send it for regular text chunking
-                        # if is_table[current - 1] == 1:
                         if start_tag in current_chunk or end_tag in current_chunk:
                             self.final_chunks.append(current_chunk)
                             current_chunk = ""
@@ -484,20 +460,7 @@ class ParserFactory:
 
         return parser
 
-class TokenEstimator(object):
-    GPT2_TOKENIZER = tiktoken.get_encoding("gpt2")
-
-    def estimate_tokens(self, text: str) -> int:
-        return len(self.GPT2_TOKENIZER.encode(text))
-
-    def construct_tokens_with_size(self, tokens: str, numofTokens: int) -> str:
-        newTokens = self.GPT2_TOKENIZER.decode(
-            self.GPT2_TOKENIZER.encode(tokens)[:numofTokens]
-        )
-        return newTokens
-
 parser_factory = ParserFactory()
-TOKEN_ESTIMATOR = TokenEstimator()
 
 class UnsupportedFormatError(Exception):
     """Exception raised when a format is not supported by a parser."""
@@ -684,9 +647,8 @@ def chunk_content_helper(
     if num_tokens is None:
         num_tokens = 1000000000
 
-    parser = parser_factory(file_format)
+    parser = parser_factory(file_format.split("_pdf")[0]) # to handle cracked pdf converted to html
     doc = parser.parse(content, file_name=file_name)
-    # import pdb; pdb.set_trace()
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
     if doc_content_size < num_tokens:
@@ -706,14 +668,13 @@ def chunk_content_helper(
                 splitter = PythonCodeTextSplitter.from_tiktoken_encoder(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
-                if file_format == "html":
+                if file_format == "html_pdf": # cracked pdf converted to html
                     splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
                             separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                             chunk_size=num_tokens, chunk_overlap=token_overlap)
-            chunked_content_list = splitter.split_text_better(doc.content)
-            print(f"Got back from split_text_better")
+            chunked_content_list = splitter.split_text(doc.content)
             print(f"Number of chunks: {len(chunked_content_list)}")
             print(f"Total tokens before chunking: {TOKEN_ESTIMATOR.estimate_tokens(doc.content)}")
             for chunked_content in chunked_content_list:
@@ -751,7 +712,7 @@ def chunk_content(
         if file_name is None or (cracked_pdf and not use_layout):
             file_format = "text"
         elif cracked_pdf:
-            file_format = "html"
+            file_format = "html_pdf" # differentiate it from native html
         else:
             file_format = _get_file_format(file_name, extensions_to_process)
             if file_format is None:
@@ -918,16 +879,6 @@ def process_file(
         result =None
     return result, is_error
 
-def contains_broken_table(s):
-    # import pdb; pdb.set_trace()
-    open_tags = len(s.split("<table>"))-1
-    close_tags = len(s.split("</table>"))-1
-    
-    if open_tags > close_tags:
-        print(f"Number of open tags: {open_tags}")
-        print(f"Number of close tags: {close_tags}")
-        return True
-    return False
 
 
 def chunk_directory(
@@ -976,7 +927,6 @@ def chunk_directory(
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
         for file_path in tqdm(files_to_process):
-        # for file_path in files_to_process:
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
