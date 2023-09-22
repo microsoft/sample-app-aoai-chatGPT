@@ -43,6 +43,7 @@ AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
 AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
 AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get("AZURE_SEARCH_PERMITTED_GROUPS_COLUMN")
+AZURE_SEARCH_STRICTNESS = os.environ.get("AZURE_SEARCH_STRICTNESS", 3)
 
 # AOAI Integration Settings
 AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
@@ -187,7 +188,8 @@ def prepare_body_headers_with_data(request):
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                     "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
                     "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                    "filter": filter
+                    "filter": filter,
+                    "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }
             }
         ]
