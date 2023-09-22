@@ -1,691 +1,269 @@
-import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from "@fluentui/react";
-import { DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
-
-import ReactMarkdown from "react-markdown";
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from "rehype-raw";
-import uuid from 'react-uuid';
+import { useRef, useState, useEffect } from "react";
+import { Checkbox, Panel, DefaultButton, TextField, SpinButton, Dropdown, IDropdownOption } from "@fluentui/react";
+import { SparkleFilled } from "@fluentui/react-icons";
 
 import styles from "./Chat.module.css";
-import Azure from "../../assets/Azure.svg";
 
-import {
-    ChatMessage,
-    ConversationRequest,
-    conversationApi,
-    Citation,
-    ToolMessageContent,
-    ChatResponse,
-    getUserInfo,
-    Conversation,
-    historyGenerate,
-    historyUpdate,
-    historyClear,
-    ChatHistoryLoadingState,
-    CosmosDBStatus,
-    ErrorMessage
-} from "../../api";
-import { Answer } from "../../components/Answer";
+import { chatApi, RetrievalMode, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
-import { AppStateContext } from "../../state/AppProvider";
-import { useBoolean } from "@fluentui/react-hooks";
-
-const enum messageStatus {
-    NotRunning = "Not Running",
-    Processing = "Processing",
-    Done = "Done"
-}
+import { ExampleList } from "../../components/Example";
+import { UserChatMessage } from "../../components/UserChatMessage";
+import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
+import { SettingsButton } from "../../components/SettingsButton";
+import { ClearChatButton } from "../../components/ClearChatButton";
 
 const Chat = () => {
-    const appStateContext = useContext(AppStateContext)
+    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+    const [promptTemplate, setPromptTemplate] = useState<string>("");
+    const [retrieveCount, setRetrieveCount] = useState<number>(3);
+    const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
+    const [useSemanticRanker, setUseSemanticRanker] = useState<boolean>(true);
+    const [useSemanticCaptions, setUseSemanticCaptions] = useState<boolean>(false);
+    const [excludeCategory, setExcludeCategory] = useState<string>("");
+    const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
+
+    const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
-    const [activeCitation, setActiveCitation] = useState<[content: string, id: string, title: string, filepath: string, url: string, metadata: string]>();
-    const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
-    const abortFuncs = useRef([] as AbortController[]);
-    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
-    const [messages, setMessages] = useState<ChatMessage[]>([])
-    const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
-    const [clearingChat, setClearingChat] = useState<boolean>(false);
-    const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
-    const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+    const [error, setError] = useState<unknown>();
 
-    const errorDialogContentProps = {
-        type: DialogType.close,
-        title: errorMsg?.title,
-        closeButtonAriaLabel: 'Close',
-        subText: errorMsg?.subtitle,
-    };
+    const [activeCitation, setActiveCitation] = useState<string>();
+    const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
-    const modalProps = {
-        titleAriaId: 'labelId',
-        subtitleAriaId: 'subTextId',
-        isBlocking: true,
-        styles: { main: { maxWidth: 450 } },
-    }
+    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
 
-    useEffect(() => {
-        if(appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && hideErrorDialog){
-            let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
-            setErrorMsg({
-                title: "Chat history is not enabled",
-                subtitle: subtitle
-            })
-            toggleErrorDialog();
-        }
-    }, [appStateContext?.state.isCosmosDBAvailable]);
+    const makeApiRequest = async (question: string) => {
+        lastQuestionRef.current = question;
 
-    const handleErrorDialogClose = () => {
-        toggleErrorDialog()
-        setTimeout(() => {
-            setErrorMsg(null)
-        }, 500);
-    }
-    
-    const getUserInfoList = async () => {
-        const userInfoList = await getUserInfo();
-        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
-            setShowAuthMessage(true);
-        }
-        else {
-            setShowAuthMessage(false);
-        }
-    }
-
-    const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+        error && setError(undefined);
         setIsLoading(true);
-        setShowLoadingMessage(true);
-        const abortController = new AbortController();
-        abortFuncs.current.unshift(abortController);
-
-        const userMessage: ChatMessage = {
-            id: uuid(),
-            role: "user",
-            content: question,
-            date: new Date().toISOString(),
-        };
-
-        let conversation: Conversation | null | undefined;
-        if(!conversationId){
-            conversation = {
-                id: conversationId ?? uuid(),
-                title: question,
-                messages: [userMessage],
-                date: new Date().toISOString(),
-            }
-        }else{
-            conversation = appStateContext?.state?.currentChat
-            if(!conversation){
-                console.error("Conversation not found.");
-                setIsLoading(false);
-                setShowLoadingMessage(false);
-                abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                return;
-            }else{
-                conversation.messages.push(userMessage);
-            }
-        }
-
-        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
-        setMessages(conversation.messages)
-        
-        const request: ConversationRequest = {
-            messages: [...conversation.messages.filter((answer) => answer.role !== "error")]
-            // messages: [...conversation.messages.filter((answer) => answer.role === "error")]
-        };
-
-        let result = {} as ChatResponse;
-        try {
-            const response = await conversationApi(request, abortController.signal);
-            if (response?.body) {
-                const reader = response.body.getReader();
-                let runningText = "";
-
-                while (true) {
-                    setProcessMessages(messageStatus.Processing)
-                    const {done, value} = await reader.read();
-                    if (done) break;
-
-                    var text = new TextDecoder("utf-8").decode(value);
-                    const objects = text.split("\n");
-                    objects.forEach((obj) => {
-                        try {
-                            runningText += obj;
-                            result = JSON.parse(runningText);
-                            result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
-                                obj.date = new Date().toISOString();
-                            })
-                            setShowLoadingMessage(false);
-                            setMessages([...messages, ...result.choices[0].messages]);
-                            runningText = "";
-                        }
-                        catch { }
-                    });
-                }
-                conversation.messages.push(...result.choices[0].messages)
-                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
-                setMessages([...messages, ...result.choices[0].messages]);
-            }
-            
-        } catch ( e )  {
-            if (!abortController.signal.aborted) {
-                let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
-                if (result.error?.message) {
-                    errorMessage = result.error.message;
-                }
-                else if (typeof result.error === "string") {
-                    errorMessage = result.error;
-                }
-                let errorChatMsg: ChatMessage = {
-                    id: uuid(),
-                    role: "error",
-                    content: errorMessage,
-                    date: new Date().toISOString()
-                }
-                conversation.messages.push(errorChatMsg);
-                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
-                setMessages([...messages, errorChatMsg]);
-            } else {
-                setMessages([...messages, userMessage])
-            }
-        } finally {
-            setIsLoading(false);
-            setShowLoadingMessage(false);
-            abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-            setProcessMessages(messageStatus.Done)
-        }
-
-        return abortController.abort();
-    };
-
-    const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
-        setIsLoading(true);
-        setShowLoadingMessage(true);
-        const abortController = new AbortController();
-        abortFuncs.current.unshift(abortController);
-
-        const userMessage: ChatMessage = {
-            id: uuid(),
-            role: "user",
-            content: question,
-            date: new Date().toISOString(),
-        };
-
-        //api call params set here (generate)
-        let request: ConversationRequest;
-        let conversation;
-        if(conversationId){
-            conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-            if(!conversation){
-                console.error("Conversation not found.");
-                setIsLoading(false);
-                setShowLoadingMessage(false);
-                abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                return;
-            }else{
-                conversation.messages.push(userMessage);
-                request = {
-                    messages: [...conversation.messages.filter((answer) => answer.role !== "error")]
-                };
-            }
-        }else{
-            request = {
-                messages: [userMessage].filter((answer) => answer.role !== "error")
-            };
-            setMessages(request.messages)
-        }
-        let result = {} as ChatResponse;
-        try {
-            const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
-            if(!response?.ok){
-                let errorChatMsg: ChatMessage = {
-                    id: uuid(),
-                    role: "error",
-                    content: "There was an error generating a response. Chat history can't be saved at this time. If the problem persists, please contact the site administrator.",
-                    date: new Date().toISOString()
-                }
-                let resultConversation;
-                if(conversationId){
-                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
-                        console.error("Conversation not found.");
-                        setIsLoading(false);
-                        setShowLoadingMessage(false);
-                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                        return;
-                    }
-                    resultConversation.messages.push(errorChatMsg);
-                }else{
-                    setMessages([...messages, userMessage, errorChatMsg])
-                    setIsLoading(false);
-                    setShowLoadingMessage(false);
-                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                    return;
-                }
-                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
-                setMessages([...resultConversation.messages]);
-                return;
-            }
-            if (response?.body) {
-                const reader = response.body.getReader();
-                let runningText = "";
-
-                while (true) {
-                    setProcessMessages(messageStatus.Processing)
-                    const {done, value} = await reader.read();
-                    if (done) break;
-
-                    var text = new TextDecoder("utf-8").decode(value);
-                    const objects = text.split("\n");
-                    objects.forEach((obj) => {
-                        try {
-                            runningText += obj;
-                            result = JSON.parse(runningText);
-                            result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
-                                obj.date = new Date().toISOString();
-                            })
-                            setShowLoadingMessage(false);
-                            if(!conversationId){
-                                setMessages([...messages, userMessage, ...result.choices[0].messages]);
-                            }else{
-                                setMessages([...messages, ...result.choices[0].messages]);
-                            }
-                            runningText = "";
-                        }
-                        catch { }
-                    });
-                }
-
-                let resultConversation;
-                if(conversationId){
-                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
-                        console.error("Conversation not found.");
-                        setIsLoading(false);
-                        setShowLoadingMessage(false);
-                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                        return;
-                    }
-                    resultConversation.messages.push(...result.choices[0].messages);
-                }else{
-                    resultConversation = {
-                        id: result.history_metadata.conversation_id,
-                        title: result.history_metadata.title,
-                        messages: [userMessage],
-                        date: result.history_metadata.date
-                    }
-                    resultConversation.messages.push(...result.choices[0].messages);
-                }
-                if(!resultConversation){
-                    setIsLoading(false);
-                    setShowLoadingMessage(false);
-                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                    return;
-                }
-                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
-                setMessages([...messages, ...result.choices[0].messages]);
-            }
-            
-        } catch ( e )  {
-            if (!abortController.signal.aborted) {
-                let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
-                if (result.error?.message) {
-                    errorMessage = result.error.message;
-                }
-                else if (typeof result.error === "string") {
-                    errorMessage = result.error;
-                }
-                let errorChatMsg: ChatMessage = {
-                    id: uuid(),
-                    role: "error",
-                    content: errorMessage,
-                    date: new Date().toISOString()
-                }
-                let resultConversation;
-                if(conversationId){
-                    resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
-                        console.error("Conversation not found.");
-                        setIsLoading(false);
-                        setShowLoadingMessage(false);
-                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                        return;
-                    }
-                    resultConversation.messages.push(errorChatMsg);
-                }else{
-                    if(!result.history_metadata){
-                        console.error("Error retrieving data.", result);
-                        setIsLoading(false);
-                        setShowLoadingMessage(false);
-                        abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                        return;
-                    }
-                    resultConversation = {
-                        id: result.history_metadata.conversation_id,
-                        title: result.history_metadata.title,
-                        messages: [userMessage],
-                        date: result.history_metadata.date
-                    }
-                    resultConversation.messages.push(errorChatMsg);
-                }
-                if(!resultConversation){
-                    setIsLoading(false);
-                    setShowLoadingMessage(false);
-                    abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-                    return;
-                }
-                appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
-                setMessages([...messages, errorChatMsg]);
-            } else {
-                setMessages([...messages, userMessage])
-            }
-        } finally {
-            setIsLoading(false);
-            setShowLoadingMessage(false);
-            abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
-            setProcessMessages(messageStatus.Done)
-        }
-        return abortController.abort();
-
-    }
-
-    const clearChat = async () => {
-        setClearingChat(true)
-        if(appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB){
-            let response = await historyClear(appStateContext?.state.currentChat.id)
-            if(!response.ok){
-                setErrorMsg({
-                    title: "Error clearing current chat",
-                    subtitle: "Please try again. If the problem persists, please contact the site administrator.",
-                })
-                toggleErrorDialog();
-            }else{
-                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: appStateContext?.state.currentChat.id});
-                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat});
-                setActiveCitation(undefined);
-                setIsCitationPanelOpen(false);
-                setMessages([])
-            }
-        }
-        setClearingChat(false)
-    };
-
-    const newChat = () => {
-        setProcessMessages(messageStatus.Processing)
-        setMessages([])
-        setIsCitationPanelOpen(false);
         setActiveCitation(undefined);
-        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
-        setProcessMessages(messageStatus.Done)
-    };
+        setActiveAnalysisPanelTab(undefined);
 
-    const stopGenerating = () => {
-        abortFuncs.current.forEach(a => a.abort());
-        setShowLoadingMessage(false);
-        setIsLoading(false);
-    }
-
-    useEffect(() => {
-        if (appStateContext?.state.currentChat) {
-
-            setMessages(appStateContext.state.currentChat.messages)
-        }else{
-            setMessages([])
-        }
-    }, [appStateContext?.state.currentChat]);
-    
-    useLayoutEffect(() => {
-        const saveToDB = async (messages: ChatMessage[], id: string) => {
-            const response = await historyUpdate(messages, id)
-            return response
-        }
-
-        if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
-                if(appStateContext.state.isCosmosDBAvailable.cosmosDB){
-                    if(!appStateContext?.state.currentChat?.messages){
-                        console.error("Failure fetching current chat state.")
-                        return 
-                    }
-                    saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
-                    .then((res) => {
-                        if(!res.ok){
-                            let errorMessage = "An error occurred. Answers can't be saved at this time. If the problem persists, please contact the site administrator.";
-                            let errorChatMsg: ChatMessage = {
-                                id: uuid(),
-                                role: "error",
-                                content: errorMessage,
-                                date: new Date().toISOString()
-                            }
-                            if(!appStateContext?.state.currentChat?.messages){
-                                let err: Error = {
-                                    ...new Error,
-                                    message: "Failure fetching current chat state."
-                                }
-                                throw err
-                            }
-                            setMessages([...appStateContext?.state.currentChat?.messages, errorChatMsg])
-                        }
-                        return res as Response
-                    })
-                    .catch((err) => {
-                        console.error("Error: ", err)
-                        let errRes: Response = {
-                            ...new Response,
-                            ok: false,
-                            status: 500,
-                        }
-                        return errRes;
-                    })
-                }else{
+        try {
+            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
+            const request: ChatRequest = {
+                history: [...history, { user: question, bot: undefined }],
+                approach: Approaches.ReadRetrieveRead,
+                overrides: {
+                    promptTemplate: promptTemplate.length === 0 ? undefined : promptTemplate,
+                    excludeCategory: excludeCategory.length === 0 ? undefined : excludeCategory,
+                    top: retrieveCount,
+                    retrievalMode: retrievalMode,
+                    semanticRanker: useSemanticRanker,
+                    semanticCaptions: useSemanticCaptions,
+                    suggestFollowupQuestions: useSuggestFollowupQuestions
                 }
-                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
-                setMessages(appStateContext.state.currentChat.messages)
-            setProcessMessages(messageStatus.NotRunning)
+            };
+            const result = await chatApi(request);
+            setAnswers([...answers, [question, result]]);
+        } catch (e) {
+            setError(e);
+        } finally {
+            setIsLoading(false);
         }
-    }, [processMessages]);
-
-    useEffect(() => {
-        getUserInfoList();
-    }, []);
-
-    useLayoutEffect(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
-    }, [showLoadingMessage, processMessages]);
-
-    const onShowCitation = (citation: Citation) => {
-        setActiveCitation([citation.content, citation.id, citation.title ?? "", citation.filepath ?? "", "", ""]);
-        setIsCitationPanelOpen(true);
     };
 
-    const parseCitationFromMessage = (message: ChatMessage) => {
-        if (message?.role && message?.role === "tool") {
-            try {
-                const toolMessage = JSON.parse(message.content) as ToolMessageContent;
-                return toolMessage.citations;
-            }
-            catch {
-                return [];
-            }
-        }
-        return [];
-    }
+    const clearChat = () => {
+        lastQuestionRef.current = "";
+        error && setError(undefined);
+        setActiveCitation(undefined);
+        setActiveAnalysisPanelTab(undefined);
+        setAnswers([]);
+    };
 
-    const disabledButton = () => {
-        return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
-    }
+    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
+
+    const onPromptTemplateChange = (_ev?: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+        setPromptTemplate(newValue || "");
+    };
+
+    const onRetrieveCountChange = (_ev?: React.SyntheticEvent<HTMLElement, Event>, newValue?: string) => {
+        setRetrieveCount(parseInt(newValue || "3"));
+    };
+
+    const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
+        setRetrievalMode(option?.data || RetrievalMode.Hybrid);
+    };
+
+    const onUseSemanticRankerChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseSemanticRanker(!!checked);
+    };
+
+    const onUseSemanticCaptionsChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseSemanticCaptions(!!checked);
+    };
+
+    const onExcludeCategoryChanged = (_ev?: React.FormEvent, newValue?: string) => {
+        setExcludeCategory(newValue || "");
+    };
+
+    const onUseSuggestFollowupQuestionsChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
+        setUseSuggestFollowupQuestions(!!checked);
+    };
+
+    const onExampleClicked = (example: string) => {
+        makeApiRequest(example);
+    };
+
+    const onShowCitation = (citation: string, index: number) => {
+        if (activeCitation === citation && activeAnalysisPanelTab === AnalysisPanelTabs.CitationTab && selectedAnswer === index) {
+            setActiveAnalysisPanelTab(undefined);
+        } else {
+            setActiveCitation(citation);
+            setActiveAnalysisPanelTab(AnalysisPanelTabs.CitationTab);
+        }
+
+        setSelectedAnswer(index);
+    };
+
+    const onToggleTab = (tab: AnalysisPanelTabs, index: number) => {
+        if (activeAnalysisPanelTab === tab && selectedAnswer === index) {
+            setActiveAnalysisPanelTab(undefined);
+        } else {
+            setActiveAnalysisPanelTab(tab);
+        }
+
+        setSelectedAnswer(index);
+    };
 
     return (
-        <div className={styles.container} role="main">
-            {showAuthMessage ? (
-                <Stack className={styles.chatEmptyState}>
-                    <ShieldLockRegular className={styles.chatIcon} style={{color: 'darkorange', height: "200px", width: "200px"}}/>
-                    <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
-                    <h2 className={styles.chatEmptyStateSubtitle}>
-                        This app does not have authentication configured. Please add an identity provider by finding your app in the 
-                        <a href="https://portal.azure.com/" target="_blank"> Azure Portal </a>
-                        and following 
-                         <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</a>.
-                    </h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>Authentication configuration takes a few minutes to apply. </strong></h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></h2>
-                </Stack>
-            ) : (
-                <Stack horizontal className={styles.chatRoot}>
-                    <div className={styles.chatContainer}>
-                        {!messages || messages.length < 1 ? (
-                            <Stack className={styles.chatEmptyState}>
-                                <img
-                                    src={Azure}
-                                    className={styles.chatIcon}
-                                    aria-hidden="true"
-                                />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
-                            </Stack>
-                        ) : (
-                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
-                                {messages.map((answer, index) => (
-                                    <>
-                                        {answer.role === "user" ? (
-                                            <div className={styles.chatMessageUser} tabIndex={0}>
-                                                <div className={styles.chatMessageUserMessage}>{answer.content}</div>
-                                            </div>
-                                        ) : (
-                                            answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
-                                                <Answer
-                                                    answer={{
-                                                        answer: answer.content,
-                                                        citations: parseCitationFromMessage(messages[index - 1]),
-                                                    }}
-                                                    onCitationClicked={c => onShowCitation(c)}
-                                                />
-                                            </div> : answer.role === "error" ? <div className={styles.chatMessageError}>
-                                                <Stack horizontal className={styles.chatMessageErrorContent}>
-                                                    <ErrorCircleRegular className={styles.errorIcon} style={{color: "rgba(182, 52, 67, 1)"}} />
-                                                    <span>Error</span>
-                                                </Stack>
-                                                <span className={styles.chatMessageErrorContent}>{answer.content}</span>
-                                            </div> : null
-                                        )}
-                                    </>
-                                ))}
-                                {showLoadingMessage && (
-                                    <>
-                                        <div className={styles.chatMessageGpt}>
-                                            <Answer
-                                                answer={{
-                                                    answer: "Generating answer...",
-                                                    citations: []
-                                                }}
-                                                onCitationClicked={() => null}
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                                <div ref={chatMessageStreamEnd} />
-                            </div>
-                        )}
-
-                        <Stack horizontal className={styles.chatInput}>
-                            {isLoading && (
-                                <Stack 
-                                    horizontal
-                                    className={styles.stopGeneratingContainer}
-                                    role="button"
-                                    aria-label="Stop generating"
-                                    tabIndex={0}
-                                    onClick={stopGenerating}
-                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
-                                    >
-                                        <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
-                                        <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
-                                </Stack>
-                            )}
-                            <Stack>
-                                {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <CommandBarButton
-                                    role="button"
-                                    styles={{ 
-                                        icon: { 
-                                            color: '#FFFFFF',
-                                        },
-                                        root: {
-                                            color: '#FFFFFF',
-                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)"
-                                        },
-                                        rootDisabled: {
-                                            background: "#BDBDBD"
-                                        }
-                                    }}
-                                    className={styles.newChatIcon}
-                                    iconProps={{ iconName: 'Add' }}
-                                    onClick={newChat}
-                                    disabled={disabledButton()}
-                                    aria-label="start a new chat button"
-                                />}
-                                <CommandBarButton
-                                    role="button"
-                                    styles={{ 
-                                        icon: { 
-                                            color: '#FFFFFF',
-                                        },
-                                        root: {
-                                            color: '#FFFFFF',
-                                            background: disabledButton() ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                                            cursor: disabledButton() ? "" : "pointer"
-                                        },
-                                    }}
-                                    className={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? styles.clearChatBroom : styles.clearChatBroomNoCosmos}
-                                    iconProps={{ iconName: 'Broom' }}
-                                    onClick={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat : newChat}
-                                    disabled={disabledButton()}
-                                    aria-label="clear chat button"
-                                />
-                                <Dialog
-                                    hidden={hideErrorDialog}
-                                    onDismiss={handleErrorDialogClose}
-                                    dialogContentProps={errorDialogContentProps}
-                                    modalProps={modalProps}
-                                >
-                                </Dialog>
-                            </Stack>
-                            <QuestionInput
-                                clearOnSend
-                                placeholder="Type a new question..."
-                                disabled={isLoading}
-                                onSend={(question, id) => {
-                                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
-                                }}
-                                conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
-                            />
-                        </Stack>
-                    </div>
-                    {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
-                    <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                        <Stack aria-label="Citations Panel Header Container" horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                            <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
-                            <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
-                        </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0}>{activeCitation[2]}</h5>
-                        <div tabIndex={0}> 
-                        <ReactMarkdown 
-                            linkTarget="_blank"
-                            className={styles.citationPanelContent}
-                            children={activeCitation[0]} 
-                            remarkPlugins={[remarkGfm]} 
-                            rehypePlugins={[rehypeRaw]}
-                        />
+        <div className={styles.container}>
+            <div className={styles.commandsContainer}>
+                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
+            </div>
+            <div className={styles.chatRoot}>
+                <div className={styles.chatContainer}>
+                    {!lastQuestionRef.current ? (
+                        <div className={styles.chatEmptyState}>
+                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />
+                            <h1 className={styles.chatEmptyStateTitle}>Chat with your data</h1>
+                            <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2>
+                            <ExampleList onExampleClicked={onExampleClicked} />
                         </div>
-                        
-                    </Stack.Item>
+                    ) : (
+                        <div className={styles.chatMessageStream}>
+                            {answers.map((answer, index) => (
+                                <div key={index}>
+                                    <UserChatMessage message={answer[0]} />
+                                    <div className={styles.chatMessageGpt}>
+                                        <Answer
+                                            key={index}
+                                            answer={answer[1]}
+                                            isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
+                                            onCitationClicked={c => onShowCitation(c, index)}
+                                            onThoughtProcessClicked={() => onToggleTab(AnalysisPanelTabs.ThoughtProcessTab, index)}
+                                            onSupportingContentClicked={() => onToggleTab(AnalysisPanelTabs.SupportingContentTab, index)}
+                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
+                                            showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            {isLoading && (
+                                <>
+                                    <UserChatMessage message={lastQuestionRef.current} />
+                                    <div className={styles.chatMessageGptMinWidth}>
+                                        <AnswerLoading />
+                                    </div>
+                                </>
+                            )}
+                            {error ? (
+                                <>
+                                    <UserChatMessage message={lastQuestionRef.current} />
+                                    <div className={styles.chatMessageGptMinWidth}>
+                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
+                                    </div>
+                                </>
+                            ) : null}
+                            <div ref={chatMessageStreamEnd} />
+                        </div>
+                    )}
+
+                    <div className={styles.chatInput}>
+                        <QuestionInput
+                            clearOnSend
+                            placeholder="Type a new question (e.g. does my plan cover annual eye exams?)"
+                            disabled={isLoading}
+                            onSend={question => makeApiRequest(question)}
+                        />
+                    </div>
+                </div>
+
+                {answers.length > 0 && activeAnalysisPanelTab && (
+                    <AnalysisPanel
+                        className={styles.chatAnalysisPanel}
+                        activeCitation={activeCitation}
+                        onActiveTabChanged={x => onToggleTab(x, selectedAnswer)}
+                        citationHeight="810px"
+                        answer={answers[selectedAnswer][1]}
+                        activeTab={activeAnalysisPanelTab}
+                    />
                 )}
-                {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}
-                </Stack>
-            )}
+
+                <Panel
+                    headerText="Configure answer generation"
+                    isOpen={isConfigPanelOpen}
+                    isBlocking={false}
+                    onDismiss={() => setIsConfigPanelOpen(false)}
+                    closeButtonAriaLabel="Close"
+                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
+                    isFooterAtBottom={true}
+                >
+                    <TextField
+                        className={styles.chatSettingsSeparator}
+                        defaultValue={promptTemplate}
+                        label="Override prompt template"
+                        multiline
+                        autoAdjustHeight
+                        onChange={onPromptTemplateChange}
+                    />
+
+                    <SpinButton
+                        className={styles.chatSettingsSeparator}
+                        label="Retrieve this many documents from search:"
+                        min={1}
+                        max={50}
+                        defaultValue={retrieveCount.toString()}
+                        onChange={onRetrieveCountChange}
+                    />
+                    <TextField className={styles.chatSettingsSeparator} label="Exclude category" onChange={onExcludeCategoryChanged} />
+                    <Checkbox
+                        className={styles.chatSettingsSeparator}
+                        checked={useSemanticRanker}
+                        label="Use semantic ranker for retrieval"
+                        onChange={onUseSemanticRankerChange}
+                    />
+                    <Checkbox
+                        className={styles.chatSettingsSeparator}
+                        checked={useSemanticCaptions}
+                        label="Use query-contextual summaries instead of whole documents"
+                        onChange={onUseSemanticCaptionsChange}
+                        disabled={!useSemanticRanker}
+                    />
+                    <Checkbox
+                        className={styles.chatSettingsSeparator}
+                        checked={useSuggestFollowupQuestions}
+                        label="Suggest follow-up questions"
+                        onChange={onUseSuggestFollowupQuestionsChange}
+                    />
+                    <Dropdown
+                        className={styles.chatSettingsSeparator}
+                        label="Retrieval mode"
+                        options={[
+                            { key: "hybrid", text: "Vectors + Text (Hybrid)", selected: retrievalMode == RetrievalMode.Hybrid, data: RetrievalMode.Hybrid },
+                            { key: "vectors", text: "Vectors", selected: retrievalMode == RetrievalMode.Vectors, data: RetrievalMode.Vectors },
+                            { key: "text", text: "Text", selected: retrievalMode == RetrievalMode.Text, data: RetrievalMode.Text }
+                        ]}
+                        required
+                        onChange={onRetrievalModeChange}
+                    />
+                </Panel>
+            </div>
         </div>
     );
 };

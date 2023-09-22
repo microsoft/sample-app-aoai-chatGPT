@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
-import { SendRegular } from "@fluentui/react-icons";
-import Send from "../../assets/Send.svg";
+import { Send28Filled } from "@fluentui/react-icons";
+
 import styles from "./QuestionInput.module.css";
 
 interface Props {
-    onSend: (question: string, id?: string) => void;
+    onSend: (question: string) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
-    conversationId?: string;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Props) => {
     const [question, setQuestion] = useState<string>("");
 
     const sendQuestion = () => {
@@ -20,11 +19,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
             return;
         }
 
-        if(conversationId){
-            onSend(question, conversationId);
-        }else{
-            onSend(question);
-        }
+        onSend(question);
 
         if (clearOnSend) {
             setQuestion("");
@@ -39,7 +34,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     };
 
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        setQuestion(newValue || "");
+        if (!newValue) {
+            setQuestion("");
+        } else if (newValue.length <= 1000) {
+            setQuestion(newValue);
+        }
     };
 
     const sendQuestionDisabled = disabled || !question.trim();
@@ -56,20 +55,15 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
             />
-            <div className={styles.questionInputSendButtonContainer} 
-                role="button" 
-                tabIndex={0}
-                aria-label="Ask question button"
-                onClick={sendQuestion}
-                onKeyDown={e => e.key === "Enter" || e.key === " " ? sendQuestion() : null}
-            >
-                { sendQuestionDisabled ? 
-                    <SendRegular className={styles.questionInputSendButtonDisabled}/>
-                    :
-                    <img src={Send} className={styles.questionInputSendButton}/>
-                }
+            <div className={styles.questionInputButtonsContainer}>
+                <div
+                    className={`${styles.questionInputSendButton} ${sendQuestionDisabled ? styles.questionInputSendButtonDisabled : ""}`}
+                    aria-label="Ask question button"
+                    onClick={sendQuestion}
+                >
+                    <Send28Filled primaryFill="rgba(115, 118, 225, 1)" />
+                </div>
             </div>
-            <div className={styles.questionInputBottomBorder} />
         </Stack>
     );
 };

@@ -5,109 +5,74 @@
 }
 
 .header {
-    background-color: #f2f2f2;
+    background-color: #222222;
+    color: #f2f2f2;
 }
 
 .headerContainer {
     display: flex;
-    justify-content: left;
     align-items: center;
+    justify-content: space-around;
+    margin-right: 12px;
+    margin-left: 12px;
 }
 
 .headerTitleContainer {
     display: flex;
     align-items: center;
-    margin-left: 14px;
+    margin-right: 40px;
+    color: #f2f2f2;
     text-decoration: none;
 }
 
+.headerLogo {
+    height: 40px;
+}
+
 .headerTitle {
-    font-style: normal;
+    margin-left: 12px;
     font-weight: 600;
-    font-size: 20px;
-    line-height: 28px;
+}
+
+.headerNavList {
     display: flex;
-    align-items: flex-end;
-    color: #242424;
+    list-style: none;
+    padding-left: 0;
 }
 
-.headerIcon {
-    height: 32px;
-    width: 32px;
-    margin-left: 36px;
+.headerNavPageLink {
+    color: #f2f2f2;
+    text-decoration: none;
+    opacity: 0.75;
+
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-duration: 500ms;
+    transition-property: opacity;
 }
 
-.shareButtonContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    width: 86px;
-    height: 32px;
-    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
-    border-radius: 4px;
-    flex: none;
-    order: 1;
-    flex-grow: 0;
-    position: absolute;
-    right: 20px;
-    cursor: pointer;
+.headerNavPageLink:hover {
+    opacity: 1;
 }
 
-.shareButton {
-    color: #FFFFFF;
+.headerNavPageLinkActive {
+    color: #f2f2f2;
+    text-decoration: none;
 }
 
-.shareButtonText {
-    font-style: normal;
+.headerNavLeftMargin {
+    margin-left: 20px;
+}
+
+.headerRightText {
+    font-weight: normal;
+    margin-left: 40px;
+}
+
+.microsoftLogo {
+    height: 23px;
     font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #FFFFFF;
 }
 
-.urlTextBox {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: #707070;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
-}
-
-.copyButtonContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    background: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-    cursor: pointer;
-    background: #D1D1D1;
-}
-
-.copyButton {
-    color: #424242;
-}
-
-.copyButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #242424;
+.githubLogo {
+    height: 20px;
 }

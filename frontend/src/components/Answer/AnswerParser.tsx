@@ -1,35 +1,52 @@
-import { AskResponse, Citation } from "../../api";
-import { cloneDeep } from "lodash-es";
+import { renderToStaticMarkup } from "react-dom/server";
+import { getCitationFilePath } from "../../api";
 
-
-type ParsedAnswer = {
-    citations: Citation[];
-    markdownFormatText: string;
+type HtmlParsedAnswer = {
+    answerHtml: string;
+    citations: string[];
+    followupQuestions: string[];
 };
 
-export function parseAnswer(answer: AskResponse): ParsedAnswer {
-    let answerText = answer.answer;
-    const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
+export function parseAnswerToHtml(answer: string, onCitationClicked: (citationFilePath: string) => void): HtmlParsedAnswer {
+    const citations: string[] = [];
+    const followupQuestions: string[] = [];
 
-    const lengthDocN = "[doc".length;
+    // Extract any follow-up questions that might be in the answer
+    let parsedAnswer = answer.replace(/<<([^>>]+)>>/g, (match, content) => {
+        followupQuestions.push(content);
+        return "";
+    });
 
-    let filteredCitations = [] as Citation[];
-    let citationReindex = 0;
-    citationLinks?.forEach(link => {
-        // Replacing the links/citations with number
-        let citationIndex = link.slice(lengthDocN, link.length - 1);
-        let citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation;
-        if (!filteredCitations.find((c) => c.id === citationIndex)) {
-          answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `);
-          citation.id = citationIndex; // original doc index to de-dupe
-          citation.reindex_id = citationReindex.toString(); // reindex from 1 for display
-          filteredCitations.push(citation);
+    // trim any whitespace from the end of the answer after removing follow-up questions
+    parsedAnswer = parsedAnswer.trim();
+
+    const parts = parsedAnswer.split(/\[([^\]]+)\]/g);
+
+    const fragments: string[] = parts.map((part, index) => {
+        if (index % 2 === 0) {
+            return part;
+        } else {
+            let citationIndex: number;
+            if (citations.indexOf(part) !== -1) {
+                citationIndex = citations.indexOf(part) + 1;
+            } else {
+                citations.push(part);
+                citationIndex = citations.length;
+            }
+
+            const path = getCitationFilePath(part);
+
+            return renderToStaticMarkup(
+                <a className="supContainer" title={part} onClick={() => onCitationClicked(path)}>
+                    <sup>{citationIndex}</sup>
+                </a>
+            );
         }
-    })
-
+    });
 
     return {
-        citations: filteredCitations,
-        markdownFormatText: answerText
+        answerHtml: fragments.join(""),
+        citations,
+        followupQuestions
     };
 }
