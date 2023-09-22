@@ -1,10 +1,29 @@
 #!/bin/bash
 
+if ! command -v pip &> /dev/null
+then
+    echo "pip not found, installing..."
+    sudo apt-get update
+    sudo apt-get install python-pip -y
+else
+    echo "pip is already installed"
+fi
+
+echo ""
+echo "installing requirements"
+pip install -r requirements.txt
+if [ $? -ne 0 ]; then
+    echo "Failed to install pip requirements"
+    exit $?
+fi
+export FLASK_APP=app.py
+flask run --port=8000
+
 # Remove existing versions of Node.js and npm
-echo ""
-echo "Removing existing versions of Node.js and npm"
-echo ""
-apt-get remove -y nodejs npm
+# echo ""
+# echo "Removing existing versions of Node.js and npm"
+# echo ""
+# apt-get remove -y nodejs npm
 
 # Install nvm and update Node.js to the latest version
 # echo ""
