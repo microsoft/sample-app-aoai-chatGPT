@@ -27,6 +27,9 @@ def favicon():
 def assets(path):
     return send_from_directory("static/assets", path)
 
+# Search Advance Settings
+SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
+SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
@@ -44,6 +47,25 @@ AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
 AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
 AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get("AZURE_SEARCH_PERMITTED_GROUPS_COLUMN")
 
+# CosmosDB Mongo vcore vector db Settings
+AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING")  #This has to be secure string
+AZURE_COSMOSDB_MONGO_VCORE_DATABASE = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_DATABASE")
+AZURE_COSMOSDB_MONGO_VCORE_CONTAINER = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_CONTAINER")
+AZURE_COSMOSDB_MONGO_VCORE__INDEX = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE__INDEX")
+AZURE_COSMOSDB_MONGO_VCORE_TOP_K = SEARCH_TOP_K
+AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS = SEARCH_STRICTNESS
+AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN", "true")
+AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS", "")
+AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN")
+AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN")
+AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN")
+AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS")
+AZURE_COSMOSDB_MONGO_VCORE_QUERY_TYPE = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_QUERY_TYPE")
+
+# Data Source Type
+# Ideally this can be passed through from studio
+SEARCH_TYPE = "AzureCognitiveSearch" if AZURE_SEARCH_SERVICE else "AzureCosmosDB"
+
 # AOAI Integration Settings
 AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
 AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
@@ -59,7 +81,6 @@ AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
 AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
-
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
@@ -145,54 +166,91 @@ def generateFilterString(userToken):
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
 
-    # Set query type
-    query_type = "simple"
-    if AZURE_SEARCH_QUERY_TYPE:
-        query_type = AZURE_SEARCH_QUERY_TYPE
-    elif AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
-        query_type = "semantic"
+    # Prepare data source parameter body
+    if SEARCH_TYPE=="AzureCognitiveSearch" : 
 
-    # Set filter
-    filter = None
-    userToken = None
-    if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
-        userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
-        filter = generateFilterString(userToken)
-
-    body = {
-        "messages": request_messages,
-        "temperature": float(AZURE_OPENAI_TEMPERATURE),
-        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
-        "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
-        "stream": SHOULD_STREAM,
-        "dataSources": [
-            {
-                "type": "AzureCognitiveSearch",
-                "parameters": {
-                    "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                    "key": AZURE_SEARCH_KEY,
-                    "indexName": AZURE_SEARCH_INDEX,
-                    "fieldsMapping": {
-                        "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
-                        "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
-                        "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
-                        "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                        "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
-                    },
-                    "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_SEARCH_TOP_K,
-                    "queryType": query_type,
-                    "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                    "filter": filter
+        # Set query type
+        query_type = "simple"
+        if AZURE_SEARCH_QUERY_TYPE:
+            query_type = AZURE_SEARCH_QUERY_TYPE
+        elif AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
+            query_type = "semantic"
+    
+        # Set filter
+        filter = None
+        userToken = None
+        if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
+            userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
+            filter = generateFilterString(userToken)
+    
+        body = {
+            "messages": request_messages,
+            "temperature": float(AZURE_OPENAI_TEMPERATURE),
+            "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
+            "top_p": float(AZURE_OPENAI_TOP_P),
+            "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+            "stream": SHOULD_STREAM,
+            "dataSources": [
+                {
+                    "type": "AzureCognitiveSearch",
+                    "parameters": {
+                        "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+                        "key": AZURE_SEARCH_KEY,
+                        "indexName": AZURE_SEARCH_INDEX,
+                        "fieldsMapping": {
+                            "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                            "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
+                            "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
+                            "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
+                            "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
+                        },
+                        "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                        "topNDocuments": AZURE_SEARCH_TOP_K,
+                        "queryType": query_type,
+                        "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
+                        "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                        "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
+                        "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                        "filter": filter
+                    }
                 }
-            }
-        ]
-    }
-
+            ]
+        }
+    else:
+        body = {
+            "messages": request_messages,
+            "temperature": float(AZURE_OPENAI_TEMPERATURE),
+            "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
+            "top_p": float(AZURE_OPENAI_TOP_P),
+            "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+            "stream": SHOULD_STREAM,
+            "dataSources": [
+                {
+                    "type": SEARCH_TYPE,
+                    "parameters": {
+                        "connectionString": AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING,
+                        "indexName": AZURE_COSMOSDB_MONGO_VCORE__INDEX,
+                        "databaseName": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
+                        "containerName": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
+                        "fieldsMapping": {
+                            "contentFields": AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                            "titleField": AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
+                            "urlField": AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
+                            "filepathField": AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
+                            "vectorFields": AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                        },
+                        "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                        "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
+                        "strictness": AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS,
+                        "queryType": "vector",
+                        "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                        "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
+                        "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY
+                    }
+                }
+            ]
+        }
+        
     headers = {
         'Content-Type': 'application/json',
         'api-key': AZURE_OPENAI_KEY,
