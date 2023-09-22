@@ -2,7 +2,7 @@
 
 # Update package list and install npm
 echo ""
-echo "Running apt-get update"
+echo "Running apt-get update and install npm"
 echo ""
 apt-get update && apt-get install -y npm
 if [ $? -ne 0 ]; then
