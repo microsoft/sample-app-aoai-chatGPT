@@ -32,7 +32,8 @@ fi
 echo ""
 echo "Running apt-get update and upgrade and install npm"
 echo ""
-apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends npm
+# apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends npm
+apt-get update -y && apt-get install -y --no-install-recommends npm
 if [ $? -ne 0 ]; then
     echo "Failed to upgrade packages and install npm"
     exit $?
