@@ -11,8 +11,7 @@ echo ""
 echo "Installing nvm and updating Node.js"
 echo ""
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+source /root/.bashrc
 nvm install node
 if [ $? -ne 0 ]; then
     echo "Failed to update Node.js"
