@@ -2,23 +2,20 @@ import json
 import uuid
 from datetime import datetime
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import BlobServiceClient
 
 from backend.history.abstractconversationclient import AbstractConversationClient
-
-
-account_url = lambda account_name: f"https://{account_name}.blob.core.windows.net"
 
 
 class BlobConversationClient(AbstractConversationClient):
     def __init__(
         self,
-        account_name: str,
+        blob_endpoint: str,
         container_name: str,
         credential: DefaultAzureCredential | str,
     ):
         self.blob_service_client = BlobServiceClient(
-            account_url=account_url(account_name), credential=credential
+            account_url=blob_endpoint, credential=credential
         )
         self.container_client = self.blob_service_client.get_container_client(
             container_name

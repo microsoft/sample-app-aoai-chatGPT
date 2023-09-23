@@ -98,13 +98,14 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
 
 elif AZURE_BLOB_ACOUNT_NAME and AZURE_BLOB_CONTAINER_NAME:
     try:
+        blob_endpoint = f'https://{AZURE_BLOB_ACOUNT_NAME}.blob.core.windows.net/'
         if not AZURE_BLOB_ACCOUNT_KEY:
             credential = DefaultAzureCredential()
         else:
             credential = AZURE_BLOB_ACCOUNT_KEY
 
         conversation_client = BlobConversationClient(
-            account_name=AZURE_BLOB_ACOUNT_NAME,
+            blob_endpoint=blob_endpoint,
             container_name=AZURE_BLOB_CONTAINER_NAME,
             credential=credential,
         )
