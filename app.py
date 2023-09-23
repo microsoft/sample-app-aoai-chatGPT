@@ -235,11 +235,11 @@ def prepare_body_headers_with_data(request):
                         "databaseName": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                         "containerName": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                         "fieldsMapping": {
-                            "contentFields": AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                            "contentFields": AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
                             "titleField": AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
                             "urlField": AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
                             "filepathField": AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
-                            "vectorFields": AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                            "vectorFields": AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                         },
                         "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
                         "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
