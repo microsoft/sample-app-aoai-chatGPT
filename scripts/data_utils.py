@@ -67,6 +67,7 @@ class PdfTextSplitter(TextSplitter):
         self._table_tags = HTML_TABLE_TAGS
         self._separators = separator or ["\n\n", "\n", " ", ""]
         self._length_function = length_function
+        self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
 
     def extract_caption(self, s, type):
         separator = self._separators[-1]
@@ -115,16 +116,14 @@ class PdfTextSplitter(TextSplitter):
             table_caption_prefix = self.extract_caption(rest, "prefix")
 
         self.final_chunks = []
-        print(f"Here are the chunk sizes before chunking regular text: {[self._length_function(x) for x in chunks]}")
-        print(f"Number of chunks before chunking regular text: {len(chunks)}")
+
         
         current = 0
         current_chunk = ""
-        # current_is_table = is_table[current]
         is_table_new = []
         while current < len(chunks):
             if self._length_function(chunks[current]) < self._chunk_size: # if the i-th chunk is less than chunk size, it can be merged
-                if self._length_function("\n".join([current_chunk, chunks[current]])) < self._chunk_size + 100: # check if after merging i-th chunk with the current chunk, the size is still less than chunk size
+                if self._length_function("\n".join([current_chunk, chunks[current]])) < self._chunk_size - self._noise: # check if after merging i-th chunk with the current chunk, the size is still less than chunk size
                     current_chunk = "\n".join([current_chunk, chunks[current]]) # merge i-th chunk with current chunk
                 else:
                     # instead of merging, first complete the current chunk by adding to list of final chunks, then i-th chunk starts the new current chunk
@@ -152,16 +151,10 @@ class PdfTextSplitter(TextSplitter):
             current += 1
         
         
-        print(f"Here are the chunk sizes after chunking/merging regular text: {[self._length_function(x) for x in self.final_chunks]}")
-        print(f"Number of chunks after chunking/merging regular text: {len(self.final_chunks)}")
-
-        print("About to do serial merge now..")
         self.final_final_chunks = [chunk for chunk, chunk_size  in merge_chunks_serially(self.final_chunks, self._chunk_size)]
 
-        print(f"Here are the chunk sizes after final merge: {[self._length_function(x) for x in self.final_final_chunks]}")
         print(f"Number of chunks after final merge: {len(self.final_final_chunks)}")
 
-        print(f"final serial merge done!!!")
 
         return self.final_final_chunks
 
@@ -181,7 +174,7 @@ class PdfTextSplitter(TextSplitter):
             splits = list(item)
         _good_splits = []
         for s in splits:
-            if self._length_function(s) < self._chunk_size:
+            if self._length_function(s) < self._chunk_size - self._noise:
                 _good_splits.append(s)
             else:
                 if _good_splits:
@@ -197,7 +190,7 @@ class PdfTextSplitter(TextSplitter):
         return chunks
         
     def chunk_table(self, table, caption):
-        if self._length_function("\n".join([caption, table])) < self._chunk_size:
+        if self._length_function("\n".join([caption, table])) < self._chunk_size - self._noise:
             return ["\n".join([caption, table])]
         else:
             headers = ""
@@ -209,7 +202,7 @@ class PdfTextSplitter(TextSplitter):
             table_length = self._length_function(current_table)
             for part in splits:
                 if len(part)>0:
-                    if table_length < self._chunk_size: # if current table length is within permissible limit, keep adding rows
+                    if table_length < self._chunk_size - self._noise: # if current table length is within permissible limit, keep adding rows
                         if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
                             current_table += self._table_tags["row_open"]
                         current_table += part
@@ -675,8 +668,6 @@ def chunk_content_helper(
                             separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                             chunk_size=num_tokens, chunk_overlap=token_overlap)
             chunked_content_list = splitter.split_text(doc.content)
-            print(f"Number of chunks: {len(chunked_content_list)}")
-            print(f"Total tokens before chunking: {TOKEN_ESTIMATOR.estimate_tokens(doc.content)}")
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
