@@ -231,7 +231,7 @@ def prepare_body_headers_with_data(request):
                     "type": "AzureCosmosDB",
                     "parameters": {
                         "connectionString": AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING,
-                        "indexName": AZURE_COSMOSDB_MONGO_VCORE__INDEX,
+                        "indexName": AZURE_COSMOSDB_MONGO_VCORE_INDEX,
                         "databaseName": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                         "containerName": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                         "fieldsMapping": {
