@@ -77,7 +77,7 @@ class BlobConversationClient(AbstractConversationClient):
         blob_prefix = f"conversation/{user_id}/"
         blobs = self.container_client.list_blobs(name_starts_with=blob_prefix)
         conversations = [self._download_json(blob.name) for blob in blobs]
-        return conversations
+        return sorted(conversations, key=lambda x: x.get('updatedAt', ''))
 
     def get_conversation(self, user_id: str, conversation_id: str):
         blob_name = f"conversation/{user_id}/{conversation_id}.json"
@@ -111,14 +111,11 @@ class BlobConversationClient(AbstractConversationClient):
         blob_prefix = f"message/{user_id}/{conversation_id}/"
         blobs = self.container_client.list_blobs(name_starts_with=blob_prefix)
         messages = [self._download_json(blob.name) for blob in blobs]
-        sorted_messages = sorted(messages, key=lambda x: x.get('createdAt', ''))
-
-        return sorted_messages
+        return sorted(messages, key=lambda x: x.get('createdAt', ''))
 
     def _upload_json(self, blob_name: str, data: dict):
         blob_client = self.container_client.get_blob_client(blob_name)
-        resp = blob_client.upload_blob(json.dumps(data), overwrite=True)
-        return resp
+        return blob_client.upload_blob(json.dumps(data), overwrite=True)
 
     def _download_json(self, blob_name: str) -> dict:
         blob_client = self.container_client.get_blob_client(blob_name)
