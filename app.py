@@ -21,11 +21,11 @@ REDIRECT_PASS = os.environ.get("REDIRECT_PASS")
 def index():
     return app.send_static_file("index.html")
 
-@app.route("/favicon.ico")
+@app.route(REDIRECT_PASS + "/favicon.ico")
 def favicon():
     return app.send_static_file('favicon.ico')
 
-@app.route("/assets/<path:path>")
+@app.route(REDIRECT_PASS + "/assets/<path:path>")
 def assets(path):
     return send_from_directory("static/assets", path)
 
@@ -338,7 +338,7 @@ def conversation_without_data(request_body):
         return Response(stream_without_data(response, history_metadata), mimetype='text/event-stream')
 
 
-@app.route("/conversation", methods=["GET", "POST"])
+@app.route(REDIRECT_PASS + "/conversation", methods=["GET", "POST"])
 def conversation():
     request_body = request.json
     return conversation_internal(request_body)
@@ -355,7 +355,7 @@ def conversation_internal(request_body):
         return jsonify({"error": str(e)}), 500
 
 ## Conversation History API ## 
-@app.route("/history/generate", methods=["POST"])
+@app.route(REDIRECT_PASS + "/history/generate", methods=["POST"])
 def add_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -400,7 +400,7 @@ def add_conversation():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/history/update", methods=["POST"])
+@app.route(REDIRECT_PASS + "/history/update", methods=["POST"])
 def update_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -445,7 +445,7 @@ def update_conversation():
         logging.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/history/delete", methods=["DELETE"])
+@app.route(REDIRECT_PASS + "/history/delete", methods=["DELETE"])
 def delete_conversation():
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
@@ -468,7 +468,7 @@ def delete_conversation():
         logging.exception("Exception in /history/delete")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/history/list", methods=["GET"])
+@app.route(REDIRECT_PASS + "/history/list", methods=["GET"])
 def list_conversations():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -482,7 +482,7 @@ def list_conversations():
 
     return jsonify(conversations), 200
 
-@app.route("/history/read", methods=["POST"])
+@app.route(REDIRECT_PASS + "/history/read", methods=["POST"])
 def get_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -507,7 +507,7 @@ def get_conversation():
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
-@app.route("/history/rename", methods=["POST"])
+@app.route(REDIRECT_PASS + "/history/rename", methods=["POST"])
 def rename_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
@@ -532,7 +532,7 @@ def rename_conversation():
 
     return jsonify(updated_conversation), 200
 
-@app.route("/history/delete_all", methods=["DELETE"])
+@app.route(REDIRECT_PASS + "/history/delete_all", methods=["DELETE"])
 def delete_all_conversations():
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
@@ -559,7 +559,7 @@ def delete_all_conversations():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route("/history/clear", methods=["POST"])
+@app.route(REDIRECT_PASS + "/history/clear", methods=["POST"])
 def clear_messages():
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
@@ -579,7 +579,7 @@ def clear_messages():
         logging.exception("Exception in /history/clear_messages")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/history/ensure", methods=["GET"])
+@app.route(REDIRECT_PASS + "/history/ensure", methods=["GET"])
 def ensure_cosmos():
     if not AZURE_COSMOSDB_ACCOUNT:
         return jsonify({"error": "CosmosDB is not configured"}), 404
