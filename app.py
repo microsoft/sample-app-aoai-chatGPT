@@ -14,7 +14,8 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="static")
 
-@app.route('/dict')
+REDIRECT_PASS = os.environ.get("REDIRECT_PASS")
+@app.route(REDIRECT_PASS)
 def redirect_func():
     return redirect('/') 
 
