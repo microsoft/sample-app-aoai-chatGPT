@@ -14,6 +14,10 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="static")
 
+@app.route('/dict')
+def redirect_func():
+    return redirect('/') 
+
 # Static Files
 @app.route("/")
 def index():
