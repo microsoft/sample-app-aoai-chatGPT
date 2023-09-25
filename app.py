@@ -4,7 +4,7 @@ import logging
 import requests
 import openai
 from azure.identity import DefaultAzureCredential
-from flask import Flask, Response, request, jsonify, send_from_directory
+from flask import Flask, Response, request, jsonify, send_from_directory, redirect
 from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -13,6 +13,13 @@ from backend.history.cosmosdbservice import CosmosConversationClient
 load_dotenv()
 
 app = Flask(__name__, static_folder="static")
+
+REDIRECT_PASS = os.environ.get("REDIRECT_PASS")
+REDIRECT_HOST = os.environ.get("REDIRECT_HOST")
+REDIRECT_PORT = os.environ.get("REDIRECT_PORT")
+@app.route(REDIRECT_PASS)
+def redirect_func():
+    return redirect('http://' + REDIRECT_HOST + ':' + REDIRECT_PORT) # Googleにリダイレクトする
 
 # Static Files
 @app.route("/")
