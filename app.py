@@ -4,7 +4,7 @@ import logging
 import requests
 import openai
 from azure.identity import DefaultAzureCredential
-from flask import Flask, Response, request, jsonify, send_from_directory, redirect
+from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -15,12 +15,9 @@ load_dotenv()
 app = Flask(__name__, static_folder="static")
 
 REDIRECT_PASS = os.environ.get("REDIRECT_PASS")
-@app.route(REDIRECT_PASS)
-def redirect_func():
-    return redirect('/') 
 
 # Static Files
-@app.route("/")
+@app.route(REDIRECT_PASS)
 def index():
     return app.send_static_file("index.html")
 
