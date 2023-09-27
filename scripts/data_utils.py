@@ -100,63 +100,25 @@ class PdfTextSplitter(TextSplitter):
         end_tag = self._table_tags["table_close"]
         splits = text.split(start_tag)
         
-        chunks = [splits[0]] # the first split is before the first table tag so it is regular text
-        is_table = [0] # to keep track of regular (0) and those containing tables (1)
+        final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
+
         table_caption_prefix = self.extract_caption(splits[0], "prefix")
         for part in splits[1:]:
             table, rest = part.split(end_tag)
             table_caption_suffix = self.extract_caption(rest, "suffix")
             table = start_tag + table + end_tag 
             minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
-            chunks.extend(minitables)
-            is_table.extend([1]*len(minitables))
-            
-            chunks.append(rest)
-            is_table.append(0)
+            final_chunks.extend(minitables)
+
+            if rest!="":
+                final_chunks.extend(self.chunk_rest(rest))
             table_caption_prefix = self.extract_caption(rest, "prefix")
 
-        self.final_chunks = []
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
 
-        
-        current = 0
-        current_chunk = ""
-        is_table_new = []
-        while current < len(chunks):
-            if self._length_function(chunks[current]) < self._chunk_size: # if the i-th chunk is less than chunk size, it can be merged
-                if self._length_function("\n".join([current_chunk, chunks[current]])) < self._chunk_size - self._noise: # check if after merging i-th chunk with the current chunk, the size is still less than chunk size
-                    current_chunk = "\n".join([current_chunk, chunks[current]]) # merge i-th chunk with current chunk
-                else:
-                    # instead of merging, first complete the current chunk by adding to list of final chunks, then i-th chunk starts the new current chunk
-                    if current_chunk!="":
-                        self.final_chunks.append(current_chunk)
-                    current_chunk = chunks[current]
-                    
-                    
-            else:
-                # since i-th chunk is already larger then the chunk size-
-                # if it is a table chunk, live with it and add to the final chunks as we already did the best we could for table chunks
-                # but if it is a regular text chunk, chunk further and merge to create multiple chunks (each of chunk size) to be added to the final chunks
-                if is_table[current]==0:
-                    if current_chunk!="": # if there is an ongoing current which is a table, we don't want to send it for regular text chunking
-                        if start_tag in current_chunk or end_tag in current_chunk:
-                            self.final_chunks.append(current_chunk)
-                            current_chunk = ""
-                    self.final_chunks.extend(self.chunk_rest("\n".join([current_chunk, chunks[current]])))
-                    
-                else:
-                    if current_chunk!="":
-                        self.final_chunks.append(current_chunk)
-                    self.final_chunks.append(chunks[current])
-                current_chunk = ""
-            current += 1
-        
-        
-        self.final_final_chunks = [chunk for chunk, chunk_size  in merge_chunks_serially(self.final_chunks, self._chunk_size)]
-
-        print(f"Number of chunks after final merge: {len(self.final_final_chunks)}")
+        return final_final_chunks
 
 
-        return self.final_final_chunks
 
     def chunk_rest(self, item):
         separator = self._separators[-1]
@@ -186,7 +148,6 @@ class PdfTextSplitter(TextSplitter):
         if _good_splits:
             merged_text = self._merge_splits(_good_splits, separator)
             chunks.extend(merged_text)
-
         return chunks
         
     def chunk_table(self, table, caption):
@@ -202,7 +163,7 @@ class PdfTextSplitter(TextSplitter):
             table_length = self._length_function(current_table)
             for part in splits:
                 if len(part)>0:
-                    if table_length < self._chunk_size - self._noise: # if current table length is within permissible limit, keep adding rows
+                    if table_length < self._chunk_size: # if current table length is within permissible limit, keep adding rows
                         if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
                             current_table += self._table_tags["row_open"]
                         current_table += part
@@ -222,7 +183,6 @@ class PdfTextSplitter(TextSplitter):
             
             # TO DO: fix the case where the last mini table only contain tags
             tables.append(current_table)
-            print(f"Number of mini table chunks from one table chunk: {len(tables)}")
             
             return tables
 
