@@ -13,7 +13,7 @@ fi
 echo ""
 echo "Launching streamlit"
 echo ""
-streamlit run chat.py --server.port 8080
+streamlit run chat.py --server.port 8000
 if [ $? -ne 0 ]; then
     echo "Failed to launch streamlit"
     exit $?
