@@ -1,0 +1,26 @@
+{
+  "questionnaires": [
+    {
+      "id": 0,
+      "name": "base_info",
+      "origin": "Carnegie",
+      "status": "Done",
+      "sortOrder": 1
+    },
+    {
+      "id": 1,
+      "name": "kyc",
+      "origin": "Trapets",
+      "reference": "ExternalPhysicalDepot",
+      "status": "Done",
+      "sortOrder": 2
+    },
+    {
+      "id": 2,
+      "name": "behpap",
+      "origin": "ClientInformation",
+      "status": "Done",
+      "sortOrder": 3
+    }
+  ]
+}

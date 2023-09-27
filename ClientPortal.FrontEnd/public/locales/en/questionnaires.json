@@ -1,0 +1,86 @@
+{
+  "baseInfo": {
+    "page1": {
+      "personalData": "Personal data",
+      "nameAndAddress": "Name and National Register address",
+      "populationRegisterText": "We have obtained this information from the population register. Changes are registered with the Swedish Tax Agency.",
+      "name": "Name",
+      "ssn": "Social security number",
+      "address": "Address",
+      "postalAddress": "Postal address",
+      "preferredAddress": "Preferred address",
+      "registeredAddressText": "This is the address you registered as your preferred for shipping. Contact your advisor if you want to change this.",
+      "doYouWantToKnowMore": "Do you want to know more about how Carnegie processes your personal data:",
+      "privacyPolicy": "Carnegie's Privacy Policy"
+    },
+
+    "page2": {
+      "citizenshipAndTaxResidence": "Citizenship and tax residence",
+      "whichCitizenships": "Which citizenship(s) do you have?",
+      "identificationType": "Identity number type",
+      "inputIdentificationFor": "Enter identity number for {{country}}",
+      "inputTinFor": "Enter TIN (tax identification number) for {{country}}",
+      "whichTaxResidence": "What is your main tax residence?",
+      "whichTaxResidenceMoreInfoTitle": "Tax residence and TIN",
+      "usaSpecific": "Do you have tax residence, citizenship or permanent work permit in the USA?",
+      "usaSpecificMoreInfoTitle": "FATCA and USA",
+      "usaSpecificTin": "Enter the TIN (Tax Identification Number) for the United States",
+      "moreTaxResidences": "Do you have additional tax domiciles?",
+      "pleaseAddMoreTaxResidences": "Please indicate your additional tax residences",
+      "confirmationText": "By continuing, you certify on your honor and conscience that the above information is true and complete and undertake to notify and update if any of the information should change. An update must be available to Carnegie no later than 30 days after the information has been changed."
+    }
+  },
+
+  "Carnegie": {
+    "base_info": {
+      "title": "Base Information",
+      "label": "Citizenship and tax residency"
+    },
+    "behaviourAnalysis": {
+      "title": "Behaviour Analysis",
+      "label": "Questions about my needs"
+    },
+    "kyc": {
+      "title": "Customer Knowledge",
+      "label": "Questions about me as a customer"
+    },
+    "account": {
+      "title": "Agreement and account information",
+      "label": "Account agreement for new customer"
+    }
+  },
+
+  "identificationTypes": {
+    "NationalIdConcat": "CONCAT",
+    "NationalIdPassport": "Passport Number",
+    "NationalIdRegNo": "National ID-number",
+    "NationalRegNo": "National ID-number"
+  },
+
+  "Trapets": {
+    "ExternalPhysicalDepot": {
+      "title": "Customer Knowledge",
+      "label": "Questions about me as a customer"
+    },
+
+    "test form 1": {
+      "title": "Customer Knowledge",
+      "label": "Questions about me as a customer"
+    }
+  },
+
+  "ClientInformation": {
+    "BEH": {
+      "title": "Requirements Analysis",
+      "label": "In-depth questions about me as a customer"
+    },
+    "PAP": {
+      "title": "Requirements Analysis",
+      "label": "In-depth questions about me as a customer"
+    },
+    "behpap": {
+      "title": "Requirements Analysis",
+      "label": "In-depth questions about me as a customer"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "#AddMore#": "Lägg till",
+  "#Approve#": "Godkänn",
+  "#Close#": "Stäng",
+  "#DefaultNextPage#": "Nästa",
+  "#DefaultPreviousPage#": "Föregående",
+  "#SignAgreement#": "Signera avtal",
+  "#No#": "Nej",
+  "#Yes#": "Ja",
+
+  "finalPage": {
+    "thankYou": "Tack för dina svar",
+    "checkingAnswers": "Vi går nu igenom dina uppgifter",
+    "forwardingSoon": "Du skickas vidare inom kort",
+    "forwardManually": "Klicka på nästa formulär nedan för att fortsätta",
+    "returnToDashboard": "Tillbaka till startsidan"
+  },
+
+  "helpDrawer": {
+    "title": "Mer info"
+  }
+}

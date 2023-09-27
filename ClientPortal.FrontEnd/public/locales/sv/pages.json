@@ -1,0 +1,68 @@
+{
+  "accountPage": {
+    "heading": "Kontoinformation"
+  },
+  "agreementSignedPage": {
+    "heading": "Välkommen som kund hos Carnegie",
+    "successMessage": "Ditt depåkonto är nu öppnat och du kan nu använda våra tjänster och logga in i onlinebanken och börja spara",
+    "pbOnlineButton": "Till PB online"
+  },
+  "baseInfoPage": {
+    "heading": "Grundinformation"
+  },
+
+  "forbiddenPage": {
+    "heading1": "Hoppsan!",
+    "heading2": "Åtkomst nekad",
+    "paragraph1": "Du saknar behörighet för att komma åt den här sidan",
+    "paragraph2": "Om du anser att detta är felaktigt, hör av dig direkt till din kontaktperson eller följ länken nedan till vår kundtjänst så hjälper vi dig.",
+    "button": "Till kundtjänst"
+  },
+
+  "loginPage": {
+    "title": "Välkommen till Carnegie",
+    "subHeading": "Tack för att du håller din kundinformation uppdaterad",
+    "step1": "Identifiera dig med BankID",
+    "step2": "Kontrollera dina kontaktuppgifter",
+    "step3": "Svara på frågor om dig och din finansiella situation",
+    "cta": "Logga in med BankID"
+  },
+
+  "onboardingPage": {
+    "title": "Välkommen till Carnegie",
+    "subHeading": "Här kan du bli kund hos oss och få tillgång till våra digitala tjänster",
+    "step1": "Identifiera dig enkelt med BankID",
+    "step2": "Fyll i dina kontaktuppgifter",
+    "step3": "Svara på frågor om dig och din finansiella situation",
+    "step4": "Signera avtal direkt och börja spara",
+    "cta": "Identifiera dig med BankID"
+  },
+
+  "notFoundPage": {
+    "heading1": "Oj då!",
+    "heading2": "Denna sida finns inte",
+    "paragraph1": "Sidan du försöker nå existerar inte",
+    "paragraph2": "Gå tillbaka till startsidan och försök igen",
+    "button": "Till startsidan"
+  },
+
+  "pandaExitPage": {
+    "heading": "Avslutat",
+    "paragraph": "Du kan nu stänga sidan."
+  },
+
+  "trapetsQuestionnairePage": {
+    "default": {
+      "heading": "Frågeformulär",
+      "paragraph": ""
+    },
+    "ExternalPhysicalDepot": {
+      "heading": "Kundkännedom",
+      "paragraph": "Här kan du se svaren på kundkännedomen"
+    },
+    "InternalApprovalAlias": {
+      "heading": "AML Office utlåtande",
+      "paragraph": "Nedan kan du se AML-utlåtandet"
+    }
+  }
+}

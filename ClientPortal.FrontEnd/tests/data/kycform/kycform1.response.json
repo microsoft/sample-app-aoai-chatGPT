@@ -1,0 +1,131 @@
+{
+  "status": "OK",
+  "pageDefinition": {
+    "rootNode": {
+      "nodeType": "PageRoot",
+      "options": [],
+      "files": [],
+      "allowAddRows": false,
+      "subNodes": [
+        {
+          "nodeType": "H3",
+          "id": "63a96bc4-f10d-4e8a-9cf0-f742157557a0",
+          "text": "Syftet med relationen till Carnegie",
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "RadioButtons",
+          "questionId": "FYS Purposeand Nature 4.1",
+          "id": "RllTIFB1cnBvc2VhbmQgTmF0dXJlIDQuMQ==",
+          "value": "",
+          "text": "I vilket syfte har du engagemang hos Carnegie? (flera val kan göras)",
+          "options": [
+            {
+              "id": "1",
+              "text": "Kortsiktigt sparande (mindre än 5 år)"
+            },
+            {
+              "id": "2",
+              "text": "Långsiktigt sparande (mer än 5 år)"
+            },
+            {
+              "id": "3",
+              "text": "Sparande till pension"
+            },
+            {
+              "id": "4",
+              "text": "Enstaka transaktioner med Carnegie"
+            },
+            {
+              "id": "5",
+              "text": "Annat"
+            }
+          ],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "Div",
+          "id": "21c6336b-af78-4689-bc4a-56489dc7bbe5",
+          "condition": {
+            "valueType": "Option",
+            "lhs": "RllTIFB1cnBvc2VhbmQgTmF0dXJlIDQuMQ==",
+            "rhs": "5",
+            "op": "Equals",
+            "statements": [
+              {
+                "valueType": "Text",
+                "op": "Equals",
+                "statements": [],
+                "returnValue": "True"
+              }
+            ]
+          },
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [
+            {
+              "nodeType": "TextArea",
+              "questionId": "FYS Purpose and Nature 4.2",
+              "id": "RllTIFB1cnBvc2UgYW5kIE5hdHVyZSA0LjI=",
+              "text": "Vänligen specificera ditt syfte",
+              "options": [],
+              "files": [],
+              "allowAddRows": false,
+              "subNodes": [],
+              "readOnly": false
+            }
+          ],
+          "readOnly": false
+        },
+        {
+          "nodeType": "RadioButtons",
+          "questionId": "FYS Purpose and Nature 4.4",
+          "id": "RllTIFB1cnBvc2UgYW5kIE5hdHVyZSA0LjQ=",
+          "value": "",
+          "text": "Kommmer någon annan än du ha tillgång till din/dina depåer?",
+          "options": [
+            {
+              "id": "1",
+              "text": "Ja, fullmaktshavare"
+            },
+            {
+              "id": "2",
+              "text": "Ja, överförmyndare/god man"
+            },
+            {
+              "id": "3",
+              "text": "Nej"
+            }
+          ],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        }
+      ],
+      "readOnly": false
+    },
+    "navigation": {
+      "next": {
+        "enabled": true,
+        "text": "#DefaultNextPage#"
+      },
+      "previous": {
+        "enabled": true,
+        "text": "#DefaultPreviousPage#"
+      },
+      "currentPage": 2,
+      "totalPages": 7
+    },
+    "reloadInterval": 0
+  },
+  "ruleViolations": []
+}

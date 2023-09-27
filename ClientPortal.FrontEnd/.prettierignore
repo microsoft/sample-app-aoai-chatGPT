@@ -1,0 +1,8 @@
+.azuredevops
+.cache
+.vscode
+
+build
+coverage
+dist
+node_modules

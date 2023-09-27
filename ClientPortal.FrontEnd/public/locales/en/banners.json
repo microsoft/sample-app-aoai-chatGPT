@@ -1,0 +1,66 @@
+{
+  "allFormsDoneBanner": {
+    "customer": {
+      "title": "Thanks for updated customer information",
+      "content": "You can now close the page and log in to our online services"
+    },
+    "prospect": {
+      "title": "Thank you for your information",
+      "content": "We will be in touch shortly"
+    }
+  },
+
+  "contactDetailsRequiredBanner": {
+    "title": "Contact details missing",
+    "content": "Please fill in your contact details before proceeding"
+  },
+
+  "contactUsToChangeBanner": {
+    "title": "Get in touch to change",
+    "content": "Get in touch with your personal contact if any of the information needs to be changed"
+  },
+
+  "customerBanner": {
+    "title": "You are currently representing {{name}}"
+  },
+
+  "errorBanner": {
+    "title": "An error occurred",
+    "description": "Please try again later or contact Carnegie."
+  },
+
+  "formsCreatingBanner": {
+    "title": "Form Creation in Progress",
+    "content": "We are currently generating the necessary forms for you. Please stand by and complete the remaining forms below once they appear."
+  },
+
+  "formIncompleteBanner": {
+    "title": "The form is missing valid information",
+    "content": "Review your answers below and try again"
+  },
+
+  "formsNotDoneBanner": {
+    "title": "There is information left to submit",
+    "content": "Please complete the remaining forms below"
+  },
+
+  "formsNotLoadedBanner": {
+    "title": "Forms could not be loaded",
+    "content": "Try reloading the page. Contact Carnegie if the problem persists."
+  },
+
+  "manualHandlingRequiredBanner": {
+    "title": "Manual handling is required",
+    "content": "Please contact your personal contact"
+  },
+
+  "userAutomaticallyLoggedOutBanner": {
+    "title": "You've been automatically signed out",
+    "content": "Please sign in again to continue."
+  },
+
+  "userNotLoggedInBanner": {
+    "title": "You're not signed in",
+    "content": "Please sign in to continue."
+  }
+}

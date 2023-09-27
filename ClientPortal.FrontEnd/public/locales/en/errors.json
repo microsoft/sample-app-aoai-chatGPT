@@ -1,0 +1,40 @@
+{
+  "statusCode": {
+    "default": {
+      "title": "An Error Occurred",
+      "description": "The website experienced a problem. Please try again later or contact Carnegie."
+    },
+    "400": {
+      "title": "Bad Request",
+      "description": "The website couldn't understand your request. Make sure you typed everything correctly and try again."
+    },
+    "401": {
+      "title": "Unauthorized",
+      "description": "You need to login to access this part of the website."
+    },
+    "403": {
+      "title": "Forbidden",
+      "description": "You don't have permission to access this part of the website. Please contact Carnegie if you think this is a mistake."
+    },
+    "404": {
+      "title": "Not found",
+      "description": "The requested page is currently unavailable."
+    },
+    "500": {
+      "title": "Internal Server Error",
+      "description": "The website is experiencing a problem, and it isn't your fault. Please try again later or contact Carnegie."
+    },
+    "503": {
+      "title": "Service Unavailable",
+      "description": "The website is currently too busy or under maintenance. Please try again later."
+    },
+    "504": {
+      "title": "Gateway Timeout",
+      "description": "The website is taking too long to respond. This could be due to high traffic or technical issues. Please try again later."
+    }
+  },
+
+  "trapets": {
+    "#RequiredField_ValidationMessage#": "This field is required"
+  }
+}

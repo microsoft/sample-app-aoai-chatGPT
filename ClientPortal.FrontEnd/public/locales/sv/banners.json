@@ -1,0 +1,66 @@
+{
+  "allFormsDoneBanner": {
+    "customer": {
+      "title": "Tack för uppdaterade kunduppgifter",
+      "content": "Du kan nu stänga ner sidan och logga in i våra onlinetjänster"
+    },
+    "prospect": {
+      "title": "Tack för dina uppgifter",
+      "content": "Vi kommer att höra av oss inom kort"
+    }
+  },
+
+  "contactDetailsRequiredBanner": {
+    "title": "Tack för att du tar dig tid att svara på frågor",
+    "content": "Vänligen fyll i dina kontaktuppgifter och följ sedan stegen nedan"
+  },
+
+  "contactUsToChangeBanner": {
+    "title": "Hör av dig för att ändra",
+    "content": "Hör av dig till din personlige kontakt om någon av uppgifterna behöver ändras"
+  },
+
+  "customerBanner": {
+    "title": "Du företräder {{name}} för tillfället"
+  },
+
+  "errorBanner": {
+    "title": "Ett fel uppstod",
+    "description": "Försök igen senare eller kontakta Carnegie om problemet kvarstår."
+  },
+
+  "formsCreatingBanner": {
+    "title": "Formulärsskapande pågår",
+    "content": "Vänligen vänta, vi genererar för närvarande dina formulär"
+  },
+
+  "formIncompleteBanner": {
+    "title": "Formuläret saknar gilitiga uppgifter",
+    "content": "Se över dina svar nedan och försök igen"
+  },
+
+  "formsNotDoneBanner": {
+    "title": "Det finns uppgifter kvar att lämna",
+    "content": "Vänligen fyll i resterande formulär nedan"
+  },
+
+  "formsNotLoadedBanner": {
+    "title": "Formulär kunde inte laddas",
+    "content": "Försök att ladda om sidan. Kontakta Carnegie om problemet kvarstår."
+  },
+
+  "manualHandlingRequiredBanner": {
+    "title": "Manuell hantering krävs",
+    "content": "Kontakta din personliga kontakt"
+  },
+
+  "userAutomaticallyLoggedOutBanner": {
+    "title": "Du har loggats ut automatiskt",
+    "content": "Logga in igen för att fortsätta."
+  },
+
+  "userNotLoggedInBanner": {
+    "title": "Du är inte inloggad",
+    "content": "Logga in för att fortsätta."
+  }
+}

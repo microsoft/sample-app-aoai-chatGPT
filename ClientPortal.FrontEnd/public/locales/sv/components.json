@@ -1,0 +1,63 @@
+{
+  "accountInfo": {
+    "chooseAccountHeading": "Välj konto att öppna hos Carnegie",
+    "depotAccount": "Depåkonto",
+    "chooseAccountText": "Depåkonto öppnas alltid upp automatiskt. Du kan när du blivit kund hos oss välja att lägga till fler konton som inte finns med i denna vy.",
+    "withdrawalAccountHeading": "Välj bankkonto för uttag",
+    "addWithdrawalAccount": "Lägg till förvalt bankkonto",
+    "addWithdrawalAccountPlaceholder": "Skriv in kontonummer inkl. clearingnr",
+    "withdrawalAccountText": "Ditt förvalda bankkonto behövs för att göra uttag från dina konton hos Carnegie. Detta kan du ändra i efterhand.",
+    "chooseBank": "Välj bank",
+    "bankRequiredText": "Bank måste väljas",
+    "accountRequiredText": "Kontonummer måste fyllas i"
+  },
+
+  "accountPolicy": {
+    "agreementSignedTitle": "Avtalet har signerats",
+    "agreementSignedText": "Du är nu klar med registreringen och ditt depåkonto har skapats upp. Du kan logga in i internetbanken genom att ",
+    "clickHere": "klicka här >>",
+    "pendingAgreementTitle": "Pågående signering",
+    "pendingAgreementText": "Det finns en pågående avtalssignering, slutför signeringen genom att ",
+    "depositHeader": "Grundläggande information om skydd för insättningar",
+    "depositText": "Enligt beslut av riksgälden omfattas din depå/konto av den statliga insättningsgarantin som Carnegie enligt lagen om insättningsgarantin är skyldig att årligen informera dig om.",
+    "depositLink": "Information om skydd för insättningar",
+    "acceptDepositLabel": "Jag bekräftar härmed att jag har tagit del av information om skydd för insättningar",
+    "priceListHeader": "Prislista för privattjänsten",
+    "priceListText": "Denna prislista gäller för dig som kund",
+    "priceListLink": "Prisblad Privattjänst",
+    "scriveErrorMessage": "Avtalet signerades inte korrekt, vänligen försök igen.",
+    "scriveWindowLoadingMessage": "Laddar Scrive..."
+  },
+
+  "contactDetailsCard": {
+    "title": "Mina kontaktuppgifter"
+  },
+
+  "contactDetailsDrawer": {
+    "title": "Ändra kontaktuppgifter",
+    "email": "E-mail",
+    "phoneNumber": "Mobilnummer",
+    "phoneHelperText": "Ange ditt primära mobilnummer",
+    "save": "Spara"
+  },
+
+  "errorBoundary": {
+    "heading": "Något gick fel",
+    "title": "Ett oväntat fel uppstod",
+    "reloadButton": "Ladda om sidan"
+  },
+
+  "formList": {
+    "heading": "Mina formulär",
+    "formInitialisingText": "Ett eller flera formulär initieras. Om detta tar för lång tid, vänligen kontakta Carnegie.",
+    "manualHandlingRequiredText": "Ett eller flera formulär kunde inte skapas med anledning av de uppgifter du angivit i din grundinformation",
+    "listCounter": "{{done}} av {{total}} klart",
+    "listCounterAllDone": "Alla klara"
+  },
+
+  "loginFooter": {
+    "title": "Vill du veta mer om hur Carnegie behandlar dina personuppgifter:",
+    "policy": "Carnegies Policy för personuppgifter",
+    "helpWithBankId": "Hjälp med mobilt BankID"
+  }
+}

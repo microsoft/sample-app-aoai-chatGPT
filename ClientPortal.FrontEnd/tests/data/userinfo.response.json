@@ -1,0 +1,11 @@
+{
+  "id": 10001,
+  "firstName": "Delidas",
+  "surName": "Habanero",
+  "name": "Delidas Habanero",
+  "isEmployee": false,
+  "isCustomer": false,
+  "isProspect": false,
+  "canSelfInitiate": false,
+  "hasDashboardAccess": false
+}

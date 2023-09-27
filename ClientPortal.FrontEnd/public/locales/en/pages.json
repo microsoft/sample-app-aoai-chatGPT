@@ -1,0 +1,68 @@
+{
+  "accountPage": {
+    "heading": "Account information"
+  },
+  "agreementSignedPage": {
+    "heading": "Welcome as customer at Carnegie",
+    "successMessage": "Your deposit account is now opened and you can now start to use our services and log into the online bank and start saving",
+    "pbOnlineButton": "To PB online"
+  },
+  "baseInfoPage": {
+    "heading": "Base information"
+  },
+
+  "forbiddenPage": {
+    "heading1": "Oops!",
+    "heading2": "Access denied",
+    "paragraph1": "You do not have permission to access this page",
+    "paragraph2": "If you believe this is incorrect, please contact your personal contact directly or follow the link below to our customer service and we will help you.",
+    "button": "To customer support"
+  },
+
+  "loginPage": {
+    "title": "Welcome to Carnegie",
+    "subHeading": "Thank you for keeping your information up to date. Here's how:",
+    "step1": "Identify with BankID",
+    "step2": "Verify your contact information",
+    "step3": "Answer some questions about yourself and your financial situation",
+    "cta": "Login with BankID"
+  },
+
+  "onboardingPage": {
+    "title": "Welcome to Carnegie",
+    "subHeading": "This is where you become a customer and gain access to our digital services",
+    "step1": "Identify with BankID",
+    "step2": "Fill in your contact details",
+    "step3": "Answer a few questions about yourself and your savings",
+    "step4": "Sign agreements and start saving",
+    "cta": "Identify Yourself With BankID"
+  },
+
+  "notFoundPage": {
+    "heading1": "Oops!",
+    "heading2": "This page does not exist",
+    "paragraph1": "The page you are trying to reach does not exist",
+    "paragraph2": "Go back to the start page and try again",
+    "button": "To the start page"
+  },
+
+  "pandaExitPage": {
+    "heading": "Exited",
+    "paragraph": "You can now close the page."
+  },
+
+  "trapetsQuestionnairePage": {
+    "default": {
+      "heading": "Questionnaire",
+      "paragraph": ""
+    },
+    "ExternalPhysicalDepot": {
+      "heading": "Customer knowledge",
+      "paragraph": "Here you can see the customer knowledge answers"
+    },
+    "InternalApprovalAlias": {
+      "heading": "AML Office assessment",
+      "paragraph": "AML Office assessment of customer"
+    }
+  }
+}

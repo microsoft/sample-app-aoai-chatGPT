@@ -1,0 +1,22 @@
+{
+  "languages": {
+    "en": "English",
+    "sv": "Svenska"
+  },
+
+  "nouns": {
+    "back": "Back",
+    "language": "Language",
+    "loading": "Loading",
+    "login": "Login",
+    "logout": "Logout",
+    "missing": "Missing",
+    "user": "User",
+    "welcome": "Welcome"
+  },
+
+  "verbs": {
+    "login": "Login",
+    "logout": "Logout"
+  }
+}

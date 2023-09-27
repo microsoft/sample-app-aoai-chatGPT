@@ -1,0 +1,22 @@
+{
+  "#AddMore#": "Add more",
+  "#Approve#": "Approve",
+  "#Close#": "Close",
+  "#DefaultNextPage#": "Next",
+  "#DefaultPreviousPage#": "Previous",
+  "#SignAgreement#": "Sign agreement",
+  "#No#": "No",
+  "#Yes#": "Yes",
+
+  "finalPage": {
+    "thankYou": "Thank you for your answers",
+    "checkingAnswers": "We are now going through your information",
+    "forwardingSoon": "You will be forwarded shortly",
+    "forwardManually": "Click on the next form below to continue",
+    "returnToDashboard": "Return to dashboard"
+  },
+
+  "helpDrawer": {
+    "title": "More info"
+  }
+}

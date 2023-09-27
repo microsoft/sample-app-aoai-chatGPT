@@ -1,0 +1,86 @@
+{
+  "baseInfo": {
+    "page1": {
+      "personalData": "Personuppgifter",
+      "nameAndAddress": "Namn och Folkbokföringsadress",
+      "populationRegisterText": "Dessa uppgifter har vi inhämtat från folkbokföringsregistret. Vid behov av ändring vänligen kontakta Skatteverket.",
+      "name": "Namn",
+      "ssn": "Personnummer",
+      "address": "Adress",
+      "postalAddress": "Postadress",
+      "preferredAddress": "Föredragen adress",
+      "registeredAddressText": "Denna adress har vi registrerat för utskick. Kontakta Carnegie vid behov av ändring.",
+      "doYouWantToKnowMore": "Vill du veta mer om hur Carnegie behandlar dina personliga uppgifter:",
+      "privacyPolicy": "Carnegies policy för personuppgifter"
+    },
+
+    "page2": {
+      "citizenshipAndTaxResidence": "Medborgarskap och skattehemvist",
+      "whichCitizenships": "Vilket/vilka medborgarskap har du?",
+      "identificationType": "Identitetsnummertyp",
+      "inputIdentificationFor": "Ange identitetsnummer för {{country}}",
+      "inputTinFor": "Ange TIN-nummer (skatteregisteringsnummer) för {{country}}",
+      "whichTaxResidence": "Vilken är din huvudsakliga skattehemvist?",
+      "whichTaxResidenceMoreInfoTitle": "Skatterättslig hemvist och TIN",
+      "usaSpecific": "Har du skatterättslig hemvist, medborgarskap eller permanent arbetstillstånd i USA?",
+      "usaSpecificMoreInfoTitle": "FATCA och USA",
+      "usaSpecificTin": "Ange TIN-nummer (skatteregisteringsnummer) för USA",
+      "moreTaxResidences": "Har du ytterligare skattehemvister?",
+      "pleaseAddMoreTaxResidences": "Vänligen ange dina ytterligare skattehemvister",
+      "confirmationText": "Genom att fortsätta intygar du på heder och samvete att ovan uppgifter är riktiga och fullständiga samt förbinder att underrätta och uppdatera om någon av uppgifterna skulle ändras. Ett uppdaterande ska vara Carnegie tillhanda senast inom 30 dagar efter att uppgiften ändrats."
+    }
+  },
+
+  "Carnegie": {
+    "base_info": {
+      "title": "Grundinformation",
+      "label": "Medborgarskap och skattehemvist"
+    },
+    "behaviourAnalysis": {
+      "title": "Behovsanalys",
+      "label": "Frågor kring mina behov"
+    },
+    "kyc": {
+      "title": "Kundkännedom",
+      "label": "Frågor om dig som kund"
+    },
+    "account": {
+      "title": "Avtal och kontoinformation",
+      "label": "Kontoavtal för nykund"
+    }
+  },
+
+  "identificationTypes": {
+    "NationalIdConcat": "CONCAT",
+    "NationalIdPassport": "Passnummer",
+    "NationalIdRegNo": "Nationellt ID-nummer",
+    "NationalRegNo": "Nationellt ID-nummer"
+  },
+
+  "Trapets": {
+    "ExternalPhysicalDepot": {
+      "title": "Kundkännedom",
+      "label": "Frågor om dig som kund"
+    },
+
+    "test form 1": {
+      "title": "Kundkännedom",
+      "label": "Frågor om dig som kund"
+    }
+  },
+
+  "ClientInformation": {
+    "BEH": {
+      "title": "Behovsanalys",
+      "label": "Frågor om dina behov och din finansiella situation"
+    },
+    "PAP": {
+      "title": "Passandeprövning",
+      "label": "Frågor om dina behov och din finansiella situation"
+    },
+    "behpap": {
+      "title": "Behovsanalys/Passandeprövning",
+      "label": "Frågor om dina behov och din finansiella situation"
+    }
+  }
+}

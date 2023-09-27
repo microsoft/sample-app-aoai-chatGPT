@@ -1,0 +1,44 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsx-a11y/recommended",
+    "prettier"
+  ],
+  "ignorePatterns": [
+    "src/@carnegie/duplo/**/*",
+    "src/test/**/*.json",
+    "src/**/*.screenshot.*",
+    "src/**/*.test.*"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "@carnegie/duplo"],
+  "rules": {
+    "@carnegie/duplo/deprecated-components": 1,
+    "@carnegie/duplo/unnecessary-css-props": 2,
+    "@typescript-eslint/ban-ts-comment": 0,
+    "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/no-unused-vars": [
+      2,
+      { "argsIgnorePattern": "^_", "ignoreRestSiblings": true }
+    ],
+    "no-fallthrough": 0,
+    "no-warning-comments": 1,
+    "react-hooks/exhaustive-deps": 0,
+    "react/no-unknown-property": 0,
+    "react/prop-types": 0,
+    "react/react-in-jsx-scope": 0
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

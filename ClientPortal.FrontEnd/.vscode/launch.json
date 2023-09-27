@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+        "name": "Start ClientPortal",
+        "configurations": ["Firefox debug", "Backend debug"],
+        "stopAll": true
+    }
+],
+  "configurations": [
+    //{
+    //  "type": "edge",
+    //  "request": "launch",
+    //  "name": "localhost (Edge)",
+    //  "url": "http://localhost:3000",
+    //  "webRoot": "${workspaceFolder}"
+    //},
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "localhost (Chrome)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Firefox debug",
+      "preLaunchTask": "npm dev:vs",
+      "type": "firefox",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+   },
+   {
+    // Use IntelliSense to find out which attributes exist for C# debugging
+    // Use hover for the description of the existing attributes
+    // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+    "name": "Backend debug",
+    "type": "coreclr",
+    "request": "launch",
+    "preLaunchTask": "dotnet build",
+    // If you have changed target frameworks, make sure to update the program path.
+    "program": "${workspaceFolder}/../ClientPortal.API/bin/Debug/net7.0/ClientPortal.API.dll",
+    "args": [],
+    "cwd": "${workspaceFolder}/../ClientPortal.API",
+    "stopAtEntry": false,
+    // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
+    "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bBus started: rabbitmq://cluster/",
+        "uriFormat": "http://localhost:5137/swagger"
+    },
+    "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+    },
+    "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+    },
+},
+  ]
+}

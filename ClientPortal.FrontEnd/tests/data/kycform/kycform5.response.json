@@ -1,0 +1,38 @@
+{
+  "status": "OK",
+  "pageDefinition": {
+    "rootNode": {
+      "nodeType": "PageRoot",
+      "options": [],
+      "files": [],
+      "allowAddRows": false,
+      "subNodes": [
+        {
+          "nodeType": "H5",
+          "id": "6cf239c4-0264-4893-a6bb-2147e069d438",
+          "text": "Vill du gå tillbaka och se över dina svar? vänligen gör det nu, annars tryck fortsätt.  ",
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        }
+      ],
+      "readOnly": false
+    },
+    "navigation": {
+      "next": {
+        "enabled": true,
+        "text": "#DefaultNextPage#"
+      },
+      "previous": {
+        "enabled": true,
+        "text": "#DefaultPreviousPage#"
+      },
+      "currentPage": 6,
+      "totalPages": 7
+    },
+    "reloadInterval": 0
+  },
+  "ruleViolations": []
+}

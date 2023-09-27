@@ -1,0 +1,2 @@
+registry=https://pkgs.dev.azure.com/carnegieinvestmentbank/_packaging/Carnegie/npm/registry/
+always-auth=true

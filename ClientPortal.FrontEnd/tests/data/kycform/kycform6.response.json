@@ -1,0 +1,25 @@
+{
+  "status": "OK",
+  "pageDefinition": {
+    "rootNode": {
+      "nodeType": "PageRoot",
+      "options": [],
+      "files": [],
+      "allowAddRows": false,
+      "subNodes": [],
+      "readOnly": false
+    },
+    "navigation": {
+      "next": {
+        "enabled": false,
+        "text": "#DefaultNextPage#"
+      },
+      "previous": {
+        "enabled": false,
+        "text": "#DefaultPreviousPage#"
+      }
+    },
+    "reloadInterval": 0
+  },
+  "ruleViolations": []
+}

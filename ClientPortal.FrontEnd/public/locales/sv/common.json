@@ -1,0 +1,22 @@
+{
+  "languages": {
+    "en": "English",
+    "sv": "Svenska"
+  },
+
+  "nouns": {
+    "back": "Tillbaka",
+    "language": "Språk",
+    "loading": "Laddar",
+    "login": "Login",
+    "logout": "Logout",
+    "missing": "Saknas",
+    "user": "Användare",
+    "welcome": "Välkommen"
+  },
+
+  "verbs": {
+    "login": "Logga in",
+    "logout": "Logga ut"
+  }
+}

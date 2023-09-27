@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/0.5.85-alpha">
+	<PropertyGroup>
+		<ShouldRunNpmInstall>false</ShouldRunNpmInstall>
+		<StartupCommand>set BROWSER=none&amp;&amp;yarn dev:vs</StartupCommand>
+	<FrameworkPathOverride>/snap/dotnet-sdk/current/shared/Microsoft.NETCore.App/7.0.5/mscorlib.dll</FrameworkPathOverride> 
+    <!--<JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Jest</JavaScriptTestFramework>-->
+    <!-- Command to run on project build -->
+    <BuildCommand></BuildCommand>
+    <!-- Command to create an optimized build of the project that's ready for publishing -->
+    <ProductionBuildCommand></ProductionBuildCommand>
+    <!-- Folder where production build objects will be placed -->
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
+  </PropertyGroup>
+</Project>
+

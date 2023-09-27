@@ -1,0 +1,63 @@
+{
+  "accountInfo": {
+    "chooseAccountHeading": "Choose account to open at Carnegie",
+    "depotAccount": "Depot account",
+    "chooseAccountText": "Depot account is always opened automatically. Once you are a customer at Carnegie you can open other account types that are not present in this view.",
+    "withdrawalAccountHeading": "Choose account for withdrawal",
+    "addWithdrawalAccount": "Add preselected account",
+    "addWithdrawalAccountPlaceholder": "Type in the account number with clearing number",
+    "withdrawalAccountText": "Your preselected account is needed to make a withdrawal from your Carnegie accounts. You can change this at any time.",
+    "chooseBank": "Choose bank",
+    "bankRequiredText": "A bank must be selected",
+    "accountRequiredText": "An account number must be entered"
+  },
+
+  "accountPolicy": {
+    "agreementSignedTitle": "The agreement has been signed",
+    "agreementSignedText": "The registration is now complete and your deposit account has been created. You can now log in to your account by ",
+    "clickHere": "clicking here >>",
+    "pendingAgreementTitle": "Pending agreement",
+    "pendingAgreementText": "An agreement signing is pending, complete the signing by ",
+    "depositHeader": "Basic information about protection of deposits",
+    "depositText": "According to decision by the national debt your account is covered by the state deposit guarantee that Carnegie according to law is oblicated to inform you about yearly.",
+    "depositLink": "Information about protection of deposits",
+    "acceptDepositLabel": "I confirm that i have read the information about protected deposits",
+    "priceListHeader": "Price list for the private service",
+    "priceListText": "This price list is valid for you as a customer",
+    "priceListLink": "Price sheet private service",
+    "scriveErrorMessage": "The agreement could not be signed, please try again.",
+    "scriveWindowLoadingMessage": "Loading Scrive..."
+  },
+
+  "contactDetailsCard": {
+    "title": "Contact Details"
+  },
+
+  "contactDetailsDrawer": {
+    "title": "Edit contact details",
+    "email": "Email",
+    "phoneNumber": "Phone number",
+    "phoneHelperText": "Enter your primary mobile phone number so that we can reach you with important messages.",
+    "save": "Save"
+  },
+
+  "errorBoundary": {
+    "heading": "Something went wrong",
+    "title": "An unexpected error occurred",
+    "reloadButton": "Reload the page"
+  },
+
+  "formList": {
+    "heading": "My questionnaires",
+    "formInitialisingText": "One or more forms is initialising. If this is taking too long, please contact Carnegie.",
+    "manualHandlingRequiredText": "One or more forms could not be created due to the information you entered in your basic information.",
+    "listCounter": "{{done}} of {{total}} done",
+    "listCounterAllDone": "All done"
+  },
+
+  "loginFooter": {
+    "title": "Do you want to know more about how Carnegie processes your personal data:",
+    "policy": "Carnegie's Policy for personal data",
+    "helpWithBankId": "Help with mobile BankID"
+  }
+}

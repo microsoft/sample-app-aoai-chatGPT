@@ -1,0 +1,40 @@
+{
+  "statusCode": {
+    "default": {
+      "title": "Ett fel inträffade",
+      "description": "Webbplatsen påträffade ett fel. Försök igen senare eller kontakta Carnegie."
+    },
+    "400": {
+      "title": "Ogiltig begäran",
+      "description": "Webbplatsen kunde inte förstå din begäran. Kontrollera att du skrev allt korrekt och försök igen."
+    },
+    "401": {
+      "title": "Inte behörig",
+      "description": "Du måste logga in för att få åtkomst till den här delen av webbplatsen."
+    },
+    "403": {
+      "title": "Förbjuden",
+      "description": "Du har inte tillåtelse att komma åt den här delen av webbplatsen. Kontakta Carnegie om du tror att detta är ett misstag."
+    },
+    "404": {
+      "title": "Sidan hittades inte",
+      "description": "Den begärda sidan är för närvarande inte tillgänglig."
+    },
+    "500": {
+      "title": "Internt serverfel",
+      "description": "Webbplatsen upplever ett problem och det är inte ditt fel. Försök igen senare eller kontakta Carnegie."
+    },
+    "503": {
+      "title": "Tjänsten är inte tillgänglig",
+      "description": "Webbplatsen är för tillfället upptagen eller under underhåll. Försök igen senare."
+    },
+    "504": {
+      "title": "Gateway Timeout",
+      "description": "Webbplatsen tar för lång tid att svara. Detta kan bero på hög trafik eller tekniska problem. Försök igen senare."
+    }
+  },
+
+  "trapets": {
+    "#RequiredField_ValidationMessage#": "Detta fält är obligatoriskt"
+  }
+}

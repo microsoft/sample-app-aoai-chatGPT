@@ -1,0 +1,244 @@
+{
+  "status": "OK",
+  "pageDefinition": {
+    "rootNode": {
+      "nodeType": "PageRoot",
+      "options": [],
+      "files": [],
+      "allowAddRows": false,
+      "subNodes": [
+        {
+          "nodeType": "H3",
+          "id": "12cc3f20-df9d-4336-9436-8b2788c84fa2",
+          "text": "Ekonomisk situation",
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "RadioButtons",
+          "questionId": "FYS Occupation 2.1",
+          "id": "RllTIE9jY3VwYXRpb24gMi4x",
+          "value": "employed",
+          "text": "Vilken är din huvudsakliga sysselsättning?",
+          "options": [
+            {
+              "id": "employed",
+              "text": "Anställd"
+            },
+            {
+              "id": "selfEmployed",
+              "text": "Driver egen firma /aktiebolag, handelsbolag, annat"
+            },
+            {
+              "id": "student",
+              "text": "Student"
+            },
+            {
+              "id": "retirerd",
+              "text": "Pensionär"
+            },
+            {
+              "id": "not working",
+              "text": "Arbetar inte"
+            },
+            {
+              "id": "other",
+              "text": "Annan sysselsättning"
+            }
+          ],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "Div",
+          "id": "6e03fd6c-f035-4702-a05a-2fd865bc7d28",
+          "condition": {
+            "valueType": "Option",
+            "lhs": "RllTIE9jY3VwYXRpb24gMi4x",
+            "rhs": "other",
+            "op": "Equals",
+            "statements": [
+              {
+                "valueType": "Text",
+                "op": "Equals",
+                "statements": [],
+                "returnValue": "True"
+              }
+            ]
+          },
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [
+            {
+              "nodeType": "TextArea",
+              "questionId": "FYS Occupationotherhidden 2.1",
+              "id": "RllTIE9jY3VwYXRpb25vdGhlcmhpZGRlbiAyLjE=",
+              "text": "Ange din huvudsakliga sysselsätting",
+              "options": [],
+              "files": [],
+              "allowAddRows": false,
+              "subNodes": [],
+              "readOnly": false
+            }
+          ],
+          "readOnly": false
+        },
+        {
+          "nodeType": "RadioButtons",
+          "questionId": "FYS IncomeQuestion 3.1",
+          "id": "RllTIEluY29tZVF1ZXN0aW9uIDMuMQ==",
+          "value": "income1",
+          "text": "Vad är din inkomst av tjänst per år före skatt?",
+          "helpText": "Inkomst av tjänst är lön, pension, sjuklön, sjukpenning och alla andra förmåner som du får från arbetsgivare, uppdragsgivare eller ersättning till exempel från Försäkringskassan. ",
+          "options": [
+            {
+              "id": "income1",
+              "text": "Mindre än 250 000 kr"
+            },
+            {
+              "id": "income2",
+              "text": "250 001 - 1 000 000 kr"
+            },
+            {
+              "id": "income3",
+              "text": "1 000 001 - 2 000 000 kr"
+            },
+            {
+              "id": "income4",
+              "text": "Mer än 2 000 000 kr"
+            }
+          ],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "Div",
+          "id": "2718fc12-4844-40cb-aa76-adad2ef2d740",
+          "condition": {
+            "valueType": "Option",
+            "lhs": "RllTIEluY29tZVF1ZXN0aW9uIDMuMQ==",
+            "rhs": "income4",
+            "op": "Equals",
+            "statements": [
+              {
+                "valueType": "Text",
+                "op": "Equals",
+                "statements": [],
+                "returnValue": "True"
+              }
+            ]
+          },
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [
+            {
+              "nodeType": "TextArea",
+              "questionId": "FYS Incomequestion specificera 3.1",
+              "id": "RllTIEluY29tZXF1ZXN0aW9uIHNwZWNpZmljZXJhIDMuMQ==",
+              "text": "Vänligen ange belopp",
+              "options": [],
+              "files": [],
+              "allowAddRows": false,
+              "subNodes": [],
+              "readOnly": false
+            }
+          ],
+          "readOnly": false
+        },
+        {
+          "nodeType": "RadioButtons",
+          "questionId": "FYS Income,capital Question 3.1",
+          "id": "RllTIEluY29tZSxjYXBpdGFsIFF1ZXN0aW9uIDMuMQ==",
+          "value": "2",
+          "text": "Vad är din kapitalinkomst per år (före skatt)?",
+          "helpText": "Kapitalinkomster är avkastning på tillgångar som man äger eller säljer, exempelvis aktieutdelning,  uthyrning av privata tillgångar, ränteinkomster eller vinst vid försäljning av tillångar som fastighet eller värdepapper. ",
+          "options": [
+            {
+              "id": "1",
+              "text": "0-500 000 kr"
+            },
+            {
+              "id": "2",
+              "text": "500 001-1 000 000 kr"
+            },
+            {
+              "id": "3",
+              "text": "1 000 001-1 500 000 kr"
+            },
+            {
+              "id": "4",
+              "text": "1 500 001-2 000 000 kr"
+            },
+            {
+              "id": "5",
+              "text": "Mer än 2 000 000 kr"
+            }
+          ],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [],
+          "readOnly": false
+        },
+        {
+          "nodeType": "Div",
+          "id": "78079350-65e3-45da-b44b-0508e950f565",
+          "condition": {
+            "valueType": "Option",
+            "lhs": "RllTIEluY29tZSxjYXBpdGFsIFF1ZXN0aW9uIDMuMQ==",
+            "rhs": "6",
+            "op": "Equals",
+            "statements": [
+              {
+                "valueType": "Text",
+                "op": "Equals",
+                "statements": [],
+                "returnValue": "True"
+              }
+            ]
+          },
+          "options": [],
+          "files": [],
+          "allowAddRows": false,
+          "subNodes": [
+            {
+              "nodeType": "TextArea",
+              "questionId": "FYS Incomequestion specificera 3.2",
+              "id": "RllTIEluY29tZXF1ZXN0aW9uIHNwZWNpZmljZXJhIDMuMg==",
+              "text": "Vänligen ange belopp",
+              "options": [],
+              "files": [],
+              "allowAddRows": false,
+              "subNodes": [],
+              "readOnly": false
+            }
+          ],
+          "readOnly": false
+        }
+      ],
+      "readOnly": false
+    },
+    "navigation": {
+      "next": {
+        "enabled": true,
+        "text": "#DefaultNextPage#"
+      },
+      "previous": {
+        "enabled": true,
+        "text": "#DefaultPreviousPage#"
+      },
+      "currentPage": 3,
+      "totalPages": 7
+    },
+    "reloadInterval": 0
+  },
+  "ruleViolations": []
+}

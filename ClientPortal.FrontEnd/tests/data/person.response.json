@@ -1,0 +1,70 @@
+{
+  "firstName": "Delidas",
+  "surName": "Habanero",
+  "name": "Delidas Habanero",
+  "birthDate": "1910-09-07T00:00:00",
+  "primaryTaxCountry": {
+    "countryCode": "SE",
+    "name": "Sverige"
+  },
+  "citizenships": [
+    {
+      "countryCode": "SE",
+      "name": "Sverige"
+    }
+  ],
+  "identifications": [
+    {
+      "identifier": "191009079813",
+      "type": "NationalIdRegNo",
+      "country": {
+        "countryCode": "SE",
+        "name": "Sverige"
+      },
+      "hasAutomaticUpdate": false,
+      "deleted": false
+    },
+    {
+      "identifier": "191009079813",
+      "type": "NationalRegNo",
+      "country": {
+        "countryCode": "SE",
+        "name": "Sverige"
+      },
+      "hasAutomaticUpdate": false,
+      "deleted": false
+    }
+  ],
+  "addresses": [
+    {
+      "id": 2862,
+      "attentionName": "",
+      "address1": "Gustavslundsvägsgatan 8",
+      "postalCode": "271 16",
+      "city": "Hjo",
+      "country": {
+        "countryCode": "SE",
+        "name": "Sverige"
+      },
+      "isPreferred": true,
+      "isDomicile": true,
+      "hasAutomaticUpdate": false
+    }
+  ],
+  "emails": [
+    {
+      "id": 5227,
+      "email": "email@address.se",
+      "isPreferred": true
+    }
+  ],
+  "phoneNumbers": [
+    {
+      "id": 4222,
+      "number": "0303230023",
+      "isPreferred": true,
+      "type": "Mobile"
+    }
+  ],
+  "hasAutomaticUpdate": false
+}
