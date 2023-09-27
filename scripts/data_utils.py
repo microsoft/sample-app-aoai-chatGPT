@@ -160,15 +160,15 @@ class PdfTextSplitter(TextSplitter):
             splits = table.split(self._table_tags["row_open"]) #split by row tag
             tables = []
             current_table = caption
-            table_length = self._length_function(current_table)
             for part in splits:
                 if len(part)>0:
-                    if table_length < self._chunk_size: # if current table length is within permissible limit, keep adding rows
+                    if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
                         if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
                             current_table += self._table_tags["row_open"]
                         current_table += part
                         
                     else:
+                        
                         # if current table size is beyond the permissible limit, complete this as a mini-table and add to final mini-tables list
                         current_table += self._table_tags["table_close"]
                         tables.append(current_table)
@@ -179,11 +179,14 @@ class PdfTextSplitter(TextSplitter):
                             current_table += self._table_tags["row_open"]
                         current_table += part
 
-                table_length = self._length_function(current_table)
             
             # TO DO: fix the case where the last mini table only contain tags
-            tables.append(current_table)
             
+            if not current_table.endswith(self._table_tags["table_close"]):
+                
+                tables.append(current_table + self._table_tags["table_close"])
+            else:
+                tables.append(current_table)
             return tables
 
     
@@ -877,7 +880,8 @@ def chunk_directory(
 
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
-        for file_path in tqdm(files_to_process):
+        # for file_path in tqdm(files_to_process):
+        for file_path in files_to_process:
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
