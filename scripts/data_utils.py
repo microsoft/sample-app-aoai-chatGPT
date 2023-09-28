@@ -15,6 +15,7 @@ from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
 
 import markdown
 import tiktoken
+from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from bs4 import BeautifulSoup
@@ -571,11 +572,11 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
-def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None):
+def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
-    if endpoint is None or key is None:
+    if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
     try:
@@ -585,8 +586,13 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None)
 
         openai.api_version = '2023-05-15'
         openai.api_base = base_url
-        openai.api_type = 'azure'
-        openai.api_key = key
+
+        if azure_credential is not None:
+            openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            openai.api_type = "azure_ad"
+        else:
+            openai.api_type = 'azure'
+            openai.api_key = key
 
         embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
         return embeddings['data'][0]["embedding"]
@@ -646,7 +652,9 @@ def chunk_content(
     extensions_to_process = FILE_FORMAT_DICT.keys(),
     cracked_pdf = False,
     use_layout = False,
-    add_embeddings = False
+    add_embeddings = False,
+    azure_credential = None,
+    embedding_endpoint = None
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -687,7 +695,7 @@ def chunk_content(
                 if add_embeddings:
                     for _ in range(RETRY_COUNT):
                         try:
-                            doc.contentVector = get_embedding(chunk)
+                            doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
                         except:
                             sleep(30)
@@ -734,7 +742,9 @@ def chunk_file(
     extensions_to_process = FILE_FORMAT_DICT.keys(),
     form_recognizer_client = None,
     use_layout = False,
-    add_embeddings=False
+    add_embeddings=False,
+    azure_credential = None,
+    embedding_endpoint = None
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -780,7 +790,9 @@ def chunk_file(
         extensions_to_process=extensions_to_process,
         cracked_pdf=cracked_pdf,
         use_layout=use_layout,
-        add_embeddings=add_embeddings
+        add_embeddings=add_embeddings,
+        azure_credential=azure_credential,
+        embedding_endpoint=embedding_endpoint
     )
 
 
@@ -795,7 +807,9 @@ def process_file(
         extensions_to_process: List[str] = FILE_FORMAT_DICT.keys(),
         form_recognizer_client = None,
         use_layout = False,
-        add_embeddings = False
+        add_embeddings = False,
+        azure_credential = None,
+        embedding_endpoint = None
     ):
 
     if not form_recognizer_client:
@@ -819,7 +833,9 @@ def process_file(
             extensions_to_process=extensions_to_process,
             form_recognizer_client=form_recognizer_client,
             use_layout=use_layout,
-            add_embeddings=add_embeddings
+            add_embeddings=add_embeddings,
+            azure_credential=azure_credential,
+            embedding_endpoint=embedding_endpoint
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
@@ -846,7 +862,9 @@ def chunk_directory(
         form_recognizer_client = None,
         use_layout = False,
         njobs=4,
-        add_embeddings = False
+        add_embeddings = False,
+        azure_credential = None,
+        embedding_endpoint = None
 ):
     """
     Chunks the given directory recursively
@@ -888,7 +906,8 @@ def chunk_directory(
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
-                                       form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings)
+                                       form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings,
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -903,7 +922,8 @@ def chunk_directory(
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
-                                       form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings)
+                                       form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings,
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:

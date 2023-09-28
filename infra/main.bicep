@@ -31,8 +31,8 @@ param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
 param openAiResourceGroupLocation string = location
 param openAiSkuName string = ''
-param openAIModel string = 'turbo'
-param openAIModelName string = 'gpt-35-turbo'
+param openAIModel string = 'turbo16k'
+param openAIModelName string = 'gpt-35-turbo-16k'
 param openAITemperature int = 0
 param openAITopP int = 1
 param openAIMaxTokens int = 1000
@@ -40,6 +40,8 @@ param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
 param openAIApiVersion string = '2023-06-01-preview'
 param openAIStream bool = true
+param embeddingDeploymentName string = 'embedding'
+param embeddingModelName string = 'text-embedding-ada-002'
 
 // Used by prepdocs.py: Form recognizer
 param formRecognizerServiceName string = ''
@@ -51,6 +53,9 @@ param formRecognizerSkuName string = ''
 param authClientId string
 @secure()
 param authClientSecret string
+
+// Used for Cosmos DB
+param cosmosAccountName string = ''
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
@@ -93,7 +98,7 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 
 // The application frontend
 var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
-var authIssuerUri = 'https://login.microsoftonline.com/${tenant().tenantId}/v2.0'
+var authIssuerUri = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
@@ -155,7 +160,16 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: openAIModelName
-          version: '0301'
+          version: '0613'
+        }
+        capacity: 30
+      }
+      {
+        name: embeddingDeploymentName
+        model: {
+          format: 'OpenAI'
+          name: embeddingModelName
+          version: '2'
         }
         capacity: 30
       }
@@ -182,6 +196,17 @@ module searchService 'core/search/search-services.bicep' = {
   }
 }
 
+// The application database
+module cosmos 'db.bicep' = {
+  name: 'cosmos'
+  scope: resourceGroup
+  params: {
+    accountName: !empty(cosmosAccountName) ? cosmosAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
+    location: 'eastus'
+    tags: tags
+    principalIds: [principalId, backend.outputs.identityPrincipalId]
+  }
+}
 
 
 // USER ROLES
@@ -285,10 +310,13 @@ output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
 // openai
 output AZURE_OPENAI_RESOURCE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
+output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 output AZURE_OPENAI_MODEL string = openAIModel
 output AZURE_OPENAI_MODEL_NAME string = openAIModelName
 output AZURE_OPENAI_SKU_NAME string = openAi.outputs.skuName
 output AZURE_OPENAI_KEY string = openAi.outputs.key
+output AZURE_OPENAI_EMBEDDING_KEY string = openAi.outputs.key
+output AZURE_OPENAI_EMBEDDING_ENDPOINT string = '${openAi.outputs.endpoint}/openai/deployments/${embeddingDeploymentName}/embeddings?api-version=2023-06-01-preview'
 output AZURE_OPENAI_TEMPERATURE int = openAITemperature
 output AZURE_OPENAI_TOP_P int = openAITopP
 output AZURE_OPENAI_MAX_TOKENS int = openAIMaxTokens
@@ -301,5 +329,10 @@ output AZURE_OPENAI_STREAM bool = openAIStream
 output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SERVICE
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
 output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
+
+// cosmos
+output AZURE_COSMOSDB_ACCOUNT string = cosmos.outputs.accountName
+output AZURE_COSMOSDB_DATABASE string = cosmos.outputs.databaseName
+output AZURE_COSMOSDB_CONVERSATIONS_CONTAINER string = cosmos.outputs.containerName
 
 output AUTH_ISSUER_URI string = authIssuerUri

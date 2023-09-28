@@ -8,11 +8,16 @@ from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
     SearchableField,
+    SearchField,
+    SearchFieldDataType,
     SemanticField,
     SemanticSettings,
     SemanticConfiguration,
     SearchIndex,
     PrioritizedFields,
+    VectorSearch,
+    VectorSearchAlgorithmConfiguration,
+    HnswParameters
 )
 from azure.search.documents import SearchClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
@@ -37,6 +42,9 @@ def create_search_index(index_name, index_client):
                 SearchableField(name="filepath", type="Edm.String"),
                 SearchableField(name="url", type="Edm.String"),
                 SearchableField(name="metadata", type="Edm.String"),
+                SearchField(name="contentVector", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
+                            hidden=False, searchable=True, filterable=False, sortable=False, facetable=False,
+                            vector_search_dimensions=1536, vector_search_configuration="default"),
             ],
             semantic_settings=SemanticSettings(
                 configurations=[
@@ -51,6 +59,15 @@ def create_search_index(index_name, index_client):
                     )
                 ]
             ),
+            vector_search=VectorSearch(
+                algorithm_configurations=[
+                    VectorSearchAlgorithmConfiguration(
+                        name="default",
+                        kind="hnsw",
+                        hnsw_parameters=HnswParameters(metric="cosine")
+                    )
+                ]
+            )
         )
         print(f"Creating {index_name} search index")
         index_client.create_index(index)
@@ -66,6 +83,8 @@ def upload_documents_to_index(docs, search_client, upload_batch_size=50):
         d = dataclasses.asdict(document)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
+        if "contentVector" in d and d["contentVector"] is None:
+            del d["contentVector"]
         to_upload_dicts.append(d)
         id += 1
 
@@ -108,7 +127,7 @@ def validate_index(index_name, index_client):
 
 
 def create_and_populate_index(
-    index_name, index_client, search_client, form_recognizer_client
+    index_name, index_client, search_client, form_recognizer_client, azure_credential, embedding_endpoint
 ):
     # create or update search index with compatible schema
     create_search_index(index_name, index_client)
@@ -121,6 +140,9 @@ def create_and_populate_index(
         use_layout=True,
         ignore_errors=False,
         njobs=1,
+        add_embeddings=True,
+        azure_credential=azd_credential,
+        embedding_endpoint=embedding_endpoint
     )
 
     if len(result.chunks) == 0:
@@ -174,6 +196,11 @@ if __name__ == "__main__":
         required=False,
         help="Optional. Use this Azure Form Recognizer account key instead of the current user identity to login (use az login to set current user for Azure)",
     )
+    parser.add_argument(
+        "--embeddingendpoint",
+        required=False,
+        help="Optional. Use this OpenAI endpoint to generate embeddings for the documents",
+    )
     args = parser.parse_args()
 
     # Use the current user identity to connect to Azure services unless a key is explicitly set for any of them
@@ -204,6 +231,6 @@ if __name__ == "__main__":
         credential=formrecognizer_creds,
     )
     create_and_populate_index(
-        args.index, index_client, search_client, form_recognizer_client
+        args.index, index_client, search_client, form_recognizer_client, azd_credential, args.embeddingendpoint
     )
     print("Data preparation for index", args.index, "completed")
