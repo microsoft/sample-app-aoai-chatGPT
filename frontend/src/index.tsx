@@ -1,9 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { initializeIcons } from "@fluentui/react";
+import { DefaultFontStyles, initializeIcons } from "@fluentui/react";
 
 import "./index.css";
+import "./fonts.css";
 
 import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
@@ -13,6 +14,7 @@ import { AppStateProvider } from "./state/AppProvider";
 initializeIcons();
 
 export default function App() {
+
     return (
         <AppStateProvider>
             <HashRouter>

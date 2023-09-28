@@ -5,7 +5,7 @@
 }
 
 .header {
-    background-color: #f2f2f2;
+    background: linear-gradient(100deg, #212D40 45%, #0A0E13 55%);
 }
 
 .headerContainer {
@@ -32,8 +32,8 @@
 }
 
 .headerIcon {
-    height: 32px;
-    width: 32px;
+    height: 64px;
+    width: 150px;
     margin-left: 36px;
 }
 
