@@ -45,20 +45,20 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
 
 ### Setup for PDF Cracking
-- Create a [Form Recognizer](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/create-a-form-recognizer-resource?view=form-recog-3.0.0) resource in your subscription 
-- Make sure you have the Form Recognizer SDK: `pip install azure-ai-formrecognizer`
-- Run the following command to get an access key for your Form Recognizer resource:
+- Create a [Azure AI Document Intelligence](https://learn.microsoft.com/en-us/azure/applied-ai-services/form-recognizer/create-a-form-recognizer-resource?view=form-recog-3.0.0) resource in your subscription 
+- Make sure you have the Azure AI Document Intelligence SDK: `pip install azure-ai-formrecognizer`
+- Run the following command to get an access key for your Azure AI Document Intelligence resource:
   `az cognitiveservices account keys list --name "<form-rec-resource-name>" --resource-group "<resource-group-name>"`
 
   Copy one of the keys returned by this command.
 
-### Create Indexes and Ingest Data from PDF with Form Recognizer
-Pass in your Form Recognizer resource name and key when running the data preparation script:
+### Create Indexes and Ingest Data from PDF with Azure AI Document Intelligence
+Pass in your Azure AI Document Intelligence resource name and key when running the data preparation script:
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
 
-This will use the Form Recognizer Read model by default. 
+This will use the Azure AI Document Intelligence Read model by default. 
 
-If your documents have a lot of tables and relevant layout information, you can use the Form Recognizer Layout model, which is more costly and slower to run but will preserve table information with better quality. The Layout model will also help preserve some of the formatting information in your document such as titles and sub-headings, which will make the citations more readable. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
+If your documents have a lot of tables and relevant layout information, you can use the Azure AI Document Intelligence Layout model, which is more costly and slower to run but will preserve table information with better quality. The Layout model will also help preserve some of the formatting information in your document such as titles and sub-headings, which will make the citations more readable. To use the Layout model instead of the default Read model, pass in the argument `--form-rec-use-layout`.
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key> --form-rec-use-layout`
