@@ -19,7 +19,7 @@ REDIRECT_HOST = os.environ.get("REDIRECT_HOST")
 REDIRECT_PORT = os.environ.get("REDIRECT_PORT")
 @app.route(REDIRECT_PASS)
 def redirect_func():
-    return redirect('http://' + REDIRECT_HOST + ':' + REDIRECT_PORT) # Googleにリダイレクトする
+    return redirect('https://' + REDIRECT_HOST)
 
 # Static Files
 @app.route("/")
