@@ -1,21 +1,16 @@
 """Data Preparation Script for an Azure Cognitive Search Index."""
 import argparse
-import dataclasses
 import json
 import os
-import subprocess
 import uuid
 
 import requests
-import time
 from data_utils import Document
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
-from azure.search.documents import SearchClient
 from pymongo.mongo_client import MongoClient
-from tqdm import tqdm
-from typing import Dict, List, Optional, Any
+from typing import List
 
 from data_utils import chunk_directory
 

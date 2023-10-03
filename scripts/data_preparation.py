@@ -134,22 +134,26 @@ def create_search_service(
 
 def create_or_update_search_index(
         service_name, 
-        subscription_id, 
-        resource_group, 
-        index_name, 
-        semantic_config_name, 
-        credential, 
-        language,
-        vector_config_name=None):
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+        subscription_id=None, 
+        resource_group=None, 
+        index_name="default-index", 
+        semantic_config_name="default", 
+        credential=None, 
+        language=None,
+        vector_config_name=None,
+        admin_key=None):
+    
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin key cannot be None")
+    
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
     headers = {
@@ -247,15 +251,17 @@ def create_or_update_search_index(
     
     return True
 
-def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential, upload_batch_size = 50):
-    if credential is None:
-        raise ValueError("credential cannot be None")
+
+def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None, upload_batch_size = 50, admin_key=None):
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin_key cannot be None")
     
     to_upload_dicts = []
 
     id = 0
-    for document in docs:
-        d = dataclasses.asdict(document)
+    for d in docs:
+        if type(d) is not dict:
+            d = dataclasses.asdict(d)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
         if "contentVector" in d and d["contentVector"] is None:
@@ -264,13 +270,14 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         id += 1
     
     endpoint = "https://{}.search.windows.net/".format(service_name)
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     search_client = SearchClient(
         endpoint=endpoint,
@@ -332,7 +339,7 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential, form_recognizer_client=None, use_layout=False, njobs=4):
+def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
@@ -361,9 +368,11 @@ def create_index(config, credential, form_recognizer_client=None, use_layout=Fal
     # chunk directory
     print("Chunking directory...")
     add_embeddings = False
-    if config.get("vector_config_name") and os.environ.get("EMBEDDING_MODEL_ENDPOINT") and os.environ.get("EMBEDDING_MODEL_KEY"):
+    if config.get("vector_config_name") and embedding_model_endpoint:
         add_embeddings = True
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0), form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs, add_embeddings=add_embeddings)
+    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+                             azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+                             add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint)
 
     if len(result.chunks) == 0:
         raise Exception("No chunks found. Please check the data path and chunk size.")
@@ -414,16 +423,12 @@ if __name__ == "__main__":
             form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
         print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
-    if args.embedding_model_endpoint and args.embedding_model_key:
-        os.environ["EMBEDDING_MODEL_ENDPOINT"] = args.embedding_model_endpoint
-        os.environ["EMBEDDING_MODEL_KEY"] = args.embedding_model_key
-
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        if index_config.get("vector_config_name") and not (args.embedding_model_endpoint and args.embedding_model_key):
+        if index_config.get("vector_config_name") and not args.embedding_model_endpoint:
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
-        create_index(index_config, credential, form_recognizer_client, use_layout=args.form_rec_use_layout, njobs=args.njobs)
+        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")

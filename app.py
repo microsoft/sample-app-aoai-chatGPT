@@ -46,6 +46,7 @@ AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
 AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
 AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
 AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get("AZURE_SEARCH_PERMITTED_GROUPS_COLUMN")
+AZURE_SEARCH_STRICTNESS = os.environ.get("AZURE_SEARCH_STRICTNESS", 3)
 
 # CosmosDB Mongo vcore vector db Settings
 AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING")  #This has to be secure string
@@ -78,7 +79,7 @@ AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
-AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
+AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
 AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
 
@@ -165,24 +166,22 @@ def generateFilterString(userToken):
 
 def prepare_body_headers_with_data(request):
     request_messages = request.json["messages"]
-
     # Prepare data source parameter body
     if SEARCH_TYPE=="AzureCognitiveSearch" : 
-
         # Set query type
         query_type = "simple"
         if AZURE_SEARCH_QUERY_TYPE:
             query_type = AZURE_SEARCH_QUERY_TYPE
         elif AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
             query_type = "semantic"
-    
+
         # Set filter
         filter = None
         userToken = None
         if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
             userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
             filter = generateFilterString(userToken)
-    
+
         body = {
             "messages": request_messages,
             "temperature": float(AZURE_OPENAI_TEMPERATURE),
@@ -211,7 +210,8 @@ def prepare_body_headers_with_data(request):
                         "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                         "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
                         "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                        "filter": filter
+                        "filter": filter,
+                        "strictness": int(AZURE_SEARCH_STRICTNESS)
                     }
                 }
             ]
