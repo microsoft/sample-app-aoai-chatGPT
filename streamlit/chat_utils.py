@@ -88,29 +88,38 @@ def stream_with_data(messages):
     body, headers = prepare_body_headers_with_data(messages)
     base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
-
     s = requests.Session()
+    res = {
+        "assistant": "",
+        "citations": [],
+        "error": -1
+    }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
             for line in r.iter_lines(chunk_size=10):
                 if line:
                     lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
                     if 'error' in lineJson:
-                        yield lineJson["error"]
+                        # yield lineJson["error"]
+                        res["error"] = lineJson["error"]
                     
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
                     if role == "tool":
+                        citations = json.loads(lineJson["choices"][0]["messages"][0]["delta"]["content"]).get("citations")
+                        # yield citations
+                        res["citations"] = citations
                         pass # TODO: Handle tool messages
                     elif role == "assistant": 
                         pass
                     else:
                         deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
                         if deltaText != "[DONE]":
-                            yield deltaText
+                            # yield deltaText
+                            res["assistant"] += deltaText
+                    yield res
 
     except Exception as e:
         yield str(e)
-
 
 def prepare_body_headers_with_data(messages):
 
@@ -161,7 +170,7 @@ def prepare_body_headers_with_data(messages):
             }
         ]
     }
-    print(body)
+    # print(body)
 
     headers = {
         'Content-Type': 'application/json',
