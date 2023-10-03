@@ -1,0 +1,52 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: data_preparation_pipeline
+experiment_name: data_prep
+description: Pipeline to crack, chunk, and embed data for RAG.
+
+settings:
+  default_compute: azureml:serverless
+
+identity:
+  type: user_identity
+
+inputs:
+  config_file: 
+    type: uri_file
+    path: aml_config.json # your config file name here
+  input_data_path:
+    type: uri_folder
+    # path: ../data # uncomment this to use local data
+    path: azureml://datastores/<datastore name>/paths/<path> # substitute your datastore name and path here
+    mode: ro_mount
+
+jobs:
+  chunk_documents:
+    type: command
+    component: ./chunk_documents.yml
+    inputs:
+      config_file: ${{parent.inputs.config_file}}
+      input_data_path: ${{parent.inputs.input_data_path}}
+    outputs:
+      document_chunks_file_path:
+        type: uri_file
+        mode: upload
+
+  embed_documents:
+    type: command
+    component: ./embed_documents.yml
+    inputs:
+      config_file: ${{parent.inputs.config_file}}
+      document_chunks_file_path: ${{parent.jobs.chunk_documents.outputs.document_chunks_file_path}}
+    outputs:
+      chunks_with_embeddings_file_path: 
+        type: uri_file
+        mode: upload
+
+  push_documents_acs:
+    type: command
+    component: ./push_documents_acs.yml
+    inputs:
+      config_file: ${{parent.inputs.config_file}}
+      chunks_with_embeddings_file_path: ${{parent.jobs.embed_documents.outputs.chunks_with_embeddings_file_path}}

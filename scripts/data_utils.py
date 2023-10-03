@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import List, Dict, Optional, Generator, Tuple
+from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
 
 import markdown
 import tiktoken
@@ -19,8 +19,10 @@ from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from bs4 import BeautifulSoup
-from langchain.text_splitter import MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
+from typing import Any
+
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -37,11 +39,158 @@ RETRY_COUNT = 5
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
 
+HTML_TABLE_TAGS = {"table_open": "<table>", "table_close": "</table>", "row_open":"<tr>"}
+
 PDF_HEADERS = {
     "title": "h1",
     "sectionHeading": "h2"
 }
 
+class TokenEstimator(object):
+    GPT2_TOKENIZER = tiktoken.get_encoding("gpt2")
+
+    def estimate_tokens(self, text: Union[str, List]) -> int:
+
+        return len(self.GPT2_TOKENIZER.encode(text, allowed_special="all"))
+
+    def construct_tokens_with_size(self, tokens: str, numofTokens: int) -> str:
+        newTokens = self.GPT2_TOKENIZER.decode(
+            self.GPT2_TOKENIZER.encode(tokens, allowed_special="all")[:numofTokens]
+        )
+        return newTokens
+
+TOKEN_ESTIMATOR = TokenEstimator()
+
+class PdfTextSplitter(TextSplitter):
+    def __init__(self, length_function: Callable[[str], int] =TOKEN_ESTIMATOR.estimate_tokens, separator: str = "\n\n", **kwargs: Any):
+        """Create a new TextSplitter for htmls from extracted pdfs."""
+        super().__init__(**kwargs)
+        self._table_tags = HTML_TABLE_TAGS
+        self._separators = separator or ["\n\n", "\n", " ", ""]
+        self._length_function = length_function
+        self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
+
+    def extract_caption(self, s, type):
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in s:
+                separator = _s
+                break
+        # Now that we have the separator, split the text
+        if separator:
+            lines = s.split(separator)
+        else:
+            lines = list(s)
+
+        caption = ""
+        if type == "prefix": #find the last heading and the last line before the table
+            if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
+               caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
+            if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
+               caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
+            caption += "\n"+ lines[-1]
+        else: # find the first line after the table
+            caption += lines[0]
+        return caption
+    
+    def split_text(self, text: str) -> List[str]:
+        start_tag = self._table_tags["table_open"]
+        end_tag = self._table_tags["table_close"]
+        splits = text.split(start_tag)
+        
+        final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
+
+        table_caption_prefix = self.extract_caption(splits[0], "prefix")
+        for part in splits[1:]:
+            table, rest = part.split(end_tag)
+            table_caption_suffix = self.extract_caption(rest, "suffix")
+            table = start_tag + table + end_tag 
+            minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
+            final_chunks.extend(minitables)
+
+            if rest!="":
+                final_chunks.extend(self.chunk_rest(rest))
+            table_caption_prefix = self.extract_caption(rest, "prefix")
+
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
+
+        return final_final_chunks
+
+
+
+    def chunk_rest(self, item):
+        separator = self._separators[-1]
+        for _s in self._separators:
+            if _s == "":
+                separator = _s
+                break
+            if _s in item:
+                separator = _s
+                break
+        chunks = []
+        if separator:
+            splits = item.split(separator)
+        else:
+            splits = list(item)
+        _good_splits = []
+        for s in splits:
+            if self._length_function(s) < self._chunk_size - self._noise:
+                _good_splits.append(s)
+            else:
+                if _good_splits:
+                    merged_text = self._merge_splits(_good_splits, separator)
+                    chunks.extend(merged_text)
+                    _good_splits = []
+                other_info = self.chunk_rest(s)
+                chunks.extend(other_info)
+        if _good_splits:
+            merged_text = self._merge_splits(_good_splits, separator)
+            chunks.extend(merged_text)
+        return chunks
+        
+    def chunk_table(self, table, caption):
+        if self._length_function("\n".join([caption, table])) < self._chunk_size - self._noise:
+            return ["\n".join([caption, table])]
+        else:
+            headers = ""
+            if re.search("<th.*>.*</th>", table):
+                headers += re.search("<th.*>.*</th>", table).group() # extract the header out. Opening tag may contain rowspan/colspan
+            splits = table.split(self._table_tags["row_open"]) #split by row tag
+            tables = []
+            current_table = caption
+            for part in splits:
+                if len(part)>0:
+                    if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
+                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
+                            current_table += self._table_tags["row_open"]
+                        current_table += part
+                        
+                    else:
+                        
+                        # if current table size is beyond the permissible limit, complete this as a mini-table and add to final mini-tables list
+                        current_table += self._table_tags["table_close"]
+                        tables.append(current_table)
+
+                        # start a new table
+                        current_table = "\n".join([caption, self._table_tags["table_open"], headers])
+                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]:
+                            current_table += self._table_tags["row_open"]
+                        current_table += part
+
+            
+            # TO DO: fix the case where the last mini table only contain tags
+            
+            if not current_table.endswith(self._table_tags["table_close"]):
+                
+                tables.append(current_table + self._table_tags["table_close"])
+            else:
+                tables.append(current_table)
+            return tables
+
+    
 @dataclass
 class Document(object):
     """A data class for storing documents
@@ -268,20 +417,7 @@ class ParserFactory:
 
         return parser
 
-class TokenEstimator(object):
-    GPT2_TOKENIZER = tiktoken.get_encoding("gpt2")
-
-    def estimate_tokens(self, text: str) -> int:
-        return len(self.GPT2_TOKENIZER.encode(text))
-
-    def construct_tokens_with_size(self, tokens: str, numofTokens: int) -> str:
-        newTokens = self.GPT2_TOKENIZER.decode(
-            self.GPT2_TOKENIZER.encode(tokens)[:numofTokens]
-        )
-        return newTokens
-
 parser_factory = ParserFactory()
-TOKEN_ESTIMATOR = TokenEstimator()
 
 class UnsupportedFormatError(Exception):
     """Exception raised when a format is not supported by a parser."""
@@ -436,22 +572,33 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
         yield current_chunk, total_size
 
 
-def get_embedding(text, azure_credential, embedding_endpoint):
+def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
+    endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
+    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
+    
+    if azure_credential is None and (endpoint is None or key is None):
+        raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
+
     try:
-        endpoint_parts = embedding_endpoint.split("/openai/deployments/")
+        endpoint_parts = endpoint.split("/openai/deployments/")
         base_url = endpoint_parts[0]
         deployment_id = endpoint_parts[1].split("/embeddings")[0]
 
         openai.api_version = '2023-05-15'
         openai.api_base = base_url
-        openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        openai.api_type = "azure_ad"
+
+        if azure_credential is not None:
+            openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            openai.api_type = "azure_ad"
+        else:
+            openai.api_type = 'azure'
+            openai.api_key = key
 
         embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
         return embeddings['data'][0]["embedding"]
 
     except Exception as e:
-        raise Exception(f"Error getting embeddings with endpoint={embedding_endpoint} with error={e}")
+        raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
 
 
 def chunk_content_helper(
@@ -462,9 +609,8 @@ def chunk_content_helper(
     if num_tokens is None:
         num_tokens = 1000000000
 
-    parser = parser_factory(file_format)
+    parser = parser_factory(file_format.split("_pdf")[0]) # to handle cracked pdf converted to html
     doc = parser.parse(content, file_name=file_name)
-
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
     if doc_content_size < num_tokens:
@@ -484,9 +630,12 @@ def chunk_content_helper(
                 splitter = PythonCodeTextSplitter.from_tiktoken_encoder(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
-                splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-                    separators=SENTENCE_ENDINGS + WORDS_BREAKS,
-                    chunk_size=num_tokens, chunk_overlap=token_overlap)
+                if file_format == "html_pdf": # cracked pdf converted to html
+                    splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
+                else:
+                    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+                            separators=SENTENCE_ENDINGS + WORDS_BREAKS,
+                            chunk_size=num_tokens, chunk_overlap=token_overlap)
             chunked_content_list = splitter.split_text(doc.content)
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
@@ -525,7 +674,7 @@ def chunk_content(
         if file_name is None or (cracked_pdf and not use_layout):
             file_format = "text"
         elif cracked_pdf:
-            file_format = "html"
+            file_format = "html_pdf" # differentiate it from native html
         else:
             file_format = _get_file_format(file_name, extensions_to_process)
             if file_format is None:
@@ -546,7 +695,7 @@ def chunk_content(
                 if add_embeddings:
                     for _ in range(RETRY_COUNT):
                         try:
-                            doc.contentVector = get_embedding(chunk, azure_credential, embedding_endpoint)
+                            doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
                         except:
                             sleep(30)
@@ -692,12 +841,14 @@ def process_file(
             chunk_doc.filepath = rel_file_path
             chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
     except Exception as e:
+        print(e)
         if not ignore_errors:
             raise
         print(f"File ({file_path}) failed with ", e)
         is_error = True
         result =None
     return result, is_error
+
 
 
 def chunk_directory(
@@ -747,7 +898,8 @@ def chunk_directory(
 
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
-        for file_path in tqdm(files_to_process):
+        # for file_path in tqdm(files_to_process):
+        for file_path in files_to_process:
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
