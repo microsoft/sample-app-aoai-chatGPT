@@ -160,7 +160,11 @@ const Chat = () => {
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            setMessages([...messages, ...result.choices[0].messages]);
+                            if(!conversationId){
+                                setMessages([...messages, userMessage, ...result.choices[0].messages]);
+                            }else{
+                                setMessages([...messages, ...result.choices[0].messages]);
+                            }
                             runningText = "";
                         }
                         catch { }
