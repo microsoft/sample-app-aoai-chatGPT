@@ -70,7 +70,7 @@ class PdfTextSplitter(TextSplitter):
         self._length_function = length_function
         self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
 
-    def extract_caption(self, s, type):
+    def extract_caption(self, s):
         separator = self._separators[-1]
         for _s in self._separators:
             if _s == "":
@@ -86,14 +86,13 @@ class PdfTextSplitter(TextSplitter):
             lines = list(s)
 
         caption = ""
-        if type == "prefix": #find the last heading and the last line before the table
-            if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
-            if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
-            caption += "\n"+ lines[-1]
-        else: # find the first line after the table
-            caption += lines[0]
+        
+        if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
+            caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
+        if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
+            caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
+        caption += "\n"+ lines[-1]
+
         return caption
     
     def split_text(self, text: str) -> List[str]:
@@ -103,17 +102,16 @@ class PdfTextSplitter(TextSplitter):
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
 
-        table_caption_prefix = self.extract_caption(splits[0], "prefix")
+        table_caption_prefix = self.extract_caption(splits[0])
         for part in splits[1:]:
             table, rest = part.split(end_tag)
-            table_caption_suffix = self.extract_caption(rest, "suffix")
             table = start_tag + table + end_tag 
-            minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
+            minitables = self.chunk_table(table, table_caption_prefix)
             final_chunks.extend(minitables)
 
             if rest!="":
                 final_chunks.extend(self.chunk_rest(rest))
-            table_caption_prefix = self.extract_caption(rest, "prefix")
+            table_caption_prefix = self.extract_caption(rest)
 
         final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
 
