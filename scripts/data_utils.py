@@ -79,7 +79,7 @@ class PdfTextSplitter(TextSplitter):
             if _s in text:
                 separator = _s
                 break
-        text = text.lstrip().rstrip()
+        
         # Now that we have the separator, split the text
         if separator:
             lines = text.split(separator)
@@ -105,8 +105,10 @@ class PdfTextSplitter(TextSplitter):
         splits = text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
-
-        table_caption_prefix = self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
+        
+        table_caption_prefix = ""
+        if len(final_chunks)>0:
+            table_caption_prefix += self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
         for part in splits[1:]:
             table, rest = part.split(end_tag)
             table = start_tag + table + end_tag 
@@ -117,6 +119,9 @@ class PdfTextSplitter(TextSplitter):
                 text_minichunks = self.chunk_rest(rest)
                 final_chunks.extend(text_minichunks)
                 table_caption_prefix = self.extract_caption(text_minichunks[-1])
+            else:
+                table_caption_prefix = ""
+            
 
         final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
 
