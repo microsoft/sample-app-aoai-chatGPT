@@ -106,7 +106,7 @@ class PdfTextSplitter(TextSplitter):
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
 
-        table_caption_prefix = self.extract_caption(final_chunks[-1]) # the last chunk is the caption of the last table
+        table_caption_prefix = self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
         for part in splits[1:]:
             table, rest = part.split(end_tag)
             table = start_tag + table + end_tag 
