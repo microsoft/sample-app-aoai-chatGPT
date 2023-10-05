@@ -70,30 +70,33 @@ class PdfTextSplitter(TextSplitter):
         self._length_function = length_function
         self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
 
-    def extract_caption(self, s, type):
+    def extract_caption(self, text):
         separator = self._separators[-1]
         for _s in self._separators:
             if _s == "":
                 separator = _s
                 break
-            if _s in s:
+            if _s in text:
                 separator = _s
                 break
+        
         # Now that we have the separator, split the text
         if separator:
-            lines = s.split(separator)
+            lines = text.split(separator)
         else:
-            lines = list(s)
-
+            lines = list(text)
+        
+        # remove empty lines
+        lines = [line for line in lines if line!='']
         caption = ""
-        if type == "prefix": #find the last heading and the last line before the table
-            if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
-            if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
-            caption += "\n"+ lines[-1]
-        else: # find the first line after the table
-            caption += lines[0]
+        
+        if len(text.split(f"<{PDF_HEADERS['title']}>"))>1:
+            caption +=  text.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
+        if len(text.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
+            caption +=  text.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
+        
+        caption += "\n"+ lines[-1].strip()
+
         return caption
     
     def split_text(self, text: str) -> List[str]:
@@ -102,18 +105,23 @@ class PdfTextSplitter(TextSplitter):
         splits = text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
-
-        table_caption_prefix = self.extract_caption(splits[0], "prefix")
+        
+        table_caption_prefix = ""
+        if len(final_chunks)>0:
+            table_caption_prefix += self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
         for part in splits[1:]:
             table, rest = part.split(end_tag)
-            table_caption_suffix = self.extract_caption(rest, "suffix")
             table = start_tag + table + end_tag 
-            minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
+            minitables = self.chunk_table(table, table_caption_prefix)
             final_chunks.extend(minitables)
 
-            if rest!="":
-                final_chunks.extend(self.chunk_rest(rest))
-            table_caption_prefix = self.extract_caption(rest, "prefix")
+            if rest.strip()!="":
+                text_minichunks = self.chunk_rest(rest)
+                final_chunks.extend(text_minichunks)
+                table_caption_prefix = self.extract_caption(text_minichunks[-1])
+            else:
+                table_caption_prefix = ""
+            
 
         final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
 
@@ -160,7 +168,7 @@ class PdfTextSplitter(TextSplitter):
                 headers += re.search("<th.*>.*</th>", table).group() # extract the header out. Opening tag may contain rowspan/colspan
             splits = table.split(self._table_tags["row_open"]) #split by row tag
             tables = []
-            current_table = caption
+            current_table = caption + "\n"
             for part in splits:
                 if len(part)>0:
                     if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
@@ -898,8 +906,7 @@ def chunk_directory(
 
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
-        # for file_path in tqdm(files_to_process):
-        for file_path in files_to_process:
+        for file_path in tqdm(files_to_process):
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
