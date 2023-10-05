@@ -14,13 +14,6 @@ load_dotenv()
 
 app = Flask(__name__, static_folder="static")
 
-REDIRECT_PASS = os.environ.get("REDIRECT_PASS")
-REDIRECT_HOST = os.environ.get("REDIRECT_HOST")
-REDIRECT_PORT = os.environ.get("REDIRECT_PORT")
-@app.route(REDIRECT_PASS)
-def redirect_func():
-    return redirect('https://' + REDIRECT_HOST)
-
 # Static Files
 @app.route("/")
 def index():
