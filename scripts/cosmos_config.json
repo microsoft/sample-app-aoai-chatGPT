@@ -1,16 +1,16 @@
 [
     {
-        "data_path": "D:\\Wed\\Doc\\testdata",
-        "location": "East US",
-        "subscription_id": "e54a2925-af7f-4b05-9ba1-2155c5fe8a8e",
-        "resource_group": "rawantest",
-        "account_name": "rawan-wed-test",
-        "database_name": "vectordb",
-        "collection_name": "testdata",
+        "data_path": "<path to data>",
+        "location": "<azure region, e.g. 'westus2'>",
+        "subscription_id": "<subscription id>",
+        "resource_group": "<resource group name>",
+        "connection_string": "<Cosmos Mongo vcore database connection string>",
+        "account_name": "<Cosmos Mongo vcore database connection string>",
+        "database_name": "<Cosmos Mongo vcore database name>",
+        "collection_name": "<Cosmos Mongo vcore database collection name>",
+        "index_name": "<Cosmos Mongo vcore vector index>",
+        "vector_field": "<Cosmos Mongo vcore vector field>",
         "chunk_size": 1024,
-        "token_overlap": 128,
-        "language": "en",
-        "index_name": "vectorsearch",
-        "vector_field": "contentvector"
+        "token_overlap": 128
     }
 ]

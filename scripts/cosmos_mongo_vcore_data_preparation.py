@@ -54,7 +54,6 @@ SUPPORTED_LANGUAGE_CODES = {
 
 def check_if_cosmos_mongo_db_exists(
     account_name: str,
-    database_name: str,
     subscription_id: str,
     resource_group: str,
     credential = None):
@@ -73,12 +72,7 @@ def check_if_cosmos_mongo_db_exists(
         f"https://management.azure.com/subscriptions/{subscription_id}"
         f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB"
         f"/mongoClusters/{account_name}?api-version=2023-03-01-preview"
-    )
-    # url = (
-    #     f"https://management.azure.com/subscriptions/{subscription_id}"
-    #     f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB/databaseAccounts"
-    #     f"/{account_name}/mongoClusters/{database_name}?api-version=2023-03-01-preview"
-    # )    
+    )   
 
     headers = {
         "Content-Type": "application/json",
@@ -87,177 +81,6 @@ def check_if_cosmos_mongo_db_exists(
 
     response = requests.get(url, headers=headers)
     return response.status_code == 200
-
-def create_cosmos_mongo_db(
-    account_name: str,
-    database_name: str,
-    subscription_id: str,
-    resource_group: str,
-    location: str,
-    credential = None,
-):
-    """_summary_
-
-    Args:
-        account_name (str): _description_
-        database_name (str): _description_
-        subscription_id (str): _description_
-        resource_group (str): _description_
-        location (str): _description_
-        credential: Azure credential to use for creating acs instance
-
-    Raises:
-        Exception: _description_
-    """
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    url = (
-        f"https://management.azure.com/subscriptions/{subscription_id}"
-        f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB/databaseAccounts"
-        f"/{account_name}/mongodbDatabases/{database_name}?api-version=2023-03-15"
-    )
-
-    payload = {
-        "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
-        "location": f"{location}",
-        "properties": {
-            "id": f"{database_name}",
-            "name": f"{database_name}"
-        },
-        "options": {}
-    }
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {credential.get_token('https://management.azure.com/.default').token}",
-    }
-
-    response = requests.put(url, json=payload, headers=headers)
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to create cosmos mongo vcore database. Error: {response.text}")
-
-def check_if_cosmos_mongo_db_collection_exists(
-    account_name: str,
-    database_name: str,
-    collection_name: str,
-    subscription_id: str,
-    resource_group: str,
-    credential = None):
-    """_summary_
-
-    Args:
-        account_name (str): _description_
-        database_name (str): _description_        
-        collection_name (str): _description_
-        subscription_id (str): _description_
-        resource_group (str): _description_
-        credential: Azure credential to use for getting acs instance
-    """
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    url = (
-        f"https://management.azure.com/subscriptions/{subscription_id}"
-        f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB/databaseAccounts"
-        f"/{account_name}/mongodbDatabases/{database_name}"
-        f"/collections/{collection_name}?api-version=2023-03-15"
-    )
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {credential.get_token('https://management.azure.com/.default').token}",
-    }
-
-    response = requests.get(url, headers=headers)
-    return response.status_code == 200
-
-def create_cosmos_mongo_db_collection(
-    account_name: str,
-    database_name: str,
-    collection_name: str,    
-    subscription_id: str,
-    resource_group: str,
-    location: str,
-    credential = None,
-):
-    """_summary_
-
-    Args:
-        account_name (str): _description_
-        database_name (str): _description_
-        collection_name (str): _description_
-        subscription_id (str): _description_
-        resource_group (str): _description_
-        location (str): _description_
-        credential: Azure credential to use for creating acs instance
-
-    Raises:
-        Exception: _description_
-    """
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    url = (
-        f"https://management.azure.com/subscriptions/{subscription_id}"
-        f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB/databaseAccounts"
-        f"/{account_name}/mongodbDatabases/{database_name}"
-        f"/collections/{collection_name}?api-version=2023-03-15"
-    )
-
-    payload = {
-        "name": f"{collection_name}",
-        "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/mongodbCollections",
-        "location": f"{location}",
-        "properties": {
-            "resource": {            
-                "id": f"{collection_name}"
-            }
-        }
-    }
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {credential.get_token('https://management.azure.com/.default').token}",
-    }
-
-    response = requests.put(url, json=payload, headers=headers)
-    if response.status_code != 200:
-        raise Exception(
-            f"Failed to create cosmos mongo vcore database collection. Error: {response.text}")
-
-def get_cosmos_mongo_db_connection_string(
-    account_name: str,
-    database_name: str,
-    subscription_id: str,
-    resource_group: str,
-    credential = None) -> str:
-    """_summary_
-
-    Args:
-        account_name (str): _description_
-        database_name (str): _description_
-        subscription_id (str): _description_
-        resource_group (str): _description_
-        credential: Azure credential to use for getting acs instance
-    """
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    url = (
-        f"https://management.azure.com/subscriptions/{subscription_id}"
-        f"/resourceGroups/{resource_group}/providers/Microsoft.DocumentDB/databaseAccounts"
-        f"/{account_name}/listConnectionStrings?api-version=2023-03-15"
-    )
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {credential.get_token('https://management.azure.com/.default').token}",
-    }
-
-    response = requests.post(url, headers=headers)
-    if response.status_code == 200:
-        return response.text.get("connectionStrings")[0].get("connectionString")
-    else:
-        raise Exception(
-            f"Failed to get connection string of cosmos database {database_name}.")
 
 def create_or_update_vector_search_index(
         mongo_client: MongoClient,
@@ -292,13 +115,8 @@ def create_or_update_vector_search_index(
     return True
 
 def initialize_mongo_client(
-        account_name: str,
-        database_name: str,
-        subscription_id, 
-        resource_group) -> MongoClient:
-    conn_string = "<connstr>"
-    # conn_string = get_cosmos_mongo_db_connection_string(account_name, database_name, subscription_id, resource_group, credential)
-    return MongoClient(conn_string)
+        connection_string: str) -> MongoClient:
+    return MongoClient(connection_string)
      
 def upsert_documents_to_index(
         mongo_client: MongoClient,
@@ -330,13 +148,7 @@ def validate_index(
         mongo_client: MongoClient,
         database_name: str,
         collection_name: str,
-        index_name,
-        vector_field, 
-        credential, 
-        language):
-    if credential is None:
-        raise ValueError("credential cannot be None")
-
+        index_name):
     try:
         mongo_collection = mongo_client[database_name][collection_name]  
         indexes = mongo_collection.index_information()
@@ -344,10 +156,9 @@ def validate_index(
             raise Exception(
                 f"Failed to create vector index {index_name} for collection {collection_name} under database {database_name}. Error: {str(e)}")
 
-            # Ensure the vector index exists.
     except Exception as e:
         raise Exception(
-            f"Failed to create vector index {index_name} for collection {collection_name} under database {database_name}. Error: {str(e)}")  
+            f"Failed to validate vector index {index_name} for collection {collection_name} under database {database_name}. Error: {str(e)}")  
 
 def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
     account_name = config["account_name"]
@@ -355,7 +166,6 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     collection_name = config["collection_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
-    location = config["location"]
     index_name = config["index_name"]
     vector_field = config["vector_field"]
     language = config.get("language", None)
@@ -364,18 +174,18 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         raise Exception(f"ERROR: Ingestion does not support {language} documents. "
                         f"Please use one of {SUPPORTED_LANGUAGE_CODES}."
                         f"Language is set as two letter code for e.g. 'en' for English."
-                        f"If you donot want to set a language just remove this prompt config or set as None")
+                        f"If you do not want to set a language just remove this prompt config or set as None")
 
 
-    # check if cosmos mongo vcore database exists, create if not
-    if check_if_cosmos_mongo_db_exists(account_name, database_name, subscription_id, resource_group, credential):
-        print(f"Using existing cosmos vcore database {database_name}")
+    # check if cosmos mongo vcore database account exists
+    if check_if_cosmos_mongo_db_exists(account_name, subscription_id, resource_group, credential):
+        print(f"Using existing cosmos vcore database account {account_name}")
     else:
-        print(f"Creating cosmos vcore database {database_name}")
-        # create_cosmos_mongo_db(account_name, database_name, subscription_id, resource_group, location, credential=credential)
+        # Won't create the database account automatically for user since it needs set admin password
+        raise Exception(f"Database account {account_name} doesn't exist. Please follow this page https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/quickstart-portal to create the resource")
 
-    # Initialize Mongo Client
-    mongo_client = initialize_mongo_client(account_name, database_name, subscription_id, resource_group)
+    # Initialize Cosmos Mongo Client
+    mongo_client = initialize_mongo_client(config.get("connection_string"))
 
     # create or update vector search index with compatible schema
     if not create_or_update_vector_search_index(mongo_client, database_name, collection_name, index_name, vector_field, credential, language):
@@ -403,7 +213,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
     # check if index is ready/validate index
     print("Validating index...")
-    #validate_index(service_name, subscription_id, resource_group, index_name)
+    validate_index(mongo_client, database_name, collection_name, index_name)
     print("Index validation completed")
 
 def valid_range(n):
