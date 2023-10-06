@@ -1,0 +1,25 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: push_only_pipeline
+description: Pipeline to push data to ACS.
+
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  config_file: 
+    type: uri_file
+    path: aml_config.json # your config file name here
+  chunked_file:
+    type: uri_file
+    path: <data asset name>
+    mode: ro_mount
+
+jobs:
+  push_documents_acs:
+    type: command
+    component: ./push_documents_acs.yml
+    inputs:
+      config_file: ${{parent.inputs.config_file}}
+      chunks_with_embeddings_file_path: ${{parent.inputs.chunked_file}}
