@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/azureBlob.schema.json
+name: my_ds # your datstore name here
+type: azure_blob
+description: Data store for index preparation # your description here
+account_name: mystorageaccount # your storage account name here
+container_name: mystoragecontainer # your container name here
+credentials: 
+  account_key: # account key here

@@ -134,22 +134,26 @@ def create_search_service(
 
 def create_or_update_search_index(
         service_name, 
-        subscription_id, 
-        resource_group, 
-        index_name, 
-        semantic_config_name, 
-        credential, 
-        language,
-        vector_config_name=None):
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+        subscription_id=None, 
+        resource_group=None, 
+        index_name="default-index", 
+        semantic_config_name="default", 
+        credential=None, 
+        language=None,
+        vector_config_name=None,
+        admin_key=None):
+    
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin key cannot be None")
+    
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
     headers = {
@@ -247,15 +251,17 @@ def create_or_update_search_index(
     
     return True
 
-def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential, upload_batch_size = 50):
-    if credential is None:
-        raise ValueError("credential cannot be None")
+
+def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None, upload_batch_size = 50, admin_key=None):
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin_key cannot be None")
     
     to_upload_dicts = []
 
     id = 0
-    for document in docs:
-        d = dataclasses.asdict(document)
+    for d in docs:
+        if type(d) is not dict:
+            d = dataclasses.asdict(d)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
         if "contentVector" in d and d["contentVector"] is None:
@@ -264,13 +270,14 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         id += 1
     
     endpoint = "https://{}.search.windows.net/".format(service_name)
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     search_client = SearchClient(
         endpoint=endpoint,
