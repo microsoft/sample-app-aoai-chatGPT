@@ -55,7 +55,7 @@ AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
 AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
-AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-08-01-preview")
+AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
@@ -220,12 +220,14 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
             for line in r.iter_lines(chunk_size=10):
                 if line:
-                    try:
-                        rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
-                    except json.decoder.JSONDecodeError:
-                        continue
-
-                    lineJson = formatApiResponseStreaming(rawResponse)
+                    if '2023-08-01-preview' in endpoint:
+                        try:
+                            rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                            lineJson = formatApiResponseStreaming(rawResponse)
+                        except json.decoder.JSONDecodeError:
+                            continue
+                    else:
+                        lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
 
                     if 'error' in lineJson:
                         yield format_as_ndjson(lineJson)
@@ -333,11 +335,15 @@ def conversation_with_data(request_body):
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
-        result = formatApiResponseNoStreaming(r)
-        result['history_metadata'] = history_metadata
+        if AZURE_OPENAI_PREVIEW_API_VERSION == "2023-08-01-preview":
+            result = formatApiResponseNoStreaming(r)
+            result['history_metadata'] = history_metadata
+            return Response(format_as_ndjson(result), status=status_code)
+        else:
+            r['history_metadata'] = history_metadata
+            return Response(format_as_ndjson(r), status=status_code)
 
 
-        return Response(format_as_ndjson(result), status=status_code)
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
 
@@ -371,7 +377,7 @@ def stream_without_data(response, history_metadata={}):
 def conversation_without_data(request_body):
     openai.api_type = "azure"
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
-    openai.api_version = "2023-08-01-preview"
+    openai.api_version = "2023-03-15-preview"
     openai.api_key = AZURE_OPENAI_KEY
 
     request_messages = request_body["messages"]
