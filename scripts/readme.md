@@ -6,6 +6,7 @@ Follow the instructions in this section to prepare your data locally. This is ea
 - Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
 
 ## Configure
+### Config for Azure Cognitive Search Data ingestion 
 - Create a config file like `config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
 
 ```
@@ -26,14 +27,39 @@ Follow the instructions in this section to prepare your data locally. This is ea
 ]
 ```
 
+### Config for Azure Cosmos Mongo vcore Data ingestion 
+- Create a config file like `cosmos_config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
+
+```
+[
+    {
+        "data_path": "<path to data>",
+        "location": "<azure region, e.g. 'westus2'>",
+        "subscription_id": "<subscription id>",
+        "resource_group": "<resource group name>",
+        "connection_string": "<Azure Cosmos Mongo vcore database connection string>",
+        "account_name": "<Azure Cosmos Mongo vcore database connection string>",
+        "database_name": "<Azure Cosmos Mongo vcore database name>",
+        "collection_name": "<Azure Cosmos Mongo vcore database collection name>",
+        "index_name": "<Azure Cosmos Mongo vcore vector index>",
+        "vector_field": "<Azure Cosmos Mongo vcore vector field, the field used to store documents/chunks vector>",
+        "chunk_size": 1024, // set to null to disable chunking before ingestion
+        "token_overlap": 128
+    }
+]
+```
+
 ## Create Indexes and Ingest Data
 Disclaimer: Make sure there are no duplicate pages in your data. That could impact the quality of the responses you get in a negative way.
 
 - Run the data preparation script, passing in your config file. You can set njobs for parallel parsing of your files.
-
+    - Create indexes and ingest data to Azure Cognitive Search:
      `python data_preparation.py --config config.json --njobs=4`
+    - Create indexes and ingest data to Azure Cosmos Mongo vcore:
+     `python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --njobs=4`
 
-## Optional: Add vector embeddings
+## Add vector embeddings
+### Add vector embeddings for Azure Cognitive Search (optional)
 Azure Cognitive Search supports vector search in public preview. See [the docs](https://learn.microsoft.com/en-us/azure/search/vector-search-overview) for more information.
 
 To add vectors to your index, you will first need an [Azure OpenAI resource](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) with an [Ada embedding model deployment](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#embeddings-models). The `text-embedding-ada-002` model is supported.
@@ -42,6 +68,17 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 - Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
 
       `python data_preparation.py --config config.json --embedding-model-endpoint "<embedding endpoint>"`
+
+### Add vector embeddings for Azure Cosmos Mongo vcore
+We only support vector search for Azure Cosmos Mongo vcore. So add vector embeddings is required.
+As for the detail information, Please see [the docs](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search)
+
+To add vectors to your index, you will first need an [Azure OpenAI resource](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) with an [Ada embedding model deployment](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#embeddings-models). The `text-embedding-ada-002` model is supported.
+
+- Get the endpoint for embedding model deployment. The endpoint will generally be of the format `https://<azure openai resource name>.openai.azure.com/openai/deployments/<ada deployment name>/embeddings?api-version=2023-06-01-preview`.
+- Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
+
+      `python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --embedding-model-endpoint "<embedding endpoint>"`
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
@@ -55,9 +92,14 @@ If your data is in PDF format, you'll first need to convert from PDF to .txt for
   Copy one of the keys returned by this command.
 
 ### Create Indexes and Ingest Data from PDF with Form Recognizer
-Pass in your Form Recognizer resource name and key when running the data preparation script:
+
+For Azure Cognitive Search, Pass in your Form Recognizer resource name and key when running the data preparation script:
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
+
+For Azure Cosmos Mongo vcore, Pass in your Form Recognizer resource name and key when running the data preparation script:
+
+`python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
 
 This will use the Form Recognizer Read model by default. 
 
