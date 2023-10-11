@@ -114,9 +114,8 @@ class PdfTextSplitter(TextSplitter):
             table_caption_prefix += self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
         for part in splits[1:]:
             table, rest = part.split(end_tag)
-            table = start_tag + table + end_tag 
-            minitables = self.chunk_table(table, table_caption_prefix)
-            final_chunks.extend(minitables)
+            table = table_caption_prefix + "\n" + start_tag + table + end_tag 
+            final_chunks.append(table)
 
             if rest.strip()!="":
                 text_minichunks = self.chunk_rest(rest)
@@ -162,44 +161,6 @@ class PdfTextSplitter(TextSplitter):
             chunks.extend(merged_text)
         return chunks
         
-    def chunk_table(self, table, caption):
-        if self._length_function("\n".join([caption, table])) < self._chunk_size - self._noise:
-            return ["\n".join([caption, table])]
-        else:
-            headers = ""
-            if re.search("<th.*>.*</th>", table):
-                headers += re.search("<th.*>.*</th>", table).group() # extract the header out. Opening tag may contain rowspan/colspan
-            splits = table.split(self._table_tags["row_open"]) #split by row tag
-            tables = []
-            current_table = caption + "\n"
-            for part in splits:
-                if len(part)>0:
-                    if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
-                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
-                            current_table += self._table_tags["row_open"]
-                        current_table += part
-                        
-                    else:
-                        
-                        # if current table size is beyond the permissible limit, complete this as a mini-table and add to final mini-tables list
-                        current_table += self._table_tags["table_close"]
-                        tables.append(current_table)
-
-                        # start a new table
-                        current_table = "\n".join([caption, self._table_tags["table_open"], headers])
-                        if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]:
-                            current_table += self._table_tags["row_open"]
-                        current_table += part
-
-            
-            # TO DO: fix the case where the last mini table only contain tags
-            
-            if not current_table.endswith(self._table_tags["table_close"]):
-                
-                tables.append(current_table + self._table_tags["table_close"])
-            else:
-                tables.append(current_table)
-            return tables
 
     
 @dataclass
