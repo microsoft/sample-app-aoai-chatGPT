@@ -230,6 +230,20 @@
                 "description": "Azure Search Permitted Groups Field"
             }
         },
+        "AzureSearchStrictness": {
+            "type": "int",
+            "defaultValue": 3,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "metadata": {
+                "description": "Azure Search Strictness"
+            }
+        },
         "AzureOpenAIEmbeddingEndpoint": {
             "type": "string",
             "defaultValue": "",
@@ -397,6 +411,10 @@
                         {
                             "name": "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN",
                             "value": "[parameters('AzureSearchPermittedGroupsField')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_STRICTNESS",
+                            "value": "[parameters('AzureSearchStrictness')]"
                         },
                         {
                             "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",

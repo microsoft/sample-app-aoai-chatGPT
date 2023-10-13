@@ -64,6 +64,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_VECTOR_COLUMNS`
     - `AZURE_SEARCH_QUERY_TYPE`
     - `AZURE_SEARCH_PERMITTED_GROUPS_COLUMN`
+    - `AZURE_SEARCH_STRICTNESS`
     - `AZURE_OPENAI_EMBEDDING_ENDPOINT`
     - `AZURE_OPENAI_EMBEDDING_KEY`
 
@@ -114,8 +115,50 @@ const getUserInfoList = async () => {
 }
 ```
 
-## Best Practices
-Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to expose some of the settings in `app.py` in the UI for users to try out different behaviors. We recommend keeping these best practices in mind:
+## Common Customization Scenarios
+Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
+
+### Updating the default chat logo and headers
+The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
+```
+<Stack className={styles.chatEmptyState}>
+    <img
+        src={Azure}
+        className={styles.chatIcon}
+        aria-hidden="true"
+    />
+    <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
+    <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+</Stack>
+```
+To update the logo, change `src={Azure}` to point to your own SVG file, which you can put in `frontend/src/assets`/
+To update the headers, change the strings "Start chatting" and "This chatbot is configured to answer your questions" to your desired values.
+
+### Changing Citation Display
+The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the "View Source" button will open the citation URL in a new tab when clicked:
+```
+const onViewSource = (citation: Citation) => {
+        if (citation.url) {
+            window.open(citation.url, "_blank");
+        }
+    };
+
+<span 
+        title={activeCitation.url} 
+        tabIndex={0} 
+        role="link" 
+        onClick={() => onViewSource(activeCitation)} 
+        onKeyDown={e => e.key === "Enter" || e.key === " " ? onViewSource(activeCitation) : null}
+        className={styles.viewSourceButton}
+        aria-label={activeCitation.url}
+    >
+        View Source
+</span>
+```
+
+
+### Best Practices
+We recommend keeping these best practices in mind:
 
 - Reset the chat session (clear chat) if the user changes any settings. Notify the user that their chat history will be lost.
 - Clearly communicate to the user what impact each setting will have on their experience.
@@ -142,6 +185,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_SEARCH_URL_COLUMN||Field from your Azure Cognitive Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
 |AZURE_SEARCH_VECTOR_COLUMNS||List of fields in your Azure Cognitive Search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
 |AZURE_SEARCH_PERMITTED_GROUPS_COLUMN||Field from your Azure Cognitive Search index that contains AAD group IDs that determine document-level access control.|
+|AZURE_SEARCH_STRICTNESS|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
 |AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
 |AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource.|

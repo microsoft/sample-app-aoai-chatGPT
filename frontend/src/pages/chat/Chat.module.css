@@ -290,6 +290,11 @@
     margin-bottom: 12px;
 } 
 
+.citationPanelTitle:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .citationPanelContent {
     font-style: normal;
     font-weight: 400;
@@ -305,4 +310,23 @@
 a {
     padding-left: 5px;
     padding-right: 5px;
+}
+
+.viewSourceButton {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: #115EA3;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px;
+    gap: 4px;
+    border: 1px solid #D1D1D1;
+    border-radius: 4px;
+}
+
+.viewSourceButton:hover {
+    text-decoration: underline;
+    cursor: pointer;
 }
