@@ -9,3 +9,4 @@ bs4==0.0.1
 urllib3==2.0.6
 pytest==7.4.0
 azure-storage-blob
+chardet
