@@ -219,7 +219,7 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
     }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
-            apimRequestId = r.headers._store.get('apim-request-id')[1]
+            apimRequestId = r.headers.get('apim-request-id')
             for line in r.iter_lines(chunk_size=10):
                 if line:
                     lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
