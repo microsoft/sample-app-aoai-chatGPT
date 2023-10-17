@@ -214,10 +214,12 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
         "choices": [{
             "messages": []
         }],
+        "apim-request-id": "",
         'history_metadata': history_metadata
     }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
+            apimRequestId = r.headers.get('apim-request-id')
             for line in r.iter_lines(chunk_size=10):
                 if line:
                     lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
@@ -227,6 +229,7 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
                     response["model"] = lineJson["model"]
                     response["created"] = lineJson["created"]
                     response["object"] = lineJson["object"]
+                    response["apim-request-id"] = apimRequestId
 
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
                     if role == "tool":
