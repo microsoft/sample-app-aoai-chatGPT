@@ -1,13 +1,14 @@
 import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
-export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+export async function conversationApi(options: ConversationRequest, conversation_id: string, abortSignal: AbortSignal): Promise<Response> {
     const response = await fetch("/conversation", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
+            conversation_id: conversation_id,
             messages: options.messages
         }),
         signal: abortSignal

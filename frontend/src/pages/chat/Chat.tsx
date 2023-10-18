@@ -139,7 +139,7 @@ const Chat = () => {
 
         let result = {} as ChatResponse;
         try {
-            const response = await conversationApi(request, abortController.signal);
+            const response = await conversationApi(request, conversation.id, abortController.signal);
             if (response?.body) {
                 const reader = response.body.getReader();
                 let runningText = "";
@@ -160,7 +160,7 @@ const Chat = () => {
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            if(!conversationId){
+                            if(conversation?.id != null || conversation?.id != "undefined"){
                                 setMessages([...messages, userMessage, ...result.choices[0].messages]);
                             }else{
                                 setMessages([...messages, ...result.choices[0].messages]);

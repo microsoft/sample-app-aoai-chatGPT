@@ -67,6 +67,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_STRICTNESS`
     - `AZURE_OPENAI_EMBEDDING_ENDPOINT`
     - `AZURE_OPENAI_EMBEDDING_KEY`
+    - `APPLICATIONINSIGHTS_CONNECTION_STRING`
 
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
 4. You can see the local running app at http://127.0.0.1:5000.

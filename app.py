@@ -10,9 +10,45 @@ from dotenv import load_dotenv
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 
+from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry import trace
+from opentelemetry.sdk.trace import SpanProcessor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+
 load_dotenv()
 
 app = Flask(__name__, static_folder="static")
+
+    
+class SpanEnrichingProcessor(SpanProcessor):
+
+    def on_end(self, span):
+        span._name = "Updated-" + span.name
+        span._attributes["Application"] = "AI-Runtime"
+         
+# configure Azure Monitor with Open Telemetry
+appinsights_connstring = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
+if (appinsights_connstring):
+    # disable Application Insights sample through OpenTelemetry SDK setting
+    OTEL_TRACES_SAMPLER_ARG=0
+    
+    # use Open Telemetry Flask implementation
+    FlaskInstrumentor().instrument_app(app)
+
+    configure_azure_monitor(connection_string=appinsights_connstring)
+
+logger = trace.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# adding this, enables the console logs
+streamHandler = logging.StreamHandler()
+streamHandler.setLevel(logging.DEBUG)
+logger.addHandler(streamHandler)
+
+if (appinsights_connstring):
+    span_enrich_processor = SpanEnrichingProcessor()
+    trace.get_tracer_provider().add_span_processor(span_enrich_processor)
+
 
 # Static Files
 @app.route("/")
@@ -204,7 +240,7 @@ def prepare_body_headers_with_data(request):
     return body, headers
 
 
-def stream_with_data(body, headers, endpoint, history_metadata={}):
+def stream_with_data(body, headers, endpoint, conversation_id, history_metadata={}):
     s = requests.Session()
     response = {
         "id": "",
@@ -243,6 +279,9 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
                         deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
                         if deltaText != "[DONE]":
                             response["choices"][0]["messages"][1]["content"] += deltaText
+                        else:
+                            # deltaText = '[DONE]' means streaming has finished
+                            logBotMessage(response, conversation_id)
 
                     yield format_as_ndjson(response)
     except Exception as e:
@@ -254,6 +293,7 @@ def conversation_with_data(request_body):
     base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
     history_metadata = request_body.get("history_metadata", {})
+    conversation_id = request_body["conversation_id"]
 
     if not SHOULD_STREAM:
         r = requests.post(endpoint, headers=headers, json=body)
@@ -261,9 +301,10 @@ def conversation_with_data(request_body):
         r = r.json()
         r['history_metadata'] = history_metadata
 
+        logBotMessage(r, conversation_id)
         return Response(format_as_ndjson(r), status=status_code)
     else:
-        return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
+        return Response(stream_with_data(body, headers, endpoint, conversation_id, history_metadata), mimetype='text/event-stream')
 
 
 def stream_without_data(response, history_metadata={}):
@@ -349,6 +390,14 @@ def conversation():
 def conversation_internal(request_body):
     try:
         use_data = should_use_data()
+
+        request_messages = request.json["messages"]
+        conversation_id = request.json["conversation_id"]
+
+        # filter only the user messages and get the last one
+        user_message = [x for x in request_messages if x['role'] == 'user'][-1]
+        logger.info(msg=user_message['content'], extra={ "type":"userMessage", "conversation_id":conversation_id })
+
         if use_data:
             return conversation_with_data(request_body)
         else:
@@ -396,6 +445,8 @@ def add_conversation():
         request_body = request.json
         history_metadata['conversation_id'] = conversation_id
         request_body['history_metadata'] = history_metadata
+        # add conversation_id on request body too, for managing both the cases with the conversation history and without it
+        request_body['conversation_id'] = conversation_id
         return conversation_internal(request_body)
        
     except Exception as e:
@@ -617,6 +668,13 @@ def generate_title(conversation_messages):
         return title
     except Exception as e:
         return messages[-2]['content']
+
+# log the response with the answer to the user and the citations
+def logBotMessage(response, conversation_id):
+    messages = response["choices"][0]["messages"]
+    bot_message = [x for x in messages if x['role'] == 'assistant'][-1]
+    citations = [x for x in messages if x['role'] == 'tool'][-1]
+    logger.info(msg=citations['content'], extra={ "type":"botMessage", "conversation_id":conversation_id, "generatedMessage":bot_message['content'] })
 
 if __name__ == "__main__":
     app.run()
