@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 
-load_dotenv()
+load_dotenv("credentials.env")
 
 app = Flask(__name__, static_folder="static")
 
