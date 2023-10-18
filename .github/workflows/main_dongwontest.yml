@@ -64,4 +64,4 @@ jobs:
         with:
           app-name: 'dongwontest'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_24EB1D93D7D240F8BAC10257606F3AED }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D55BF8D5AAED402C89592D513232FB1E }}
