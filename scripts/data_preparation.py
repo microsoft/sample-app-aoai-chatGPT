@@ -12,6 +12,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
 from azure.search.documents import SearchClient
 from tqdm import tqdm
+from distutils.util import strtobool
 
 from data_utils import chunk_directory, chunk_blob_container
 
@@ -141,7 +142,9 @@ def create_or_update_search_index(
         credential=None, 
         language=None,
         vector_config_name=None,
-        admin_key=None):
+        admin_key=None,
+        is_hierarchical=False,
+):
     
     if credential is None and admin_key is None:
         raise ValueError("credential and admin key cannot be None")
@@ -168,6 +171,7 @@ def create_or_update_search_index(
                 "type": "Edm.String",
                 "searchable": True,
                 "key": True,
+                "filterable": True,
             },
             {
                 "name": "content",
@@ -222,6 +226,14 @@ def create_or_update_search_index(
         },
     }
 
+    if is_hierarchical:
+        body["fields"].append({
+            "name": "parent_id",
+            "type": "Edm.String",
+            "searchable": True,
+            "retrievable": True,
+            "filterable": True,
+        })
     if vector_config_name:
         body["fields"].append({
             "name": "contentVector",
@@ -252,7 +264,8 @@ def create_or_update_search_index(
     return True
 
 
-def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None, upload_batch_size = 50, admin_key=None):
+def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None,
+                              upload_batch_size = 50, admin_key=None, is_hierarchical=False):
     if credential is None and admin_key is None:
         raise ValueError("credential and admin_key cannot be None")
     
@@ -263,7 +276,11 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         if type(d) is not dict:
             d = dataclasses.asdict(d)
         # add id to documents
-        d.update({"@search.action": "upload", "id": str(id)})
+        if d["id"]:
+            update_id = d["id"]
+        else:
+            update_id = id
+        d.update({"@search.action": "upload", "id": str(update_id)})
         if "contentVector" in d and d["contentVector"] is None:
             del d["contentVector"]
         to_upload_dicts.append(d)
@@ -346,6 +363,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     location = config["location"]
     index_name = config["index_name"]
     language = config.get("language", None)
+    is_hierarchical = bool(strtobool(config.get("hierarchical", "False")))
 
     if language and language not in SUPPORTED_LANGUAGE_CODES:
         raise Exception(f"ERROR: Ingestion does not support {language} documents. "
@@ -362,7 +380,10 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
 
     # create or update search index with compatible schema
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None)):
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name,
+                                         config["semantic_config_name"], credential, language,
+                                         vector_config_name=config.get("vector_config_name", None),
+                                         is_hierarchical=is_hierarchical):
         raise Exception(f"Failed to create or update index {index_name}")
     
     data_configs = []
@@ -384,11 +405,13 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         if "blob.core" in data_config["path"]:
             result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                 azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                is_hierarchical=is_hierarchical)
         elif os.path.exists(data_config["path"]):
             result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                     azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                    is_hierarchical=is_hierarchical)
         else:
             raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
@@ -402,7 +425,8 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
         # upload documents to index
         print("Uploading documents to index...")
-        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential,
+                                  is_hierarchical=is_hierarchical)
 
     # check if index is ready/validate index
     print("Validating index...")

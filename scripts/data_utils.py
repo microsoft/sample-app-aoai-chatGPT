@@ -221,6 +221,7 @@ class Document(object):
     filepath: Optional[str] = None
     url: Optional[str] = None
     metadata: Optional[Dict] = None
+    parent_id: str = "self"
     contentVector: Optional[List[float]] = None
 
 def cleanup_content(content: str) -> str:
@@ -645,8 +646,7 @@ def chunk_content_helper(
 ) -> Generator[Tuple[str, int, Document], None, None]:
     if num_tokens is None:
         num_tokens = 1000000000
-
-    parser = parser_factory(file_format.split("_pdf")[0]) # to handle cracked pdf converted to html
+    parser = parser_factory(file_format.split("_pdf")[0])  # to handle cracked pdf converted to html
     doc = parser.parse(content, file_name=file_name)
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
@@ -658,7 +658,11 @@ def chunk_content_helper(
                 chunk_size=num_tokens, chunk_overlap=token_overlap)
             chunked_content_list = splitter.split_text(
                 content)  # chunk the original content
-            for chunked_content, chunk_size in merge_chunks_serially(chunked_content_list, num_tokens):
+            if token_overlap:
+                generator = zip(chunked_content_list, [TOKEN_ESTIMATOR.estimate_tokens(chunk) for chunk in chunked_content_list])
+            else:
+                generator = merge_chunks_serially(chunked_content_list, num_tokens)
+            for chunked_content, chunk_size in generator:
                 chunk_doc = parser.parse(chunked_content, file_name=file_name)
                 chunk_doc.title = doc.title
                 yield chunk_doc.content, chunk_size, chunk_doc
@@ -678,6 +682,51 @@ def chunk_content_helper(
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
 
+
+def prepare_doc_from_chunk(
+    chunk: str,
+    chunk_size: int,
+    doc: Document,
+    url: Optional[str] = None,
+    azure_credential = None,
+    min_chunk_size: int = 10,
+    embedding_endpoint = None,
+    add_embeddings = False,
+) -> Union[None, Document]:
+    if chunk_size >= min_chunk_size:
+        if add_embeddings:
+            for _ in range(RETRY_COUNT):
+                try:
+                    doc.contentVector = get_embedding(chunk, azure_credential=azure_credential,
+                                                      embedding_model_endpoint=embedding_endpoint)
+                    break
+                except:
+                    sleep(30)
+            if doc.contentVector is None:
+                raise Exception(f"Error getting embedding for chunk={chunk}")
+
+
+        return Document(
+                content=chunk,
+                title=doc.title,
+                url=url,
+                contentVector=doc.contentVector
+            )
+
+    else:
+        return None
+
+def filepath_no_ext(file_path):
+    # Split the file path into the directory and filename
+    directory, filename = os.path.split(file_path)
+
+    # Split the filename into its name and extension
+    name, extension = os.path.splitext(filename)
+
+    # Print the directory and file name without extension
+    directory = "path_"+directory
+    return f"{directory}_{name}"
+
 def chunk_content(
     content: str,
     file_name: Optional[str] = None,
@@ -691,7 +740,8 @@ def chunk_content(
     use_layout = False,
     add_embeddings = False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    is_hierarchical=False,
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -723,31 +773,45 @@ def chunk_content(
             file_name=file_name,
             file_format=file_format,
             num_tokens=num_tokens,
-            token_overlap=token_overlap
+            token_overlap=token_overlap,
         )
         chunks = []
         skipped_chunks = 0
+        chunk_id = 0
         for chunk, chunk_size, doc in chunked_context:
-            if chunk_size >= min_chunk_size:
-                if add_embeddings:
-                    for _ in range(RETRY_COUNT):
-                        try:
-                            doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
-                            break
-                        except:
-                            sleep(30)
-                    if doc.contentVector is None:
-                        raise Exception(f"Error getting embedding for chunk={chunk}")
-                    
+            doc = prepare_doc_from_chunk(chunk, chunk_size, doc,
+                                         url=url, azure_credential=azure_credential,
+                                         min_chunk_size=min_chunk_size, embedding_endpoint=embedding_endpoint,
+                                         add_embeddings=add_embeddings)
+            doc.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}"
+            doc.parent_id = "self"
+            chunks.append(doc)
+            chunk_id += 1
+            print("Parent chunksize:", chunk_size)
+            if is_hierarchical and chunk_size > 512:
+                second_level_overlap = 0
+                second_level_numtokens = 256
 
-                chunks.append(
-                    Document(
-                        content=chunk,
-                        title=doc.title,
-                        url=url,
-                        contentVector=doc.contentVector
-                    )
+                second_level_chunked_context = chunk_content_helper(
+                    content=chunk,
+                    file_name=file_name,
+                    file_format=file_format,
+                    num_tokens=second_level_numtokens,
+                    token_overlap=second_level_overlap,
                 )
+                second_idx = 0
+                for chunk_2, chunk_size_2, doc_2 in second_level_chunked_context:
+                    doc_2 = prepare_doc_from_chunk(
+                        chunk_2, chunk_size_2, doc_2,
+                        url=url, azure_credential=azure_credential,
+                        min_chunk_size=min_chunk_size, embedding_endpoint=embedding_endpoint,
+                        add_embeddings=add_embeddings
+                    )
+                    doc_2.parent_id = doc.id
+                    doc_2.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}_{second_idx}"
+                    chunks.append(doc_2)
+                    second_idx += 1
+                    print("Child chunk size", chunk_size_2)
             else:
                 skipped_chunks += 1
 
@@ -781,7 +845,8 @@ def chunk_file(
     use_layout = False,
     add_embeddings=False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    is_hierarchical=False,
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -829,7 +894,8 @@ def chunk_file(
         use_layout=use_layout,
         add_embeddings=add_embeddings,
         azure_credential=azure_credential,
-        embedding_endpoint=embedding_endpoint
+        embedding_endpoint=embedding_endpoint,
+        is_hierarchical=is_hierarchical,
     )
 
 
@@ -846,7 +912,8 @@ def process_file(
         use_layout = False,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        is_hierarchical=False,
     ):
 
     if not form_recognizer_client:
@@ -872,7 +939,8 @@ def process_file(
             use_layout=use_layout,
             add_embeddings=add_embeddings,
             azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            is_hierarchical=is_hierarchical,
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
@@ -900,7 +968,8 @@ def chunk_blob_container(
         njobs=4,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        is_hierarchical = False,
 ):
     with tempfile.TemporaryDirectory() as local_data_folder:
         print(f'Downloading {blob_url} to local folder')
@@ -920,7 +989,8 @@ def chunk_blob_container(
             njobs=njobs,
             add_embeddings=add_embeddings,
             azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            is_hierarchical=is_hierarchical,
         )
 
     return result
@@ -939,7 +1009,8 @@ def chunk_directory(
         njobs=4,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        is_hierarchical = False,
 ):
     """
     Chunks the given directory recursively
@@ -981,7 +1052,8 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint,
+                                       is_hierarchical=is_hierarchical)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -997,7 +1069,8 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint,
+                                       is_hierarchical=is_hierarchical)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:
