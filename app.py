@@ -58,6 +58,8 @@ AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-08-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
+AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
+AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
 AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME")
 
 
@@ -186,6 +188,8 @@ def prepare_body_headers_with_data(request):
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                     "embeddingDeploymentName": AZURE_OPENAI_EMBEDDING_NAME,
+                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
+                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
                     "filter": filter,
                     "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }

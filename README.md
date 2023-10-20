@@ -65,6 +65,8 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_QUERY_TYPE`
     - `AZURE_SEARCH_PERMITTED_GROUPS_COLUMN`
     - `AZURE_SEARCH_STRICTNESS`
+    - `AZURE_OPENAI_EMBEDDING_ENDPOINT`
+    - `AZURE_OPENAI_EMBEDDING_KEY`
     - `AZURE_OPENAI_EMBEDDING_NAME`
 
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
