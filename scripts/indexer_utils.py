@@ -483,31 +483,16 @@ class ElasticsearchIndexer(BaseIndexer):
         self.validate_index()
     
     def create_or_update_search_index(self):
-        mappings = {
-            "properties": {
-                "id": {
-                    "type": "text"
-                },
-                "content": {
-                    "type": "text"
-                },
-                "title": {
-                    "type": "text"
-                },
-                "filepath": {
-                    "type": "text"
-                },
-                "url": {
-                    "type": "text"
-                },
-                "metadata": {
-                    "type": "text"
-                }
-            }
-        }
+        index_tempate_path = os.path.join(
+            os.path.dirname(__file__),
+            "elasticsearch_index_template.json"
+        )
         
+        with open(index_tempate_path) as f:
+            index_template = json.load(f)
+            
         if self.add_aoai_embeddings:
-            mappings["properties"]["contentVector"] = {
+            index_template["mappings"]["properties"]["contentVector"] = {
                 "type": "dense_vector",
                 "dims": 1536,
                 "index": True,
@@ -516,10 +501,25 @@ class ElasticsearchIndexer(BaseIndexer):
         
         try:
             if self.elasticsearch_client.indices.exists(index=self.index_name):
-                return self.elasticsearch_client.indices.put_mapping(index=self.index_name, mappings=mappings)
+                self.elasticsearch_client.indices.close(index=self.index_name)
+                self.elasticsearch_client.indices.put_mapping(
+                    index=self.index_name,
+                    **index_template["mappings"]
+                )
+                self.elasticsearch_client.indices.put_settings(
+                    index=self.index_name,
+                    settings=index_template["settings"]
+                )
+                self.elasticsearch_client.indices.open(index=self.index_name)
+                return True
                 
-            return self.elasticsearch_client.indices.create(index=self.index_name, mappings=mappings)
-        
+            self.elasticsearch_client.indices.create(
+                index=self.index_name,
+                mappings=index_template["mappings"],
+                settings=index_template["settings"])
+            
+            return True
+            
         except Exception as exc:
             self.handle_client_error(exc)
     

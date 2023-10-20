@@ -1,0 +1,36 @@
+{
+	"mappings": {
+		"properties": {
+			"content": {
+				"type": "text",
+				"analyzer": "english"
+			},
+			"filepath": {
+				"type": "text"
+			},
+			"metadata": {
+				"type": "text"
+			},
+			"id": {
+				"type": "text",
+                "analyzer": "english"
+			},
+			"title": {
+				"type": "text",
+				"analyzer": "english"
+			},
+			"url": {
+				"type": "text"
+			}
+		}
+	},
+	"settings": {
+		"index": {
+			"similarity": {
+				"default": {
+					"type": "BM25"
+				}
+			}
+		}
+	}
+}
