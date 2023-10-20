@@ -7,6 +7,8 @@ import os
 import re
 import requests
 import openai
+import re
+import tempfile
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -18,6 +20,7 @@ import tiktoken
 from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
@@ -450,6 +453,32 @@ class ChunkingResult:
     # some chunks might be skipped to small number of tokens
     skipped_chunks: int = 0
 
+def extractStorageDetailsFromUrl(url):
+    matches = re.fullmatch(r'https:\/\/([^\/.]*)\.blob\.core\.windows\.net\/([^\/]*)\/(.*)', url)
+    if not matches:
+        raise Exception(f"Not a valid blob storage URL: {url}")
+    return (matches.group(1), matches.group(2), matches.group(3))
+
+def downloadBlobUrlToLocalFolder(blob_url, local_folder, credential):
+    (storage_account, container_name, path) = extractStorageDetailsFromUrl(blob_url)
+    container_url = f'https://{storage_account}.blob.core.windows.net/{container_name}'
+    container_client = ContainerClient.from_container_url(container_url, credential=credential)
+    if path and not path.endswith('/'):
+        path = path + '/'
+
+    last_destination_folder = None
+    for blob in container_client.list_blobs(name_starts_with=path):
+        relative_path = blob.name[len(path):]
+        destination_path = os.path.join(local_folder, relative_path)
+        destination_folder = os.path.dirname(destination_path)
+        if destination_folder != last_destination_folder:
+            os.makedirs(destination_folder, exist_ok=True)
+            last_destination_folder = destination_folder
+        blob_client = container_client.get_blob_client(blob.name)
+        with open(file=destination_path, mode='wb') as local_file:
+            stream = blob_client.download_blob()
+            local_file.write(stream.readall())
+
 def get_files_recursively(directory_path: str) -> List[str]:
     """Gets all files in the given directory recursively.
     Args:
@@ -857,6 +886,44 @@ def process_file(
         result =None
     return result, is_error
 
+def chunk_blob_container(
+        blob_url: str,
+        credential,
+        ignore_errors: bool = True,
+        num_tokens: int = 1024,
+        min_chunk_size: int = 10,
+        url_prefix = None,
+        token_overlap: int = 0,
+        extensions_to_process: List[str] = list(FILE_FORMAT_DICT.keys()),
+        form_recognizer_client = None,
+        use_layout = False,
+        njobs=4,
+        add_embeddings = False,
+        azure_credential = None,
+        embedding_endpoint = None
+):
+    with tempfile.TemporaryDirectory() as local_data_folder:
+        print(f'Downloading {blob_url} to local folder')
+        downloadBlobUrlToLocalFolder(blob_url, local_data_folder, credential)
+        print(f'Downloaded.')
+
+        result = chunk_directory(
+            local_data_folder,
+            ignore_errors=ignore_errors,
+            num_tokens=num_tokens,
+            min_chunk_size=min_chunk_size,
+            url_prefix=url_prefix,
+            token_overlap=token_overlap,
+            extensions_to_process=extensions_to_process,
+            form_recognizer_client=form_recognizer_client,
+            use_layout=use_layout,
+            njobs=njobs,
+            add_embeddings=add_embeddings,
+            azure_credential=azure_credential,
+            embedding_endpoint=embedding_endpoint
+        )
+
+    return result
 
 
 def chunk_directory(
@@ -954,14 +1021,13 @@ def chunk_directory(
 
 class SingletonFormRecognizerClient:
     instance = None
-    url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
-    key = os.getenv("FORM_RECOGNIZER_KEY")
-
     def __new__(cls, *args, **kwargs):
         if not cls.instance:
             print("SingletonFormRecognizerClient: Creating instance of Form recognizer per process")
-            if cls.url and cls.key:
-                cls.instance = DocumentAnalysisClient(endpoint=cls.url, credential=AzureKeyCredential(cls.key))
+            url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
+            key = os.getenv("FORM_RECOGNIZER_KEY")
+            if url and key:
+                cls.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key))
             else:
                 print("SingletonFormRecognizerClient: Skipping since credentials not provided. Assuming NO form recognizer extensions(like .pdf) in directory")
                 cls.instance = object() # dummy object
