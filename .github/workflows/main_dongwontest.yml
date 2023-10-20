@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build file in git repository
         run:         
-          npm run build
+          chmod +x start.sh
 
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       - name: Zip artifact for deployment
