@@ -222,12 +222,14 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
             apimRequestId = r.headers.get('apim-request-id')
             for line in r.iter_lines(chunk_size=10):
                 if line:
-                    try:
-                        rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
-                    except json.decoder.JSONDecodeError:
-                        continue
-
-                    lineJson = formatApiResponseStreaming(rawResponse)
+                    if AZURE_OPENAI_PREVIEW_API_VERSION == '2023-06-01-preview':
+                        lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                    else:
+                        try:
+                            rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                            lineJson = formatApiResponseStreaming(rawResponse)
+                        except json.decoder.JSONDecodeError:
+                            continue
 
                     if 'error' in lineJson:
                         yield format_as_ndjson(lineJson)
@@ -336,11 +338,15 @@ def conversation_with_data(request_body):
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
-        result = formatApiResponseNoStreaming(r)
-        result['history_metadata'] = history_metadata
+        if AZURE_OPENAI_PREVIEW_API_VERSION == "2023-06-01-preview":
+            r['history_metadata'] = history_metadata
+            return Response(format_as_ndjson(r), status=status_code)
+        else:
+            result = formatApiResponseNoStreaming(r)
+            result['history_metadata'] = history_metadata
+            return Response(format_as_ndjson(result), status=status_code)
 
 
-        return Response(format_as_ndjson(result), status=status_code)
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
 
