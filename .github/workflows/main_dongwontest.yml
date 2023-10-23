@@ -36,11 +36,7 @@ jobs:
         run:         
           cd ./frontend;npm install;npm run build
 
-          
-      - uses: actions/checkout@v3
-      - name: Build file in git repository
-        run:         
-          cd ./backend;npm install;npm run build
+
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
