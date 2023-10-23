@@ -58,8 +58,7 @@ AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-08-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
-AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
-AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
+AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME")
 
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
@@ -186,8 +185,7 @@ def prepare_body_headers_with_data(request):
                     "queryType": query_type,
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                    "embeddingDeploymentName": AZURE_OPENAI_EMBEDDING_NAME,
                     "filter": filter,
                     "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }
@@ -222,14 +220,12 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
             apimRequestId = r.headers.get('apim-request-id')
             for line in r.iter_lines(chunk_size=10):
                 if line:
-                    if AZURE_OPENAI_PREVIEW_API_VERSION == '2023-06-01-preview':
-                        lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
-                    else:
-                        try:
-                            rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
-                            lineJson = formatApiResponseStreaming(rawResponse)
-                        except json.decoder.JSONDecodeError:
-                            continue
+                    try:
+                        rawResponse = json.loads(line.lstrip(b'data:').decode('utf-8'))
+                    except json.decoder.JSONDecodeError:
+                        continue
+
+                    lineJson = formatApiResponseStreaming(rawResponse)
 
                     if 'error' in lineJson:
                         yield format_as_ndjson(lineJson)
@@ -338,15 +334,11 @@ def conversation_with_data(request_body):
         r = requests.post(endpoint, headers=headers, json=body)
         status_code = r.status_code
         r = r.json()
-        if AZURE_OPENAI_PREVIEW_API_VERSION == "2023-06-01-preview":
-            r['history_metadata'] = history_metadata
-            return Response(format_as_ndjson(r), status=status_code)
-        else:
-            result = formatApiResponseNoStreaming(r)
-            result['history_metadata'] = history_metadata
-            return Response(format_as_ndjson(result), status=status_code)
+        result = formatApiResponseNoStreaming(r)
+        result['history_metadata'] = history_metadata
 
 
+        return Response(format_as_ndjson(result), status=status_code)
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
 
