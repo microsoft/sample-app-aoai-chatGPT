@@ -60,6 +60,7 @@ AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
 AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
+AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
 
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
@@ -186,8 +187,9 @@ def prepare_body_headers_with_data(request):
                     "queryType": query_type,
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                    "embeddingDeploymentName": AZURE_OPENAI_EMBEDDING_NAME,
+                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
+                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
                     "filter": filter,
                     "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }
@@ -346,10 +348,8 @@ def conversation_with_data(request_body):
             result['history_metadata'] = history_metadata
             return Response(format_as_ndjson(result), status=status_code)
 
-
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
-
 
 def stream_without_data(response, history_metadata={}):
     responseText = ""
