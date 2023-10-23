@@ -31,6 +31,18 @@
     color: #242424;
 }
 
+.headerTitle1 {
+    /* Layout Properties */
+    top: 61px;
+    left: 95px;
+    width: 16px;
+    height: 18px;
+    /* UI Properties */
+    background: #005FB1 0% 0% no-repeat padding-box;
+    opacity: 1;
+}
+
+
 .headerIcon {
     height: 32px;
     width: 32px;
