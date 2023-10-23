@@ -199,6 +199,8 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
+|AZURE_OPENAI_EMBEDDING_ENDPOINT||The endpoint for your Ada embedding model deployment if using vector search.
+|AZURE_OPENAI_EMBEDDING_KEY||The key for the Azure OpenAI resource with the Ada deployment to use with vector search.|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 
 
