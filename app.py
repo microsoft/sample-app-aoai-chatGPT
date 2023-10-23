@@ -70,6 +70,9 @@ AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
 AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
 
+#Graph Search Integration Settings
+GRAPH_SEARCH_SETTINGS = os.environ.get("GRAPH_SEARCH_SETTINGS")
+
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
@@ -99,6 +102,8 @@ def is_chat_model():
 
 def should_use_data():
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
+        return True
+    if GRAPH_SEARCH_SETTINGS:
         return True
     return False
 
@@ -160,6 +165,40 @@ def prepare_body_headers_with_data(request):
         userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
         filter = generateFilterString(userToken)
 
+    dataSource = {}
+    if AZURE_SEARCH_SERVICE:
+        dataSource = {
+            "type": "AzureCognitiveSearch",
+            "parameters": {
+                "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+                "key": AZURE_SEARCH_KEY,
+                "indexName": AZURE_SEARCH_INDEX,
+                "fieldsMapping": {
+                    "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                    "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
+                    "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
+                    "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
+                    "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
+                },
+                "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                "topNDocuments": AZURE_SEARCH_TOP_K,
+                "queryType": query_type,
+                "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
+                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
+                "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                "filter": filter,
+                "strictness": int(AZURE_SEARCH_STRICTNESS)
+            }
+        }
+    elif GRAPH_SEARCH_SETTINGS:
+        dataSource = {
+            "type": "GraphSearch",
+            "parameters": {
+                "userToken": userToken
+            }
+        }
+
     body = {
         "messages": request_messages,
         "temperature": float(AZURE_OPENAI_TEMPERATURE),
@@ -168,30 +207,7 @@ def prepare_body_headers_with_data(request):
         "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
         "stream": SHOULD_STREAM,
         "dataSources": [
-            {
-                "type": "AzureCognitiveSearch",
-                "parameters": {
-                    "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                    "key": AZURE_SEARCH_KEY,
-                    "indexName": AZURE_SEARCH_INDEX,
-                    "fieldsMapping": {
-                        "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
-                        "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
-                        "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
-                        "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                        "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
-                    },
-                    "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_SEARCH_TOP_K,
-                    "queryType": query_type,
-                    "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                    "filter": filter,
-                    "strictness": int(AZURE_SEARCH_STRICTNESS)
-                }
-            }
+            dataSource
         ]
     }
 
@@ -428,6 +444,12 @@ def conversation_without_data(request_body):
     else:
         return Response(stream_without_data(response, history_metadata), mimetype='text/event-stream')
 
+@app.route("/echo", methods=["GET", "POST"])
+def echo():
+    headers = {}
+    for h in request.headers:
+        headers[h[0]]=h[1]
+    return jsonify(headers), 200
 
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
