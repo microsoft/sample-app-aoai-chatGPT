@@ -248,7 +248,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Azure OpenAI Embedding Name"
+                "description": "Azure OpenAI Embedding Deployment Name"
             }
         },
         "WebAppEnableChatHistory": {
