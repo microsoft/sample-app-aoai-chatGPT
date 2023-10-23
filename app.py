@@ -160,9 +160,8 @@ def prepare_body_headers_with_data(request):
 
     # Set filter
     filter = None
-    userToken = None
+    userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', os.environ.get("GRAPH_API_USER_TOKEN_TEST", ""))
     if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
-        userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
         filter = generateFilterString(userToken)
 
     dataSource = {}
