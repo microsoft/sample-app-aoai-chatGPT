@@ -351,7 +351,6 @@ def conversation_with_data(request_body):
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
 
-
 def stream_without_data(response, history_metadata={}):
     responseText = ""
     for line in response:
