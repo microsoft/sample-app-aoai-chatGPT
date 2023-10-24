@@ -187,15 +187,20 @@ def prepare_body_headers_with_data(request):
                     "queryType": query_type,
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingDeploymentName": AZURE_OPENAI_EMBEDDING_NAME,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY if len(AZURE_OPENAI_EMBEDDING_NAME) == 0 else "",
                     "filter": filter,
                     "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }
             }
         ]
     }
+
+    if "vector" in query_type.lower():
+        if AZURE_OPENAI_EMBEDDING_NAME:
+            body["dataSources"][0]["parameters"]["embeddingDeploymentName"] = AZURE_OPENAI_EMBEDDING_NAME
+        else:
+            body["dataSources"][0]["parameters"]["embeddingEndpoint"] = AZURE_OPENAI_EMBEDDING_ENDPOINT
+            body["dataSources"][0]["parameters"]["embeddingKey"] = AZURE_OPENAI_EMBEDDING_KEY
+
 
     headers = {
         'Content-Type': 'application/json',
