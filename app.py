@@ -109,6 +109,7 @@ def should_use_data():
 
 
 def format_as_ndjson(obj: dict) -> str:
+    print(json.dumps(obj, ensure_ascii=False) + "\n")
     return json.dumps(obj, ensure_ascii=False) + "\n"
 
 def fetchUserGroups(userToken, nextLink=None):
@@ -194,7 +195,10 @@ def prepare_body_headers_with_data(request):
         dataSource = {
             "type": "GraphSearch",
             "parameters": {
-                "userToken": userToken
+                "userToken": userToken,
+                "entityTypes": "driveItem",
+                "queryParameters": "setFlight=nwLargerSummaryForGraph,nwEnableSemanticSearchForGraph,nwEnableSemanticSearchIntRel,SemanticSearchSwitch,nwEnableSummary,FanoutV2SetFlightsInRequest",
+                "queryTemplate": "({searchTerms})"
             }
         }
 
