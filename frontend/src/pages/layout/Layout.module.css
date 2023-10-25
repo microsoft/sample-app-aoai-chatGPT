@@ -6,6 +6,7 @@
 
 .header {
     background-color: #f2f2f2;
+    height: 40px;
 }
 
 .headerContainer {
@@ -45,7 +46,7 @@
 
 .headerIcon {
     height: 32px;
-    width: 32px;
+    width: 100%;
     margin-left: 36px;
 }
 
