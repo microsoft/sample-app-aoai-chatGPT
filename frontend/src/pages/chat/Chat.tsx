@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from "@fluentui/react";
 import { DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
-
+import { HistoryButton, ShareButton } from "../../components/common/Button";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from "rehype-raw";
@@ -529,6 +529,23 @@ const Chat = () => {
         return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     }
 
+    /*add several code here from chat history*/
+    
+    const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
+    const handleHistoryClick = () => {
+        appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
+    };
+
+    const handleShareClick = () => {
+        setIsSharePanelOpen(true);
+    };
+
+
+
+
+    useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status]);
+
+
     return (
         <div className={styles.container} role="main">
             {showAuthMessage ? (
@@ -545,7 +562,18 @@ const Chat = () => {
                     <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></h2>
                 </Stack>
             ) : (
+                
                 <Stack horizontal className={styles.chatRoot}>
+                    <div>
+                    <Stack horizontal tokens={{ childrenGap: 4 }}>
+                            {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && 
+                                <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
+                            }
+                            <ShareButton onClick={handleShareClick} />
+                            
+                    </Stack>
+                    {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}
+                    </div>
                     <div className={styles.chatContainer}>
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
@@ -554,8 +582,8 @@ const Chat = () => {
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting with dongwon chatbot, wanna go home</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions.\n Let me know when you have a questions</h2>
+                                <h1 className={styles.chatEmptyStateTitle}>Start chatting with dongwon chatbot</h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions, let me know when you have a questions</h2>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
@@ -693,7 +721,7 @@ const Chat = () => {
                         </div>
                     </Stack.Item>
                 )}
-                {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}
+                
                 </Stack>
             )}
         </div>

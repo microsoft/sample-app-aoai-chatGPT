@@ -83,6 +83,7 @@ const Layout = () => {
                             {/* <h1 className={styles.headerTitle1}>d</h1> */}
                         </Link>
                     </Stack>
+                    {/*move the other script*/}
                     {/* <Stack horizontal tokens={{ childrenGap: 4 }}>
                             {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && 
                                 <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    

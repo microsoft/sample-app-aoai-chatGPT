@@ -138,6 +138,7 @@
 }
 
 .chatInput {
+    background-color: #11102C;
     position: sticky;
     flex: 0 0 100px;
     padding-top: 12px;
@@ -159,7 +160,7 @@
     position: absolute;
     width: 40px;
     height: 40px;
-    left: 7px;
+    right: 53px; /*change left to right*/
     top: 13px;
     color: #FFFFFF;
     border: 1px solid #D1D1D1;
@@ -193,8 +194,8 @@
     position: absolute;
     width: 40px;
     height: 40px;
-    left: 7px;
-    top: 66px;
+    right: 7px; /*change left to right*/
+    top: 13px;
     color: #FFFFFF;
     border: 1px solid #D1D1D1;
     border-radius: 4px;

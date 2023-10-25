@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
 import { SendRegular } from "@fluentui/react-icons";
-import Send from "../../assets/Send.svg";
+import Send from "../../assets/send_1.svg";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
@@ -46,16 +46,17 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
-            <TextField
-                className={styles.questionInputTextArea}
-                placeholder={placeholder}
-                multiline
-                resizable={false}
-                borderless
-                value={question}
-                onChange={onQuestionChange}
-                onKeyDown={onEnterPress}
-            />
+            
+                <TextField
+                    className={styles.questionInputTextArea}
+                    placeholder={placeholder}
+                    multiline
+                    resizable={false}
+                    borderless
+                    value={question}
+                    onChange={onQuestionChange}
+                    onKeyDown={onEnterPress}
+                />
             <div className={styles.questionInputSendButtonContainer} 
                 role="button" 
                 tabIndex={0}
@@ -69,7 +70,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                     <img src={Send} className={styles.questionInputSendButton}/>
                 }
             </div>
-            <div className={styles.questionInputBottomBorder} />
+            {/* <div className={styles.questionInputBottomBorder} /> */}
         </Stack>
     );
 };
