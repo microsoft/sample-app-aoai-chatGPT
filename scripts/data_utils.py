@@ -1,6 +1,8 @@
 """Data utilities for index preparation."""
 import ast
 import base64
+import time
+import random
 from asyncio import sleep
 import html
 import json
@@ -38,7 +40,7 @@ FILE_FORMAT_DICT = {
         "pdf": "pdf"
     }
 
-RETRY_COUNT = 5
+RETRY_COUNT = 50
 
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
@@ -702,7 +704,11 @@ def prepare_doc_from_chunk(
                                                       embedding_model_endpoint=embedding_endpoint)
                     break
                 except:
-                    sleep(30)
+                    # sleep(30)
+                    sleep_time = random.randint(1, 20)
+                    print(f"Failed - sleeping for {sleep_time}")
+                    time.sleep(sleep_time)
+                    print(f"Retrying - after {sleep_time}")
             if doc.contentVector is None:
                 raise Exception(f"Error getting embedding for chunk={chunk}")
 
@@ -742,7 +748,7 @@ def chunk_content(
     content: str,
     file_name: Optional[str] = None,
     url: Optional[str] = None,
-    ignore_errors: bool = True,
+    ignore_errors: bool = False,
     num_tokens: int = 256,
     min_chunk_size: int = 10,
     token_overlap: int = 0,
@@ -794,6 +800,8 @@ def chunk_content(
                                          url=url, azure_credential=azure_credential,
                                          min_chunk_size=min_chunk_size, embedding_endpoint=embedding_endpoint,
                                          add_embeddings=add_embeddings)
+            if not doc:
+                continue
             doc.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}"
             doc.id = url_safe_base64_encode(doc.id) # do base64 encode for safe retrieval
             doc.parent_id = "self"
@@ -819,6 +827,8 @@ def chunk_content(
                         min_chunk_size=min_chunk_size, embedding_endpoint=embedding_endpoint,
                         add_embeddings=add_embeddings
                     )
+                    if not doc_2:
+                        continue
                     doc_2.parent_id = doc.id
                     doc_2.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}_{second_idx}"
                     doc_2.id = url_safe_base64_encode(doc_2.id)  # do base64 encode for safe retrieval
@@ -836,6 +846,7 @@ def chunk_content(
                 skipped_chunks += 1
 
     except UnsupportedFormatError as e:
+        print(e)
         if ignore_errors:
             return ChunkingResult(
                 chunks=[], total_files=1, num_unsupported_format_files=1
@@ -843,6 +854,7 @@ def chunk_content(
         else:
             raise e
     except Exception as e:
+        print(e)
         if ignore_errors:
             return ChunkingResult(chunks=[], total_files=1, num_files_with_errors=1)
         else:

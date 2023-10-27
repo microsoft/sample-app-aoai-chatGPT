@@ -436,8 +436,8 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
 def valid_range(n):
     n = int(n)
-    if n < 1 or n > 32:
-        raise argparse.ArgumentTypeError("njobs must be an Integer between 1 and 32.")
+    if n < 1 or n > 128:
+        raise argparse.ArgumentTypeError("njobs must be an Integer between 1 and 128.")
     return n
 
 if __name__ == "__main__": 
