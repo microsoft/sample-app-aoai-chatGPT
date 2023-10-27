@@ -1,6 +1,5 @@
 """Data utilities for index preparation."""
 import ast
-from asyncio import sleep
 import html
 import json
 import os
@@ -9,6 +8,7 @@ import requests
 import openai
 import re
 import tempfile
+import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -735,7 +735,7 @@ def chunk_content(
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
                         except:
-                            sleep(30)
+                            time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
                     
