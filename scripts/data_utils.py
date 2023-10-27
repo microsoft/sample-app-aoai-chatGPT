@@ -1,5 +1,6 @@
 """Data utilities for index preparation."""
 import ast
+import base64
 from asyncio import sleep
 import html
 import json
@@ -697,7 +698,7 @@ def prepare_doc_from_chunk(
         if add_embeddings:
             for _ in range(RETRY_COUNT):
                 try:
-                    doc.contentVector = get_embedding(chunk, azure_credential=azure_credential,
+                    doc.contentVector = get_embedding(chunk, azure_credential=None,
                                                       embedding_model_endpoint=embedding_endpoint)
                     break
                 except:
@@ -726,6 +727,16 @@ def filepath_no_ext(file_path):
     # Print the directory and file name without extension
     directory = "path_"+directory
     return f"{directory}_{name}"
+
+
+def url_safe_base64_encode(input_string):
+    encoded_bytes = base64.urlsafe_b64encode(input_string.encode("utf-8"))
+    encoded_string = str(encoded_bytes, "utf-8")
+    return encoded_string
+
+
+
+
 
 def chunk_content(
     content: str,
@@ -784,13 +795,14 @@ def chunk_content(
                                          min_chunk_size=min_chunk_size, embedding_endpoint=embedding_endpoint,
                                          add_embeddings=add_embeddings)
             doc.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}"
+            doc.id = url_safe_base64_encode(doc.id) # do base64 encode for safe retrieval
             doc.parent_id = "self"
             chunks.append(doc)
             chunk_id += 1
             print("Parent chunksize:", chunk_size)
-            if is_hierarchical and chunk_size > 512:
-                second_level_overlap = 0
-                second_level_numtokens = 256
+            if is_hierarchical:
+                second_level_overlap = 128
+                second_level_numtokens = 512
 
                 second_level_chunked_context = chunk_content_helper(
                     content=chunk,
@@ -809,9 +821,17 @@ def chunk_content(
                     )
                     doc_2.parent_id = doc.id
                     doc_2.id = f"{filepath_no_ext(file_name)}_{chunk_id}_{chunk_size}_{second_idx}"
+                    doc_2.id = url_safe_base64_encode(doc_2.id)  # do base64 encode for safe retrieval
+                    doc_2.metadata = {"sub_chunk_id": second_idx, "chunk_size": chunk_size_2}
                     chunks.append(doc_2)
                     second_idx += 1
                     print("Child chunk size", chunk_size_2)
+                doc.metadata = {
+                    "num_sub_chunks": second_idx,
+                    "chunk_id": chunk_id,
+                    "chunk_size": chunk_size
+                }
+
             else:
                 skipped_chunks += 1
 
@@ -944,7 +964,10 @@ def process_file(
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
-            chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
+            if chunk_doc.metadata and isinstance(chunk_doc.metadata, dict):
+                chunk_doc.metadata = json.dumps(chunk_doc.metadata)
+            else:
+                chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
     except Exception as e:
         print(e)
         if not ignore_errors:
