@@ -26,6 +26,10 @@ from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, Recursiv
 from tqdm import tqdm
 from typing import Any
 
+import email
+from email import policy
+from email.parser import BytesParser
+
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -34,7 +38,8 @@ FILE_FORMAT_DICT = {
         "shtml": "html",
         "htm": "html",
         "py": "python",
-        "pdf": "pdf"
+        "pdf": "pdf",
+        "eml": "eml",
     }
 
 RETRY_COUNT = 5
@@ -413,7 +418,8 @@ class ParserFactory:
             "html": HTMLParser(),
             "text": TextParser(),
             "markdown": MarkdownParser(),
-            "python": PythonParser()
+            "python": PythonParser(),
+            "eml": HTMLParser()
         }
 
     @property
@@ -806,15 +812,31 @@ def chunk_file(
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
     else:
-        try:
+        
+        if file_format == "eml":
+            
             with open(file_path, "r", encoding="utf8") as f:
-                content = f.read()
-        except UnicodeDecodeError:
-            from chardet import detect
-            with open(file_path, "rb") as f:
-                binary_content = f.read()
-                encoding = detect(binary_content).get('encoding', 'utf8')
-                content = binary_content.decode(encoding)
+                email_content = email.message_from_file(f)
+                content = ""
+                if email_content.is_multipart():
+                    for part in email_content.walk():                     
+                        if part.get_content_type() not in [ "text/html" ]:
+                            continue
+                        content += str(part.get_payload(decode=True).decode('utf-8'))
+                        
+                else:
+                    if email_content.get_content_type() in [ "text/html" ]:
+                        content += str(email_content.get_payload(decode=True).decode('utf-8'))
+        else:
+            try:
+                with open(file_path, "r", encoding="utf8") as f:
+                    content = f.read()
+            except UnicodeDecodeError:
+                from chardet import detect
+                with open(file_path, "rb") as f:
+                    binary_content = f.read()
+                    encoding = detect(binary_content).get('encoding', 'utf8')
+                    content = binary_content.decode(encoding)
         
     return chunk_content(
         content=content,
