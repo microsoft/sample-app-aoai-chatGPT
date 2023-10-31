@@ -198,7 +198,7 @@ def prepare_body_headers_with_data(request):
                 "userToken": userToken,
                 "entityTypes": "driveItem",
                 "queryParameters": "setFlight=nwLargerSummaryForGraph,nwEnableSemanticSearchForGraph,nwEnableSemanticSearchIntRel,SemanticSearchSwitch,nwEnableSummary,FanoutV2SetFlightsInRequest",
-                "queryTemplate": "({searchTerms})"
+                "queryTemplate": '{searchTerms} (path:"https://m365x90842950.sharepoint.com/sites/Retail/Shared%20Documents")'
             }
         }
 
