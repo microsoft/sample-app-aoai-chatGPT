@@ -4,7 +4,7 @@ import Azure from "../../assets/Azure.svg";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { CommandBarButton, Dialog, Stack, TextField, ICommandBarStyles, IButtonStyles, DefaultButton  } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
-import { HistoryButton, ShareButton } from "../../components/common/Button";
+import { HistoryButton, ShareButton, GraphSearchDebugButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
 
@@ -87,6 +87,7 @@ const Layout = () => {
                                 <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
                             }
                             <ShareButton onClick={handleShareClick} />
+                            <GraphSearchDebugButton onClick={handleShareClick} />
                     </Stack>
 
                 </Stack>
