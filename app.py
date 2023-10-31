@@ -60,6 +60,7 @@ AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k") # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
 AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
 AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
+AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
 
 
 SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
@@ -165,54 +166,7 @@ def prepare_body_headers_with_data(request):
     if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
         filter = generateFilterString(userToken)
 
-    dataSource = {}
-    if AZURE_SEARCH_SERVICE:
-        dataSource = {
-            "type": "AzureCognitiveSearch",
-            "parameters": {
-                "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                "key": AZURE_SEARCH_KEY,
-                "indexName": AZURE_SEARCH_INDEX,
-                "fieldsMapping": {
-                    "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
-                    "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
-                    "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
-                    "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                    "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
-                },
-                "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                "topNDocuments": AZURE_SEARCH_TOP_K,
-                "queryType": query_type,
-                "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                "filter": filter,
-                "strictness": int(AZURE_SEARCH_STRICTNESS)
-            }
-        }
-    elif GRAPH_SEARCH_SETTINGS:
-        dataSource = {
-            "type": "GraphSearch",
-            "parameters": {
-                "userToken": userToken,
-                "entityTypes": "driveItem",
-                "queryParameters": "setFlight=nwLargerSummaryForGraph,nwEnableSemanticSearchForGraph,nwEnableSemanticSearchIntRel,SemanticSearchSwitch,nwEnableSummary,FanoutV2SetFlightsInRequest",
-                "queryTemplate": '{searchTerms} (path:"https://m365x90842950.sharepoint.com/sites/Retail/Shared%20Documents")'
-            }
-        }
-
-    body = {
-        "messages": request_messages,
-        "temperature": float(AZURE_OPENAI_TEMPERATURE),
-        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
-        "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
-        "stream": SHOULD_STREAM,
-        "dataSources": [
-            dataSource
-        ]
-    }
+   
 
     headers = {
         'Content-Type': 'application/json',
@@ -365,10 +319,8 @@ def conversation_with_data(request_body):
             result['history_metadata'] = history_metadata
             return Response(format_as_ndjson(result), status=status_code)
 
-
     else:
         return Response(stream_with_data(body, headers, endpoint, history_metadata), mimetype='text/event-stream')
-
 
 def stream_without_data(response, history_metadata={}):
     responseText = ""
