@@ -58,6 +58,10 @@ const Layout = () => {
         appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
     };
 
+    const handleGraphSearchDebugClick = () => {
+        appStateContext?.dispatch({ type: 'TOGGLE_SETTINGS' })
+    };
+
     useEffect(() => {
         if (copyClicked) {
             setCopyText("Copied URL");
@@ -87,7 +91,7 @@ const Layout = () => {
                                 <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
                             }
                             <ShareButton onClick={handleShareClick} />
-                            <GraphSearchDebugButton onClick={handleShareClick} />
+                            <GraphSearchDebugButton onClick={handleGraphSearchDebugClick} />
                     </Stack>
 
                 </Stack>

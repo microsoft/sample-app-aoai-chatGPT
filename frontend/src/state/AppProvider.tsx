@@ -5,6 +5,7 @@ import { Conversation } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
+    isSettingsOpen: boolean;
     chatHistoryLoadingState: ChatHistoryLoadingState;
     isCosmosDBAvailable: CosmosDBHealth;
     chatHistory: Conversation[] | null;
@@ -13,7 +14,8 @@ export interface AppState {
 }
 
 export type Action =
-    | { type: 'TOGGLE_CHAT_HISTORY' }
+| { type: 'TOGGLE_CHAT_HISTORY' }
+| { type: 'TOGGLE_SETTINGS' }
     | { type: 'SET_COSMOSDB_STATUS', payload: CosmosDBHealth }
     | { type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState }
     | { type: 'UPDATE_CURRENT_CHAT', payload: Conversation | null }
@@ -27,6 +29,7 @@ export type Action =
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
+    isSettingsOpen: false,
     chatHistoryLoadingState: ChatHistoryLoadingState.Loading,
     chatHistory: null,
     filteredChatHistory: null,

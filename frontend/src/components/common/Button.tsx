@@ -73,7 +73,7 @@ export const GraphSearchDebugButton: React.FC<GraphSearchDebugButtonProps> = ({o
               styles={graphSearchDebugButtonStyles}
               iconProps={{ iconName: 'Settings' }}
               onClick={onClick}
-              text='Graph Search Debug Settings'
+              text='Settings'
       />
     )
 }
