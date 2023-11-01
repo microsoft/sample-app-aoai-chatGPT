@@ -1,5 +1,6 @@
 [
     {
+        "index_type": "<type of index, e.g. 'AzureCognitiveSearch', 'Elasticsearch'>",
         "data_path": "<path to data>",
         "location": "<azure region, e.g. 'westus2'>",
         "subscription_id": "<subscription id>",
