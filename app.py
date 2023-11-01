@@ -89,6 +89,22 @@ AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
 AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
 
+# Elasticsearch Integration Settings
+ELASTICSEARCH_ENDPOINT = os.environ.get("ELASTICSEARCH_ENDPOINT")
+ELASTICSEARCH_API_KEY = os.environ.get("ELASTICSEARCH_API_KEY")
+ELASTICSEARCH_API_KEY_ID = os.environ.get("ELASTICSEARCH_API_KEY_ID")
+ELASTICSEARCH_INDEX = os.environ.get("ELASTICSEARCH_INDEX")
+ELASTICSEARCH_QUERY_TYPE = os.environ.get("ELASTICSEARCH_QUERY_TYPE", "simple")
+ELASTICSEARCH_TOP_K = SEARCH_TOP_K
+ELASTICSEARCH_ENABLE_IN_DOMAIN = SEARCH_ENABLE_IN_DOMAIN
+ELASTICSEARCH_CONTENT_COLUMNS = os.environ.get("ELASTICSEARCH_CONTENT_COLUMNS")
+ELASTICSEARCH_FILENAME_COLUMN = os.environ.get("ELASTICSEARCH_FILENAME_COLUMN")
+ELASTICSEARCH_TITLE_COLUMN = os.environ.get("ELASTICSEARCH_TITLE_COLUMN")
+ELASTICSEARCH_URL_COLUMN = os.environ.get("ELASTICSEARCH_URL_COLUMN")
+ELASTICSEARCH_VECTOR_COLUMNS = os.environ.get("ELASTICSEARCH_VECTOR_COLUMNS")
+ELASTICSEARCH_QUERY_TYPE = os.environ.get("ELASTICSEARCH_QUERY_TYPE")
+ELASTICSEARCH_STRICTNESS = SEARCH_STRICTNESS
+
 # Initialize a CosmosDB client with AAD auth and containers
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
@@ -248,6 +264,40 @@ def prepare_body_headers_with_data(request):
                         "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                         "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
                         "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY
+                    }
+                }
+            ]
+        }
+    elif DATASOURCE_TYPE == "Elasticsearch":
+        body = {
+            "messages": request_messages,
+            "temperature": float(AZURE_OPENAI_TEMPERATURE),
+            "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
+            "top_p": float(AZURE_OPENAI_TOP_P),
+            "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+            "stream": SHOULD_STREAM,
+            "dataSources": [
+                {
+                    "type": "AzureCognitiveSearch",
+                    "parameters": {
+                        "endpoint": ELASTICSEARCH_ENDPOINT,
+                        "key": ELASTICSEARCH_API_KEY,
+                        "keyId": ELASTICSEARCH_API_KEY_ID,
+                        "indexName": ELASTICSEARCH_INDEX,
+                        "fieldsMapping": {
+                            "contentFields": ELASTICSEARCH_CONTENT_COLUMNS.split("|") if ELASTICSEARCH_CONTENT_COLUMNS else [],
+                            "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
+                            "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
+                            "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
+                            "vectorFields": ELASTICSEARCH_VECTOR_COLUMNS.split("|") if ELASTICSEARCH_VECTOR_COLUMNS else []
+                        },
+                        "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                        "topNDocuments": ELASTICSEARCH_TOP_K,
+                        "queryType": ELASTICSEARCH_QUERY_TYPE,
+                        "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                        "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
+                        "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                        "strictness": int(ELASTICSEARCH_STRICTNESS)
                     }
                 }
             ]
