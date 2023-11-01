@@ -176,12 +176,15 @@ const Chat = () => {
                         try {
                             runningText += obj;
                             result = JSON.parse(runningText);
+                            console.log('result.choices[0] :', result.choices[0]);
                             result.choices[0].messages.forEach((obj) => {
                                 obj.id = uuid();
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            processResultMessage(result.choices[0].messages[0], userMessage, conversationId);
+                            result.choices[0].messages.forEach((resultObj) => {
+                                processResultMessage(resultObj, userMessage, conversationId);
+                            })
                             runningText = "";
                         }
                         catch { }
@@ -311,7 +314,9 @@ const Chat = () => {
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
-                            processResultMessage(result.choices[0].messages[0], userMessage, conversationId);
+                            result.choices[0].messages.forEach((resultObj) => {
+                                processResultMessage(resultObj, userMessage, conversationId);
+                            })
                             runningText = "";
                         }
                         catch { }
