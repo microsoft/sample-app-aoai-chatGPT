@@ -63,12 +63,7 @@ AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
 AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
 
 
-# SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
-
-# SHOULD_STREAM = False
-SHOULD_STREAM = True
-
-print("SHOULD_STREAM", SHOULD_STREAM)
+SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
 # CosmosDB Integration Settings
 AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")

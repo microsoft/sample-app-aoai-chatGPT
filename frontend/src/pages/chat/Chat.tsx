@@ -176,7 +176,6 @@ const Chat = () => {
                         try {
                             runningText += obj;
                             result = JSON.parse(runningText);
-                            console.log('result.choices[0] :', result.choices[0]);
                             result.choices[0].messages.forEach((obj) => {
                                 obj.id = uuid();
                                 obj.date = new Date().toISOString();
