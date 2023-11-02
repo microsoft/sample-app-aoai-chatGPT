@@ -219,6 +219,9 @@ def prepare_body_headers_with_data(request):
                 }
             })
     elif DATASOURCE_TYPE == "AzureCosmosDB":
+        # Set query type
+        query_type = "vector"
+
         body["dataSources"].append(
             {
                 "type": "AzureCosmosDB",
@@ -237,10 +240,8 @@ def prepare_body_headers_with_data(request):
                     "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
                     "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
                     "strictness": int(AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS),
-                    "queryType": "vector",
-                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                    "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY
+                    "queryType": query_type,
+                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
                 }
             })
     else:
