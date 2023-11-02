@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from "rehype-raw";
 import uuid from 'react-uuid';
+import { isEmpty } from "lodash-es";
 
 import styles from "./Chat.module.css";
 import Azure from "../../assets/Azure.svg";
@@ -111,9 +112,13 @@ const Chat = () => {
         if (resultMessage.role === TOOL) toolMessage = resultMessage
 
         if (!conversationId) {
-            setMessages([...messages, userMessage, toolMessage, assistantMessage]);
+            isEmpty(toolMessage) ?
+                setMessages([...messages, userMessage, assistantMessage]) :
+                setMessages([...messages, userMessage, toolMessage, assistantMessage]);
         } else {
-            setMessages([...messages, toolMessage, assistantMessage]);
+            isEmpty(toolMessage) ?
+                setMessages([...messages, assistantMessage]) :
+                setMessages([...messages, toolMessage, assistantMessage]);
         }
     }
 
