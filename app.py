@@ -213,21 +213,20 @@ def prepare_body_headers_with_data(request):
 
 def stream_with_data(body, headers, endpoint, history_metadata={}):
     s = requests.Session()
-    response = {
-        "id": "",
-        "model": "",
-        "created": 0,
-        "object": "",
-        "choices": [{
-            "messages": []
-        }],
-        "apim-request-id": "",
-        'history_metadata': history_metadata
-    }
     try:
         with s.post(endpoint, json=body, headers=headers, stream=True) as r:
-            apimRequestId = r.headers.get('apim-request-id')
             for line in r.iter_lines(chunk_size=10):
+                response = {
+                    "id": "",
+                    "model": "",
+                    "created": 0,
+                    "object": "",
+                    "choices": [{
+                        "messages": []
+                    }],
+                    "apim-request-id": "",
+                    'history_metadata': history_metadata
+                }
                 if line:
                     if AZURE_OPENAI_PREVIEW_API_VERSION == '2023-06-01-preview':
                         lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
@@ -244,23 +243,27 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
                     response["model"] = lineJson["model"]
                     response["created"] = lineJson["created"]
                     response["object"] = lineJson["object"]
-                    response["apim-request-id"] = apimRequestId
+                    response["apim-request-id"] = r.headers.get('apim-request-id')
 
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
 
                     if role == "tool":
                         response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
+                        yield format_as_ndjson(response)
                     elif role == "assistant": 
                         response["choices"][0]["messages"].append({
                             "role": "assistant",
                             "content": ""
                         })
+                        yield format_as_ndjson(response)
                     else:
                         deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
                         if deltaText != "[DONE]":
-                            response["choices"][0]["messages"][1]["content"] += deltaText
-
-                    yield format_as_ndjson(response)
+                            response["choices"][0]["messages"].append({
+                                "role": "assistant",
+                                "content": deltaText
+                            })
+                            yield format_as_ndjson(response)
     except Exception as e:
         yield format_as_ndjson({"error" + str(e)})
 
@@ -364,7 +367,7 @@ def stream_without_data(response, history_metadata={}):
         else:
             deltaText = ""
         if deltaText and deltaText != "[DONE]":
-            responseText += deltaText
+            responseText = deltaText
 
         response_obj = {
             "id": line["id"],
