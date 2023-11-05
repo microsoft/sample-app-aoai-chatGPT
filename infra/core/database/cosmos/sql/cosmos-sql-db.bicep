@@ -29,7 +29,11 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-05-15
         id: container.id
         partitionKey: { paths: [ container.partitionKey ] }
       }
-      options: {}
+      options: {
+        autoscaleSettings: {
+          maxThroughput: 1000
+        }
+      }
     }
   }]
 
