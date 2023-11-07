@@ -31,7 +31,7 @@ def create_application(credential):
         headers=get_auth_headers(credential),
         json={
             "displayName": "WebApp",
-            "signInAudience": "AzureADandPersonalMicrosoftAccount",
+            "signInAudience": "AzureADMyOrg",
             "web": {
                 "redirectUris": ["http://localhost:5000/.auth/login/aad/callback"],
                 "implicitGrantSettings": {"enableIdTokenIssuance": True},
