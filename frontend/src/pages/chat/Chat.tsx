@@ -89,9 +89,10 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
-            ? setIsLoading(true)
-            : setIsLoading(false);
+        // appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
+        //     ? setIsLoading(true)
+        //     : setIsLoading(false);
+        setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
 
     }, [appStateContext?.state.chatHistoryLoadingState])
 
