@@ -400,10 +400,11 @@ def conversation_without_data(request_body):
     ]
 
     for message in request_messages:
-        messages.append({
-            "role": message["role"] ,
-            "content": message["content"]
-        })
+        if message:
+            messages.append({
+                "role": message["role"] ,
+                "content": message["content"]
+            })
 
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
