@@ -521,7 +521,7 @@ def update_conversation():
         ## then write it to the conversation history in cosmos
         messages = request.json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "assistant":
-            if len(messages) > 1 and messages[-2]['role'] == "tool":
+            if len(messages) > 1 and messages[-2] != {} and messages[-2]['role'] == "tool":
                 # write the tool message first
                 cosmos_conversation_client.create_message(
                     conversation_id=conversation_id,
