@@ -571,7 +571,7 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={Azure}
+                                    src={Wheelie}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
