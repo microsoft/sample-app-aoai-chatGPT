@@ -10,6 +10,7 @@ import { isEmpty } from "lodash-es";
 
 import styles from "./Chat.module.css";
 import Azure from "../../assets/Azure.svg";
+import Wheelie from "../../assets/Wheelie.svg"
 
 import {
     ChatMessage,
@@ -90,7 +91,7 @@ const Chat = () => {
     
     const getUserInfoList = async () => {
         const userInfoList = await getUserInfo();
-        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
+        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost") {
             setShowAuthMessage(true);
         }
         else {
