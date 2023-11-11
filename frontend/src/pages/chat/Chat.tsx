@@ -10,7 +10,7 @@ import { isEmpty } from "lodash-es";
 
 import styles from "./Chat.module.css";
 import Azure from "../../assets/Azure.svg";
-import Wheelie from "../../assets/Wheelie.svg"
+import Wheelie from "../../assets/wheelie.svg"
 
 import {
     ChatMessage,
