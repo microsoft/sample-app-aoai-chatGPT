@@ -3,6 +3,7 @@ import os
 import logging
 import requests
 import openai
+import copy
 from azure.identity import DefaultAzureCredential
 from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
@@ -274,7 +275,15 @@ def prepare_body_headers_with_data(request):
             body["dataSources"][0]["parameters"]["embeddingKey"] = AZURE_OPENAI_EMBEDDING_KEY
 
     if DEBUG_LOGGING:
-        logging.debug(f"REQUEST BODY: {json.dumps(body, indent=4)}")
+        body_clean = copy.deepcopy(body)
+        if body_clean["dataSources"][0]["parameters"].get("key"):
+            body_clean["dataSources"][0]["parameters"]["key"] = "*****"
+        if body_clean["dataSources"][0]["parameters"].get("connectionString"):
+            body_clean["dataSources"][0]["parameters"]["connectionString"] = "*****"
+        if body_clean["dataSources"][0]["parameters"].get("embeddingKey"):
+            body_clean["dataSources"][0]["parameters"]["embeddingKey"] = "*****"
+            
+        logging.debug(f"REQUEST BODY: {json.dumps(body_clean, indent=4)}")
 
     headers = {
         'Content-Type': 'application/json',
