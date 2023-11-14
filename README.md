@@ -117,6 +117,13 @@ const getUserInfoList = async () => {
 ## Common Customization Scenarios
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
 
+### Debugging your deployed app
+First, add an environment variable on the app service resource called "DEBUG". Set this to "true".
+
+Next, enable logging on the app service. Go to "App Service logs" under Monitoring, and change Application logging to File System. Save the change.
+
+Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
+
 ### Updating the default chat logo and headers
 The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
 ```
