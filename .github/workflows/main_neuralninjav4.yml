@@ -66,4 +66,4 @@ jobs:
         with:
           app-name: 'neuralninjav4'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_CFBB6A48C6414FCA832C93E9E0293D2D }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0CABEC339A0946DB82B7A4A90AE44100 }}
