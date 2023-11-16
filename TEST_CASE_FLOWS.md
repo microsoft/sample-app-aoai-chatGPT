@@ -14,7 +14,7 @@ The following environment variables are required to run this test case:
 
 `AZURE_SEARCH_SERVICE`\
 `AZURE_SEARCH_INDEX`\
-`AZURE_SEARCH_KEY`\
+`AZURE_SEARCH_KEY`
 
 `AZURE_OPENAI_STREAM` should be set to `true`
 
@@ -24,13 +24,13 @@ Keep the same environment variables as above, but add the following:
 `AZURE_COSMOSDB_DATABASE`\
 `AZURE_COSMOSDB_ACCOUNT`\
 `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`\
-`AZURE_COSMOSDB_ACCOUNT_KEY`\
+`AZURE_COSMOSDB_ACCOUNT_KEY`
 
 ## With Data, Nonstreaming
 The following environment variables are required to run this test case:
 `AZURE_SEARCH_SERVICE`\
 `AZURE_SEARCH_INDEX`\
-`AZURE_SEARCH_KEY`\
+`AZURE_SEARCH_KEY`
 
 `AZURE_OPENAI_STREAM` should be set to `false`
 
@@ -40,14 +40,14 @@ Keep the same environment variables as above, but add the following:
 `AZURE_COSMOSDB_DATABASE`\
 `AZURE_COSMOSDB_ACCOUNT`\
 `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`\
-`AZURE_COSMOSDB_ACCOUNT_KEY`\
+`AZURE_COSMOSDB_ACCOUNT_KEY`
 
 ## Without Data, Streaming
 The following environment variables should **not** be set:
 
 `AZURE_SEARCH_SERVICE`\
 `AZURE_SEARCH_INDEX`\
-`AZURE_SEARCH_KEY`\
+`AZURE_SEARCH_KEY`
 
 `AZURE_OPENAI_STREAM` should be set to `true`
 
@@ -57,14 +57,14 @@ Keep the same environment variables as above, but add the following:
 `AZURE_COSMOSDB_DATABASE`\
 `AZURE_COSMOSDB_ACCOUNT`\
 `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`\
-`AZURE_COSMOSDB_ACCOUNT_KEY`\
+`AZURE_COSMOSDB_ACCOUNT_KEY`
 
 ## Without Data, Nonstreaming
 The following environment variables should **not** be set:
 
 `AZURE_SEARCH_SERVICE`\
 `AZURE_SEARCH_INDEX`\
-`AZURE_SEARCH_KEY`\
+`AZURE_SEARCH_KEY`
 
 `AZURE_OPENAI_STREAM` should be set to `false`
 
@@ -74,4 +74,4 @@ Keep the same environment variables as above, but add the following:
 `AZURE_COSMOSDB_DATABASE`\
 `AZURE_COSMOSDB_ACCOUNT`\
 `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`\
-`AZURE_COSMOSDB_ACCOUNT_KEY`\
+`AZURE_COSMOSDB_ACCOUNT_KEY`
