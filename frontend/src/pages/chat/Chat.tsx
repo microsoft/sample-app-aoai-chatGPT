@@ -607,6 +607,8 @@ const Chat = () => {
                                                     answer={{
                                                         answer: answer.content,
                                                         citations: parseCitationFromMessage(messages[index - 1]),
+                                                        message_id: answer.id,
+                                                        feedback: answer.feedback
                                                     }}
                                                     onCitationClicked={c => onShowCitation(c)}
                                                 />

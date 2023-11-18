@@ -94,6 +94,7 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
                     role: msg.role,
                     date: msg.createdAt,
                     content: msg.content,
+                    feedback: msg.feedback ?? undefined
                 }
                 messages.push(message)
             });
@@ -308,4 +309,29 @@ export const frontendSettings = async (): Promise<Response | null> => {
     })
 
     return response
+}
+export const historyMessageFeedback = async (messageId: string, feedback: string): Promise<Response> => {
+    const response = await fetch("/history/message_feedback", {
+        method: "POST",
+        body: JSON.stringify({
+            message_id: messageId,
+            message_feedback: feedback
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue logging feedback.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
 }

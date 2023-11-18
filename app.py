@@ -97,6 +97,7 @@ AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")
 AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
 AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
+AZURE_COSMOSDB_ENABLE_FEEDBACK = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "false") == "true"
 
 # Elasticsearch Integration Settings
 ELASTICSEARCH_ENDPOINT = os.environ.get("ELASTICSEARCH_ENDPOINT")
@@ -133,7 +134,8 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
             cosmosdb_endpoint=cosmos_endpoint, 
             credential=credential, 
             database_name=AZURE_COSMOSDB_DATABASE,
-            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER,
+            enable_message_feedback = AZURE_COSMOSDB_ENABLE_FEEDBACK
         )
     except Exception as e:
         logging.exception("Exception in CosmosDB initialization", e)
@@ -257,7 +259,7 @@ def prepare_body_headers_with_data(request):
                         "vectorFields": parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if AZURE_SEARCH_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_SEARCH_TOP_K,
+                    "topNDocuments": int(AZURE_SEARCH_TOP_K),
                     "queryType": query_type,
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
@@ -285,7 +287,7 @@ def prepare_body_headers_with_data(request):
                         "vectorFields": parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS) if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
+                    "topNDocuments": int(AZURE_COSMOSDB_MONGO_VCORE_TOP_K),
                     "strictness": int(AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS),
                     "queryType": query_type,
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
@@ -695,6 +697,33 @@ def update_conversation():
         logging.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/history/message_feedback", methods=["POST"])
+def update_message():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+
+    ## check request for message_id
+    message_id = request.json.get("message_id", None)
+    message_feedback = request.json.get("message_feedback", None)
+    try:
+        if not message_id:
+            return jsonify({"error": "message_id is required"}), 400
+        
+        if not message_feedback:
+            return jsonify({"error": "message_feedback is required"}), 400
+        
+        ## update the message in cosmos
+        updated_message = cosmos_conversation_client.update_message_feedback(user_id, message_id, message_feedback)
+        if updated_message:
+            return jsonify({"message": f"Successfully updated message with feedback {message_feedback}", "message_id": message_id}), 200
+        else:
+            return jsonify({"error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."}), 404
+        
+    except Exception as e:
+        logging.exception("Exception in /history/message_feedback")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/history/delete", methods=["DELETE"])
 def delete_conversation():
     ## get the user id from the request headers
@@ -754,7 +783,7 @@ def get_conversation():
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
-    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt']} for msg in conversation_messages]
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages]
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
