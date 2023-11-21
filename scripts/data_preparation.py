@@ -13,7 +13,7 @@ from azure.identity import AzureCliCredential
 from azure.search.documents import SearchClient
 from tqdm import tqdm
 
-from data_utils import chunk_directory
+from data_utils import chunk_directory, chunk_blob_container
 
 SUPPORTED_LANGUAGE_CODES = {
     "ar": "Arabic",
@@ -134,22 +134,26 @@ def create_search_service(
 
 def create_or_update_search_index(
         service_name, 
-        subscription_id, 
-        resource_group, 
-        index_name, 
-        semantic_config_name, 
-        credential, 
-        language,
-        vector_config_name=None):
-    if credential is None:
-        raise ValueError("credential cannot be None")
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+        subscription_id=None, 
+        resource_group=None, 
+        index_name="default-index", 
+        semantic_config_name="default", 
+        credential=None, 
+        language=None,
+        vector_config_name=None,
+        admin_key=None):
+    
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin key cannot be None")
+    
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
     headers = {
@@ -225,7 +229,7 @@ def create_or_update_search_index(
             "searchable": True,
             "retrievable": True,
             "dimensions": 1536,
-            "vectorSearchConfiguration": "default"
+            "vectorSearchConfiguration": vector_config_name
         })
 
         body["vectorSearch"] = {
@@ -247,15 +251,17 @@ def create_or_update_search_index(
     
     return True
 
-def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential, upload_batch_size = 50):
-    if credential is None:
-        raise ValueError("credential cannot be None")
+
+def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None, upload_batch_size = 50, admin_key=None):
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin_key cannot be None")
     
     to_upload_dicts = []
 
     id = 0
-    for document in docs:
-        d = dataclasses.asdict(document)
+    for d in docs:
+        if type(d) is not dict:
+            d = dataclasses.asdict(d)
         # add id to documents
         d.update({"@search.action": "upload", "id": str(id)})
         if "contentVector" in d and d["contentVector"] is None:
@@ -264,13 +270,14 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         id += 1
     
     endpoint = "https://{}.search.windows.net/".format(service_name)
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
 
     search_client = SearchClient(
         endpoint=endpoint,
@@ -348,36 +355,59 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
 
     # check if search service exists, create if not
-    if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
-        print(f"Using existing search service {service_name}")
-    else:
-        print(f"Creating search service {service_name}")
-        create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
+    try:
+        if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
+            print(f"Using existing search service {service_name}")
+        else:
+            print(f"Creating search service {service_name}")
+            create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
+    except Exception as e:
+        print(f"Unable to verify if search service exists. Error: {e}")
+        print("Proceeding to attempt to create index.")
 
     # create or update search index with compatible schema
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None)):
+    admin_key = os.environ.get("AZURE_SEARCH_ADMIN_KEY", None)
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None), admin_key=admin_key):
         raise Exception(f"Failed to create or update index {index_name}")
     
-    # chunk directory
-    print("Chunking directory...")
-    add_embeddings = False
-    if config.get("vector_config_name") and embedding_model_endpoint:
-        add_embeddings = True
-    result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
-                             azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                             add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint)
+    data_configs = []
+    if "data_path" in config:
+        data_configs.append({
+            "path": config["data_path"],
+            "url_prefix": config.get("url_prefix", None),
+        })
+    if "data_paths" in config:
+        data_configs.extend(config["data_paths"])
 
-    if len(result.chunks) == 0:
-        raise Exception("No chunks found. Please check the data path and chunk size.")
+    for data_config in data_configs:
+        # chunk directory
+        print(f"Chunking path {data_config['path']}...")
+        add_embeddings = False
+        if config.get("vector_config_name") and embedding_model_endpoint:
+            add_embeddings = True
 
-    print(f"Processed {result.total_files} files")
-    print(f"Unsupported formats: {result.num_unsupported_format_files} files")
-    print(f"Files with errors: {result.num_files_with_errors} files")
-    print(f"Found {len(result.chunks)} chunks")
+        if "blob.core" in data_config["path"]:
+            result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+                                azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+        elif os.path.exists(data_config["path"]):
+            result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+                                    azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+        else:
+            raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
-    # upload documents to index
-    print("Uploading documents to index...")
-    upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        if len(result.chunks) == 0:
+            raise Exception("No chunks found. Please check the data path and chunk size.")
+
+        print(f"Processed {result.total_files} files")
+        print(f"Unsupported formats: {result.num_unsupported_format_files} files")
+        print(f"Files with errors: {result.num_files_with_errors} files")
+        print(f"Found {len(result.chunks)} chunks")
+
+        # upload documents to index
+        print("Uploading documents to index...")
+        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
 
     # check if index is ready/validate index
     print("Validating index...")
@@ -400,6 +430,7 @@ if __name__ == "__main__":
     parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
     parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-03-15-preview'")
     parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
+    parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -409,6 +440,9 @@ if __name__ == "__main__":
     form_recognizer_client = None
 
     print("Data preparation script started")
+    if args.search_admin_key:
+        os.environ["AZURE_SEARCH_ADMIN_KEY"] = args.search_admin_key
+
     if args.form_rec_resource and args.form_rec_key:
         os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
         os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
