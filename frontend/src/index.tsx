@@ -67,7 +67,11 @@ export default function App() {
           window.location.reload();
         }}
         style={{ background: "#2B373B" }}
-        buttonStyle={{ background: "#37772F", fontSize: "13px" }}
+        buttonStyle={{
+          background: "#37772F",
+          color: "#effded",
+          fontSize: "13px",
+        }}
       >
         By clicking "I Understand", you consent to the use of cookies for
         performance and usage tracking purposes to enhance your browsing
