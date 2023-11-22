@@ -230,18 +230,25 @@
                 "description": "Azure Search Permitted Groups Field"
             }
         },
-        "AzureOpenAIEmbeddingEndpoint": {
+        "AzureSearchStrictness": {
+            "type": "int",
+            "defaultValue": 3,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "metadata": {
+                "description": "Azure Search Strictness"
+            }
+        },
+        "AzureOpenAIEmbeddingName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Azure OpenAI Embedding Endpoint"
-            }
-        },
-        "AzureOpenAIEmbeddingKey": {
-            "type": "securestring",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Azure OpenAI Embedding Key"
+                "description": "Azure OpenAI Embedding Deployment Name"
             }
         },
         "WebAppEnableChatHistory": {
@@ -399,12 +406,12 @@
                             "value": "[parameters('AzureSearchPermittedGroupsField')]"
                         },
                         {
-                            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-                            "value": "[parameters('AzureOpenAIEmbeddingEndpoint')]"
+                            "name": "AZURE_SEARCH_STRICTNESS",
+                            "value": "[parameters('AzureSearchStrictness')]"
                         },
                         {
-                            "name": "AZURE_OPENAI_EMBEDDING_KEY",
-                            "value": "[parameters('AzureOpenAIEmbeddingKey')]"
+                            "name": "AZURE_OPENAI_EMBEDDING_NAME",
+                            "value": "[parameters('AzureOpenAIEmbeddingName')]"
                         },
                         {
                             "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
