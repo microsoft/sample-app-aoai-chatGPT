@@ -72,14 +72,14 @@ class CosmosConversationClient():
             return response_list
 
 
-    def get_conversations(self, user_id, sort_order = 'DESC'):
+    def get_conversations(self, user_id, sort_order = 'DESC', offset = 0, limit = 25):
         parameters = [
             {
                 'name': '@userId',
                 'value': user_id
             }
         ]
-        query = f"SELECT * FROM c where c.userId = @userId and c.type='conversation' order by c.updatedAt {sort_order}"
+        query = f"SELECT * FROM c where c.userId = @userId and c.type='conversation' order by c.updatedAt {sort_order} offset {offset} limit {limit}"
         conversations = list(self.container_client.query_items(query=query, parameters=parameters,
                                                                                enable_cross_partition_query =True))
         ## if no conversations are found, return None
