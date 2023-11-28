@@ -714,7 +714,7 @@ def list_conversations():
     user_id = authenticated_user['user_principal_id']
 
     ## get the conversations from cosmos
-    conversations = cosmos_conversation_client.get_conversations(user_id, offset=offset)
+    conversations = cosmos_conversation_client.get_conversations(user_id, offset=offset, limit=25)
     if not isinstance(conversations, list):
         return jsonify({"error": f"No conversations for {user_id} were found"}), 404
 
@@ -780,7 +780,7 @@ def delete_all_conversations():
 
     # get conversations for user
     try:
-        conversations = cosmos_conversation_client.get_conversations(user_id)
+        conversations = cosmos_conversation_client.get_conversations(user_id, offset=0, limit=None)
         if not conversations:
             return jsonify({"error": f"No conversations for {user_id} were found"}), 404
         
