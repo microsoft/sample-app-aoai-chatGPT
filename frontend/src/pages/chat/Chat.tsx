@@ -548,7 +548,9 @@ const Chat = () => {
         if (message?.role && message?.role === "tool") {
             try {
                 const toolMessage = JSON.parse(message.content) as ToolMessageContent;
-                return toolMessage.citations;
+                const citationsWithContentAndURL = toolMessage.citations
+                    .filter(citation => citation.url && citation.content);
+                return citationsWithContentAndURL;
             }
             catch {
                 return [];
