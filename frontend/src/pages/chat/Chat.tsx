@@ -538,8 +538,8 @@ const Chat = () => {
     };
 
     const onViewSource = (citation: Citation) => {
-        if (citation.url) {
-            window.open(citation.url, "_blank");
+        if (citation.filepath) {
+            window.open(citation.filepath, "_blank");
         }
     };
 
@@ -713,7 +713,7 @@ const Chat = () => {
                             <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
                             <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
                         </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
+                        <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.filepath ? activeCitation.filepath : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
 
                         <ReactMarkdown 
                             linkTarget="_blank"
