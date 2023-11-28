@@ -718,7 +718,7 @@ const Chat = () => {
                         <ReactMarkdown 
                             linkTarget="_blank"
                             className={styles.citationPanelContent}
-                            children={activeCitation.content} 
+                            children={activeCitation.url} 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw]}
                         />
