@@ -1,0 +1,16 @@
+[
+    {
+        "data_path": "<path to data>",
+        "location": "<azure region, e.g. 'westus2'>",
+        "subscription_id": "<subscription id>",
+        "resource_group": "<resource group name>",
+        "connection_string": "<Cosmos Mongo vcore database connection string>",
+        "account_name": "<Cosmos Mongo vcore database connection string>",
+        "database_name": "<Cosmos Mongo vcore database name>",
+        "collection_name": "<Cosmos Mongo vcore database collection name>",
+        "index_name": "<Cosmos Mongo vcore vector index>",
+        "vector_field": "<Cosmos Mongo vcore vector field>",
+        "chunk_size": 1024,
+        "token_overlap": 128
+    }
+]

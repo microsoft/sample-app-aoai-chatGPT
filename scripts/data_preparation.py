@@ -355,14 +355,19 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
 
     # check if search service exists, create if not
-    if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
-        print(f"Using existing search service {service_name}")
-    else:
-        print(f"Creating search service {service_name}")
-        create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
+    try:
+        if check_if_search_service_exists(service_name, subscription_id, resource_group, credential):
+            print(f"Using existing search service {service_name}")
+        else:
+            print(f"Creating search service {service_name}")
+            create_search_service(service_name, subscription_id, resource_group, location, credential=credential)
+    except Exception as e:
+        print(f"Unable to verify if search service exists. Error: {e}")
+        print("Proceeding to attempt to create index.")
 
     # create or update search index with compatible schema
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None)):
+    admin_key = os.environ.get("AZURE_SEARCH_ADMIN_KEY", None)
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None), admin_key=admin_key):
         raise Exception(f"Failed to create or update index {index_name}")
     
     data_configs = []
@@ -425,6 +430,7 @@ if __name__ == "__main__":
     parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
     parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-03-15-preview'")
     parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
+    parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -434,6 +440,9 @@ if __name__ == "__main__":
     form_recognizer_client = None
 
     print("Data preparation script started")
+    if args.search_admin_key:
+        os.environ["AZURE_SEARCH_ADMIN_KEY"] = args.search_admin_key
+
     if args.form_rec_resource and args.form_rec_key:
         os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
         os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
