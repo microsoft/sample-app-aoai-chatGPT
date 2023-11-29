@@ -340,6 +340,12 @@
             "metadata": {
                 "description": "Elasticsearch strictness"
             }
+        },
+        "ElasticsearchEmbeddingModelId": {
+            "type": "string",
+            "metadata": {
+                "description": "The model ID for a model deployed on Elasticsearch to use for generating embeddings for queries."
+            }
         }
     },
     "variables": {

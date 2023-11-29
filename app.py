@@ -104,6 +104,7 @@ ELASTICSEARCH_TITLE_COLUMN = os.environ.get("ELASTICSEARCH_TITLE_COLUMN")
 ELASTICSEARCH_URL_COLUMN = os.environ.get("ELASTICSEARCH_URL_COLUMN")
 ELASTICSEARCH_VECTOR_COLUMNS = os.environ.get("ELASTICSEARCH_VECTOR_COLUMNS")
 ELASTICSEARCH_STRICTNESS = os.environ.get("ELASTICSEARCH_STRICTNESS", SEARCH_STRICTNESS)
+ELASTICSEARCH_EMBEDDING_MODEL_ID = os.environ.get("ELASTICSEARCH_EMBEDDING_MODEL_ID")
 
 # Initialize a CosmosDB client with AAD auth and containers for Chat History
 cosmos_conversation_client = None
@@ -285,11 +286,12 @@ def prepare_body_headers_with_data(request):
                                 "vectorFields": ELASTICSEARCH_VECTOR_COLUMNS.split("|") if ELASTICSEARCH_VECTOR_COLUMNS else []
                             },
                             "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                            "topNDocuments": ELASTICSEARCH_TOP_K,
+                            "topNDocuments": int(ELASTICSEARCH_TOP_K),
                             "queryType": ELASTICSEARCH_QUERY_TYPE,
                             "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                             "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
                             "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
+                            "embeddingModelId": ELASTICSEARCH_EMBEDDING_MODEL_ID,
                             "strictness": int(ELASTICSEARCH_STRICTNESS)
                         }
                     }
