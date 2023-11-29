@@ -549,7 +549,7 @@ const Chat = () => {
             try {
                 const toolMessage = JSON.parse(message.content) as ToolMessageContent;
                 const citationsWithContentAndURL = toolMessage.citations
-                    .filter(citation => citation.url && citation.content);
+                    .filter(citation => citation.url && citation.content && citation.filepath && citation.metadata);
                 return citationsWithContentAndURL;
             }
             catch {
