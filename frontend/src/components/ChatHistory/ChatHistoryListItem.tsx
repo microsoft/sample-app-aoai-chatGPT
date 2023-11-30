@@ -250,6 +250,7 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
     const [offset, setOffset] = useState<number>(25);
     const [observerCounter, setObserverCounter] = useState(0);
     const [showSpinner, setShowSpinner] = useState(false);
+    const firstRender = useRef(true);
 
   const handleSelectHistory = (item?: Conversation) => {
     if(item){
@@ -264,6 +265,10 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
   };
 
     useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
         handleFetchHistory();
         setOffset((offset) => offset += 25);
     }, [observerCounter]);
