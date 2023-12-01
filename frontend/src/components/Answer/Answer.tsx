@@ -116,8 +116,21 @@ export const Answer = ({
                                     tabIndex={0} 
                                     role="link" 
                                     key={idx} 
-                                    onClick={hasURL(citation, ++idx) ? () => onCitationClicked(citation) : window.open(citation.url, "_blank")} 
-                                    onKeyDown={e => (e.key === "Enter" || e.key === " ") && hasURL(citation, ++idx) ? onCitationClicked(citation) : window.open(citation.url, "_blank")}
+                                    onClick={() => {
+                                        if (hasURL(citation, ++idx)) {
+                                            onCitationClicked(citation);
+                                        } else {
+                                            window.open(citation.url, "_blank")?.focus();
+                                        }
+                                    }}
+                                    onKeyDown={e => (e.key === "Enter" || e.key === " ") && 
+                                    onClick={() => {
+                                        if (hasURL(citation, ++idx)) {
+                                            onCitationClicked(citation);
+                                        } else {
+                                            window.open(citation.url, "_blank")?.focus();
+                                        }
+                                    }
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >
