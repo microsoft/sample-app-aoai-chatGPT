@@ -56,7 +56,7 @@ export const Answer = ({
         return citationFilename;
     }
 
-    const hasURL = (citation: Citation, index: number, truncate: boolean = false) => {
+    const hasURL = (citation: Citation) => {
         if (citation.filepath && citation.chunk_id) {
             return true;
         }
@@ -69,7 +69,7 @@ export const Answer = ({
     }
     
     const handleCitationClick = (citation: Citation) => {
-        if (hasURL(citation, ++idx)) {
+        if (hasURL(citation)) {
             onCitationClicked(citation);
         } else {
             window.open(citation.url, "_blank")?.focus();
