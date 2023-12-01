@@ -146,9 +146,12 @@ def is_chat_model():
     return False
 
 def should_use_data():
-    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
+    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX:
         if DEBUG_LOGGING:
             logging.debug("Using Azure Cognitive Search")
+        if AZURE_SEARCH_KEY:
+            logging.debug("Connecting to Azure Search using API key")
+
         return True
     
     if AZURE_COSMOSDB_MONGO_VCORE_DATABASE and AZURE_COSMOSDB_MONGO_VCORE_CONTAINER and AZURE_COSMOSDB_MONGO_VCORE_INDEX and AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING:
@@ -242,29 +245,33 @@ def prepare_body_headers_with_data(request):
             if DEBUG_LOGGING:
                 logging.debug(f"FILTER: {filter}")
 
-        body["dataSources"].append(
-            {
-                "type": "AzureCognitiveSearch",
-                "parameters": {
-                    "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                    "key": AZURE_SEARCH_KEY,
-                    "indexName": AZURE_SEARCH_INDEX,
-                    "fieldsMapping": {
-                        "contentFields": parse_multi_columns(AZURE_SEARCH_CONTENT_COLUMNS) if AZURE_SEARCH_CONTENT_COLUMNS else [],
-                        "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
-                        "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
-                        "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                        "vectorFields": parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if AZURE_SEARCH_VECTOR_COLUMNS else []
-                    },
-                    "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_SEARCH_TOP_K,
-                    "queryType": query_type,
-                    "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                    "filter": filter,
-                    "strictness": int(AZURE_SEARCH_STRICTNESS)
-                }
-            })
+        cognitiveSearchDataSource = {
+            "type": "AzureCognitiveSearch",
+            "parameters": {
+                "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+                "indexName": AZURE_SEARCH_INDEX,
+                "fieldsMapping": {
+                    "contentFields": parse_multi_columns(AZURE_SEARCH_CONTENT_COLUMNS) if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                    "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
+                    "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
+                    "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
+                    "vectorFields": parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if AZURE_SEARCH_VECTOR_COLUMNS else []
+                },
+                "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                "topNDocuments": AZURE_SEARCH_TOP_K,
+                "queryType": query_type,
+                "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
+                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                "filter": filter,
+                "strictness": int(AZURE_SEARCH_STRICTNESS)
+            }
+        }
+
+        if AZURE_SEARCH_KEY:
+            cognitiveSearchDataSource["parameters"]["key"] = AZURE_SEARCH_KEY
+
+        body["dataSources"].append(cognitiveSearchDataSource)
+        
     elif DATASOURCE_TYPE == "AzureCosmosDB":
         # Set query type
         query_type = "vector"

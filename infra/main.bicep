@@ -26,6 +26,7 @@ param searchContentColumns string = 'content'
 param searchFilenameColumn string = 'filepath'
 param searchTitleColumn string = 'title'
 param searchUrlColumn string = 'url'
+param searchApiKeyEnabled bool = true
 
 param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
@@ -118,7 +119,7 @@ module backend 'core/host/appservice.bicep' = {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_SEARCH_KEY: searchService.outputs.adminKey
+      AZURE_SEARCH_KEY: searchApiKeyEnabled ? searchService.outputs.adminKey : null
       AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
       AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
       AZURE_SEARCH_TOP_K: searchTopK
@@ -189,6 +190,7 @@ module searchService 'core/search/search-services.bicep' = {
         aadAuthFailureMode: 'http401WithBearerChallenge'
       }
     }
+    searchApiKeyEnabled: searchApiKeyEnabled
     sku: {
       name: !empty(searchServiceSkuName) ? searchServiceSkuName : 'standard'
     }

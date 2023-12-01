@@ -8,6 +8,7 @@ param sku object = {
 
 param authOptions object = {}
 param semanticSearch string = 'disabled'
+param searchApiKeyEnabled bool = true
 
 resource search 'Microsoft.Search/searchServices@2021-04-01-preview' = {
   name: name
@@ -17,8 +18,8 @@ resource search 'Microsoft.Search/searchServices@2021-04-01-preview' = {
     type: 'SystemAssigned'
   }
   properties: {
-    authOptions: authOptions
-    disableLocalAuth: false
+    authOptions: searchApiKeyEnabled ? authOptions : null
+    disableLocalAuth: searchApiKeyEnabled ? false : true
     disabledDataExfiltrationOptions: []
     encryptionWithCmk: {
       enforcement: 'Unspecified'

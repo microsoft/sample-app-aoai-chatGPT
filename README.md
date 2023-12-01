@@ -113,6 +113,17 @@ To remove this restriction, you can add `AUTH_ENABLED=False` to the environment 
 
 To add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. 
 
+### Authenticate using Azure RBAC
+To authenticate using Azure RBAC instead of the default API Keys follow the steps below:
+1. Ensure role assignments listed on [this page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/use-your-data?tabs=ai-search#azure-role-based-access-controls-azure-rbac-for-adding-data-sources) have been created 
+2. Navigate to your Search service in the Azure Portal
+3. Under Settings, select `Keys`
+4. Select either `Role-based access control` or `Both`
+5. Navigate to your App service in the Azure Portal
+6. Under Settings, select `Configuration`
+7. Delete the value of the `AZURE_SEARCH_KEY` setting
+8. Restart the application
+
 ## Common Customization Scenarios
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
 
