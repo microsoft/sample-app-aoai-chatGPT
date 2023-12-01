@@ -130,7 +130,7 @@ export const Answer = ({
                                         } else {
                                             window.open(citation.url, "_blank")?.focus();
                                         }
-                                    }
+                                    }}
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >
