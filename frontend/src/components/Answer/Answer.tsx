@@ -22,7 +22,7 @@ export const Answer = ({
 }: Props) => {
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
     const filePathTruncationLimit = 50;
-
+   
     const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
     const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
 
@@ -56,6 +56,26 @@ export const Answer = ({
         return citationFilename;
     }
 
+    const hasURL = (citation: Citation) => {
+        if (citation.filepath && citation.chunk_id) {
+            return true;
+        }
+        else if (citation.filepath && citation.reindex_id) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    const handleCitationClick = (citation: Citation) => {
+        if (!hasURL(citation)) {
+            onCitationClicked(citation);
+        } else if (citation.url) {
+            window.open(citation.url, "_blank")?.focus();
+        }
+    };
+    
     return (
         <>
             <Stack className={styles.answerContainer} tabIndex={0}>
@@ -104,8 +124,8 @@ export const Answer = ({
                                     tabIndex={0} 
                                     role="link" 
                                     key={idx} 
-                                    onClick={() => onCitationClicked(citation)} 
-                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? onCitationClicked(citation) : null}
+                                    onClick={() => handleCitationClick(citation)}
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCitationClick(citation) : null}
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >
