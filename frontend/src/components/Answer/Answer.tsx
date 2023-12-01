@@ -68,6 +68,14 @@ export const Answer = ({
         }
     }
     
+    const handleCitationClick = (citation: Citation) => {
+        if (hasURL(citation, ++idx)) {
+            onCitationClicked(citation);
+        } else {
+            window.open(citation.url, "_blank")?.focus();
+        }
+    };
+    
     return (
         <>
             <Stack className={styles.answerContainer} tabIndex={0}>
@@ -116,21 +124,8 @@ export const Answer = ({
                                     tabIndex={0} 
                                     role="link" 
                                     key={idx} 
-                                    onClick={() => {
-                                        if (hasURL(citation, ++idx)) {
-                                            onCitationClicked(citation);
-                                        } else {
-                                            window.open(citation.url, "_blank")?.focus();
-                                        }
-                                    }}
-                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? 
-                                        {() => {
-                                        if (hasURL(citation, ++idx)) {
-                                            onCitationClicked(citation);
-                                        } else {
-                                            window.open(citation.url, "_blank")?.focus();
-                                        }}}
-                                    }
+                                    onClick={() => handleCitationClick(citation)}
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCitationClick(citation) : null}
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >
