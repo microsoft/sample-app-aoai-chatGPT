@@ -71,7 +71,7 @@ export const Answer = ({
     const handleCitationClick = (citation: Citation) => {
         if (hasURL(citation)) {
             onCitationClicked(citation);
-        } else {
+        } else if (citation.url) {
             window.open(citation.url, "_blank")?.focus();
         }
     };
