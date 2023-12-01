@@ -123,15 +123,14 @@ export const Answer = ({
                                             window.open(citation.url, "_blank")?.focus();
                                         }
                                     }}
-                                    onKeyDown={e => {
-                                        e => e.key === "Enter" || e.key === " " ? 
+                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? 
                                         {() => {
                                         if (hasURL(citation, ++idx)) {
                                             onCitationClicked(citation);
                                         } else {
                                             window.open(citation.url, "_blank")?.focus();
                                         }}}
-                                    }}
+                                    }
                                     className={styles.citationContainer}
                                     aria-label={createCitationFilepath(citation, idx)}
                                 >
