@@ -273,6 +273,46 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
+module searchRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+  scope: searchServiceResourceGroup
+  name: 'search-role-openai'
+  params: {
+    principalId: openAi.outputs.identityPrincipalId
+    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module searchServiceRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+  scope: searchServiceResourceGroup
+  name: 'search-service-role-openai'
+  params: {
+    principalId: openAi.outputs.identityPrincipalId
+    roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module openAiContributorRoleSearch 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+  scope: searchServiceResourceGroup
+  name: 'openai-contributor-role-search'
+  params: {
+    principalId: searchService.outputs.identityPrincipalId
+    roleDefinitionId: 'a001fd3d-188f-4b5d-821b-7da978bf7442'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module cognitiveServicesContributorRoleSearch 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+  scope: searchServiceResourceGroup
+  name: 'cognitive-services-contributor-role-search'
+  params: {
+    principalId: searchService.outputs.identityPrincipalId
+    roleDefinitionId: '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68'
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // For doc prep
 module docPrepResources 'docprep.bicep' = {
   name: 'docprep-resources${resourceToken}'

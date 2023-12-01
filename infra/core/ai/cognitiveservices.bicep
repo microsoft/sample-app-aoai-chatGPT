@@ -20,6 +20,9 @@ resource account 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     publicNetworkAccess: publicNetworkAccess
   }
   sku: sku
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 @batchSize(1)
@@ -41,3 +44,5 @@ output id string = account.id
 output name string = account.name
 output skuName string = account.sku.name
 output key string = account.listKeys().key1
+output identityPrincipalId string = account.identity.principalId
+
