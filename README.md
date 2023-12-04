@@ -115,7 +115,7 @@ To add further access controls, update the logic in `getUserInfoList` in `fronte
 
 ### Authenticate using Azure RBAC
 To authenticate using Azure RBAC instead of the default API Keys follow the steps below:
-1. Ensure role assignments listed on [this page](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/use-your-data?tabs=ai-search#azure-role-based-access-controls-azure-rbac-for-adding-data-sources) have been created 
+1. Ensure role assignments listed on [this page](https://learn.microsoft.com/azure/ai-services/openai/concepts/use-your-data?tabs=ai-search#azure-role-based-access-controls-azure-rbac-for-adding-data-sources) have been created 
 2. Navigate to your Search service in the Azure Portal
 3. Under Settings, select `Keys`
 4. Select either `Role-based access control` or `Both`
