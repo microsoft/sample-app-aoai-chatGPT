@@ -9,8 +9,7 @@ import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
 import styles from "./Chat.module.css";
-import Azure from "../../assets/Azure.svg";
-import Gps from "../../assets/Gps.svg";
+import BabyYodaGps from "../../assets/BabyYodaGps.svg";
 
 import {
     ChatMessage,
@@ -582,7 +581,7 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={Gps}
+                                    src={BabyYodaGps}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
