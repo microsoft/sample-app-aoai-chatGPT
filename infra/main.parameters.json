@@ -43,6 +43,9 @@
     },
     "authClientSecret": {
       "value": "${AUTH_CLIENT_SECRET}"
+    },
+    "authType": {
+      "value": "${AZURE_AUTH_TYPE}"
     }
   }
 }
