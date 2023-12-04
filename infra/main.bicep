@@ -13,6 +13,12 @@ param appServicePlanName string = ''
 param backendServiceName string = ''
 param resourceGroupName string = ''
 
+@allowed([
+  'apikeys'
+  'rbac'
+])
+param authType string = 'apikeys'
+
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
 param searchServiceResourceGroupLocation string = location
@@ -26,7 +32,6 @@ param searchContentColumns string = 'content'
 param searchFilenameColumn string = 'filepath'
 param searchTitleColumn string = 'title'
 param searchUrlColumn string = 'url'
-param searchApiKeyEnabled bool = true
 
 param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
@@ -41,7 +46,6 @@ param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
 param openAIApiVersion string = '2023-06-01-preview'
 param openAIStream bool = true
-param openAIApiKeyEnabled bool = true
 param embeddingDeploymentName string = 'embedding'
 param embeddingModelName string = 'text-embedding-ada-002'
 
@@ -120,7 +124,7 @@ module backend 'core/host/appservice.bicep' = {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_SEARCH_KEY: searchApiKeyEnabled ? searchService.outputs.adminKey : null
+      AZURE_SEARCH_KEY: authType == 'apikeys' ? searchService.outputs.adminKey : null
       AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
       AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
       AZURE_SEARCH_TOP_K: searchTopK
@@ -133,7 +137,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_RESOURCE: openAi.outputs.name
       AZURE_OPENAI_MODEL: openAIModel
       AZURE_OPENAI_MODEL_NAME: openAIModelName
-      AZURE_OPENAI_KEY: openAIApiKeyEnabled ? openAi.outputs.key : null
+      AZURE_OPENAI_KEY: authType == 'apikeys' ? openAi.outputs.key : null
       AZURE_OPENAI_TEMPERATURE: openAITemperature
       AZURE_OPENAI_TOP_P: openAITopP
       AZURE_OPENAI_MAX_TOKENS: openAIMaxTokens
@@ -191,7 +195,7 @@ module searchService 'core/search/search-services.bicep' = {
         aadAuthFailureMode: 'http401WithBearerChallenge'
       }
     }
-    searchApiKeyEnabled: searchApiKeyEnabled
+    authType: authType
     sku: {
       name: !empty(searchServiceSkuName) ? searchServiceSkuName : 'standard'
     }
@@ -274,7 +278,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+module searchRoleOpenAi 'core/security/role.bicep' = if (authType == 'rbac') {
   scope: searchServiceResourceGroup
   name: 'search-role-openai'
   params: {
@@ -284,7 +288,7 @@ module searchRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
   }
 }
 
-module searchServiceRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+module searchServiceRoleOpenAi 'core/security/role.bicep' = if (authType == 'rbac') {
   scope: searchServiceResourceGroup
   name: 'search-service-role-openai'
   params: {
@@ -294,7 +298,7 @@ module searchServiceRoleOpenAi 'core/security/role.bicep' = if (!searchApiKeyEna
   }
 }
 
-module openAiContributorRoleSearch 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+module openAiContributorRoleSearch 'core/security/role.bicep' = if (authType == 'rbac') {
   scope: searchServiceResourceGroup
   name: 'openai-contributor-role-search'
   params: {
@@ -304,7 +308,7 @@ module openAiContributorRoleSearch 'core/security/role.bicep' = if (!searchApiKe
   }
 }
 
-module cognitiveServicesContributorRoleSearch 'core/security/role.bicep' = if (!searchApiKeyEnabled) {
+module cognitiveServicesContributorRoleSearch 'core/security/role.bicep' = if (authType == 'rbac') {
   scope: searchServiceResourceGroup
   name: 'cognitive-services-contributor-role-search'
   params: {

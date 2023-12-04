@@ -8,7 +8,6 @@ from azure.identity import DefaultAzureCredential
 from base64 import b64encode
 from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
-from azure.identity import DefaultAzureCredential
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -41,6 +40,7 @@ DATASOURCE_TYPE = os.environ.get("DATASOURCE_TYPE", "AzureCognitiveSearch")
 SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
 SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
 SEARCH_ENABLE_IN_DOMAIN = os.environ.get("SEARCH_ENABLE_IN_DOMAIN", "true")
+AZURE_AUTH_TYPE = os.environ.get("AZURE_AUTH_TYPE", "apikeys")
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
@@ -140,6 +140,8 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
         logging.exception("Exception in CosmosDB initialization", e)
         cosmos_conversation_client = None
 
+def should_use_apikeys():
+    return AZURE_AUTH_TYPE == "apikeys"
 
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
@@ -150,8 +152,6 @@ def should_use_data():
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX:
         if DEBUG_LOGGING:
             logging.debug("Using Azure Cognitive Search")
-        if AZURE_SEARCH_KEY:
-            logging.debug("Connecting to Azure Search using API key")
 
         return True
     
@@ -268,7 +268,7 @@ def prepare_body_headers_with_data(request):
             }
         }
 
-        if AZURE_SEARCH_KEY:
+        if should_use_apikeys():
             cognitiveSearchDataSource["parameters"]["key"] = AZURE_SEARCH_KEY
 
         body["dataSources"].append(cognitiveSearchDataSource)
@@ -363,7 +363,7 @@ def prepare_body_headers_with_data(request):
         "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
     }
     
-    if AZURE_OPENAI_KEY:
+    if should_use_apikeys():
         headers["api-key"] = AZURE_OPENAI_KEY
     else:
         default_credential = DefaultAzureCredential()
@@ -554,7 +554,7 @@ def conversation_without_data(request_body):
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-08-01-preview"
     
-    if AZURE_OPENAI_KEY:
+    if should_use_apikeys():
         openai.api_key = AZURE_OPENAI_KEY
     else:
         default_credential = DefaultAzureCredential()
@@ -882,7 +882,7 @@ def generate_title(conversation_messages):
         openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
         
-        if AZURE_OPENAI_KEY:
+        if should_use_apikeys():
             openai.api_key = AZURE_OPENAI_KEY
         else:
             default_credential = DefaultAzureCredential()
