@@ -85,8 +85,8 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
     React.useEffect(() => {}, [appStateContext?.state.chatHistory, clearingError]);
 
     return (
-        <section className={styles.container} data-is-scrollable aria-label={"chat history panel"}>
-            <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap aria-label="chat history header">
+        <section className={styles.container} data-is-scrollable aria-label={"painel de histórico de bate-papo"}>
+            <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap aria-label="cabeçalho do histórico de bate-papo">
                 <StackItem>
                     <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "auto", paddingLeft: "20px" }}>Chat history</Text>
                 </StackItem>
@@ -96,7 +96,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                             iconProps={{ iconName: 'More' }}
                             title={"Clear all chat history"}
                             onClick={onShowContextualMenu}
-                            aria-label={"clear all chat history"}
+                            aria-label={"limpar todo o histórico de bate-papo"}
                             styles={commandBarStyle}
                             role="button"
                             id="moreButton"
@@ -112,14 +112,14 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                             iconProps={{ iconName: 'Cancel' }}
                             title={"Hide"}
                             onClick={handleHistoryClick}
-                            aria-label={"hide button"}
+                            aria-label={"botão ocultar"}
                             styles={commandBarStyle}
                             role="button"
                         />
                     </Stack>
                 </Stack>
             </Stack>
-            <Stack aria-label="chat history panel content"
+            <Stack aria-label="conteúdo do painel do histórico de bate-papo"
                 styles={{
                     root: {
                         display: "flex",

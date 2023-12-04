@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Stack, TextField } from "@fluentui/react";
 import { SendRegular } from "@fluentui/react-icons";
 import Send from "../../assets/Send.svg";
@@ -44,8 +44,22 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     const sendQuestionDisabled = disabled || !question.trim();
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    const handleResize = () => {
+        setIsMobile(window.innerWidth < 768);
+    };
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
     return (
-        <Stack horizontal className={styles.questionInputContainer}>
+        
+        <Stack horizontal className={isMobile ? styles.questionInputContainerMobile : styles.questionInputContainer}>
             <TextField
                 className={styles.questionInputTextArea}
                 placeholder={placeholder}
@@ -59,7 +73,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
             <div className={styles.questionInputSendButtonContainer} 
                 role="button" 
                 tabIndex={0}
-                aria-label="Ask question button"
+                aria-label="Botão fazer pergunta"
                 onClick={sendQuestion}
                 onKeyDown={e => e.key === "Enter" || e.key === " " ? sendQuestion() : null}
             >

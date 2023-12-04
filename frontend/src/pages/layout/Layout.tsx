@@ -1,6 +1,7 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
 import Azure from "../../assets/Azure.svg";
+import Logo from "../../assets/logo-tracbel.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { CommandBarButton, Dialog, Stack, TextField, ICommandBarStyles, IButtonStyles, DefaultButton  } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
@@ -13,7 +14,8 @@ const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
       width: 86,
       height: 32,
       borderRadius: 4,
-      background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
+      background: '#fbbb00',
+    //   'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
     //   position: 'absolute',
     //   right: 20,
       padding: '5px 12px',
@@ -23,7 +25,7 @@ const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
       color: '#FFFFFF',
     },
     rootHovered: {
-      background: 'linear-gradient(135deg, #0F6CBD 0%, #2D87C3 51.04%, #8DDDD8 100%)',
+      background: 'linear-gradient(135deg, #fac937 0%, #f7cd4f 51.04%, #f7cd4f 100%)',
     },
     label: {
       fontWeight: 600,
@@ -36,7 +38,7 @@ const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
 const Layout = () => {
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [copyClicked, setCopyClicked] = useState<boolean>(false);
-    const [copyText, setCopyText] = useState<string>("Copy URL");
+    const [copyText, setCopyText] = useState<string>("Copiar URL");
     const appStateContext = useContext(AppStateContext)
 
     const handleShareClick = () => {
@@ -46,7 +48,7 @@ const Layout = () => {
     const handleSharePanelDismiss = () => {
         setIsSharePanelOpen(false);
         setCopyClicked(false);
-        setCopyText("Copy URL");
+        setCopyText("Copiar URL");
     };
 
     const handleCopyClick = () => {
@@ -60,11 +62,24 @@ const Layout = () => {
 
     useEffect(() => {
         if (copyClicked) {
-            setCopyText("Copied URL");
+            setCopyText("URL copiado");
         }
     }, [copyClicked]);
 
     useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status]);
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    const handleResize = () => {
+        setIsMobile(window.innerWidth < 768);
+    };
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
 
     return (
         <div className={styles.layout}>
@@ -74,17 +89,23 @@ const Layout = () => {
                 >
                     <Stack horizontal verticalAlign="center">
                         <img
-                            src={Azure}
+                            src={Logo}
                             className={styles.headerIcon}
                             aria-hidden="true"
                         />
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Azure AI</h1>
+                            <h1 className={styles.headerTitle}>TracGPT</h1>
                         </Link>
                     </Stack>
+                    {/* TODO:BTN HISTORICO */}
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
                             {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && 
-                                <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
+                                !isMobile && (<HistoryButton hidden={isMobile} onClick={handleHistoryClick} text={isMobile 
+                                    ? '' 
+                                    : (appStateContext?.state?.isChatHistoryOpen 
+                                        ? "Ocultar histórico de bate-papo" 
+                                        : "Mostrar histórico de bate-papo"
+                                      )}/>)    
                             }
                             <ShareButton onClick={handleShareClick} />
                     </Stack>
@@ -111,7 +132,8 @@ const Layout = () => {
                       }]
                 }}
                 dialogContentProps={{
-                    title: "Share the web app",
+                    // title: "Share the web app",
+                    title:"Compartilhe",
                     showCloseButton: true
                 }}
             >

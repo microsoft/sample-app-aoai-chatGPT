@@ -32,8 +32,8 @@
 }
 
 .headerIcon {
-    height: 32px;
-    width: 32px;
+    height: 46px;
+    width: 130px;
     margin-left: 36px;
 }
 
@@ -46,7 +46,7 @@
     gap: 4px;
     width: 86px;
     height: 32px;
-    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #fbbb00 33.63%, #fac937 70.31%, #f7cd4f 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
     border-radius: 4px;
     flex: none;
     order: 1;
