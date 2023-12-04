@@ -211,7 +211,7 @@ module cosmos 'db.bicep' = {
     accountName: !empty(cosmosAccountName) ? cosmosAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
     location: 'eastus'
     tags: tags
-    principalIds: [principalId, backend.outputs.identityPrincipalId]
+    principalIds: [principalId, backend.outputs.principalId]
   }
 }
 
@@ -262,7 +262,7 @@ module openAiRoleBackend 'core/security/role.bicep' = {
   scope: openAiResourceGroup
   name: 'openai-role-backend'
   params: {
-    principalId: backend.outputs.identityPrincipalId
+    principalId: backend.outputs.principalId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
     principalType: 'ServicePrincipal'
   }
@@ -272,7 +272,7 @@ module searchRoleBackend 'core/security/role.bicep' = {
   scope: searchServiceResourceGroup
   name: 'search-role-backend'
   params: {
-    principalId: backend.outputs.identityPrincipalId
+    principalId: backend.outputs.principalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
     principalType: 'ServicePrincipal'
   }
@@ -282,7 +282,7 @@ module searchRoleOpenAi 'core/security/role.bicep' = if (authType == 'rbac') {
   scope: searchServiceResourceGroup
   name: 'search-role-openai'
   params: {
-    principalId: openAi.outputs.identityPrincipalId
+    principalId: openAi.outputs.principalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
     principalType: 'ServicePrincipal'
   }
@@ -292,7 +292,7 @@ module searchServiceRoleOpenAi 'core/security/role.bicep' = if (authType == 'rba
   scope: searchServiceResourceGroup
   name: 'search-service-role-openai'
   params: {
-    principalId: openAi.outputs.identityPrincipalId
+    principalId: openAi.outputs.principalId
     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
     principalType: 'ServicePrincipal'
   }
@@ -302,7 +302,7 @@ module openAiContributorRoleSearch 'core/security/role.bicep' = if (authType == 
   scope: searchServiceResourceGroup
   name: 'openai-contributor-role-search'
   params: {
-    principalId: searchService.outputs.identityPrincipalId
+    principalId: searchService.outputs.principalId
     roleDefinitionId: 'a001fd3d-188f-4b5d-821b-7da978bf7442'
     principalType: 'ServicePrincipal'
   }
@@ -312,7 +312,7 @@ module cognitiveServicesContributorRoleSearch 'core/security/role.bicep' = if (a
   scope: searchServiceResourceGroup
   name: 'cognitive-services-contributor-role-search'
   params: {
-    principalId: searchService.outputs.identityPrincipalId
+    principalId: searchService.outputs.principalId
     roleDefinitionId: '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68'
     principalType: 'ServicePrincipal'
   }
