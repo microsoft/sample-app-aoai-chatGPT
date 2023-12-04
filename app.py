@@ -8,6 +8,7 @@ from azure.identity import DefaultAzureCredential
 from base64 import b64encode
 from flask import Flask, Response, request, jsonify, send_from_directory
 from dotenv import load_dotenv
+from azure.identity import DefaultAzureCredential
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -359,9 +360,15 @@ def prepare_body_headers_with_data(request):
 
     headers = {
         'Content-Type': 'application/json',
-        'api-key': AZURE_OPENAI_KEY,
         "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
     }
+    
+    if AZURE_OPENAI_KEY:
+        headers["api-key"] = AZURE_OPENAI_KEY
+    else:
+        default_credential = DefaultAzureCredential()
+        token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+        headers["Authorization"] = "Bearer " + token.token
 
     return body, headers
 
@@ -546,7 +553,13 @@ def conversation_without_data(request_body):
     openai.api_type = "azure"
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-08-01-preview"
-    openai.api_key = AZURE_OPENAI_KEY
+    
+    if AZURE_OPENAI_KEY:
+        openai.api_key = AZURE_OPENAI_KEY
+    else:
+        default_credential = DefaultAzureCredential()
+        token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+        openai.api_key = token.token
 
     request_messages = request_body["messages"]
     messages = [
@@ -868,7 +881,14 @@ def generate_title(conversation_messages):
         openai.api_type = "azure"
         openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
-        openai.api_key = AZURE_OPENAI_KEY
+        
+        if AZURE_OPENAI_KEY:
+            openai.api_key = AZURE_OPENAI_KEY
+        else:
+            default_credential = DefaultAzureCredential()
+            token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+            openai.api_key = token.token
+        
         completion = openai.ChatCompletion.create(    
             engine=AZURE_OPENAI_MODEL,
             messages=messages,

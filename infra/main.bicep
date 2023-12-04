@@ -41,6 +41,7 @@ param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
 param openAIApiVersion string = '2023-06-01-preview'
 param openAIStream bool = true
+param openAIApiKeyEnabled bool = true
 param embeddingDeploymentName string = 'embedding'
 param embeddingModelName string = 'text-embedding-ada-002'
 
@@ -132,7 +133,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_RESOURCE: openAi.outputs.name
       AZURE_OPENAI_MODEL: openAIModel
       AZURE_OPENAI_MODEL_NAME: openAIModelName
-      AZURE_OPENAI_KEY: openAi.outputs.key
+      AZURE_OPENAI_KEY: openAIApiKeyEnabled ? openAi.outputs.key : null
       AZURE_OPENAI_TEMPERATURE: openAITemperature
       AZURE_OPENAI_TOP_P: openAITopP
       AZURE_OPENAI_MAX_TOKENS: openAIMaxTokens

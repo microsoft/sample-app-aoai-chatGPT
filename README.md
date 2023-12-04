@@ -121,7 +121,7 @@ To authenticate using Azure RBAC instead of the default API Keys follow the step
 4. Select either `Role-based access control` or `Both`
 5. Navigate to your App service in the Azure Portal
 6. Under Settings, select `Configuration`
-7. Delete the value of the `AZURE_SEARCH_KEY` setting
+7. Delete the value of the `AZURE_SEARCH_KEY` and `AZURE_OPENAI_KEY` settings
 8. Restart the application
 
 ## Common Customization Scenarios
