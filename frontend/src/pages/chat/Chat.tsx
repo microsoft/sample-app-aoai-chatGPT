@@ -40,7 +40,7 @@ const enum messageStatus {
 }
 
 const Chat = () => {
-    const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH;
+    const AUTH_DISABLED = import.meta.env.VITE_AUTH_DISABLED;
     const appStateContext = useContext(AppStateContext)
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
