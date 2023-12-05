@@ -4,3 +4,4 @@ frontend/node_modules
 # static
 .azure/
 __pycache__/
+.ipynb_checkpoints/
