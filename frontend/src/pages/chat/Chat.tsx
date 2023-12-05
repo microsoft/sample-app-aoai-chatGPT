@@ -40,6 +40,7 @@ const enum messageStatus {
 }
 
 const Chat = () => {
+    const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH;
     const appStateContext = useContext(AppStateContext)
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -93,6 +94,10 @@ const Chat = () => {
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
+        if (AUTH_DISABLED) {
+            setShowAuthMessage(false);
+            return;
+        }
         const userInfoList = await getUserInfo();
         if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
             setShowAuthMessage(true);
