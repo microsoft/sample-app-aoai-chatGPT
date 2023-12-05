@@ -14,7 +14,7 @@ param backendServiceName string = ''
 param resourceGroupName string = ''
 
 @allowed([
-  'apikeys'
+  'keys'
   'rbac'
 ])
 param authType string = 'rbac'
@@ -125,7 +125,7 @@ module backend 'core/host/appservice.bicep' = {
       // search
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_SEARCH_KEY: authType == 'apikeys' ? searchService.outputs.adminKey : null
+      AZURE_SEARCH_KEY: authType == 'keys' ? searchService.outputs.adminKey : null
       AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
       AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
       AZURE_SEARCH_TOP_K: searchTopK
@@ -138,7 +138,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_RESOURCE: openAi.outputs.name
       AZURE_OPENAI_MODEL: openAIModel
       AZURE_OPENAI_MODEL_NAME: openAIModelName
-      AZURE_OPENAI_KEY: authType == 'apikeys' ? openAi.outputs.key : null
+      AZURE_OPENAI_KEY: authType == 'keys' ? openAi.outputs.key : null
       AZURE_OPENAI_TEMPERATURE: openAITemperature
       AZURE_OPENAI_TOP_P: openAITopP
       AZURE_OPENAI_MAX_TOKENS: openAIMaxTokens

@@ -18,8 +18,8 @@ resource search 'Microsoft.Search/searchServices@2021-04-01-preview' = {
     type: 'SystemAssigned'
   }
   properties: {
-    authOptions: authType == 'apikeys' ? authOptions : null
-    disableLocalAuth: authType == 'apikeys' ? false : true
+    authOptions: authType == 'keys' ? authOptions : null
+    disableLocalAuth: authType == 'keys' ? false : true
     disabledDataExfiltrationOptions: []
     encryptionWithCmk: {
       enforcement: 'Unspecified'

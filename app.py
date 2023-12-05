@@ -140,8 +140,8 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
         logging.exception("Exception in CosmosDB initialization", e)
         cosmos_conversation_client = None
 
-def should_use_apikeys():
-    return AZURE_AUTH_TYPE == "apikeys"
+def should_use_keys():
+    return AZURE_AUTH_TYPE == "keys"
 
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
@@ -268,7 +268,7 @@ def prepare_body_headers_with_data(request):
             }
         }
 
-        if should_use_apikeys():
+        if should_use_keys():
             cognitiveSearchDataSource["parameters"]["key"] = AZURE_SEARCH_KEY
 
         body["dataSources"].append(cognitiveSearchDataSource)
@@ -363,7 +363,7 @@ def prepare_body_headers_with_data(request):
         "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
     }
     
-    if should_use_apikeys():
+    if should_use_keys():
         headers["api-key"] = AZURE_OPENAI_KEY
     else:
         default_credential = DefaultAzureCredential()
@@ -554,7 +554,7 @@ def conversation_without_data(request_body):
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-08-01-preview"
     
-    if should_use_apikeys():
+    if should_use_keys():
         openai.api_key = AZURE_OPENAI_KEY
     else:
         default_credential = DefaultAzureCredential()
@@ -882,7 +882,7 @@ def generate_title(conversation_messages):
         openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
         
-        if should_use_apikeys():
+        if should_use_keys():
             openai.api_key = AZURE_OPENAI_KEY
         else:
             default_credential = DefaultAzureCredential()
