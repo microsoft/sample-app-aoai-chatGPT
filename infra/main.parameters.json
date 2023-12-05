@@ -45,7 +45,7 @@
       "value": "${AUTH_CLIENT_SECRET}"
     },
     "authType": {
-      "value": "${AZURE_AUTH_TYPE}"
+      "value": "${AZURE_AUTH_TYPE=rbac}"
     }
   }
 }

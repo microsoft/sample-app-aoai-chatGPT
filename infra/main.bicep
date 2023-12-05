@@ -17,7 +17,7 @@ param resourceGroupName string = ''
   'apikeys'
   'rbac'
 ])
-param authType string = 'apikeys'
+param authType string = 'rbac'
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
@@ -121,6 +121,7 @@ module backend 'core/host/appservice.bicep' = {
     authClientId: authClientId
     authIssuerUri: authIssuerUri
     appSettings: {
+      AZURE_AUTH_TYPE: authType
       // search
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name

@@ -40,7 +40,7 @@ DATASOURCE_TYPE = os.environ.get("DATASOURCE_TYPE", "AzureCognitiveSearch")
 SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
 SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
 SEARCH_ENABLE_IN_DOMAIN = os.environ.get("SEARCH_ENABLE_IN_DOMAIN", "true")
-AZURE_AUTH_TYPE = os.environ.get("AZURE_AUTH_TYPE", "apikeys")
+AZURE_AUTH_TYPE = os.environ.get("AZURE_AUTH_TYPE", "rbac")
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
