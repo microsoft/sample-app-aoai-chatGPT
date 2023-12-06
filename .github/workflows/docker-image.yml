@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build the Docker image
         run:
-          docker build . --file WebApp.Dockerfile --tag crtechdeptdev.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
-          docker tag crtechdeptdev.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crtechdeptdev.azurecr.io/huvepharma-ai-chat:latest;
-          docker push crtechdeptdev.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
-          docker push crtechdeptdev.azurecr.io/huvepharma-ai-chat:latest;
+          docker build . --file WebApp.Dockerfile --tag crhuvepharmaaiprod.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
+          docker tag crhuvepharmaaiprod.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crhuvepharmaaiprod.azurecr.io/huvepharma-ai-chat:latest;
+          docker push crhuvepharmaaiprod.azurecr.io/huvepharma-ai-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
+          docker push crhuvepharmaaiprod.azurecr.io/huvepharma-ai-chat:latest;
