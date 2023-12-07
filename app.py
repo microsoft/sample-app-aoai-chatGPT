@@ -143,6 +143,9 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
 def should_use_keys():
     return AZURE_AUTH_TYPE == "keys"
 
+def get_default_token():
+    return DefaultAzureCredential().get_token("https://cognitiveservices.azure.com/.default").token
+
 def is_chat_model():
     if 'gpt-4' in AZURE_OPENAI_MODEL_NAME.lower() or AZURE_OPENAI_MODEL_NAME.lower() in ['gpt-35-turbo-4k', 'gpt-35-turbo-16k']:
         return True
@@ -366,9 +369,7 @@ def prepare_body_headers_with_data(request):
     if should_use_keys():
         headers["api-key"] = AZURE_OPENAI_KEY
     else:
-        default_credential = DefaultAzureCredential()
-        token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
-        headers["Authorization"] = "Bearer " + token.token
+        headers["Authorization"] = "Bearer " + get_default_token()
 
     return body, headers
 
@@ -557,9 +558,7 @@ def conversation_without_data(request_body):
     if should_use_keys():
         openai.api_key = AZURE_OPENAI_KEY
     else:
-        default_credential = DefaultAzureCredential()
-        token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
-        openai.api_key = token.token
+        openai.api_key =  + get_default_token()
 
     request_messages = request_body["messages"]
     messages = [
@@ -885,9 +884,7 @@ def generate_title(conversation_messages):
         if should_use_keys():
             openai.api_key = AZURE_OPENAI_KEY
         else:
-            default_credential = DefaultAzureCredential()
-            token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
-            openai.api_key = token.token
+            openai.api_key = get_default_token()
         
         completion = openai.ChatCompletion.create(    
             engine=AZURE_OPENAI_MODEL,
