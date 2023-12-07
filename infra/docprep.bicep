@@ -35,15 +35,15 @@ module formRecognizer 'core/ai/cognitiveservices.bicep' = {
   }
 }
 
-// module formRecognizerRoleUser 'core/security/role.bicep' = {
-//   scope: formRecognizerResourceGroup
-//   name: 'formrecognizer-role-user'
-//   params: {
-//     principalId: principalId
-//     roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
-//     principalType: 'User'
-//   }
-// }
+module formRecognizerRoleUser 'core/security/role.bicep' = {
+  scope: formRecognizerResourceGroup
+  name: 'formrecognizer-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'a97b65f3-24c7-4388-baec-2e87135dc908'
+    principalType: 'User'
+  }
+}
 
 // Used by prepdocs
 // Form recognizer
