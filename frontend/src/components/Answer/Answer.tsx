@@ -24,12 +24,8 @@ export const Answer = ({
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
-        if (answer.feedback == Feedback.Positive || answer.feedback == Feedback.Negative || answer.feedback == Feedback.Neutral) {
-            return answer.feedback;
-        }
-        else {
-            return Feedback.Negative;
-        }
+        if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
+        return Feedback.Neutral;
     }
 
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
@@ -50,6 +46,10 @@ export const Answer = ({
     useEffect(() => {
         setChevronIsExpanded(isRefAccordionOpen);
     }, [isRefAccordionOpen]);
+
+    useEffect(() => {
+        setFeedbackState(initializeAnswerFeedback(answer));
+    }, [answer]);
 
     const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
         let citationFilename = "";
@@ -94,17 +94,15 @@ export const Answer = ({
         if (answer.message_id == undefined) return;
 
         let newFeedbackState = feedbackState;
-
-        if (feedbackState == Feedback.Negative) {
-            // Reset negative feedback to neutral
-            newFeedbackState = Feedback.Neutral;
-            setFeedbackState(newFeedbackState);
-            await historyMessageFeedback(answer.message_id, newFeedbackState);
-        }
-        else {
+        if (feedbackState === undefined || feedbackState === Feedback.Neutral || feedbackState === Feedback.Positive) {
             newFeedbackState = Feedback.Negative;
             setFeedbackState(newFeedbackState);
             setIsFeedbackDialogOpen(true);
+        } else {
+            // Reset negative feedback to neutral
+            newFeedbackState = Feedback.Neutral;
+            setFeedbackState(newFeedbackState);
+            await historyMessageFeedback(answer.message_id, Feedback.Neutral);
         }
     }
 
@@ -178,18 +176,18 @@ export const Answer = ({
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
-                            {feedbackState != undefined && answer.message_id != undefined && <Stack horizontal horizontalAlign="space-between">
+                            {answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
                                 <ThumbLike20Filled
                                     aria-hidden="false"
                                     aria-label="Like this response"
                                     onClick={() => onLikeResponseClicked()}
-                                    style={feedbackState == Feedback.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={feedbackState === Feedback.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                                 <ThumbDislike20Filled
                                     aria-hidden="false"
                                     aria-label="Dislike this response"
                                     onClick={() => onDislikeResponseClicked()}
-                                    style={(feedbackState != Feedback.Positive && feedbackState != Feedback.Neutral) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                             </Stack>}
                         </Stack.Item>
