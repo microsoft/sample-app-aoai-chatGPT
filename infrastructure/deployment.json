@@ -257,6 +257,95 @@
             "metadata": {
                 "description": "Enable chat history by deploying a Cosmos DB instance"
             }
+        },
+        "ElasticsearchEndpoint": {
+            "type": "string",
+            "metadata": {
+                "description": "Endpoint to use to connect to an Elasticsearch cluster"
+            }
+        },
+        "ElasticsearchEncodedApiKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Encoded API key credentials to use to connect to an Elasticsearch cluster"
+            }
+        },
+        "ElasticsearchIndex": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index to use for retrieving grounding data"
+            }
+        },
+        "ElasticsearchQueryType": {
+            "type": "string",
+            "defaultValue": "simple",
+            "metadata": {
+                "description": "Type of query to use for Elasticsearch data"
+            }
+        },
+        "ElasticsearchContentColumns": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index content columns"
+            }
+        },
+        "ElasticsearchFilenameColumn": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index filename column"
+            }
+        },
+        "ElasticsearchTitleColumn": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index title column"
+            }
+        },
+        "ElasticsearchUrlColumn": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index url column"
+            }
+        },
+        "ElasticsearchVectorColumns": {
+            "type": "string",
+            "metadata": {
+                "description": "Elasticsearch index vector columns"
+            }
+        },
+        "ElasticsearchTopK": {
+            "type": "int",
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Top K results"
+            }
+        },
+        "ElasticsearchEnableInDomain": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable in domain"
+            }
+        },
+        "ElasticsearchStrictness": {
+            "type": "int",
+            "defaultValue": 3,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "metadata": {
+                "description": "Elasticsearch strictness"
+            }
+        },
+        "ElasticsearchEmbeddingModelId": {
+            "type": "string",
+            "metadata": {
+                "description": "The model ID for a model deployed on Elasticsearch to use for generating embeddings for queries."
+            }
         }
     },
     "variables": {
@@ -428,6 +517,54 @@
                         {
                             "name": "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER",
                             "value": "[variables('cosmosdb_container_name')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENDPOINT",
+                            "value": "[variables('ElasticsearchEndpoint')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENCODED_API_KEY",
+                            "value": "[variables('ElasticsearchEncodedApiKey')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_INDEX",
+                            "value": "[variables('ElasticsearchIndex')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_QUERY_TYPE",
+                            "value": "[variables('ElasticsearchQueryType')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_TOP_K",
+                            "value": "[variables('ElasticsearchTopK')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
+                            "value": "[variables('ElasticsearchEnableInDomain')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_CONTENT_COLUMNS",
+                            "value": "[variables('ElasticsearchContentColumns')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_FILENAME_COLUMN",
+                            "value": "[variables('ElasticsearchFilenameColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_TITLE_COLUMN",
+                            "value": "[variables('ElasticsearchTitleColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_URL_COLUMN",
+                            "value": "[variables('ElasticsearchUrlColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_VECTOR_COLUMNS",
+                            "value": "[variables('ElasticsearchVectorColumns')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_STRICTNESS",
+                            "value": "[variables('ElasticsearchStrictness')]"
                         }
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"

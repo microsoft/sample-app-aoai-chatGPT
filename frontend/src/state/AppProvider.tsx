@@ -51,10 +51,10 @@ type AppStateProviderProps = {
 
     useEffect(() => {
         // Check for cosmosdb config and fetch initial data here
-        const fetchChatHistory = async (): Promise<Conversation[] | null> => {
-            const result = await historyList().then((response) => {
+        const fetchChatHistory = async (offset=0): Promise<Conversation[] | null> => {
+            const result = await historyList(offset).then((response) => {
                 if(response){
-                    dispatch({ type: 'FETCH_CHAT_HISTORY', payload: response });
+                    dispatch({ type: 'FETCH_CHAT_HISTORY', payload: response});
                 }else{
                     dispatch({ type: 'FETCH_CHAT_HISTORY', payload: null });
                 }

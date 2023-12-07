@@ -5,3 +5,4 @@ frontend/node_modules
 .azure/
 __pycache__/
 data/
+.ipynb_checkpoints/
