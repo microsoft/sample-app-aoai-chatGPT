@@ -260,18 +260,21 @@
         },
         "ElasticsearchEndpoint": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Endpoint to use to connect to an Elasticsearch cluster"
             }
         },
         "ElasticsearchEncodedApiKey": {
             "type": "securestring",
+            "defaultValue": "",
             "metadata": {
                 "description": "Encoded API key credentials to use to connect to an Elasticsearch cluster"
             }
         },
         "ElasticsearchIndex": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index to use for retrieving grounding data"
             }
@@ -285,30 +288,35 @@
         },
         "ElasticsearchContentColumns": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index content columns"
             }
         },
         "ElasticsearchFilenameColumn": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index filename column"
             }
         },
         "ElasticsearchTitleColumn": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index title column"
             }
         },
         "ElasticsearchUrlColumn": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index url column"
             }
         },
         "ElasticsearchVectorColumns": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "Elasticsearch index vector columns"
             }
@@ -343,6 +351,7 @@
         },
         "ElasticsearchEmbeddingModelId": {
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "The model ID for a model deployed on Elasticsearch to use for generating embeddings for queries."
             }
@@ -520,51 +529,55 @@
                         },
                         {
                             "name": "ELASTICSEARCH_ENDPOINT",
-                            "value": "[variables('ElasticsearchEndpoint')]"
+                            "value": "[parameters('ElasticsearchEndpoint')]"
                         },
                         {
                             "name": "ELASTICSEARCH_ENCODED_API_KEY",
-                            "value": "[variables('ElasticsearchEncodedApiKey')]"
+                            "value": "[parameters('ElasticsearchEncodedApiKey')]"
                         },
                         {
                             "name": "ELASTICSEARCH_INDEX",
-                            "value": "[variables('ElasticsearchIndex')]"
+                            "value": "[parameters('ElasticsearchIndex')]"
                         },
                         {
                             "name": "ELASTICSEARCH_QUERY_TYPE",
-                            "value": "[variables('ElasticsearchQueryType')]"
+                            "value": "[parameters('ElasticsearchQueryType')]"
                         },
                         {
                             "name": "ELASTICSEARCH_TOP_K",
-                            "value": "[variables('ElasticsearchTopK')]"
+                            "value": "[parameters('ElasticsearchTopK')]"
                         },
                         {
                             "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
-                            "value": "[variables('ElasticsearchEnableInDomain')]"
+                            "value": "[parameters('ElasticsearchEnableInDomain')]"
                         },
                         {
                             "name": "ELASTICSEARCH_CONTENT_COLUMNS",
-                            "value": "[variables('ElasticsearchContentColumns')]"
+                            "value": "[parameters('ElasticsearchContentColumns')]"
                         },
                         {
                             "name": "ELASTICSEARCH_FILENAME_COLUMN",
-                            "value": "[variables('ElasticsearchFilenameColumn')]"
+                            "value": "[parameters('ElasticsearchFilenameColumn')]"
                         },
                         {
                             "name": "ELASTICSEARCH_TITLE_COLUMN",
-                            "value": "[variables('ElasticsearchTitleColumn')]"
+                            "value": "[parameters('ElasticsearchTitleColumn')]"
                         },
                         {
                             "name": "ELASTICSEARCH_URL_COLUMN",
-                            "value": "[variables('ElasticsearchUrlColumn')]"
+                            "value": "[parameters('ElasticsearchUrlColumn')]"
                         },
                         {
                             "name": "ELASTICSEARCH_VECTOR_COLUMNS",
-                            "value": "[variables('ElasticsearchVectorColumns')]"
+                            "value": "[parameters('ElasticsearchVectorColumns')]"
                         },
                         {
                             "name": "ELASTICSEARCH_STRICTNESS",
-                            "value": "[variables('ElasticsearchStrictness')]"
+                            "value": "[parameters('ElasticsearchStrictness')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_EMBEDDING_MODEL_ID",
+                            "value": "[parameters('ElasticsearchEmbeddingModelId')]"
                         }
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"
