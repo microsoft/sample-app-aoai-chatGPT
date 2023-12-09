@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const Answer = ({ answer }: Props) => {
-  const filePathTruncationLimit = 44;
+  const filePathTruncationLimit = 100;
   const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
 
   const { citations } = parsedAnswer;
@@ -26,7 +26,7 @@ export const Answer = ({ answer }: Props) => {
     if (citation.filepath && citation.chunk_id) {
       if (truncate && citation.filepath.length > filePathTruncationLimit) {
         const citationLength = citation.filepath.length;
-        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)}`;
+        citationFilename = `${citation.filepath.substring(0, 48)}...${citation.filepath.substring(citationLength - 48)}`;
       } else {
         citationFilename = citation.filepath;
       }
