@@ -220,16 +220,16 @@ def prepare_body_headers_with_data(request):
             query_type = "semantic"
 
         # Set filter
-        filter = None
-        userToken = None
-        if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
-            userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
-            if DEBUG_LOGGING:
-                logging.debug(f"USER TOKEN is {'present' if userToken else 'not present'}")
+        filter = "(language/any(t: t eq 'EN')) and not (document_type/any(t: t eq 'LBL (Label)'))"
+        #userToken = None
+        # if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
+        #     userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
+        #     if DEBUG_LOGGING:
+        #         logging.debug(f"USER TOKEN is {'present' if userToken else 'not present'}")
 
-            filter = generateFilterString(userToken)
-            if DEBUG_LOGGING:
-                logging.debug(f"FILTER: {filter}")
+        #     filter = generateFilterString(userToken)
+        #     if DEBUG_LOGGING:
+        #         logging.debug(f"FILTER: {filter}")
 
         body["dataSources"].append(
             {
@@ -376,6 +376,7 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
 
                     if 'error' in lineJson:
                         yield format_as_ndjson(lineJson)
+
                     response["id"] = lineJson["id"]
                     response["model"] = lineJson["model"]
                     response["created"] = lineJson["created"]
@@ -383,7 +384,7 @@ def stream_with_data(body, headers, endpoint, history_metadata={}):
                     response["apim-request-id"] = r.headers.get('apim-request-id')
 
                     role = lineJson["choices"][0]["messages"][0]["delta"].get("role")
-
+                    
                     if role == "tool":
                         response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
                         yield format_as_ndjson(response)

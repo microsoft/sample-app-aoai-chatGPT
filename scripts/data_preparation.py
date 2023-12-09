@@ -155,7 +155,7 @@ def create_or_update_search_index(
             ).stdout
         )["primaryKey"]
 
-    url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
+    url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-10-01-Preview"
     headers = {
         "Content-Type": "application/json",
         "api-key": admin_key,
