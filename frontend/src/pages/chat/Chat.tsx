@@ -8,7 +8,7 @@ import uuid from 'react-uuid';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
-import Logo from '../../assets/Logo.svg';
+import Logo from '../../assets/logo.svg';
 import styles from './Chat.module.css';
 
 import { useBoolean } from '@fluentui/react-hooks';
