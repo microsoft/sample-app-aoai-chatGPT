@@ -67,11 +67,11 @@ export const Answer = ({ answer }: Props) => {
           </Stack.Item>
         </Stack>
 
-        <div style={{ marginTop: 8, display: 'flex', flexFlow: 'wrap column', maxHeight: '150px', gap: '4px' }}>
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {citations.map((citation, idx) => {
             return (
               <a
-                title={createCitationFilepath(citation, ++idx)}
+                title={createCitationFilepath(citation, idx)}
                 href={citation.url!}
                 target="_blank"
                 tabIndex={0}
@@ -80,6 +80,7 @@ export const Answer = ({ answer }: Props) => {
                 className={styles.citationContainer}
                 aria-label={createCitationFilepath(citation, idx)}
               >
+                <div className={styles.citation}>{idx}</div>
                 {createCitationFilepath(citation, idx, true)}
               </a>
             );
