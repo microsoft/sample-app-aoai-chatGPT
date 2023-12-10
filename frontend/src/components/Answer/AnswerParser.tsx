@@ -3,28 +3,33 @@ import { AskResponse, Citation } from '../../api';
 
 type ParsedAnswer = {
   citations: Citation[];
+  documentLinks: { url: string; title: string; truncatedTitle: string }[];
   markdownFormatText: string;
+};
+const createCitationFilepath = (citation: Citation, index: number, filePathTruncationLimit?: number) => {
+  let citationFilename = '';
+
+  const truncate = filePathTruncationLimit !== undefined;
+
+  if (citation.filepath && citation.chunk_id) {
+    if (truncate && citation.filepath.length > filePathTruncationLimit) {
+      const halfFilePathTruncationLimit = Math.floor((filePathTruncationLimit - 3) / 2);
+      const citationLength = citation.filepath.length;
+      citationFilename = `${citation.filepath.substring(0, halfFilePathTruncationLimit)}...${citation.filepath.substring(
+        citationLength - halfFilePathTruncationLimit
+      )}`;
+    } else {
+      citationFilename = citation.filepath;
+    }
+  } else if (citation.filepath && citation.reindex_id) {
+    citationFilename = citation.filepath;
+  } else {
+    citationFilename = `Citation ${index}`;
+  }
+  return citationFilename;
 };
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
-  const filePathTruncationLimit = 44;
-
-  const citationsByUrl = Object.entries(
-    answer.citations
-      .filter((citation) => !!citation.url && !!citation.filepath)
-      .map((citation) => ({ ...citation, url: citation.url!, filepath: citation.filepath! }))
-      .reduce(
-        (acc, obj) => ({
-          ...acc,
-          [obj.url]: [...(acc[obj.url] || []), obj],
-        }),
-        {} as { [url: string]: Citation[] }
-      )
-  ).map(([url, citation]) => ({
-    url,
-    citation,
-  }));
-
   let answerText = answer.answer;
 
   const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
@@ -45,15 +50,20 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     }
   });
 
-  const outsideOfContextMessage = import.meta.env.VITE_OUT_OF_SCOPE_MESSAGE;
-  if (
-    outsideOfContextMessage &&
-    answerText === 'The requested information is not available in the retrieved data. Please try another query or topic.'
-  ) {
-    answerText = outsideOfContextMessage;
+  const outOfScopeRegex = /is not available in the retrieved documents\. Please try another query or topic\.$/;
+  const outOfScopeResponse = import.meta.env.VITE_OUT_OF_SCOPE_MESSAGE;
+  if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
+    answerText = outOfScopeResponse;
   }
+
   return {
     citations: filteredCitations,
+    documentLinks: filteredCitations.map((citation, index) => ({
+      url: citation.url ?? '#',
+      index,
+      title: createCitationFilepath(citation, index),
+      truncatedTitle: createCitationFilepath(citation, index, 100),
+    })),
     markdownFormatText: answerText,
   };
 }

@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import styles from './Answer.module.css';
 
-import { AskResponse, Citation } from '../../api';
+import { AskResponse } from '../../api';
 import { parseAnswer } from './AnswerParser';
 
 import ReactMarkdown from 'react-markdown';
@@ -15,28 +15,9 @@ interface Props {
 }
 
 export const Answer = ({ answer }: Props) => {
-  const filePathTruncationLimit = 100;
   const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
 
-  const { citations } = parsedAnswer;
-
-  const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
-    let citationFilename = '';
-
-    if (citation.filepath && citation.chunk_id) {
-      if (truncate && citation.filepath.length > filePathTruncationLimit) {
-        const citationLength = citation.filepath.length;
-        citationFilename = `${citation.filepath.substring(0, 48)}...${citation.filepath.substring(citationLength - 48)}`;
-      } else {
-        citationFilename = citation.filepath;
-      }
-    } else if (citation.filepath && citation.reindex_id) {
-      citationFilename = citation.filepath;
-    } else {
-      citationFilename = `Citation ${index}`;
-    }
-    return citationFilename;
-  };
+  const { citations, documentLinks } = parsedAnswer;
 
   return (
     <>
@@ -55,7 +36,7 @@ export const Answer = ({ answer }: Props) => {
             <Stack.Item>
               <Stack style={{ width: '100%' }}>
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
-                  <Text className={styles.accordionTitle} aria-label="Open references" tabIndex={0} role="button">
+                  <Text className={styles.accordionTitle}>
                     <span>{citations.length > 1 ? citations.length + ' references' : '1 reference'}</span>
                   </Text>
                 </Stack>
@@ -67,25 +48,27 @@ export const Answer = ({ answer }: Props) => {
           </Stack.Item>
         </Stack>
 
-        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {citations.map((citation, idx) => {
-            return (
-              <a
-                title={createCitationFilepath(citation, idx)}
-                href={citation.url!}
-                target="_blank"
-                tabIndex={0}
-                role="link"
-                key={idx}
-                className={styles.citationContainer}
-                aria-label={createCitationFilepath(citation, idx)}
-              >
-                <div className={styles.citation}>{idx}</div>
-                {createCitationFilepath(citation, idx, true)}
-              </a>
-            );
-          })}
-        </div>
+        {documentLinks.length > 0 && (
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {documentLinks.map((documentLink, idx) => {
+              return (
+                <a
+                  title={documentLink.title}
+                  href={documentLink.url}
+                  target="_blank"
+                  tabIndex={0}
+                  role="link"
+                  key={idx}
+                  className={styles.citationContainer}
+                  aria-label={documentLink.title}
+                >
+                  <div className={styles.citation}>{idx + 1}</div>
+                  {documentLink.truncatedTitle}
+                </a>
+              );
+            })}
+          </div>
+        )}
       </Stack>
     </>
   );
