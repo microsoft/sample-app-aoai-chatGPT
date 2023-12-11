@@ -65,8 +65,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_QUERY_TYPE`
     - `AZURE_SEARCH_PERMITTED_GROUPS_COLUMN`
     - `AZURE_SEARCH_STRICTNESS`
-    - `AZURE_OPENAI_EMBEDDING_ENDPOINT`
-    - `AZURE_OPENAI_EMBEDDING_KEY`
+    - `AZURE_OPENAI_EMBEDDING_NAME`
 
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
 4. You can see the local running app at http://127.0.0.1:5000.
@@ -117,6 +116,13 @@ const getUserInfoList = async () => {
 
 ## Common Customization Scenarios
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
+
+### Debugging your deployed app
+First, add an environment variable on the app service resource called "DEBUG". Set this to "true".
+
+Next, enable logging on the app service. Go to "App Service logs" under Monitoring, and change Application logging to File System. Save the change.
+
+Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
 
 ### Updating the default chat logo and headers
 The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
@@ -198,8 +204,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
-|AZURE_OPENAI_EMBEDDING_ENDPOINT||The endpoint for your Ada embedding model deployment if using vector search.
-|AZURE_OPENAI_EMBEDDING_KEY||The key for the Azure OpenAI resource with the Ada deployment to use with vector search.|
+|AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 
 
 ## Contributing
