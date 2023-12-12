@@ -94,7 +94,7 @@ const Chat = () => {
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
-        if (AUTH_DISABLED) {
+        if (AUTH_DISABLED == "true") {
             setShowAuthMessage(false);
             return;
         }
