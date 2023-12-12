@@ -1,6 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, useContext } from "react";
 import { useBoolean } from "@fluentui/react-hooks"
 import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from "@fluentui/react";
+import { AppStateContext } from '../../state/AppProvider';
 
 import styles from "./Answer.module.css";
 
@@ -37,6 +38,8 @@ export const Answer = ({
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
+    const appStateContext = useContext(AppStateContext)
+    const FEEDBACK_ENABLED = import.meta.env.VITE_FEEDBACK_ENABLED;
 
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
@@ -48,8 +51,17 @@ export const Answer = ({
     }, [isRefAccordionOpen]);
 
     useEffect(() => {
-        setFeedbackState(initializeAnswerFeedback(answer));
-    }, [answer]);
+        if (answer.message_id == undefined) return;
+        if (feedbackState === undefined) return;
+        
+        let currentFeedbackState;
+        if (appStateContext?.state.feedbackState && answer.message_id in appStateContext?.state.feedbackState) {
+            currentFeedbackState = appStateContext?.state.feedbackState[answer.message_id];
+        } else {
+            currentFeedbackState = initializeAnswerFeedback(answer);
+        }
+        setFeedbackState(currentFeedbackState)
+    }, [appStateContext?.state.feedbackState, feedbackState]);
 
     const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
         let citationFilename = "";
@@ -77,13 +89,13 @@ export const Answer = ({
 
         let newFeedbackState = feedbackState;
         // Set or unset the thumbs up state
-        if (feedbackState == Feedback.Positive) {
+        if (feedbackState == Feedback.Positive || feedbackState == undefined) {
             newFeedbackState = Feedback.Neutral;
         }
         else {
             newFeedbackState = Feedback.Positive;
         }
-
+        appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState } });
         setFeedbackState(newFeedbackState);
 
         // Update message feedback in db
@@ -104,6 +116,7 @@ export const Answer = ({
             setFeedbackState(newFeedbackState);
             await historyMessageFeedback(answer.message_id, Feedback.Neutral);
         }
+        appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState }});
     }
 
     const updateFeedbackList = (ev?: FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
@@ -176,7 +189,7 @@ export const Answer = ({
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
-                            {answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
+                            {FEEDBACK_ENABLED == "True" && answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
                                 <ThumbLike20Filled
                                     aria-hidden="false"
                                     aria-label="Like this response"
