@@ -117,6 +117,17 @@ const getUserInfoList = async () => {
 ## Common Customization Scenarios
 Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
 
+### Scalability
+For apps published with `az webapp up` or from the Azure AI Studio, you can increase your app's ability to handle concurrent requests from multiple users with the following steps:
+1. Upgrade your App Service plan tier to a higher tier, for example tiers with more than one vCPU.
+
+2. Configure the following app settings on your App Service in the Azure Portal:
+- `PYTHON_ENABLE_GUNICORN_MULTIWORKERS`: true
+- `PYTHON_GUNICORN_CUSTOM_WORKER_NUM`: 5 (may be higher or lower depending on your App Service Plan tier)
+- `PYTHON_GUNICORN_CUSTOM_THREAD_NUM`: 5 (may be higher or lower depending on your App Service Plan tier)
+
+After adding the settings, be sure to save the configuration and then restart your app.
+
 ### Debugging your deployed app
 First, add an environment variable on the app service resource called "DEBUG". Set this to "true".
 
