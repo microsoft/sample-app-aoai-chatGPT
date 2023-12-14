@@ -114,7 +114,7 @@ ELASTICSEARCH_STRICTNESS = os.environ.get("ELASTICSEARCH_STRICTNESS", SEARCH_STR
 ELASTICSEARCH_EMBEDDING_MODEL_ID = os.environ.get("ELASTICSEARCH_EMBEDDING_MODEL_ID")
 
 # Frontend Settings via Environment Variables
-AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true")
+AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower()
 frontend_settings = { "auth_enabled": AUTH_ENABLED }
 
 
