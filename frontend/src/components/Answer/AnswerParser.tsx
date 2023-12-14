@@ -50,7 +50,7 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     }
   });
 
-  const outOfScopeRegex = /is not available in the retrieved documents\. Please try another query or topic\.$/;
+  const outOfScopeRegex = /Please try another query or topic\.$/;
   const outOfScopeResponse = import.meta.env.VITE_OUT_OF_SCOPE_MESSAGE;
   if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
     answerText = outOfScopeResponse;
