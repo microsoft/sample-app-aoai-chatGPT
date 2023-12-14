@@ -42,8 +42,6 @@ const enum messageStatus {
 const Chat = () => {
     const appStateContext = useContext(AppStateContext)
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled === "true" ;
-    console.log('AUTH_ENABLED type:', typeof AUTH_ENABLED);
-    console.log('AUTH_ENABLED :',  AUTH_ENABLED);
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
