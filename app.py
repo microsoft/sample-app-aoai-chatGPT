@@ -839,7 +839,7 @@ def get_frontend_settings():
     try:
         return jsonify(frontend_settings), 200
     except Exception as e:
-        logging.exception("Exception in /frontend_config")
+        logging.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500  
 
 def generate_title(conversation_messages):

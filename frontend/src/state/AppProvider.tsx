@@ -1,7 +1,6 @@
 import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
-import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings } from '../api';
-import { Conversation } from '../api';
+import { Conversation, ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
@@ -10,7 +9,7 @@ export interface AppState {
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
     currentChat: Conversation | null;
-    frontendSettings: any | null;
+    frontendSettings: Response | null;
 }
 
 export type Action =
@@ -25,7 +24,7 @@ export type Action =
     | { type: 'DELETE_CHAT_HISTORY'}  // API Call
     | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
-    | { type: 'FETCH_FRONTEND_SETTINGS', payload: any | null }  // API Call
+    | { type: 'FETCH_FRONTEND_SETTINGS', payload: Response | null }  // API Call
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
