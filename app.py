@@ -113,6 +113,11 @@ ELASTICSEARCH_VECTOR_COLUMNS = os.environ.get("ELASTICSEARCH_VECTOR_COLUMNS")
 ELASTICSEARCH_STRICTNESS = os.environ.get("ELASTICSEARCH_STRICTNESS", SEARCH_STRICTNESS)
 ELASTICSEARCH_EMBEDDING_MODEL_ID = os.environ.get("ELASTICSEARCH_EMBEDDING_MODEL_ID")
 
+# Frontend Settings via Environment Variables
+AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower()
+frontend_settings = { "auth_enabled": AUTH_ENABLED }
+
+
 # Initialize a CosmosDB client with AAD auth and containers for Chat History
 cosmos_conversation_client = None
 if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
@@ -829,6 +834,13 @@ def ensure_cosmos():
 
     return jsonify({"message": "CosmosDB is configured and working"}), 200
 
+@app.route("/frontend_settings", methods=["GET"])  
+def get_frontend_settings():
+    try:
+        return jsonify(frontend_settings), 200
+    except Exception as e:
+        logging.exception("Exception in /frontend_settings")
+        return jsonify({"error": str(e)}), 500  
 
 def generate_title(conversation_messages):
     ## make sure the messages are sorted by _ts descending
