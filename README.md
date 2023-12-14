@@ -139,6 +139,12 @@ Next, enable logging on the app service. Go to "App Service logs" under Monitori
 
 Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
 
+### Configuring vector search
+When using your own data with a vector index, ensure these settings are configured on your app:
+- `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
+- `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+- `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+
 ### Updating the default chat logo and headers
 The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
 ```
