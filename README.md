@@ -121,10 +121,14 @@ Feel free to fork this repository and make your own modifications to the UX or b
 For apps published with `az webapp up` or from the Azure AI Studio, you can increase your app's ability to handle concurrent requests from multiple users with the following steps:
 1. Upgrade your App Service plan tier to a higher tier, for example tiers with more than one vCPU.
 
-2. Configure the following app settings on your App Service in the Azure Portal:
+2. Configure the following app setting on your App Service in the Azure Portal:
 - `PYTHON_ENABLE_GUNICORN_MULTIWORKERS`: true
-- `PYTHON_GUNICORN_CUSTOM_WORKER_NUM`: 5 (may be higher or lower depending on your App Service Plan tier)
-- `PYTHON_GUNICORN_CUSTOM_THREAD_NUM`: 5 (may be higher or lower depending on your App Service Plan tier)
+This will default to use a default worker count of (2 * numCores) + 1 and thread count of 1.
+If your App Service Plan has additional compute capacity and you want to increase the worker or thread count, you can figure these additional settings accordingly:
+- `PYTHON_GUNICORN_CUSTOM_WORKER_NUM`
+- `PYTHON_GUNICORN_CUSTOM_THREAD_NUM`
+
+See the [Oryx documentation](https://github.com/microsoft/Oryx/blob/main/doc/configuration.md) for more details on these settings.
 
 After adding the settings, be sure to save the configuration and then restart your app.
 
@@ -134,6 +138,12 @@ First, add an environment variable on the app service resource called "DEBUG". S
 Next, enable logging on the app service. Go to "App Service logs" under Monitoring, and change Application logging to File System. Save the change.
 
 Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
+
+### Configuring vector search
+When using your own data with a vector index, ensure these settings are configured on your app:
+- `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
+- `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+- `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 ### Updating the default chat logo and headers
 The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
@@ -152,25 +162,22 @@ To update the logo, change `src={Azure}` to point to your own SVG file, which yo
 To update the headers, change the strings "Start chatting" and "This chatbot is configured to answer your questions" to your desired values.
 
 ### Changing Citation Display
-The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the "View Source" button will open the citation URL in a new tab when clicked:
+The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the title element is a clickable hyperlink if `url` is not a blob URL.
+
 ```
-const onViewSource = (citation: Citation) => {
-        if (citation.url) {
+    <h5 
+        className={styles.citationPanelTitle} 
+        tabIndex={0} 
+        title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} 
+        onClick={() => onViewSource(activeCitation)}
+    >{activeCitation.title}</h5>
+
+    const onViewSource = (citation: Citation) => {
+        if (citation.url && !citation.url.includes("blob.core")) {
             window.open(citation.url, "_blank");
         }
     };
 
-<span 
-        title={activeCitation.url} 
-        tabIndex={0} 
-        role="link" 
-        onClick={() => onViewSource(activeCitation)} 
-        onKeyDown={e => e.key === "Enter" || e.key === " " ? onViewSource(activeCitation) : null}
-        className={styles.viewSourceButton}
-        aria-label={activeCitation.url}
-    >
-        View Source
-</span>
 ```
 
 
