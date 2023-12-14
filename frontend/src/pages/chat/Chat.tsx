@@ -40,8 +40,8 @@ const enum messageStatus {
 }
 
 const Chat = () => {
-    const AUTH_DISABLED = import.meta.env.VITE_AUTH_DISABLED;
     const appStateContext = useContext(AppStateContext)
+    const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -94,7 +94,7 @@ const Chat = () => {
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
-        if (AUTH_DISABLED == "true") {
+        if (AUTH_ENABLED === "false") {
             setShowAuthMessage(false);
             return;
         }
@@ -530,8 +530,8 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        getUserInfoList();
-    }, []);
+        if (AUTH_ENABLED !== undefined) getUserInfoList();
+    }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
         chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })

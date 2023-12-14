@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
-import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus } from '../api';
+import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings } from '../api';
 import { Conversation } from '../api';
   
 export interface AppState {
@@ -10,6 +10,7 @@ export interface AppState {
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
     currentChat: Conversation | null;
+    frontendSettings: any | null;
 }
 
 export type Action =
@@ -24,6 +25,7 @@ export type Action =
     | { type: 'DELETE_CHAT_HISTORY'}  // API Call
     | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
+    | { type: 'FETCH_FRONTEND_SETTINGS', payload: any | null }  // API Call
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
@@ -34,7 +36,8 @@ const initialState: AppState = {
     isCosmosDBAvailable: {
         cosmosDB: false,
         status: CosmosDBStatus.NotConfigured,
-    }
+    },
+    frontendSettings: null,
 };
 
 export const AppStateContext = createContext<{
@@ -98,6 +101,18 @@ type AppStateProviderProps = {
             })
         }
         getHistoryEnsure();
+    }, []);
+
+    useEffect(() => {
+        const getFrontendSettings = async () => {
+            frontendSettings().then((response) => {
+                dispatch({ type: 'FETCH_FRONTEND_SETTINGS', payload: response });
+            })
+            .catch((err) => {
+                console.error("There was an issue fetching your data.");
+            })
+        }
+        getFrontendSettings();
     }, []);
   
     return (

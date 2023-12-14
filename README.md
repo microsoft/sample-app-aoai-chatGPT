@@ -109,7 +109,7 @@ After deployment, you will need to add an identity provider to provide authentic
 
 If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. 
 
-To remove this restriction, you can can include a `.env` file in the `frontend` folder with the following contents: `VITE_AUTH_DISABLED=True`. This will disable authentication and allow anyone to access the chat functionality of your app. **This is not recommended for production apps.**
+To remove this restriction, you can `AUTH_ENABLED=False` to the environment variables. This will disable authentication and allow anyone to access the chat functionality of your app. **This is not recommended for production apps.**
 
 To add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. 
 
