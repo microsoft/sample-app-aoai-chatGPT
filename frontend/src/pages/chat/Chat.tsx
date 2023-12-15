@@ -41,6 +41,7 @@ const enum messageStatus {
 
 const Chat = () => {
     const appStateContext = useContext(AppStateContext)
+    const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled === "true" ;
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -93,6 +94,10 @@ const Chat = () => {
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
+        if (!AUTH_ENABLED) {
+            setShowAuthMessage(false);
+            return;
+        }
         const userInfoList = await getUserInfo();
         if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
             setShowAuthMessage(true);
@@ -525,8 +530,8 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        getUserInfoList();
-    }, []);
+        if (AUTH_ENABLED !== undefined) getUserInfoList();
+    }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
         chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
