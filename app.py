@@ -347,7 +347,6 @@ def prepare_body_headers_with_data(request):
 
     return body, headers
 
-
 def stream_with_data(body, headers, endpoint, history_metadata={}):
     s = requests.Session()
     try:
@@ -544,7 +543,22 @@ def conversation_without_data(request_body):
                 "role": message["role"] ,
                 "content": message["content"]
             })
-
+    functions= [  
+        {
+            "name": "get_weather",
+            "description": "Retrieve weather from api for given city, state",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The location for which you want to get weather"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    ]
     response = openai.ChatCompletion.create(
         engine=AZURE_OPENAI_MODEL,
         messages = messages,
@@ -552,11 +566,45 @@ def conversation_without_data(request_body):
         max_tokens=int(AZURE_OPENAI_MAX_TOKENS),
         top_p=float(AZURE_OPENAI_TOP_P),
         stop=AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
-        stream=SHOULD_STREAM
-    )
+        stream=SHOULD_STREAM,
+        functions=functions,
+        function_call="auto",
+    )   
+    response_message = response["choices"][0]["message"]
+    # Check if the model wants to call a function
+    if response_message.get("function_call"):
+
+    # Call the function. The JSON response may not always be valid so make sure to handle errors
+        function_name = response_message["function_call"]["name"]
+
+        available_functions = {
+                "get_weather": get_weather,
+        }
+        function_to_call = available_functions[function_name] 
+
+        function_args = json.loads(response_message["function_call"]["arguments"])
+        function_response = function_to_call(**function_args)
+        # Add the assistant response and function response to the messages
+        messages.append( # adding assistant response to messages
+            {
+                "role": response_message["role"],
+                "function_call": {
+                    "name": function_name,
+                    "arguments": response_message["function_call"]["arguments"],
+                },
+                "content": None
+            }
+        )
+        messages.append( # adding function response to messages
+            {
+                "role": "function",
+                "name": function_name,
+                "content": function_response,
+            }
+        )
 
     history_metadata = request_body.get("history_metadata", {})
-
+    
     if not SHOULD_STREAM:
         response_obj = {
             "id": response,
@@ -576,6 +624,11 @@ def conversation_without_data(request_body):
     else:
         return Response(stream_without_data(response, history_metadata), mimetype='text/event-stream')
 
+def get_weather(location):
+    url = "https://functionweatherapp1.azurewebsites.net/api/httptrigger1"
+    data = {"location": location}
+    response = requests.post(url, json=data)
+    return response
 
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
@@ -854,6 +907,8 @@ def generate_title(conversation_messages):
         return title
     except Exception as e:
         return messages[-2]['content']
+    
+
 
 if __name__ == "__main__":
     app.run()
