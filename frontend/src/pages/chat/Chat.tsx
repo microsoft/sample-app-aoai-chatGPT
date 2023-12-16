@@ -177,7 +177,6 @@ const Chat = () => {
             const response = await conversationApi(request, abortController.signal);
             if (response?.body) {
                 const reader = response.body.getReader();
-                let runningText = "";
 
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
@@ -188,19 +187,22 @@ const Chat = () => {
                     const objects = text.split("\n");
                     objects.forEach((obj) => {
                         try {
-                            runningText += obj;
-                            result = JSON.parse(runningText);
-                            result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
-                                obj.date = new Date().toISOString();
-                            })
-                            setShowLoadingMessage(false);
-                            result.choices[0].messages.forEach((resultObj) => {
-                                processResultMessage(resultObj, userMessage, conversationId);
-                            })
-                            runningText = "";
+                            if (obj !== "") {
+                                result = JSON.parse(obj);
+                                result.choices[0].messages.forEach((msg) => {
+                                    msg.id = uuid();
+                                    msg.date = new Date().toISOString();
+                                })
+                                setShowLoadingMessage(false);
+                                result.choices[0].messages.forEach((resultObj) => {
+                                    processResultMessage(resultObj, userMessage, conversationId);
+                                })
+                            }
+                            
                         }
-                        catch { }
+                        catch (e) {
+                            console.error(e)
+                         }
                     });
                 }
                 conversation.messages.push(toolMessage, assistantMessage)
@@ -309,7 +311,6 @@ const Chat = () => {
             }
             if (response?.body) {
                 const reader = response.body.getReader();
-                let runningText = "";
 
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
@@ -320,19 +321,22 @@ const Chat = () => {
                     const objects = text.split("\n");
                     objects.forEach((obj) => {
                         try {
-                            runningText += obj;
-                            result = JSON.parse(runningText);
-                            result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
-                                obj.date = new Date().toISOString();
-                            })
-                            setShowLoadingMessage(false);
-                            result.choices[0].messages.forEach((resultObj) => {
-                                processResultMessage(resultObj, userMessage, conversationId);
-                            })
-                            runningText = "";
+                            if (obj !== "") {
+                                result = JSON.parse(obj);
+                                result.choices[0].messages.forEach((msg) => {
+                                    msg.id = uuid();
+                                    msg.date = new Date().toISOString();
+                                })
+                                setShowLoadingMessage(false);
+                                result.choices[0].messages.forEach((resultObj) => {
+                                    processResultMessage(resultObj, userMessage, conversationId);
+                                })
+                            }
+                            
                         }
-                        catch { }
+                        catch (e) {
+                            console.error(e)
+                         }
                     });
                 }
 
