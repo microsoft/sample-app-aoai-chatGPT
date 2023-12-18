@@ -1,0 +1,19 @@
+.footerContainer{
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.footerIcon {
+    height: 12px;
+    width: 12px;
+}
+
+.footerText {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    color: #242424;
+}
