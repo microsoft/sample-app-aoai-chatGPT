@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
+import Footer from "../../components/Footer/Footer";
 
 const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
     root: {
@@ -79,7 +80,7 @@ const Layout = () => {
                             aria-hidden="true"
                         />
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Azure AI</h1>
+                            <h1 className={styles.headerTitle}>MSR Chat</h1>
                         </Link>
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
@@ -130,6 +131,7 @@ const Layout = () => {
                     </div>
                 </Stack>
             </Dialog>
+            <Footer />
         </div>
     );
 };
