@@ -39,8 +39,8 @@ export const Answer = ({
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext)
-    const FEEDBACK_ENABLED = import.meta.env.VITE_FEEDBACK_ENABLED;
-
+    const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled; 
+    
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
         toggleIsRefAccordionOpen();
@@ -61,7 +61,7 @@ export const Answer = ({
             currentFeedbackState = initializeAnswerFeedback(answer);
         }
         setFeedbackState(currentFeedbackState)
-    }, [appStateContext?.state.feedbackState, feedbackState]);
+    }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id]);
 
     const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
         let citationFilename = "";
@@ -89,7 +89,7 @@ export const Answer = ({
 
         let newFeedbackState = feedbackState;
         // Set or unset the thumbs up state
-        if (feedbackState == Feedback.Positive || feedbackState == undefined) {
+        if (feedbackState == Feedback.Positive) {
             newFeedbackState = Feedback.Neutral;
         }
         else {
@@ -189,7 +189,7 @@ export const Answer = ({
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
-                            {FEEDBACK_ENABLED == "True" && answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
+                            {FEEDBACK_ENABLED && answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
                                 <ThumbLike20Filled
                                     aria-hidden="false"
                                     aria-label="Like this response"
