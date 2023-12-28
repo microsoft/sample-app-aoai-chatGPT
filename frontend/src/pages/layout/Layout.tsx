@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
-import Azure from "../../assets/Azure.svg";
+import Azure from "../../assets/Skyward.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField } from "@fluentui/react";
 import { useEffect, useState } from "react";
