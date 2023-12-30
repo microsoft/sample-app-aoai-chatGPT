@@ -4,6 +4,14 @@ This folder contains the ARM template of a sample Logic App that can sync your S
 
 ## Quick Start
 
+Click the following button to deploy the sample Logic App to your Azure Subscription.
+
+[![Deploy to Azure](https://github.com/MicrosoftDocs/azure-docs/raw/main/articles/media/template-deployments/deploy-to-azure.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fquickstarts%2Fmicrosoft.logic%2Flogic-app-create%2Fazuredeploy.json)
+
+
+
+After deployment, you will need to authenticate to the two deployed connectors so the Logic App can use the connectors access the SharePoint and blob storage.
+
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
 ## Sub Folders
