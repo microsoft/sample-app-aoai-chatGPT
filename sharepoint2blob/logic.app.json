@@ -114,8 +114,42 @@
                             "name": "PendingFolders",
                             "type": "array",
                             "value": [
-                                "Shared Documents"
+                                "@variables('SeedFolder')"
                             ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_SeedFolder": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_SeedFolder": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SeedFolder",
+                            "type": "string",
+                            "value": "@{concat(variables('SitePath'), '/Shared Documents')}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_SitePath": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_SitePath": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SitePath",
+                            "type": "string",
+                            "value": "@{concat('/', join(skip(split(parameters('siteUrl'), '/'),3),'/'))}"
                         }
                     ]
                 },
@@ -2624,20 +2658,20 @@
                 "actions": {
                     "Collect_sub_folders": {
                         "inputs": {
-                            "from": "@outputs('Parse_JSON_2')['body']['Row']",
+                            "from": "@body('Parse_list')['Row']",
                             "where": "@equals(item()['FSObjType'], '1')"
                         },
                         "runAfter": {
-                            "Compose": [
+                            "Parse_list": [
                                 "Succeeded"
                             ]
                         },
                         "type": "Query"
                     },
-                    "Compose": {
-                        "inputs": "@first(outputs('Parse_JSON_2')['body']['Row'])['FSObjType']",
+                    "Concat_sub_folders_url_to_pending_folders": {
+                        "inputs": "@union(variables('PendingFolders'), body('Select_sub_folder_url'))",
                         "runAfter": {
-                            "Parse_JSON_2": [
+                            "Select_sub_folder_url": [
                                 "Succeeded"
                             ]
                         },
@@ -2656,7 +2690,7 @@
                         "type": "SetVariable"
                     },
                     "Get_first_pending_folder": {
-                        "inputs": "@concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27', encodeURIComponent(concat(parameters('sitePath'), first(variables('PendingFolders')))), '%27')",
+                        "inputs": "@concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27', encodeURIComponent(variables('SeedFolder')), '%27&RootFolder=', encodeURIComponent(first(variables('PendingFolders'))))",
                         "runAfter": {},
                         "type": "Compose"
                     },
@@ -2682,1152 +2716,29 @@
                         },
                         "type": "ApiConnection"
                     },
-                    "Parse_JSON_2": {
+                    "Parse_list": {
                         "inputs": {
                             "content": "@body('List_folder')",
                             "schema": {
                                 "properties": {
                                     "body": {
                                         "properties": {
-                                            "CurrentFolderPrincipalCount": {
-                                                "type": "string"
-                                            },
-                                            "CurrentFolderSpItemUrl": {
-                                                "type": "string"
-                                            },
-                                            "FilterLink": {
-                                                "type": "string"
-                                            },
-                                            "FirstRow": {
-                                                "type": "integer"
-                                            },
-                                            "FolderPermissions": {
-                                                "type": "string"
-                                            },
-                                            "ForceNoHierarchy": {
-                                                "type": "string"
-                                            },
-                                            "HierarchyHasIndention": {
-                                                "type": "string"
-                                            },
-                                            "LastRow": {
-                                                "type": "integer"
-                                            },
                                             "Row": {
                                                 "items": {
                                                     "properties": {
-                                                        "A2ODMountCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "AccessPolicy": {
-                                                            "type": "string"
-                                                        },
-                                                        "AppAuthor": {
-                                                            "type": "string"
-                                                        },
-                                                        "AppEditor": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author": {
-                                                            "items": {
-                                                                "properties": {
-                                                                    "department": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "email": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "id": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "jobTitle": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "picture": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "sip": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "title": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "id",
-                                                                    "title",
-                                                                    "email",
-                                                                    "sip",
-                                                                    "picture",
-                                                                    "department",
-                                                                    "jobTitle"
-                                                                ],
-                                                                "type": "object"
-                                                            },
-                                                            "type": "array"
-                                                        },
-                                                        "Author.department": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.email": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.id": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.jobTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.picture": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.sip": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.span": {
-                                                            "type": "string"
-                                                        },
-                                                        "Author.title": {
-                                                            "type": "string"
-                                                        },
-                                                        "BSN": {
-                                                            "type": "string"
-                                                        },
-                                                        "BaseName": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckedOutTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckedOutUserId": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.department": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.email": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.id": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.jobTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.picture": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.sip": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.span": {
-                                                            "type": "string"
-                                                        },
-                                                        "CheckoutUser.title": {
-                                                            "type": "string"
-                                                        },
-                                                        "Combine": {
-                                                            "type": "string"
-                                                        },
-                                                        "ComplianceAssetId": {
-                                                            "type": "string"
-                                                        },
-                                                        "ContentType": {
-                                                            "type": "string"
-                                                        },
-                                                        "ContentTypeId": {
-                                                            "type": "string"
-                                                        },
-                                                        "ContentVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created.": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created_x0020_By": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created_x0020_Date": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created_x0020_Date.": {
-                                                            "type": "string"
-                                                        },
-                                                        "Created_x0020_Date.ifnew": {
-                                                            "type": "string"
-                                                        },
-                                                        "DocConcurrencyNumber": {
-                                                            "type": "string"
-                                                        },
-                                                        "DocIcon": {
-                                                            "type": "string"
-                                                        },
-                                                        "Edit": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor": {
-                                                            "items": {
-                                                                "properties": {
-                                                                    "department": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "email": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "id": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "jobTitle": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "picture": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "sip": {
-                                                                        "type": "string"
-                                                                    },
-                                                                    "title": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "id",
-                                                                    "title",
-                                                                    "email",
-                                                                    "sip",
-                                                                    "picture",
-                                                                    "department",
-                                                                    "jobTitle"
-                                                                ],
-                                                                "type": "object"
-                                                            },
-                                                            "type": "array"
-                                                        },
-                                                        "Editor.department": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.email": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.id": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.jobTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.picture": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.sip": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.span": {
-                                                            "type": "string"
-                                                        },
-                                                        "Editor.title": {
-                                                            "type": "string"
-                                                        },
-                                                        "Edits": {
-                                                            "type": "string"
-                                                        },
-                                                        "EncodedAbsUrl": {
-                                                            "type": "string"
-                                                        },
                                                         "FSObjType": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileDirRef": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileLeafRef": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileLeafRef.Name": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileLeafRef.Suffix": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileRef": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileRef.scriptencodeasurl": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileRef.urlencode": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileRef.urlencodeasurl": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileRef.urlencoding": {
-                                                            "type": "string"
-                                                        },
-                                                        "FileSizeDisplay": {
-                                                            "type": "string"
-                                                        },
-                                                        "File_x0020_Size": {
-                                                            "type": "string"
-                                                        },
-                                                        "File_x0020_Type": {
-                                                            "type": "string"
-                                                        },
-                                                        "File_x0020_Type.progid": {
-                                                            "type": "string"
-                                                        },
-                                                        "File_x0020_Type.url": {
-                                                            "type": "string"
-                                                        },
-                                                        "FolderChildCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "GUID": {
-                                                            "type": "string"
-                                                        },
-                                                        "HTML_x0020_File_x0020_Type": {
-                                                            "type": "string"
-                                                        },
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapall": {
-                                                            "type": "string"
-                                                        },
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapcon": {
-                                                            "type": "string"
-                                                        },
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapico": {
-                                                            "type": "string"
-                                                        },
-                                                        "ID": {
-                                                            "type": "string"
-                                                        },
-                                                        "ImageTagsTaxHTField": {
-                                                            "type": "string"
-                                                        },
-                                                        "InstanceID": {
-                                                            "type": "string"
-                                                        },
-                                                        "Interactivity": {
-                                                            "type": "string"
-                                                        },
-                                                        "IsCheckedoutToLocal": {
-                                                            "type": "string"
-                                                        },
-                                                        "ItemChildCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "Last_x0020_Modified": {
-                                                            "type": "string"
-                                                        },
-                                                        "Last_x0020_Modified.": {
-                                                            "type": "string"
-                                                        },
-                                                        "LinkCheckedOutTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "LinkFilename": {
-                                                            "type": "string"
-                                                        },
-                                                        "LinkFilename2": {
-                                                            "type": "string"
-                                                        },
-                                                        "LinkFilenameNoMenu": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaLengthInSeconds": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaLengthInSeconds.": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceAutoKeyPoints": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceDateTaken": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceDocTags": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceEventHashCode": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceFastMetadata": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceGenerationTime": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceImageTags": {
-                                                            "type": "array"
-                                                        },
-                                                        "MediaServiceImageTags.": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceKeyPoints": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceMetadata": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceOCR": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceObjectDetectorVersions": {
-                                                            "type": "string"
-                                                        },
-                                                        "MediaServiceSearchProperties": {
-                                                            "type": "string"
-                                                        },
-                                                        "MetaInfo": {
-                                                            "items": {
-                                                                "properties": {
-                                                                    "isSecretFieldValue": {
-                                                                        "type": "boolean"
-                                                                    },
-                                                                    "lookupId": {
-                                                                        "type": "integer"
-                                                                    },
-                                                                    "lookupValue": {
-                                                                        "type": "string"
-                                                                    }
-                                                                },
-                                                                "required": [
-                                                                    "lookupId",
-                                                                    "lookupValue",
-                                                                    "isSecretFieldValue"
-                                                                ],
-                                                                "type": "object"
-                                                            },
-                                                            "type": "array"
-                                                        },
-                                                        "MetaInfo.": {
-                                                            "type": "string"
-                                                        },
-                                                        "Modified": {
-                                                            "type": "string"
-                                                        },
-                                                        "Modified.": {
-                                                            "type": "string"
-                                                        },
-                                                        "Modified_x0020_By": {
-                                                            "type": "string"
-                                                        },
-                                                        "NoExecute": {
-                                                            "type": "string"
-                                                        },
-                                                        "NoExecute.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "Order": {
-                                                            "type": "string"
-                                                        },
-                                                        "Order.": {
-                                                            "type": "string"
-                                                        },
-                                                        "OriginatorId": {
-                                                            "type": "string"
-                                                        },
-                                                        "ParentLeafName": {
-                                                            "type": "string"
-                                                        },
-                                                        "ParentUniqueId": {
-                                                            "type": "string"
-                                                        },
-                                                        "ParentVersionString": {
-                                                            "type": "string"
-                                                        },
-                                                        "PermMask": {
-                                                            "type": "string"
-                                                        },
-                                                        "PolicyDisabledUICapabilities": {
-                                                            "type": "string"
-                                                        },
-                                                        "PrincipalCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "ProgId": {
-                                                            "type": "string"
-                                                        },
-                                                        "RepairDocument": {
-                                                            "type": "string"
-                                                        },
-                                                        "Restricted": {
-                                                            "type": "string"
-                                                        },
-                                                        "SMLastModifiedDate": {
-                                                            "type": "string"
-                                                        },
-                                                        "SMLastModifiedDate.": {
-                                                            "type": "string"
-                                                        },
-                                                        "SMTotalFileCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "SMTotalFileStreamSize": {
-                                                            "type": "string"
-                                                        },
-                                                        "SMTotalSize": {
-                                                            "type": "string"
-                                                        },
-                                                        "ScopeId": {
-                                                            "type": "string"
-                                                        },
-                                                        "SelectFilename": {
-                                                            "type": "string"
-                                                        },
-                                                        "SelectTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "ServerRedirectedEmbedUrl": {
                                                             "type": "string"
                                                         },
                                                         "ServerUrl": {
                                                             "type": "string"
-                                                        },
-                                                        "SharedWithDetails": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.department": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.email": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.id": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.jobTitle": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.picture": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.sip": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.span": {
-                                                            "type": "string"
-                                                        },
-                                                        "SharedWithUsers.title": {
-                                                            "type": "string"
-                                                        },
-                                                        "SortBehavior": {
-                                                            "type": "string"
-                                                        },
-                                                        "StreamHash": {
-                                                            "type": "string"
-                                                        },
-                                                        "SyncClientId": {
-                                                            "type": "string"
-                                                        },
-                                                        "TaxCatchAll": {
-                                                            "type": "array"
-                                                        },
-                                                        "TaxCatchAll.": {
-                                                            "type": "string"
-                                                        },
-                                                        "TemplateUrl": {
-                                                            "type": "string"
-                                                        },
-                                                        "Title": {
-                                                            "type": "string"
-                                                        },
-                                                        "TriggerFlowInfo": {
-                                                            "type": "string"
-                                                        },
-                                                        "UniqueId": {
-                                                            "type": "string"
-                                                        },
-                                                        "VirusStatus": {
-                                                            "type": "string"
-                                                        },
-                                                        "WelcomePageCustomized": {
-                                                            "type": "string"
-                                                        },
-                                                        "WelcomeViewId": {
-                                                            "type": "string"
-                                                        },
-                                                        "WorkflowInstanceID": {
-                                                            "type": "string"
-                                                        },
-                                                        "WorkflowVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "_AdditionalStreamSize": {
-                                                            "type": "string"
-                                                        },
-                                                        "_CheckinComment": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ColorHex": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ColorTag": {
-                                                            "type": "string"
-                                                        },
-                                                        "_CommentCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "_CommentFlags": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ComplianceFlags": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ComplianceTag": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ComplianceTagUserId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ComplianceTagWrittenTime": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ComplianceTagWrittenTime.": {
-                                                            "type": "string"
-                                                        },
-                                                        "_CopySource": {
-                                                            "type": "string"
-                                                        },
-                                                        "_Dirty": {
-                                                            "type": "string"
-                                                        },
-                                                        "_DisplayName": {
-                                                            "type": "string"
-                                                        },
-                                                        "_EditMenuTableEnd": {
-                                                            "type": "string"
-                                                        },
-                                                        "_EditMenuTableStart": {
-                                                            "type": "string"
-                                                        },
-                                                        "_EditMenuTableStart2": {
-                                                            "type": "string"
-                                                        },
-                                                        "_EffectiveIpLabelDisplayName": {
-                                                            "type": "string"
-                                                        },
-                                                        "_Emoji": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ExpirationDate": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ExpirationDate.": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ExtendedDescription": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasCopyDestinations": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasCopyDestinations.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasEncryptedContent": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasEncryptedContent.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasUserDefinedProtection": {
-                                                            "type": "string"
-                                                        },
-                                                        "_HasUserDefinedProtection.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IpLabelAssignmentMethod": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IpLabelHash": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IpLabelId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IpLabelMetaInfo": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IpLabelPromotionCtagVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IsCurrentVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IsCurrentVersion.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_IsRecord": {
-                                                            "type": "string"
-                                                        },
-                                                        "_Level": {
-                                                            "type": "string"
-                                                        },
-                                                        "_LikeCount": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ListSchemaVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ModerationComments": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ModerationStatus": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ModerationStatus.": {
-                                                            "type": "string"
-                                                        },
-                                                        "_Parsable": {
-                                                            "type": "string"
-                                                        },
-                                                        "_Parsable.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_RmsTemplateId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_SharedFileIndex": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ShortcutSiteId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ShortcutUniqueId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ShortcutUrl": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ShortcutUrl.desc": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ShortcutWebId": {
-                                                            "type": "string"
-                                                        },
-                                                        "_SourceUrl": {
-                                                            "type": "string"
-                                                        },
-                                                        "_StreamScenarioIds": {
-                                                            "type": "string"
-                                                        },
-                                                        "_StubFile": {
-                                                            "type": "string"
-                                                        },
-                                                        "_StubFile.value": {
-                                                            "type": "string"
-                                                        },
-                                                        "_UIVersion": {
-                                                            "type": "string"
-                                                        },
-                                                        "_UIVersionString": {
-                                                            "type": "string"
-                                                        },
-                                                        "_VirusInfo": {
-                                                            "type": "string"
-                                                        },
-                                                        "_VirusStatus": {
-                                                            "type": "string"
-                                                        },
-                                                        "_VirusVendorID": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ip_UnifiedCompliancePolicyProperties": {
-                                                            "type": "string"
-                                                        },
-                                                        "_ip_UnifiedCompliancePolicyUIAction": {
-                                                            "type": "string"
-                                                        },
-                                                        "ecb.dispex": {
-                                                            "type": "string"
-                                                        },
-                                                        "owshiddenversion": {
-                                                            "type": "string"
-                                                        },
-                                                        "serverurl.progid": {
-                                                            "type": "string"
-                                                        },
-                                                        "xd_ProgID": {
-                                                            "type": "string"
-                                                        },
-                                                        "xd_Signature": {
-                                                            "type": "string"
-                                                        },
-                                                        "xd_Signature.value": {
-                                                            "type": "string"
                                                         }
                                                     },
-                                                    "required": [
-                                                        "ContentTypeId",
-                                                        "Modified",
-                                                        "Modified.",
-                                                        "_ModerationComments",
-                                                        "FileLeafRef",
-                                                        "FileLeafRef.Name",
-                                                        "FileLeafRef.Suffix",
-                                                        "Modified_x0020_By",
-                                                        "Created_x0020_By",
-                                                        "File_x0020_Type",
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapall",
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapcon",
-                                                        "HTML_x0020_File_x0020_Type.File_x0020_Type.mapico",
-                                                        "serverurl.progid",
-                                                        "ServerRedirectedEmbedUrl",
-                                                        "File_x0020_Type.progid",
-                                                        "File_x0020_Type.url",
-                                                        "HTML_x0020_File_x0020_Type",
-                                                        "_SourceUrl",
-                                                        "_SharedFileIndex",
-                                                        "ComplianceAssetId",
-                                                        "Title",
-                                                        "TemplateUrl",
-                                                        "xd_ProgID",
-                                                        "xd_Signature",
-                                                        "xd_Signature.value",
-                                                        "_ShortcutUrl",
-                                                        "_ShortcutUrl.desc",
-                                                        "_ShortcutSiteId",
-                                                        "_ShortcutWebId",
-                                                        "_ShortcutUniqueId",
-                                                        "MediaServiceMetadata",
-                                                        "MediaServiceFastMetadata",
-                                                        "SelectFilename",
-                                                        "MediaServiceAutoKeyPoints",
-                                                        "MediaServiceKeyPoints",
-                                                        "MediaServiceOCR",
-                                                        "MediaServiceGenerationTime",
-                                                        "MediaServiceEventHashCode",
-                                                        "SharedWithUsers",
-                                                        "SharedWithUsers.id",
-                                                        "SharedWithUsers.title",
-                                                        "SharedWithUsers.span",
-                                                        "SharedWithUsers.email",
-                                                        "SharedWithUsers.sip",
-                                                        "SharedWithUsers.jobTitle",
-                                                        "SharedWithUsers.department",
-                                                        "SharedWithUsers.picture",
-                                                        "SharedWithDetails",
-                                                        "TaxCatchAll",
-                                                        "TaxCatchAll.",
-                                                        "_ExtendedDescription",
-                                                        "MediaServiceImageTags",
-                                                        "MediaServiceImageTags.",
-                                                        "ImageTagsTaxHTField",
-                                                        "MediaServiceDateTaken",
-                                                        "MediaLengthInSeconds",
-                                                        "MediaLengthInSeconds.",
-                                                        "TriggerFlowInfo",
-                                                        "_ip_UnifiedCompliancePolicyProperties",
-                                                        "_ip_UnifiedCompliancePolicyUIAction",
-                                                        "MediaServiceSearchProperties",
-                                                        "MediaServiceDocTags",
-                                                        "_ColorHex",
-                                                        "_ColorTag",
-                                                        "_Emoji",
-                                                        "MediaServiceObjectDetectorVersions",
-                                                        "_EffectiveIpLabelDisplayName",
-                                                        "ID",
-                                                        "ContentType",
-                                                        "WelcomeViewId",
-                                                        "WelcomePageCustomized",
-                                                        "Created",
-                                                        "Created.",
-                                                        "Author",
-                                                        "Author.id",
-                                                        "Author.title",
-                                                        "Author.span",
-                                                        "Author.email",
-                                                        "Author.sip",
-                                                        "Author.jobTitle",
-                                                        "Author.department",
-                                                        "Author.picture",
-                                                        "Editor",
-                                                        "Editor.id",
-                                                        "Editor.title",
-                                                        "Editor.span",
-                                                        "Editor.email",
-                                                        "Editor.sip",
-                                                        "Editor.jobTitle",
-                                                        "Editor.department",
-                                                        "Editor.picture",
-                                                        "_HasCopyDestinations",
-                                                        "_HasCopyDestinations.value",
-                                                        "_CopySource",
-                                                        "_ModerationStatus",
-                                                        "_ModerationStatus.",
-                                                        "FileRef",
-                                                        "FileRef.urlencode",
-                                                        "FileRef.urlencodeasurl",
-                                                        "FileRef.urlencoding",
-                                                        "FileRef.scriptencodeasurl",
-                                                        "FileDirRef",
-                                                        "Last_x0020_Modified",
-                                                        "Last_x0020_Modified.",
-                                                        "Created_x0020_Date",
-                                                        "Created_x0020_Date.",
-                                                        "Created_x0020_Date.ifnew",
-                                                        "File_x0020_Size",
-                                                        "FSObjType",
-                                                        "SortBehavior",
-                                                        "PermMask",
-                                                        "PrincipalCount",
-                                                        "CheckedOutUserId",
-                                                        "IsCheckedoutToLocal",
-                                                        "CheckoutUser",
-                                                        "CheckoutUser.id",
-                                                        "CheckoutUser.title",
-                                                        "CheckoutUser.span",
-                                                        "CheckoutUser.email",
-                                                        "CheckoutUser.sip",
-                                                        "CheckoutUser.jobTitle",
-                                                        "CheckoutUser.department",
-                                                        "CheckoutUser.picture",
-                                                        "UniqueId",
-                                                        "ParentUniqueId",
-                                                        "SyncClientId",
-                                                        "ProgId",
-                                                        "ScopeId",
-                                                        "VirusStatus",
-                                                        "CheckedOutTitle",
-                                                        "_CheckinComment",
-                                                        "LinkCheckedOutTitle",
-                                                        "_EditMenuTableStart",
-                                                        "_EditMenuTableStart2",
-                                                        "_EditMenuTableEnd",
-                                                        "LinkFilenameNoMenu",
-                                                        "LinkFilename",
-                                                        "LinkFilename2",
-                                                        "DocIcon",
-                                                        "ServerUrl",
-                                                        "EncodedAbsUrl",
-                                                        "BaseName",
-                                                        "FileSizeDisplay",
-                                                        "MetaInfo",
-                                                        "MetaInfo.",
-                                                        "_Level",
-                                                        "_IsCurrentVersion",
-                                                        "_IsCurrentVersion.value",
-                                                        "ItemChildCount",
-                                                        "FolderChildCount",
-                                                        "Restricted",
-                                                        "OriginatorId",
-                                                        "NoExecute",
-                                                        "NoExecute.value",
-                                                        "ContentVersion",
-                                                        "_ComplianceFlags",
-                                                        "_ComplianceTag",
-                                                        "_ComplianceTagWrittenTime",
-                                                        "_ComplianceTagWrittenTime.",
-                                                        "_ComplianceTagUserId",
-                                                        "_IsRecord",
-                                                        "BSN",
-                                                        "_ListSchemaVersion",
-                                                        "_Dirty",
-                                                        "_Parsable",
-                                                        "_Parsable.value",
-                                                        "_StubFile",
-                                                        "_StubFile.value",
-                                                        "_HasEncryptedContent",
-                                                        "_HasEncryptedContent.value",
-                                                        "_HasUserDefinedProtection",
-                                                        "_HasUserDefinedProtection.value",
-                                                        "AccessPolicy",
-                                                        "_VirusStatus",
-                                                        "_VirusVendorID",
-                                                        "_VirusInfo",
-                                                        "_CommentFlags",
-                                                        "_CommentCount",
-                                                        "_LikeCount",
-                                                        "_RmsTemplateId",
-                                                        "_IpLabelId",
-                                                        "_DisplayName",
-                                                        "_IpLabelAssignmentMethod",
-                                                        "A2ODMountCount",
-                                                        "_ExpirationDate",
-                                                        "_ExpirationDate.",
-                                                        "_IpLabelHash",
-                                                        "_IpLabelPromotionCtagVersion",
-                                                        "_IpLabelMetaInfo",
-                                                        "_AdditionalStreamSize",
-                                                        "_StreamScenarioIds",
-                                                        "AppAuthor",
-                                                        "AppEditor",
-                                                        "SMTotalSize",
-                                                        "SMLastModifiedDate",
-                                                        "SMLastModifiedDate.",
-                                                        "SMTotalFileStreamSize",
-                                                        "SMTotalFileCount",
-                                                        "SelectTitle",
-                                                        "Edit",
-                                                        "owshiddenversion",
-                                                        "_UIVersion",
-                                                        "_UIVersionString",
-                                                        "InstanceID",
-                                                        "Order",
-                                                        "Order.",
-                                                        "GUID",
-                                                        "WorkflowVersion",
-                                                        "WorkflowInstanceID",
-                                                        "ParentVersionString",
-                                                        "ParentLeafName",
-                                                        "DocConcurrencyNumber",
-                                                        "StreamHash",
-                                                        "Combine",
-                                                        "RepairDocument",
-                                                        "PolicyDisabledUICapabilities",
-                                                        "ecb.dispex",
-                                                        "Interactivity",
-                                                        "Edits"
-                                                    ],
                                                     "type": "object"
                                                 },
                                                 "type": "array"
-                                            },
-                                            "RowLimit": {
-                                                "type": "integer"
                                             }
                                         },
                                         "type": "object"
-                                    },
-                                    "headers": {
-                                        "properties": {
-                                            "Cache-Control": {
-                                                "type": "string"
-                                            },
-                                            "Content-Security-Policy": {
-                                                "type": "string"
-                                            },
-                                            "Content-Type": {
-                                                "type": "string"
-                                            },
-                                            "DATASERVICEVERSION": {
-                                                "type": "string"
-                                            },
-                                            "Date": {
-                                                "type": "string"
-                                            },
-                                            "Expires": {
-                                                "type": "string"
-                                            },
-                                            "Last-Modified": {
-                                                "type": "string"
-                                            },
-                                            "MS-CV": {
-                                                "type": "string"
-                                            },
-                                            "MicrosoftSharePointTeamServices": {
-                                                "type": "string"
-                                            },
-                                            "P3P": {
-                                                "type": "string"
-                                            },
-                                            "Request-Id": {
-                                                "type": "string"
-                                            },
-                                            "SPClientServiceRequestDuration": {
-                                                "type": "string"
-                                            },
-                                            "SPRequestDuration": {
-                                                "type": "string"
-                                            },
-                                            "SPRequestGuid": {
-                                                "type": "string"
-                                            },
-                                            "Set-Cookie": {
-                                                "type": "string"
-                                            },
-                                            "Strict-Transport-Security": {
-                                                "type": "string"
-                                            },
-                                            "Timing-Allow-Origin": {
-                                                "type": "string"
-                                            },
-                                            "Transfer-Encoding": {
-                                                "type": "string"
-                                            },
-                                            "Vary": {
-                                                "type": "string"
-                                            },
-                                            "X-1DSCollectorUrl": {
-                                                "type": "string"
-                                            },
-                                            "X-AriaCollectorURL": {
-                                                "type": "string"
-                                            },
-                                            "X-AspNet-Version": {
-                                                "type": "string"
-                                            },
-                                            "X-BackEndHttpStatus": {
-                                                "type": "string"
-                                            },
-                                            "X-Content-Type-Options": {
-                                                "type": "string"
-                                            },
-                                            "X-DataBoundary": {
-                                                "type": "string"
-                                            },
-                                            "X-FEEFZInfo": {
-                                                "type": "string"
-                                            },
-                                            "X-FEProxyInfo": {
-                                                "type": "string"
-                                            },
-                                            "X-FEServer": {
-                                                "type": "string"
-                                            },
-                                            "X-FirstHopCafeEFZ": {
-                                                "type": "string"
-                                            },
-                                            "X-Frame-Options": {
-                                                "type": "string"
-                                            },
-                                            "X-MS-InvokeApp": {
-                                                "type": "string"
-                                            },
-                                            "X-MSEdge-Ref": {
-                                                "type": "string"
-                                            },
-                                            "X-NetworkStatistics": {
-                                                "type": "string"
-                                            },
-                                            "X-Powered-By": {
-                                                "type": "string"
-                                            },
-                                            "X-Proxy-BackendServerStatus": {
-                                                "type": "string"
-                                            },
-                                            "X-Proxy-RoutingCorrectness": {
-                                                "type": "string"
-                                            },
-                                            "X-SP-SERVERSTATE": {
-                                                "type": "string"
-                                            },
-                                            "X-SharePointHealthScore": {
-                                                "type": "string"
-                                            },
-                                            "x-ms-apihub-cached-response": {
-                                                "type": "string"
-                                            },
-                                            "x-ms-apihub-obo": {
-                                                "type": "string"
-                                            },
-                                            "x-ms-request-id": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    "statusCode": {
-                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -3840,7 +2751,7 @@
                         },
                         "type": "ParseJson"
                     },
-                    "Remove_first_folder": {
+                    "Remove_first_pending_folder": {
                         "inputs": "@skip(variables('PendingFolders'), 1)",
                         "runAfter": {
                             "List_folder": [
@@ -3849,13 +2760,37 @@
                         },
                         "type": "Compose"
                     },
+                    "Select_sub_folder_url": {
+                        "inputs": {
+                            "from": "@body('Collect_sub_folders')",
+                            "select": "@item()['ServerUrl']"
+                        },
+                        "runAfter": {
+                            "Collect_sub_folders": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Select"
+                    },
                     "Update_pending_folders": {
                         "inputs": {
                             "name": "PendingFolders",
-                            "value": "@outputs('Remove_first_folder')"
+                            "value": "@outputs('Remove_first_pending_folder')"
                         },
                         "runAfter": {
-                            "Remove_first_folder": [
+                            "Remove_first_pending_folder": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Update_pending_folders_with_new_sub_folders": {
+                        "inputs": {
+                            "name": "PendingFolders",
+                            "value": "@outputs('Concat_sub_folders_url_to_pending_folders')"
+                        },
+                        "runAfter": {
+                            "Concat_sub_folders_url_to_pending_folders": [
                                 "Succeeded"
                             ]
                         },
@@ -3864,7 +2799,7 @@
                 },
                 "expression": "@equals(length(variables('PendingFolders')), 0)",
                 "limit": {
-                    "count": 3,
+                    "count": 5,
                     "timeout": "PT1H"
                 },
                 "runAfter": {
@@ -3882,8 +2817,8 @@
                 "defaultValue": {},
                 "type": "Object"
             },
-            "sitePath": {
-                "defaultValue": "/teams/ALPSAzureLanguagePillars/",
+            "siteUrl": {
+                "defaultValue": "https://microsoft.sharepoint-df.com/teams/ALPSAzureLanguagePillars",
                 "type": "String"
             }
         },
