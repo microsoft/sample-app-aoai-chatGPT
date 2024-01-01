@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from "@fluentui/react";
 import { DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
-
+// add a comment
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from "rehype-raw";
@@ -543,16 +543,19 @@ const Chat = () => {
     };
 
     const onViewSource = (citation: Citation) => {
-        if (citation.url && !citation.url.includes("blob.core")) {
+        if (citation.url) {
             window.open(citation.url, "_blank");
         }
     };
+
 
     const parseCitationFromMessage = (message: ChatMessage) => {
         if (message?.role && message?.role === "tool") {
             try {
                 const toolMessage = JSON.parse(message.content) as ToolMessageContent;
-                return toolMessage.citations;
+                const citationsWithContentAndURL = toolMessage.citations
+                    .filter(citation => citation.url && citation.content && citation.filepath && citation.metadata);
+                return citationsWithContentAndURL;
             }
             catch {
                 return [];
@@ -717,12 +720,12 @@ const Chat = () => {
                             <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
                             <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
                         </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
-                        <div tabIndex={0}> 
+                        <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url ? activeCitation.url : activeCitation.url ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.url}</h5>
+
                         <ReactMarkdown 
                             linkTarget="_blank"
                             className={styles.citationPanelContent}
-                            children={activeCitation.content} 
+                            children={activeCitation.url} 
                             remarkPlugins={[remarkGfm]} 
                             rehypePlugins={[rehypeRaw]}
                         />
