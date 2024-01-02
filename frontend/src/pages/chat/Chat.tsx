@@ -586,12 +586,12 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={CAE}
+                                    src={acid}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}> WinchellAI Chat </h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}> Run a search here </h2>
+                                <h1 className={styles.chatEmptyStateTitle}> Hello!! </h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}> What do you want to learn? </h2>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
