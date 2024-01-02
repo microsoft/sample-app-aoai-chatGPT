@@ -11,17 +11,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:
-    - name: Azure Container Registry Login
-      uses: Azure/docker-login@v1
-      with:
-        # Container registry username
-        username: ${{ secrets.ACR_USERNAME }}
-        # Container registry password
-        password: ${{ secrets.ACR_PASSWORD }}
-        # Container registry server url
-        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
-        
+    steps:     
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run:         
