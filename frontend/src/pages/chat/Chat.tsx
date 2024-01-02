@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from "@fluentui/react";
-import { DismissRegular, SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
+import { ShieldLockRegular, ErrorCircleRegular, CalendarCancel16Regular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
@@ -32,6 +31,9 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image, Card, Body1 } from "@fluentui/react-components";
+import { ChatStyles } from "./ChatStyles";
+import { QuestionDisplay } from "../../components/QuestionDisplay/QuestionDisplay";
 
 const enum messageStatus {
     NotRunning = "Not Running",
@@ -40,8 +42,9 @@ const enum messageStatus {
 }
 
 const Chat = () => {
+    const Newstyles = ChatStyles();
     const appStateContext = useContext(AppStateContext)
-    const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled === "true" ;
+    const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled === "true";
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -56,23 +59,17 @@ const Chat = () => {
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
 
     const errorDialogContentProps = {
-        type: DialogType.close,
         title: errorMsg?.title,
         closeButtonAriaLabel: 'Close',
         subText: errorMsg?.subtitle,
     };
 
-    const modalProps = {
-        titleAriaId: 'labelId',
-        subtitleAriaId: 'subTextId',
-        isBlocking: true,
-        styles: { main: { maxWidth: 450 } },
-    }
+
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
     useEffect(() => {
-        if(appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && hideErrorDialog){
+        if (appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && hideErrorDialog) {
             let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
             setErrorMsg({
                 title: "Chat history is not enabled",
@@ -90,7 +87,7 @@ const Chat = () => {
     }
 
     useEffect(() => {
-       setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
+        setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
@@ -145,29 +142,29 @@ const Chat = () => {
         };
 
         let conversation: Conversation | null | undefined;
-        if(!conversationId){
+        if (!conversationId) {
             conversation = {
                 id: conversationId ?? uuid(),
                 title: question,
                 messages: [userMessage],
                 date: new Date().toISOString(),
             }
-        }else{
+        } else {
             conversation = appStateContext?.state?.currentChat
-            if(!conversation){
+            if (!conversation) {
                 console.error("Conversation not found.");
                 setIsLoading(false);
                 setShowLoadingMessage(false);
                 abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                 return;
-            }else{
+            } else {
                 conversation.messages.push(userMessage);
             }
         }
 
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
         setMessages(conversation.messages)
-        
+
         const request: ConversationRequest = {
             messages: [...conversation.messages.filter((answer) => answer.role !== ERROR)]
         };
@@ -181,7 +178,7 @@ const Chat = () => {
 
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
-                    const {done, value} = await reader.read();
+                    const { done, value } = await reader.read();
                     if (done) break;
 
                     var text = new TextDecoder("utf-8").decode(value);
@@ -207,8 +204,8 @@ const Chat = () => {
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
                 setMessages([...messages, toolMessage, assistantMessage]);
             }
-            
-        } catch ( e )  {
+
+        } catch (e) {
             if (!abortController.signal.aborted) {
                 let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
                 if (result.error?.message) {
@@ -255,21 +252,21 @@ const Chat = () => {
         //api call params set here (generate)
         let request: ConversationRequest;
         let conversation;
-        if(conversationId){
+        if (conversationId) {
             conversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-            if(!conversation){
+            if (!conversation) {
                 console.error("Conversation not found.");
                 setIsLoading(false);
                 setShowLoadingMessage(false);
                 abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
                 return;
-            }else{
+            } else {
                 conversation.messages.push(userMessage);
                 request = {
                     messages: [...conversation.messages.filter((answer) => answer.role !== ERROR)]
                 };
             }
-        }else{
+        } else {
             request = {
                 messages: [userMessage].filter((answer) => answer.role !== ERROR)
             };
@@ -278,7 +275,7 @@ const Chat = () => {
         let result = {} as ChatResponse;
         try {
             const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
-            if(!response?.ok){
+            if (!response?.ok) {
                 let errorChatMsg: ChatMessage = {
                     id: uuid(),
                     role: ERROR,
@@ -286,9 +283,9 @@ const Chat = () => {
                     date: new Date().toISOString()
                 }
                 let resultConversation;
-                if(conversationId){
+                if (conversationId) {
                     resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
+                    if (!resultConversation) {
                         console.error("Conversation not found.");
                         setIsLoading(false);
                         setShowLoadingMessage(false);
@@ -296,7 +293,7 @@ const Chat = () => {
                         return;
                     }
                     resultConversation.messages.push(errorChatMsg);
-                }else{
+                } else {
                     setMessages([...messages, userMessage, errorChatMsg])
                     setIsLoading(false);
                     setShowLoadingMessage(false);
@@ -313,7 +310,7 @@ const Chat = () => {
 
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
-                    const {done, value} = await reader.read();
+                    const { done, value } = await reader.read();
                     if (done) break;
 
                     var text = new TextDecoder("utf-8").decode(value);
@@ -337,9 +334,9 @@ const Chat = () => {
                 }
 
                 let resultConversation;
-                if(conversationId){
+                if (conversationId) {
                     resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
+                    if (!resultConversation) {
                         console.error("Conversation not found.");
                         setIsLoading(false);
                         setShowLoadingMessage(false);
@@ -349,7 +346,7 @@ const Chat = () => {
                     isEmpty(toolMessage) ?
                         resultConversation.messages.push(assistantMessage) :
                         resultConversation.messages.push(toolMessage, assistantMessage)
-                }else{
+                } else {
                     resultConversation = {
                         id: result.history_metadata.conversation_id,
                         title: result.history_metadata.title,
@@ -360,7 +357,7 @@ const Chat = () => {
                         resultConversation.messages.push(assistantMessage) :
                         resultConversation.messages.push(toolMessage, assistantMessage)
                 }
-                if(!resultConversation){
+                if (!resultConversation) {
                     setIsLoading(false);
                     setShowLoadingMessage(false);
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
@@ -369,10 +366,10 @@ const Chat = () => {
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation });
                 isEmpty(toolMessage) ?
                     setMessages([...messages, assistantMessage]) :
-                    setMessages([...messages, toolMessage, assistantMessage]);     
+                    setMessages([...messages, toolMessage, assistantMessage]);
             }
-            
-        } catch ( e )  {
+
+        } catch (e) {
             if (!abortController.signal.aborted) {
                 let errorMessage = "An error occurred. Please try again. If the problem persists, please contact the site administrator.";
                 if (result.error?.message) {
@@ -388,9 +385,9 @@ const Chat = () => {
                     date: new Date().toISOString()
                 }
                 let resultConversation;
-                if(conversationId){
+                if (conversationId) {
                     resultConversation = appStateContext?.state?.chatHistory?.find((conv) => conv.id === conversationId)
-                    if(!resultConversation){
+                    if (!resultConversation) {
                         console.error("Conversation not found.");
                         setIsLoading(false);
                         setShowLoadingMessage(false);
@@ -398,8 +395,8 @@ const Chat = () => {
                         return;
                     }
                     resultConversation.messages.push(errorChatMsg);
-                }else{
-                    if(!result.history_metadata){
+                } else {
+                    if (!result.history_metadata) {
                         console.error("Error retrieving data.", result);
                         setIsLoading(false);
                         setShowLoadingMessage(false);
@@ -414,7 +411,7 @@ const Chat = () => {
                     }
                     resultConversation.messages.push(errorChatMsg);
                 }
-                if(!resultConversation){
+                if (!resultConversation) {
                     setIsLoading(false);
                     setShowLoadingMessage(false);
                     abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
@@ -437,17 +434,17 @@ const Chat = () => {
 
     const clearChat = async () => {
         setClearingChat(true)
-        if(appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB){
+        if (appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB) {
             let response = await historyClear(appStateContext?.state.currentChat.id)
-            if(!response.ok){
+            if (!response.ok) {
                 setErrorMsg({
                     title: "Error clearing current chat",
                     subtitle: "Please try again. If the problem persists, please contact the site administrator.",
                 })
                 toggleErrorDialog();
-            }else{
-                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: appStateContext?.state.currentChat.id});
-                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat});
+            } else {
+                appStateContext?.dispatch({ type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: appStateContext?.state.currentChat.id });
+                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat });
                 setActiveCitation(undefined);
                 setIsCitationPanelOpen(false);
                 setMessages([])
@@ -474,11 +471,11 @@ const Chat = () => {
     useEffect(() => {
         if (appStateContext?.state.currentChat) {
             setMessages(appStateContext.state.currentChat.messages)
-        }else{
+        } else {
             setMessages([])
         }
     }, [appStateContext?.state.currentChat]);
-    
+
     useLayoutEffect(() => {
         const saveToDB = async (messages: ChatMessage[], id: string) => {
             const response = await historyUpdate(messages, id)
@@ -486,14 +483,14 @@ const Chat = () => {
         }
 
         if (appStateContext && appStateContext.state.currentChat && processMessages === messageStatus.Done) {
-                if(appStateContext.state.isCosmosDBAvailable.cosmosDB){
-                    if(!appStateContext?.state.currentChat?.messages){
-                        console.error("Failure fetching current chat state.")
-                        return 
-                    }
-                    saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
+            if (appStateContext.state.isCosmosDBAvailable.cosmosDB) {
+                if (!appStateContext?.state.currentChat?.messages) {
+                    console.error("Failure fetching current chat state.")
+                    return
+                }
+                saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
                     .then((res) => {
-                        if(!res.ok){
+                        if (!res.ok) {
                             let errorMessage = "An error occurred. Answers can't be saved at this time. If the problem persists, please contact the site administrator.";
                             let errorChatMsg: ChatMessage = {
                                 id: uuid(),
@@ -501,7 +498,7 @@ const Chat = () => {
                                 content: errorMessage,
                                 date: new Date().toISOString()
                             }
-                            if(!appStateContext?.state.currentChat?.messages){
+                            if (!appStateContext?.state.currentChat?.messages) {
                                 let err: Error = {
                                     ...new Error,
                                     message: "Failure fetching current chat state."
@@ -521,10 +518,10 @@ const Chat = () => {
                         }
                         return errRes;
                     })
-                }else{
-                }
-                appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
-                setMessages(appStateContext.state.currentChat.messages)
+            } else {
+            }
+            appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext.state.currentChat });
+            setMessages(appStateContext.state.currentChat.messages)
             setProcessMessages(messageStatus.NotRunning)
         }
     }, [processMessages]);
@@ -566,58 +563,62 @@ const Chat = () => {
     }
 
     return (
-        <div className={styles.container} role="main">
+        <div className={Newstyles.container} role="main">
             {showAuthMessage ? (
-                <Stack className={styles.chatEmptyState}>
-                    <ShieldLockRegular className={styles.chatIcon} style={{color: 'darkorange', height: "200px", width: "200px"}}/>
+                <div className={Newstyles.chatEmptyState}>
+                    <ShieldLockRegular className={styles.chatIcon} style={{ color: 'darkorange', height: "200px", width: "200px" }} />
                     <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
                     <h2 className={styles.chatEmptyStateSubtitle}>
-                        This app does not have authentication configured. Please add an identity provider by finding your app in the 
-                        <a href="https://portal.azure.com/" target="_blank"> Azure Portal </a>
-                        and following 
-                         <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</a>.
+                        This app does not have authentication configured. Please add an identity provider by finding your app in the
+                        <Link href="https://portal.azure.com/" target="_blank"> Azure Portal </Link>
+                        and following
+                        <Link href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</Link>.
                     </h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>Authentication configuration takes a few minutes to apply. </strong></h2>
-                    <h2 className={styles.chatEmptyStateSubtitle} style={{fontSize: "20px"}}><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></h2>
-                </Stack>
+                    <Title2 className={styles.chatEmptyStateSubtitle} ><strong>Authentication configuration takes a few minutes to apply. </strong></Title2>
+                    <Title2 className={styles.chatEmptyStateSubtitle} ><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></Title2>
+                </div>
             ) : (
-                <Stack horizontal className={styles.chatRoot}>
-                    <div className={styles.chatContainer}>
+                <div className={Newstyles.container}>
+                    <div className={Newstyles.chatContainer}>
                         {!messages || messages.length < 1 ? (
-                            <Stack className={styles.chatEmptyState}>
-                                <img
+                            <div className={Newstyles.chatEmptyState}>
+                                <Image
                                     src={Azure}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
-                            </Stack>
+                                <Title1>Start chatting</Title1>
+                                <Subtitle2>This chatbot is configured to answer your questions</Subtitle2>
+                            </div>
                         ) : (
-                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">
+                            <div className={Newstyles.chatMessageStream} role="log">
                                 {messages.map((answer, index) => (
                                     <>
-                                        {answer.role === "user" ? (
-                                            <div className={styles.chatMessageUser} tabIndex={0}>
-                                                <div className={styles.chatMessageUserMessage}>{answer.content}</div>
-                                            </div>
-                                        ) : (
-                                            answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
-                                                <Answer
-                                                    answer={{
-                                                        answer: answer.content,
-                                                        citations: parseCitationFromMessage(messages[index - 1]),
-                                                    }}
-                                                    onCitationClicked={c => onShowCitation(c)}
-                                                />
-                                            </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
-                                                <Stack horizontal className={styles.chatMessageErrorContent}>
-                                                    <ErrorCircleRegular className={styles.errorIcon} style={{color: "rgba(182, 52, 67, 1)"}} />
-                                                    <span>Error</span>
-                                                </Stack>
-                                                <span className={styles.chatMessageErrorContent}>{answer.content}</span>
-                                            </div> : null
-                                        )}
+                                        {
+                                            answer.role === "user" ? (
+                                                <div className={Newstyles.questionDisplayRow}>
+                                                    <QuestionDisplay
+                                                        content={answer.content}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                                                    <Answer
+                                                        answer={{
+                                                            answer: answer.content,
+                                                            citations: parseCitationFromMessage(messages[index - 1]),
+                                                        }}
+                                                        onCitationClicked={c => onShowCitation(c)}
+                                                    />
+                                                </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
+                                                    <div className={styles.chatMessageErrorContent}>
+                                                        <ErrorCircleRegular className={styles.errorIcon} style={{ color: "rgba(182, 52, 67, 1)" }} />
+                                                        <span>Error</span>
+                                                    </div>
+                                                    <span className={styles.chatMessageErrorContent}>{answer.content}</span>
+                                                </div> : null
+                                            )
+                                        }
                                     </>
                                 ))}
                                 {showLoadingMessage && (
@@ -637,68 +638,26 @@ const Chat = () => {
                             </div>
                         )}
 
-                        <Stack horizontal className={styles.chatInput}>
-                            {isLoading && (
-                                <Stack 
-                                    horizontal
-                                    className={styles.stopGeneratingContainer}
-                                    role="button"
-                                    aria-label="Stop generating"
-                                    tabIndex={0}
-                                    onClick={stopGenerating}
-                                    onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
-                                    >
-                                        <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true"/>
-                                        <span className={styles.stopGeneratingText} aria-hidden="true">Stop generating</span>
-                                </Stack>
-                            )}
-                            <Stack>
-                                {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <CommandBarButton
-                                    role="button"
-                                    styles={{ 
-                                        icon: { 
-                                            color: '#FFFFFF',
-                                        },
-                                        root: {
-                                            color: '#FFFFFF',
-                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)"
-                                        },
-                                        rootDisabled: {
-                                            background: "#BDBDBD"
-                                        }
-                                    }}
-                                    className={styles.newChatIcon}
-                                    iconProps={{ iconName: 'Add' }}
-                                    onClick={newChat}
-                                    disabled={disabledButton()}
-                                    aria-label="start a new chat button"
-                                />}
-                                <CommandBarButton
-                                    role="button"
-                                    styles={{ 
-                                        icon: { 
-                                            color: '#FFFFFF',
-                                        },
-                                        root: {
-                                            color: '#FFFFFF',
-                                            background: disabledButton() ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                                            cursor: disabledButton() ? "" : "pointer"
-                                        },
-                                    }}
-                                    className={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? styles.clearChatBroom : styles.clearChatBroomNoCosmos}
-                                    iconProps={{ iconName: 'Broom' }}
+                        <div className={Newstyles.chatInput}>
+                            <div className={Newstyles.chatButtonsLeftContainer}>
+                                {
+                                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
+                                        <Button
+                                            icon={<Add16Regular />}
+                                            onClick={newChat}
+                                            disabled={disabledButton()}
+                                            aria-label="start a new chat button"
+                                        />
+                                    )
+                                }
+                                <Button
+                                    icon={<Broom16Regular />}
                                     onClick={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat : newChat}
                                     disabled={disabledButton()}
                                     aria-label="clear chat button"
                                 />
-                                <Dialog
-                                    hidden={hideErrorDialog}
-                                    onDismiss={handleErrorDialogClose}
-                                    dialogContentProps={errorDialogContentProps}
-                                    modalProps={modalProps}
-                                >
-                                </Dialog>
-                            </Stack>
+
+                            </div>
                             <QuestionInput
                                 clearOnSend
                                 placeholder="Type a new question..."
@@ -708,30 +667,72 @@ const Chat = () => {
                                 }}
                                 conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                             />
-                        </Stack>
+                        </div>
+                        {
+                            // isLoading show Stop Generating button
+                            isLoading && (
+                                <div className={Newstyles.stopGeneratingContainer}>
+                                    <Button
+                                        icon={<Stop24Regular />}
+                                        aria-label="Stop generating"
+                                        tabIndex={0}
+                                        onClick={stopGenerating}
+                                        onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
+                                    >
+                                        Stop generating
+                                    </Button>
+                                </div>
+                            )
+                        }
                     </div>
                     {/* Citation Panel */}
-                    {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && ( 
-                    <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                        <Stack aria-label="Citations Panel Header Container" horizontal className={styles.citationPanelHeaderContainer} horizontalAlign="space-between" verticalAlign="center">
-                            <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
-                            <IconButton iconProps={{ iconName: 'Cancel'}} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)}/>
-                        </Stack>
-                        <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
-                        <div tabIndex={0}> 
-                        <ReactMarkdown 
-                            linkTarget="_blank"
-                            className={styles.citationPanelContent}
-                            children={activeCitation.content} 
-                            remarkPlugins={[remarkGfm]} 
-                            rehypePlugins={[rehypeRaw]}
-                        />
-                        </div>
-                    </Stack.Item>
-                )}
-                {(appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && <ChatHistoryPanel/>}
-                </Stack>
+                    {
+                        messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
+                            <div className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
+                                <div aria-label="Citations Panel Header Container" className={Newstyles.citationPanelHeaderContainer} >
+                                    <span aria-label="Citations" className={Newstyles.citationPanelHeader}>Citations</span>
+                                    <Button icon={<CalendarCancel16Regular />} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)} />
+                                </div>
+                                <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
+                                <div tabIndex={0}>
+                                    <ReactMarkdown
+                                        linkTarget="_blank"
+                                        className={styles.citationPanelContent}
+                                        children={activeCitation.content}
+                                        remarkPlugins={[remarkGfm]}
+                                        rehypePlugins={[rehypeRaw]}
+                                    />
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    <ChatHistoryPanel
+                        open={appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured}
+                    />
+                </div>
             )}
+            <Dialog
+                open={false}
+                onOpenChange={handleErrorDialogClose}
+            >
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>{errorDialogContentProps.title}ERROR DIALOG TO BE DONE</DialogTitle>
+                        <DialogContent>
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
+                            exercitationem cumque repellendus eaque est dolor eius expedita
+                            nulla ullam? Tenetur reprehenderit aut voluptatum impedit voluptates
+                            in natus iure cumque eaque?
+                        </DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">Close</Button>
+                            </DialogTrigger>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
         </div>
     );
 };

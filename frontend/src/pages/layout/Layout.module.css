@@ -37,38 +37,11 @@
     margin-left: 36px;
 }
 
-.shareButtonContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    width: 86px;
-    height: 32px;
-    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
-    border-radius: 4px;
-    flex: none;
-    order: 1;
-    flex-grow: 0;
-    position: absolute;
-    right: 20px;
-    cursor: pointer;
-}
 
 .shareButton {
     color: #FFFFFF;
 }
 
-.shareButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #FFFFFF;
-}
 
 .urlTextBox {
     font-style: normal;
@@ -78,36 +51,4 @@
     color: #707070;
     border: 1px solid #D1D1D1;
     border-radius: 4px;
-}
-
-.copyButtonContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    background: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-    cursor: pointer;
-    background: #D1D1D1;
-}
-
-.copyButton {
-    color: #424242;
-}
-
-.copyButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #242424;
 }
