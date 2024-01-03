@@ -659,12 +659,15 @@ const Chat = () => {
                                         icon: { 
                                             color: '#FFFFFF',
                                         },
+                                        iconDisabled: {
+                                            color: "#BDBDBD !important"
+                                        },
                                         root: {
                                             color: '#FFFFFF',
                                             background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)"
                                         },
                                         rootDisabled: {
-                                            background: "#BDBDBD"
+                                            background: "#F0F0F0"
                                         }
                                     }}
                                     className={styles.newChatIcon}
@@ -679,11 +682,16 @@ const Chat = () => {
                                         icon: { 
                                             color: '#FFFFFF',
                                         },
+                                        iconDisabled: {
+                                            color: "#BDBDBD !important" ,
+                                        },
                                         root: {
                                             color: '#FFFFFF',
-                                            background: disabledButton() ? "#BDBDBD" : "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                                            cursor: disabledButton() ? "" : "pointer"
+                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
                                         },
+                                        rootDisabled: {
+                                            background: "#F0F0F0"
+                                        }
                                     }}
                                     className={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? styles.clearChatBroom : styles.clearChatBroomNoCosmos}
                                     iconProps={{ iconName: 'Broom' }}
