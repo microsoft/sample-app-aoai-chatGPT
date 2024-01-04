@@ -23,14 +23,14 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://acrvita.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_281cc05af94b4a77a124615db4c4154b }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_f4fa99a223484df4ae09019c759bfd2e }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_dcc2a4d605094182b0812cd5dc09d216 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_e329efb8ce9e4ff79692adf38a6e20c2 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: acrvita.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_281cc05af94b4a77a124615db4c4154b }}/sample-app-aoai-chatgpt-vita:${{ github.sha }}
+        tags: acrvita.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_dcc2a4d605094182b0812cd5dc09d216 }}/fruoccopublic.azurecr.io/sample-app-aoai-chatgpt-vita:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'vita-axerweb-com-br'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_c581f1a44c8d4a19a2bd41ec8fc77e7d }}
-        images: 'acrvita.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_281cc05af94b4a77a124615db4c4154b }}/sample-app-aoai-chatgpt-vita:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_7933591a13a54e258e3704b5f916e0dd }}
+        images: 'acrvita.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_dcc2a4d605094182b0812cd5dc09d216 }}/fruoccopublic.azurecr.io/sample-app-aoai-chatgpt-vita:${{ github.sha }}'
