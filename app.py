@@ -600,6 +600,17 @@ def conversation_internal(request_body):
 
 ## Conversation History API ## 
 @app.route("/history/generate", methods=["POST"])
+
+## Mensagem inicial
+@app.route("/", methods=["GET"])
+def homepage():
+    # Enviar "OLA" automaticamente
+    ola_response = {
+        "role": "user",
+        "content": "OLA"
+    }  
+    return jsonify({"messages": [ola_response]}), 200
+    
 def add_conversation():
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
