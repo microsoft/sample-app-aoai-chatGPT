@@ -590,7 +590,7 @@ const Chat = () => {
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>Olá, sou Vita</h1>
+                                <h1 className={styles.chatEmptyStateTitle}>Olá, sou Vita!</h1>
                                 <h2 className={styles.chatEmptyStateSubtitle}>Serei seu assistente e ajudarei a passar por esse momento difícil. Pode me dizer seu nome?</h2>
                             </Stack>
                         ) : (
