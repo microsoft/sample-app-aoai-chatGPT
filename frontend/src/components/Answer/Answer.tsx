@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useBoolean } from "@fluentui/react-hooks"
-import { FontIcon, Stack, Text } from "@fluentui/react";
+import { FontIcon, Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
 
@@ -10,7 +10,7 @@ import { parseAnswer } from "./AnswerParser";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
-import { Card } from "@fluentui/react-components";
+import { Card, Text } from "@fluentui/react-components";
 
 interface Props {
     answer: AskResponse;
@@ -66,7 +66,7 @@ export const Answer = ({
                         remarkPlugins={[remarkGfm, supersub]}
                         children={parsedAnswer.markdownFormatText}
                         className={styles.answerText}
-                    /> 
+                    />
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
                     {!!parsedAnswer.citations.length && (

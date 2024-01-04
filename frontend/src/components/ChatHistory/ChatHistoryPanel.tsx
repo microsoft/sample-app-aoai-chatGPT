@@ -1,4 +1,4 @@
-import { CommandBarButton, ContextualMenu, DefaultButton, Dialog, DialogFooter, DialogType, ICommandBarStyles, IContextualMenuItem, IStackStyles, PrimaryButton, Spinner, SpinnerSize, Stack, StackItem, Text } from "@fluentui/react";
+
 import { useBoolean } from '@fluentui/react-hooks';
 
 import styles from "./ChatHistoryPanel.module.css"
@@ -7,7 +7,10 @@ import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
 import ChatHistoryList from "./ChatHistoryList";
 import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
-import { Drawer, DrawerBody } from "@fluentui/react-components";
+import { Text, Button, Drawer, DrawerBody, DrawerHeader, DrawerHeaderNavigation, Menu, MenuList, MenuPopover, MenuTrigger, Title3, Toolbar, ToolbarButton, Dialog, Spinner, DialogSurface, DialogTitle, DialogActions, DialogBody } from "@fluentui/react-components";
+import { Delete24Regular, Dismiss24Regular, MoreHorizontal24Filled } from "@fluentui/react-icons";
+import { ChatHistoryStyles } from "./ChatHistoryStyles";
+import { Stack, StackItem } from '@fluentui/react';
 
 interface ChatHistoryPanelProps {
     open: boolean | undefined;
@@ -17,53 +20,17 @@ export enum ChatHistoryPanelTabs {
     History = "History"
 }
 
-const commandBarStyle: ICommandBarStyles = {
-    root: {
-        padding: '0',
-        display: 'flex',
-        justifyContent: 'center',
-        backgroundColor: 'transparent'
-    },
-};
-
-const commandBarButtonStyle: Partial<IStackStyles> = { root: { height: '50px' } };
-
 export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
+    const NewStyles = ChatHistoryStyles();
     const appStateContext = useContext(AppStateContext);
     const [showDrawer, setShowDrawer] = React.useState(false);
-    const [showContextualMenu, setShowContextualMenu] = React.useState(false);
     const [hideClearAllDialog, { toggle: toggleClearAllDialog }] = useBoolean(true);
     const [clearing, setClearing] = React.useState(false)
     const [clearingError, setClearingError] = React.useState(false)
 
-    const clearAllDialogContentProps = {
-        type: DialogType.close,
-        title: !clearingError ? 'Are you sure you want to clear all chat history?' : 'Error deleting all of chat history',
-        closeButtonAriaLabel: 'Close',
-        subText: !clearingError ? 'All chat history will be permanently removed.' : 'Please try again. If the problem persists, please contact the site administrator.',
-    };
-
-    const modalProps = {
-        titleAriaId: 'labelId',
-        subtitleAriaId: 'subTextId',
-        isBlocking: true,
-        styles: { main: { maxWidth: 450 } },
-    }
-
-    const menuItems: IContextualMenuItem[] = [
-        { key: 'clearAll', text: 'Clear all chat history', iconProps: { iconName: 'Delete' } },
-    ];
-
     const handleHistoryClick = () => {
         appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
     };
-
-    const onShowContextualMenu = React.useCallback((ev: React.MouseEvent<HTMLElement>) => {
-        ev.preventDefault(); // don't navigate
-        setShowContextualMenu(true);
-    }, []);
-
-    const onHideContextualMenu = React.useCallback(() => setShowContextualMenu(false), []);
 
     const onClearAllChatHistory = async () => {
         setClearing(true)
@@ -99,40 +66,36 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                 position='end'
                 type='overlay'
             >
+                <DrawerHeader className={NewStyles.panelHeader}>
+                    <Title3>Chat History</Title3>
+                    <DrawerHeaderNavigation>
+                        <Toolbar>
+                            <Menu>
+                                <MenuTrigger>
+                                    <ToolbarButton aria-label="More" icon={<MoreHorizontal24Filled />} />
+                                </MenuTrigger>
+                                <MenuPopover>
+                                    <MenuList>
+                                        <Button
+                                            onClick={toggleClearAllDialog}
+                                            icon={<Delete24Regular />}
+                                        >
+                                            Clear all chat history
+                                        </Button>
+                                    </MenuList>
+                                </MenuPopover>
+                            </Menu>
+                            <ToolbarButton
+                                icon={<Dismiss24Regular />}
+                                title={"Hide"}
+                                onClick={handleHistoryClick}
+                                aria-label={"hide button"}
+                                role="button"
+                            />
+                        </Toolbar>
+                    </DrawerHeaderNavigation>
+                </DrawerHeader>
                 <DrawerBody>
-                    <Stack horizontal horizontalAlign='space-between' verticalAlign='center' wrap aria-label="chat history header">
-                        <StackItem>
-                            <Text role="heading" aria-level={2} style={{ alignSelf: "center", fontWeight: "600", fontSize: "18px", marginRight: "auto", paddingLeft: "20px" }}>Chat history</Text>
-                        </StackItem>
-                        <Stack verticalAlign="start">
-                            <Stack horizontal styles={commandBarButtonStyle}>
-                                <CommandBarButton
-                                    iconProps={{ iconName: 'More' }}
-                                    title={"Clear all chat history"}
-                                    onClick={onShowContextualMenu}
-                                    aria-label={"clear all chat history"}
-                                    styles={commandBarStyle}
-                                    role="button"
-                                    id="moreButton"
-                                />
-                                <ContextualMenu
-                                    items={menuItems}
-                                    hidden={!showContextualMenu}
-                                    target={"#moreButton"}
-                                    onItemClick={toggleClearAllDialog}
-                                    onDismiss={onHideContextualMenu}
-                                />
-                                <CommandBarButton
-                                    iconProps={{ iconName: 'Cancel' }}
-                                    title={"Hide"}
-                                    onClick={handleHistoryClick}
-                                    aria-label={"hide button"}
-                                    styles={commandBarStyle}
-                                    role="button"
-                                />
-                            </Stack>
-                        </Stack>
-                    </Stack>
                     <Stack aria-label="chat history panel content"
                         styles={{
                             root: {
@@ -156,14 +119,14 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                                 <Stack>
                                     <Stack horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
                                         <StackItem>
-                                            <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 16 }}>
+                                            <Text style={{ alignSelf: 'center' }}>
                                                 {appStateContext?.state.isCosmosDBAvailable?.status && <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>}
                                                 {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
 
                                             </Text>
                                         </StackItem>
                                         <StackItem>
-                                            <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                                            <Text style={{ alignSelf: 'center' }}>
                                                 <span>Chat history can't be saved at this time</span>
                                             </Text>
                                         </StackItem>
@@ -174,10 +137,10 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                                 <Stack>
                                     <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
                                         <StackItem style={{ justifyContent: 'center', alignItems: 'center' }}>
-                                            <Spinner style={{ alignSelf: "flex-start", height: "100%", marginRight: "5px" }} size={SpinnerSize.medium} />
+                                            <Spinner style={{ alignSelf: "flex-start", height: "100%", marginRight: "5px" }} />
                                         </StackItem>
                                         <StackItem>
-                                            <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                                            <Text style={{ alignSelf: 'center' }}>
                                                 <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
                                             </Text>
                                         </StackItem>
@@ -189,15 +152,17 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                 </DrawerBody>
             </Drawer>
             <Dialog
-                hidden={hideClearAllDialog}
-                onDismiss={clearing ? () => { } : onHideClearAllDialog}
-                dialogContentProps={clearAllDialogContentProps}
-                modalProps={modalProps}
+                open={!hideClearAllDialog}
             >
-                <DialogFooter>
-                    {!clearingError && <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />}
-                    <DefaultButton onClick={onHideClearAllDialog} disabled={clearing} text={!clearingError ? "Cancel" : "Close"} />
-                </DialogFooter>
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>Clear all chat history?</DialogTitle>
+                        <DialogActions>
+                            {!clearingError && <Button appearance='primary' onClick={onClearAllChatHistory} disabled={clearing} >Clear all </Button>}
+                            <Button onClick={onHideClearAllDialog} disabled={clearing}>{!clearingError ? "Cancel" : "Close"}</Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
             </Dialog>
         </>
     );
