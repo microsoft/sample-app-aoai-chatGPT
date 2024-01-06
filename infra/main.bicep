@@ -258,6 +258,27 @@ module searchServiceContribRoleUser 'core/security/role.bicep' = {
   }
 }
 
+
+module openAiContributorRoleUser 'core/security/role.bicep' = if (authType == 'rbac') {
+  scope: searchServiceResourceGroup
+  name: 'openai-contributor-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'a001fd3d-188f-4b5d-821b-7da978bf7442'
+    principalType: 'User'
+  }
+}
+
+module cognitiveServicesContributorRoleUser 'core/security/role.bicep' = if (authType == 'rbac') {
+  scope: searchServiceResourceGroup
+  name: 'cognitive-services-contributor-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68'
+    principalType: 'User'
+  }
+}
+
 // SYSTEM IDENTITIES
 module openAiRoleBackend 'core/security/role.bicep' = {
   scope: openAiResourceGroup
