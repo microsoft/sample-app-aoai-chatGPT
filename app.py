@@ -13,6 +13,7 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 
 load_dotenv()
+print(os.environ)
 
 app = Flask(__name__, static_folder="static")
 
@@ -162,12 +163,6 @@ def should_use_data():
 def format_as_ndjson(obj: dict) -> str:
     return json.dumps(obj, ensure_ascii=False) + "\n"
 
-def parse_multi_columns(columns: str) -> list:
-    if "|" in columns:
-        return columns.split("|")
-    else:
-        return columns.split(",")
-
 def fetchUserGroups(userToken, nextLink=None):
     # Recursively fetch group membership
     if nextLink:
@@ -241,7 +236,7 @@ def prepare_body_headers_with_data(request):
             filter = generateFilterString(userToken)
             if DEBUG_LOGGING:
                 logging.debug(f"FILTER: {filter}")
-
+    
         body["dataSources"].append(
             {
                 "type": "AzureCognitiveSearch",
@@ -250,11 +245,11 @@ def prepare_body_headers_with_data(request):
                     "key": AZURE_SEARCH_KEY,
                     "indexName": AZURE_SEARCH_INDEX,
                     "fieldsMapping": {
-                        "contentFields": parse_multi_columns(AZURE_SEARCH_CONTENT_COLUMNS) if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                        "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
                         "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
                         "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
                         "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                        "vectorFields": parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if AZURE_SEARCH_VECTOR_COLUMNS else []
+                        "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
                     "topNDocuments": AZURE_SEARCH_TOP_K,
@@ -264,7 +259,7 @@ def prepare_body_headers_with_data(request):
                     "filter": filter,
                     "strictness": int(AZURE_SEARCH_STRICTNESS)
                 }
-            })
+           })
     elif DATASOURCE_TYPE == "AzureCosmosDB":
         # Set query type
         query_type = "vector"
@@ -278,11 +273,11 @@ def prepare_body_headers_with_data(request):
                     "databaseName": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                     "containerName": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                     "fieldsMapping": {
-                        "contentFields": parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS) if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                        "contentFields": AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
                         "titleField": AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
                         "urlField": AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
                         "filepathField": AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
-                        "vectorFields": parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS) if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                        "vectorFields": AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
                     "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
@@ -310,11 +305,11 @@ def prepare_body_headers_with_data(request):
                             "encodedApiKey": ELASTICSEARCH_ENCODED_API_KEY,
                             "indexName": ELASTICSEARCH_INDEX,
                             "fieldsMapping": {
-                                "contentFields": parse_multi_columns(ELASTICSEARCH_CONTENT_COLUMNS) if ELASTICSEARCH_CONTENT_COLUMNS else [],
+                                "contentFields": ELASTICSEARCH_CONTENT_COLUMNS.split("|") if ELASTICSEARCH_CONTENT_COLUMNS else [],
                                 "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
                                 "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
                                 "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
-                                "vectorFields": parse_multi_columns(ELASTICSEARCH_VECTOR_COLUMNS) if ELASTICSEARCH_VECTOR_COLUMNS else []
+                                "vectorFields": ELASTICSEARCH_VECTOR_COLUMNS.split("|") if ELASTICSEARCH_VECTOR_COLUMNS else []
                             },
                             "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
                             "topNDocuments": int(ELASTICSEARCH_TOP_K),
@@ -492,6 +487,8 @@ def conversation_with_data(request_body):
     body, headers = prepare_body_headers_with_data(request)
     base_url = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+    # endpoint = f"{base_url}openai/deployments/{AZURE_OPENAI_MODEL}/extensions?api-version={AZURE_OPENAI_PREVIEW_API_VERSION}"
+
     history_metadata = request_body.get("history_metadata", {})
 
     if not SHOULD_STREAM:

@@ -73,20 +73,20 @@ const Layout = () => {
                 // className={styles.headerContainer}
                 >
                     <Stack horizontal verticalAlign="center">
-                        <img
+                        {/* <img
                             src={Azure}
                             className={styles.headerIcon}
                             aria-hidden="true"
-                        />
+                        /> */}
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Azure AI</h1>
+                            <h1 className={styles.headerTitle}>Knowledge Chatbot</h1>
                         </Link>
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
                             {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) && 
                                 <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"}/>    
                             }
-                            <ShareButton onClick={handleShareClick} />
+                            {/* <ShareButton onClick={handleShareClick} /> */}
                     </Stack>
 
                 </Stack>
