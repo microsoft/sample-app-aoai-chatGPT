@@ -44,5 +44,5 @@ output id string = account.id
 output name string = account.name
 output skuName string = account.sku.name
 output key string = account.listKeys().key1
-output principalId string = account.identity.principalId
+output identityPrincipalId string = account.identity.principalId
 

@@ -42,4 +42,4 @@ output endpoint string = 'https://${name}.search.windows.net/'
 output name string = search.name
 output skuName string = sku.name
 output adminKey string = search.listAdminKeys().primaryKey
-output principalId string = search.identity.principalId
+output identityPrincipalId string = search.identity.principalId
