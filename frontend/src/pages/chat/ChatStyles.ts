@@ -9,16 +9,17 @@ export const ChatStyles = makeStyles({
     },
 
     chatContainer: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            //background: 'radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%)',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12)',
-            ...shorthands.borderRadius('8px'),
-            overflowY: 'auto',
-            height: 'calc(100vh - 130px)',
-            ...shorthands.padding('30px'),
-            boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        //background: 'radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%)',
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12)',
+        ...shorthands.borderRadius('8px'),
+        overflowY: 'auto',
+        height: 'calc(100vh - 130px)',
+        ...shorthands.padding('30px'),
+        boxSizing: 'border-box',
     },
 
     questionDisplayRow: {
@@ -61,11 +62,11 @@ export const ChatStyles = makeStyles({
 
     citationPanelHeaderContainer: {
         width: '100%',
-          // display horizontally and equal space between
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+        // display horizontally and equal space between
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
 
     citationPanelHeader: {
@@ -75,7 +76,7 @@ export const ChatStyles = makeStyles({
         lineHeight: '24px',
         color: '#000000',
         order: 0,
-        flexGrow: 0      
+        flexGrow: 0
     },
 
     stopGeneratingContainer: {
@@ -91,6 +92,14 @@ export const ChatStyles = makeStyles({
         maxWidth: '1080px',
     },
 
-});
+    chatInputContainer: {
+        // display vertically and centered  
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        maxWidth: '1080px',
+        height: '165px',
+    },
 
-  
+});

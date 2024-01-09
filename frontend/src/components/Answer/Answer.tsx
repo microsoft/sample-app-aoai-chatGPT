@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useBoolean } from "@fluentui/react-hooks"
 import { FontIcon, Stack } from "@fluentui/react";
 
-import styles from "./Answer.module.css";
-
 import { AskResponse, Citation } from "../../api";
 import { parseAnswer } from "./AnswerParser";
 
@@ -11,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
 import { Card, Text } from "@fluentui/react-components";
+import { AnswerStyles } from "./AnswerStyles";
 
 interface Props {
     answer: AskResponse;
@@ -21,6 +20,7 @@ export const Answer = ({
     answer,
     onCitationClicked
 }: Props) => {
+    const styles = AnswerStyles();
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
     const filePathTruncationLimit = 50;
 

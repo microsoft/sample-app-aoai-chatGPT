@@ -637,53 +637,55 @@ const Chat = () => {
                                 <div ref={chatMessageStreamEnd} />
                             </div>
                         )}
+                        <div className={Newstyles.chatInputContainer}>
+                            <div className={Newstyles.chatInput}>
+                                <div className={Newstyles.chatButtonsLeftContainer}>
+                                    {
+                                        appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
+                                            <Button
+                                                icon={<Add16Regular />}
+                                                onClick={newChat}
+                                                disabled={disabledButton()}
+                                                aria-label="start a new chat button"
+                                            />
+                                        )
+                                    }
+                                    <Button
+                                        icon={<Broom16Regular />}
+                                        onClick={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat : newChat}
+                                        disabled={disabledButton()}
+                                        aria-label="clear chat button"
+                                    />
 
-                        <div className={Newstyles.chatInput}>
-                            <div className={Newstyles.chatButtonsLeftContainer}>
-                                {
-                                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
-                                        <Button
-                                            icon={<Add16Regular />}
-                                            onClick={newChat}
-                                            disabled={disabledButton()}
-                                            aria-label="start a new chat button"
-                                        />
-                                    )
-                                }
-                                <Button
-                                    icon={<Broom16Regular />}
-                                    onClick={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat : newChat}
-                                    disabled={disabledButton()}
-                                    aria-label="clear chat button"
+                                </div>
+                                <QuestionInput
+                                    clearOnSend
+                                    placeholder="Type a new question..."
+                                    disabled={isLoading}
+                                    onSend={(question, id) => {
+                                        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
+                                    }}
+                                    conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                                 />
 
                             </div>
-                            <QuestionInput
-                                clearOnSend
-                                placeholder="Type a new question..."
-                                disabled={isLoading}
-                                onSend={(question, id) => {
-                                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
-                                }}
-                                conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
-                            />
+                            {
+                                // isLoading show Stop Generating button
+                                isLoading && (
+                                    <div className={Newstyles.stopGeneratingContainer}>
+                                        <Button
+                                            icon={<Stop24Regular />}
+                                            aria-label="Stop generating"
+                                            tabIndex={0}
+                                            onClick={stopGenerating}
+                                            onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
+                                        >
+                                            Stop generating
+                                        </Button>
+                                    </div>
+                                )
+                            }
                         </div>
-                        {
-                            // isLoading show Stop Generating button
-                            isLoading && (
-                                <div className={Newstyles.stopGeneratingContainer}>
-                                    <Button
-                                        icon={<Stop24Regular />}
-                                        aria-label="Stop generating"
-                                        tabIndex={0}
-                                        onClick={stopGenerating}
-                                        onKeyDown={e => e.key === "Enter" || e.key === " " ? stopGenerating() : null}
-                                    >
-                                        Stop generating
-                                    </Button>
-                                </div>
-                            )
-                        }
                     </div>
                     {/* Citation Panel */}
                     {
