@@ -191,7 +191,7 @@ const Chat = () => {
                             runningText += obj;
                             result = JSON.parse(runningText);
                             result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
+                                obj.id = result.id;
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
@@ -323,7 +323,7 @@ const Chat = () => {
                             runningText += obj;
                             result = JSON.parse(runningText);
                             result.choices[0].messages.forEach((obj) => {
-                                obj.id = uuid();
+                                obj.id = result.id;
                                 obj.date = new Date().toISOString();
                             })
                             setShowLoadingMessage(false);
@@ -607,6 +607,8 @@ const Chat = () => {
                                                     answer={{
                                                         answer: answer.content,
                                                         citations: parseCitationFromMessage(messages[index - 1]),
+                                                        message_id: answer.id,
+                                                        feedback: answer.feedback
                                                     }}
                                                     onCitationClicked={c => onShowCitation(c)}
                                                 />
@@ -626,7 +628,7 @@ const Chat = () => {
                                             <Answer
                                                 answer={{
                                                     answer: "Generating answer...",
-                                                    citations: []
+                                                    citations: [],
                                                 }}
                                                 onCitationClicked={() => null}
                                             />

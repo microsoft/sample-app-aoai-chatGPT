@@ -6,3 +6,5 @@ frontend/node_modules
 __pycache__/
 .ipynb_checkpoints/
 static/
+static/index.html
+static/index.html
