@@ -540,7 +540,6 @@ def stream_without_data(response, history_metadata={}):
         }
         yield format_as_ndjson(response_obj)
 
-
 def conversation_without_data(request_body):
     openai.api_type = "azure"
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
@@ -592,7 +591,6 @@ def conversation_without_data(request_body):
         return jsonify(response_obj), 200
     else:
         return Response(stream_without_data(response, history_metadata), mimetype='text/event-stream')
-
 
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
@@ -690,7 +688,7 @@ def update_conversation():
                 )
             # write the assistant message
             cosmos_conversation_client.create_message(
-                uuid=str(uuid.uuid4()),
+                uuid=message_uuid,
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
