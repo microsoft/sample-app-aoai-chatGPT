@@ -52,10 +52,9 @@ export const Answer = ({
 
     useEffect(() => {
         if (answer.message_id == undefined) return;
-        if (feedbackState === undefined) return;
         
         let currentFeedbackState;
-        if (appStateContext?.state.feedbackState && answer.message_id in appStateContext?.state.feedbackState) {
+        if (appStateContext?.state.feedbackState && appStateContext?.state.feedbackState[answer.message_id]) {
             currentFeedbackState = appStateContext?.state.feedbackState[answer.message_id];
         } else {
             currentFeedbackState = initializeAnswerFeedback(answer);
@@ -194,13 +193,17 @@ export const Answer = ({
                                     aria-hidden="false"
                                     aria-label="Like this response"
                                     onClick={() => onLikeResponseClicked()}
-                                    style={feedbackState === Feedback.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={feedbackState === Feedback.Positive || appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive ? 
+                                        { color: "darkgreen", cursor: "pointer" } : 
+                                        { color: "slategray", cursor: "pointer" }}
                                 />
                                 <ThumbDislike20Filled
                                     aria-hidden="false"
                                     aria-label="Dislike this response"
                                     onClick={() => onDislikeResponseClicked()}
-                                    style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ? 
+                                        { color: "darkred", cursor: "pointer" } : 
+                                        { color: "slategray", cursor: "pointer" }}
                                 />
                             </Stack>}
                         </Stack.Item>
