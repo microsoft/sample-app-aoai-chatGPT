@@ -10,6 +10,7 @@ import { isEmpty } from "lodash-es";
 
 import styles from "./Chat.module.css";
 import Contoso from "../../assets/Contoso.svg";
+import Octo from "../../assets/octo.png";
 
 import {
     ChatMessage,
@@ -586,7 +587,7 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={Contoso}
+                                    src={Octo}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
@@ -689,7 +690,7 @@ const Chat = () => {
                                         },
                                         root: {
                                             color: '#FFFFFF',
-                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #8e8f8f 33.63%, #8e8f8f 70.31%, #8e8f8f 100%)",
                                         },
                                         rootDisabled: {
                                             background: "#F0F0F0"
