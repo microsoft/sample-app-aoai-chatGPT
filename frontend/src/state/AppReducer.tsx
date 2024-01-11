@@ -1,4 +1,4 @@
-import { Conversation, fetchChatHistoryInit, historyList } from '../api';
+import { Conversation, Feedback, fetchChatHistoryInit, historyList } from '../api';
 import { Action, AppState } from './AppProvider';
 
 // Define the reducer function
@@ -67,6 +67,14 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
             return { ...state, isCosmosDBAvailable: action.payload };
         case 'FETCH_FRONTEND_SETTINGS':
             return { ...state, frontendSettings: action.payload };    
+        case 'SET_FEEDBACK_STATE':
+            return {
+                ...state,
+                feedbackState: {
+                    ...state.feedbackState,
+                    [action.payload.answerId]: action.payload.feedback,
+                },
+            };    
         default:
             return state;
       }
