@@ -191,7 +191,7 @@ def should_use_data():
 SHOULD_USE_DATA = should_use_data()
 
 # Initialize Azure OpenAI Client
-def init_openai_client():
+def init_openai_client(use_data=SHOULD_USE_DATA):
     azure_openai_client = None
     try:
         # Endpoint
@@ -217,7 +217,7 @@ def init_openai_client():
             'x-ms-useragent': USER_AGENT
         }
 
-        if SHOULD_USE_DATA:
+        if use_data:
             base_url = f"{str(endpoint).rstrip('/')}/openai/deployments/{deployment}/extensions"
             azure_openai_client = AsyncAzureOpenAI(
                 base_url=str(base_url),
@@ -918,7 +918,7 @@ async def generate_title(conversation_messages):
     messages.append({'role': 'user', 'content': title_prompt})
 
     try:
-        azure_openai_client = init_openai_client()
+        azure_openai_client = init_openai_client(use_data=False)
         response = await azure_openai_client.chat.completions.create(
             model=AZURE_OPENAI_MODEL,
             messages=messages,
