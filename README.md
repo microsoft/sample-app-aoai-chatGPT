@@ -79,6 +79,12 @@ To enable chat history, you will need to set up CosmosDB resources. The ARM temp
 
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:5000.
 
+#### Local Setup: Enable Message Feedback
+To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
+
+/.env
+- `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
+
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
 

@@ -4,7 +4,7 @@ from azure.cosmos.aio import CosmosClient
   
 class CosmosConversationClient():
     
-    def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str):
+    def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str, enable_message_feedback: bool = False):
         self.cosmosdb_endpoint = cosmosdb_endpoint
         self.credential = credential
         self.database_name = database_name
@@ -12,6 +12,7 @@ class CosmosConversationClient():
         self.cosmosdb_client = CosmosClient(self.cosmosdb_endpoint, credential=credential)
         self.database_client = self.cosmosdb_client.get_database_client(database_name)
         self.container_client = self.database_client.get_container_client(container_name)
+        self.enable_message_feedback = enable_message_feedback
 
     async def ensure(self):
         try:
@@ -108,9 +109,9 @@ class CosmosConversationClient():
         else:
             return conversations[0]
  
-    async def create_message(self, conversation_id, user_id, input_message: dict):
+    async def create_message(self, uuid, conversation_id, user_id, input_message: dict):
         message = {
-            'id': str(uuid.uuid4()),
+            'id': uuid,
             'type': 'message',
             'userId' : user_id,
             'createdAt': datetime.utcnow().isoformat(),
@@ -119,6 +120,9 @@ class CosmosConversationClient():
             'role': input_message['role'],
             'content': input_message['content']
         }
+
+        if self.enable_message_feedback:
+            message['feedback'] = ''
         
         resp = await self.container_client.upsert_item(message)  
         if resp:
@@ -126,6 +130,15 @@ class CosmosConversationClient():
             conversation = await self.get_conversation(user_id, conversation_id)
             conversation['updatedAt'] = message['createdAt']
             await self.upsert_conversation(conversation)
+            return resp
+        else:
+            return False
+    
+    async def update_message_feedback(self, user_id, message_id, feedback):
+        message = await self.container_client.read_item(item=message_id, partition_key=user_id)
+        if message:
+            message['feedback'] = feedback
+            resp = self.container_client.upsert_item(message)
             return resp
         else:
             return False

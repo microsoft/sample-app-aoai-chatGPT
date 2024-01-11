@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import logging
+import uuid
 from dotenv import load_dotenv
 
 from quart import (
@@ -104,6 +105,7 @@ AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")
 AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
 AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
+AZURE_COSMOSDB_ENABLE_FEEDBACK = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "false").lower() == "true"
 
 # Elasticsearch Integration Settings
 ELASTICSEARCH_ENDPOINT = os.environ.get("ELASTICSEARCH_ENDPOINT")
@@ -149,9 +151,13 @@ AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
 
 
 # Frontend Settings via Environment Variables
-AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower()
-frontend_settings = { "auth_enabled": AUTH_ENABLED }
+AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
+frontend_settings = { 
+    "auth_enabled": AUTH_ENABLED, 
+    "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and AZURE_COSMOSDB_DATABASE not in [None, ""],
+}
 
+message_uuid = ""
 
 def should_use_data():
     global DATASOURCE_TYPE
@@ -487,7 +493,7 @@ def prepare_model_args(request_body):
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
-        secret_params = ["key", "connectionString", "embeddingKey", "encodedApiKey"]
+        secret_params = ["key", "connectionString", "embeddingKey", "encodedApiKey", "apiKey"]
         for secret_param in secret_params:
             if model_args_clean["extra_body"]["dataSources"][0]["parameters"].get(secret_param):
                 model_args_clean["extra_body"]["dataSources"][0]["parameters"][secret_param] = "*****"
@@ -523,7 +529,7 @@ async def complete_chat_request(request_body):
     history_metadata = request_body.get("history_metadata", {})
 
     return {
-        "id": response.id,
+        "id": message_uuid,
         "model": response.model,
         "created": response.created,
         "object": response.object,
@@ -585,6 +591,8 @@ def get_frontend_settings():
 ## Conversation History API ## 
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
+    global message_uuid
+    message_uuid = str(uuid.uuid4())
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
 
@@ -612,6 +620,7 @@ async def add_conversation():
         messages = request_json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "user":
             await cosmos_conversation_client.create_message(
+                uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
@@ -658,12 +667,14 @@ async def update_conversation():
             if len(messages) > 1 and messages[-2].get('role', None) == "tool":
                 # write the tool message first
                 await cosmos_conversation_client.create_message(
+                    uuid=str(uuid.uuid4()),
                     conversation_id=conversation_id,
                     user_id=user_id,
                     input_message=messages[-2]
                 )
             # write the assistant message
             await cosmos_conversation_client.create_message(
+                uuid=message_uuid,
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
@@ -678,6 +689,34 @@ async def update_conversation():
        
     except Exception as e:
         logging.exception("Exception in /history/update")
+        return jsonify({"error": str(e)}), 500
+
+@bp.route("/history/message_feedback", methods=["POST"])
+async def update_message():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+    cosmos_conversation_client = init_cosmosdb_client()
+
+    ## check request for message_id
+    request_json = await request.get_json()
+    message_id = request_json.get('message_id', None)
+    message_feedback = request_json.get("message_feedback", None)
+    try:
+        if not message_id:
+            return jsonify({"error": "message_id is required"}), 400
+        
+        if not message_feedback:
+            return jsonify({"error": "message_feedback is required"}), 400
+        
+        ## update the message in cosmos
+        updated_message = await cosmos_conversation_client.update_message_feedback(user_id, message_id, message_feedback)
+        if updated_message:
+            return jsonify({"message": f"Successfully updated message with feedback {message_feedback}", "message_id": message_id}), 200
+        else:
+            return jsonify({"error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."}), 404
+        
+    except Exception as e:
+        logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
 
 
@@ -763,7 +802,7 @@ async def get_conversation():
     conversation_messages = await cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
-    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt']} for msg in conversation_messages]
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages]
 
     await cosmos_conversation_client.cosmosdb_client.close()
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
