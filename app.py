@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import logging
+from dotenv import load_dotenv
 
 from quart import (
     Blueprint,
@@ -17,7 +18,7 @@ from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 
-from backend.utils import format_as_ndjson, format_stream_response, generateFilterString
+from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -33,6 +34,7 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
+load_dotenv()
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
@@ -118,12 +120,41 @@ ELASTICSEARCH_VECTOR_COLUMNS = os.environ.get("ELASTICSEARCH_VECTOR_COLUMNS")
 ELASTICSEARCH_STRICTNESS = os.environ.get("ELASTICSEARCH_STRICTNESS", SEARCH_STRICTNESS)
 ELASTICSEARCH_EMBEDDING_MODEL_ID = os.environ.get("ELASTICSEARCH_EMBEDDING_MODEL_ID")
 
+# Pinecone Integration Settings
+PINECONE_ENVIRONMENT = os.environ.get("PINECONE_ENVIRONMENT")
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
+PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME")
+PINECONE_TOP_K = os.environ.get("PINECONE_TOP_K", SEARCH_TOP_K)
+PINECONE_STRICTNESS = os.environ.get("PINECONE_STRICTNESS", SEARCH_STRICTNESS)  
+PINECONE_ENABLE_IN_DOMAIN = os.environ.get("PINECONE_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN)
+PINECONE_CONTENT_COLUMNS = os.environ.get("PINECONE_CONTENT_COLUMNS", "")
+PINECONE_FILENAME_COLUMN = os.environ.get("PINECONE_FILENAME_COLUMN")
+PINECONE_TITLE_COLUMN = os.environ.get("PINECONE_TITLE_COLUMN")
+PINECONE_URL_COLUMN = os.environ.get("PINECONE_URL_COLUMN")
+PINECONE_VECTOR_COLUMNS = os.environ.get("PINECONE_VECTOR_COLUMNS")
+
+# Azure AI MLIndex Integration Settings - for use with MLIndex data assets created in Azure AI Studio
+AZURE_MLINDEX_NAME = os.environ.get("AZURE_MLINDEX_NAME")
+AZURE_MLINDEX_VERSION = os.environ.get("AZURE_MLINDEX_VERSION")
+AZURE_ML_PROJECT_RESOURCE_ID = os.environ.get("AZURE_ML_PROJECT_RESOURCE_ID") # /subscriptions/{sub ID}/resourceGroups/{rg name}/providers/Microsoft.MachineLearningServices/workspaces/{AML project name}
+AZURE_MLINDEX_TOP_K = os.environ.get("AZURE_MLINDEX_TOP_K", SEARCH_TOP_K)
+AZURE_MLINDEX_STRICTNESS = os.environ.get("AZURE_MLINDEX_STRICTNESS", SEARCH_STRICTNESS)  
+AZURE_MLINDEX_ENABLE_IN_DOMAIN = os.environ.get("AZURE_MLINDEX_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN)
+AZURE_MLINDEX_CONTENT_COLUMNS = os.environ.get("AZURE_MLINDEX_CONTENT_COLUMNS", "")
+AZURE_MLINDEX_FILENAME_COLUMN = os.environ.get("AZURE_MLINDEX_FILENAME_COLUMN")
+AZURE_MLINDEX_TITLE_COLUMN = os.environ.get("AZURE_MLINDEX_TITLE_COLUMN")
+AZURE_MLINDEX_URL_COLUMN = os.environ.get("AZURE_MLINDEX_URL_COLUMN")
+AZURE_MLINDEX_VECTOR_COLUMNS = os.environ.get("AZURE_MLINDEX_VECTOR_COLUMNS")
+AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
+
+
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower()
 frontend_settings = { "auth_enabled": AUTH_ENABLED }
 
 
 def should_use_data():
+    global DATASOURCE_TYPE
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX:
         DATASOURCE_TYPE = "AzureCognitiveSearch"
         logging.debug("Using Azure Cognitive Search")
@@ -139,6 +170,16 @@ def should_use_data():
         logging.debug("Using Elasticsearch")
         return True
     
+    if PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX_NAME:
+        DATASOURCE_TYPE = "Pinecone"
+        logging.debug("Using Pinecone")
+        return True
+    
+    if AZURE_MLINDEX_NAME and AZURE_MLINDEX_VERSION and AZURE_ML_PROJECT_RESOURCE_ID:
+        DATASOURCE_TYPE = "AzureMLIndex"
+        logging.debug("Using Azure ML Index")
+        return True
+
     return False
 
 SHOULD_USE_DATA = should_use_data()
@@ -223,9 +264,9 @@ def init_cosmosdb_client():
 
 def get_configured_data_source():
     data_source = {}
+    query_type = "simple"
     if DATASOURCE_TYPE == "AzureCognitiveSearch":
         # Set query type
-        query_type = "simple"
         if AZURE_SEARCH_QUERY_TYPE:
             query_type = AZURE_SEARCH_QUERY_TYPE
         elif AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
@@ -240,91 +281,174 @@ def get_configured_data_source():
 
             filter = generateFilterString(userToken)
             logging.debug(f"FILTER: {filter}")
+        
+        # Set authentication
+        authentication = {}
+        if AZURE_SEARCH_KEY:
+            authentication = {
+                "type": "APIKey",
+                "key": AZURE_SEARCH_KEY,
+                "apiKey": AZURE_SEARCH_KEY
+            }
+        else:
+            # If key is not provided, assume AOAI resource identity has been granted access to the search service
+            authentication = {
+                "type": "SystemAssignedManagedIdentity"
+            }
 
         data_source = {
                 "type": "AzureCognitiveSearch",
                 "parameters": {
                     "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                    "key": AZURE_SEARCH_KEY,
+                    "authentication": authentication,
                     "indexName": AZURE_SEARCH_INDEX,
                     "fieldsMapping": {
-                        "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
+                        "contentFields": parse_multi_columns(AZURE_SEARCH_CONTENT_COLUMNS) if AZURE_SEARCH_CONTENT_COLUMNS else [],
                         "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
                         "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
                         "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None,
-                        "vectorFields": AZURE_SEARCH_VECTOR_COLUMNS.split("|") if AZURE_SEARCH_VECTOR_COLUMNS else []
+                        "vectorFields": parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if AZURE_SEARCH_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_SEARCH_TOP_K,
+                    "topNDocuments": int(AZURE_SEARCH_TOP_K) if AZURE_SEARCH_TOP_K else int(SEARCH_TOP_K),
                     "queryType": query_type,
                     "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
                     "filter": filter,
-                    "strictness": int(AZURE_SEARCH_STRICTNESS)
+                    "strictness": int(AZURE_SEARCH_STRICTNESS) if AZURE_SEARCH_STRICTNESS else int(SEARCH_STRICTNESS)
                 }
             }
     elif DATASOURCE_TYPE == "AzureCosmosDB":
-        # Set query type
         query_type = "vector"
 
         data_source = {
                 "type": "AzureCosmosDB",
                 "parameters": {
-                    "connectionString": AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING,
+                    "authentication": {
+                        "type": "ConnectionString",
+                        "connectionString": AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING
+                    },
                     "indexName": AZURE_COSMOSDB_MONGO_VCORE_INDEX,
                     "databaseName": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                     "containerName": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                     "fieldsMapping": {
-                        "contentFields": AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                        "contentFields": parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS) if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
                         "titleField": AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
                         "urlField": AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
                         "filepathField": AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
-                        "vectorFields": AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                        "vectorFields": parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS) if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                     },
                     "inScope": True if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                    "topNDocuments": AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
-                    "strictness": int(AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS),
+                    "topNDocuments": int(AZURE_COSMOSDB_MONGO_VCORE_TOP_K) if AZURE_COSMOSDB_MONGO_VCORE_TOP_K else int(SEARCH_TOP_K),
+                    "strictness": int(AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS) if AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS else int(SEARCH_STRICTNESS),
                     "queryType": query_type,
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
                 }
             }
-        
+    # TODO: when Elasticsearch authentication is fixed, uncomment this
+    # elif DATASOURCE_TYPE == "Elasticsearch":
+    #     if ELASTICSEARCH_QUERY_TYPE:
+    #         query_type = ELASTICSEARCH_QUERY_TYPE
 
-    elif DATASOURCE_TYPE == "Elasticsearch":
-        data_source ={
-                        "type": "Elasticsearch",
-                        "parameters": {
-                            "endpoint": ELASTICSEARCH_ENDPOINT,
-                            "encodedApiKey": ELASTICSEARCH_ENCODED_API_KEY,
-                            "indexName": ELASTICSEARCH_INDEX,
-                            "fieldsMapping": {
-                                "contentFields": ELASTICSEARCH_CONTENT_COLUMNS.split("|") if ELASTICSEARCH_CONTENT_COLUMNS else [],
-                                "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
-                                "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
-                                "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
-                                "vectorFields": ELASTICSEARCH_VECTOR_COLUMNS.split("|") if ELASTICSEARCH_VECTOR_COLUMNS else []
-                            },
-                            "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                            "topNDocuments": int(ELASTICSEARCH_TOP_K),
-                            "queryType": ELASTICSEARCH_QUERY_TYPE,
-                            "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-                            "embeddingEndpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                            "embeddingKey": AZURE_OPENAI_EMBEDDING_KEY,
-                            "embeddingModelId": ELASTICSEARCH_EMBEDDING_MODEL_ID,
-                            "strictness": int(ELASTICSEARCH_STRICTNESS)
-                        }
-                    }
+    #     data_source ={
+    #             "type": "Elasticsearch",
+    #             "parameters": {
+    #                 "endpoint": ELASTICSEARCH_ENDPOINT,
+    #                 "authentication": {},
+    #                 "encodedApiKey": ELASTICSEARCH_ENCODED_API_KEY,
+    #                 "indexName": ELASTICSEARCH_INDEX,
+    #                 "fieldsMapping": {
+    #                     "contentFields": parse_multi_columns(ELASTICSEARCH_CONTENT_COLUMNS) if ELASTICSEARCH_CONTENT_COLUMNS else [],
+    #                     "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
+    #                     "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
+    #                     "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
+    #                     "vectorFields": parse_multi_columns(ELASTICSEARCH_VECTOR_COLUMNS) if ELASTICSEARCH_VECTOR_COLUMNS else []
+    #                 },
+    #                 "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+    #                 "topNDocuments": int(ELASTICSEARCH_TOP_K) if ELASTICSEARCH_TOP_K else int(SEARCH_TOP_K),
+    #                 "queryType": query_type,
+    #                 "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+    #                 "strictness": int(ELASTICSEARCH_STRICTNESS) if ELASTICSEARCH_STRICTNESS else int(SEARCH_STRICTNESS)
+    #             }
+    #         }
+        
+    elif DATASOURCE_TYPE == "AzureMLIndex":
+        if AZURE_MLINDEX_QUERY_TYPE:
+            query_type = AZURE_MLINDEX_QUERY_TYPE
+
+        data_source = {
+            "type": "AzureMLIndex",
+            "parameters": {
+                "name": AZURE_MLINDEX_NAME,
+                "version": AZURE_MLINDEX_VERSION,
+                "projectResourceId": AZURE_ML_PROJECT_RESOURCE_ID,
+                "fieldsMapping": {
+                    "contentFields": parse_multi_columns(AZURE_MLINDEX_CONTENT_COLUMNS) if AZURE_MLINDEX_CONTENT_COLUMNS else [],
+                    "titleField": AZURE_MLINDEX_TITLE_COLUMN if AZURE_MLINDEX_TITLE_COLUMN else None,
+                    "urlField": AZURE_MLINDEX_URL_COLUMN if AZURE_MLINDEX_URL_COLUMN else None,
+                    "filepathField": AZURE_MLINDEX_FILENAME_COLUMN if AZURE_MLINDEX_FILENAME_COLUMN else None,
+                    "vectorFields": parse_multi_columns(AZURE_MLINDEX_VECTOR_COLUMNS) if AZURE_MLINDEX_VECTOR_COLUMNS else []
+                },
+                "inScope": True if AZURE_MLINDEX_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                "topNDocuments": int(AZURE_MLINDEX_TOP_K) if AZURE_MLINDEX_TOP_K else int(SEARCH_TOP_K),
+                "queryType": query_type,
+                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                "strictness": int(AZURE_MLINDEX_STRICTNESS) if AZURE_MLINDEX_STRICTNESS else int(SEARCH_STRICTNESS)
+            }
+        }
+    elif DATASOURCE_TYPE == "Pinecone":
+        query_type = "vector"
+
+        data_source = {
+            "type": "Pinecone",
+            "parameters": {
+                "environment": PINECONE_ENVIRONMENT,
+                "authentication": {
+                    "type": "APIKey",
+                    "key": PINECONE_API_KEY
+                },
+                "indexName": PINECONE_INDEX_NAME,
+                "fieldsMapping": {
+                    "contentFields": parse_multi_columns(PINECONE_CONTENT_COLUMNS) if PINECONE_CONTENT_COLUMNS else [],
+                    "titleField": PINECONE_TITLE_COLUMN if PINECONE_TITLE_COLUMN else None,
+                    "urlField": PINECONE_URL_COLUMN if PINECONE_URL_COLUMN else None,
+                    "filepathField": PINECONE_FILENAME_COLUMN if PINECONE_FILENAME_COLUMN else None,
+                    "vectorFields": parse_multi_columns(PINECONE_VECTOR_COLUMNS) if PINECONE_VECTOR_COLUMNS else []
+                },
+                "inScope": True if PINECONE_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                "topNDocuments": int(PINECONE_TOP_K) if PINECONE_TOP_K else int(SEARCH_TOP_K),
+                "strictness": int(PINECONE_STRICTNESS) if PINECONE_STRICTNESS else int(SEARCH_STRICTNESS),
+                "queryType": query_type,
+                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+            }
+        }
     else:
         raise Exception(f"DATASOURCE_TYPE is not configured or unknown: {DATASOURCE_TYPE}")
 
-    if "vector" in query_type.lower():
-        if AZURE_OPENAI_EMBEDDING_NAME:
-            data_source["parameters"]["embeddingDeploymentName"] = AZURE_OPENAI_EMBEDDING_NAME
+    if "vector" in query_type.lower() and DATASOURCE_TYPE != "AzureMLIndex":
+        embeddingDependency = {}
+        if AZURE_OPENAI_EMBEDDING_NAME and DATASOURCE_TYPE != "Elasticsearch":
+            embeddingDependency = {
+                "type": "DeploymentName",
+                "deploymentName": AZURE_OPENAI_EMBEDDING_NAME
+            }
         elif AZURE_OPENAI_EMBEDDING_ENDPOINT and AZURE_OPENAI_EMBEDDING_KEY:
-            data_source["parameters"]["embeddingEndpoint"] = AZURE_OPENAI_EMBEDDING_ENDPOINT
-            data_source["parameters"]["embeddingKey"] = AZURE_OPENAI_EMBEDDING_KEY
+            embeddingDependency = {
+                "type": "Endpoint",
+                "endpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
+                "authentication": {
+                    "type": "APIKey",
+                    "key": AZURE_OPENAI_EMBEDDING_KEY
+                }
+            }
+        elif DATASOURCE_TYPE == "Elasticsearch" and ELASTICSEARCH_EMBEDDING_MODEL_ID:
+            embeddingDependency = {
+                "type": "ModelId",
+                "modelId": ELASTICSEARCH_EMBEDDING_MODEL_ID
+            }
         else:
-            raise Exception("Vector query type is selected but no embedding endpoint or key is configured")
+            raise Exception(f"Vector query type ({query_type}) is selected for data source type {DATASOURCE_TYPE} but no embedding dependency is configured")
+        data_source["parameters"]["embeddingDependency"] = embeddingDependency
 
     return data_source
 
@@ -351,7 +475,7 @@ def prepare_model_args(request_body):
         "temperature": float(AZURE_OPENAI_TEMPERATURE),
         "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
         "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+        "stop": parse_multi_columns(AZURE_OPENAI_STOP_SEQUENCE) if AZURE_OPENAI_STOP_SEQUENCE else None,
         "stream": SHOULD_STREAM,
         "model": AZURE_OPENAI_MODEL,
     }
@@ -363,9 +487,19 @@ def prepare_model_args(request_body):
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
-        for secret_param in ["key", "connectionString", "embeddingKey", "encodedApiKey"]:
+        secret_params = ["key", "connectionString", "embeddingKey", "encodedApiKey"]
+        for secret_param in secret_params:
             if model_args_clean["extra_body"]["dataSources"][0]["parameters"].get(secret_param):
                 model_args_clean["extra_body"]["dataSources"][0]["parameters"][secret_param] = "*****"
+        authentication = model_args_clean["extra_body"]["dataSources"][0]["parameters"].get("authentication", {})
+        for field in authentication:
+            if field in secret_params:
+                model_args_clean["extra_body"]["dataSources"][0]["parameters"]["authentication"][field] = "*****"
+        embeddingDependency = model_args_clean["extra_body"]["dataSources"][0]["parameters"].get("embeddingDependency", {})
+        if "authentication" in embeddingDependency:
+            for field in embeddingDependency["authentication"]:
+                if field in secret_params:
+                    model_args_clean["extra_body"]["dataSources"][0]["parameters"]["embeddingDependency"]["authentication"][field] = "*****"
         
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
     
@@ -426,7 +560,10 @@ async def conversation_internal(request_body):
     
     except Exception as ex:
         logging.exception(ex)
-        return jsonify({"error": str(ex)}), 500
+        if ex.status_code:
+            return jsonify({"error": str(ex)}), ex.status_code
+        else:
+            return jsonify({"error": str(ex)}), 500
 
 
 @bp.route("/conversation", methods=["POST"])

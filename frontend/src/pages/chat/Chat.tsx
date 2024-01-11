@@ -187,22 +187,27 @@ const Chat = () => {
                     const objects = text.split("\n");
                     objects.forEach((obj) => {
                         try {
-                            if (obj !== "") {
+                            if (obj !== "" && obj !== "{}") {
                                 result = JSON.parse(obj);
-                                result.choices[0].messages.forEach((msg) => {
-                                    msg.id = uuid();
-                                    msg.date = new Date().toISOString();
-                                })
-                                setShowLoadingMessage(false);
-                                result.choices[0].messages.forEach((resultObj) => {
-                                    processResultMessage(resultObj, userMessage, conversationId);
-                                })
+                                if (result.choices?.length > 0) {
+                                    result.choices[0].messages.forEach((msg) => {
+                                        msg.id = uuid();
+                                        msg.date = new Date().toISOString();
+                                    })
+                                    setShowLoadingMessage(false);
+                                    result.choices[0].messages.forEach((resultObj) => {
+                                        processResultMessage(resultObj, userMessage, conversationId);
+                                    })
+                                }
+                                else if (result.error) {
+                                    throw Error(result.error);
+                                }
                             }
-                            
                         }
                         catch (e) {
-                            console.error(e)
-                         }
+                            console.error(e);
+                            throw e;
+                        }
                     });
                 }
                 conversation.messages.push(toolMessage, assistantMessage)
@@ -321,21 +326,26 @@ const Chat = () => {
                     const objects = text.split("\n");
                     objects.forEach((obj) => {
                         try {
-                            if (obj !== "") {
+                            if (obj !== "" && obj !== "{}") {
                                 result = JSON.parse(obj);
-                                result.choices[0].messages.forEach((msg) => {
-                                    msg.id = uuid();
-                                    msg.date = new Date().toISOString();
-                                })
-                                setShowLoadingMessage(false);
-                                result.choices[0].messages.forEach((resultObj) => {
-                                    processResultMessage(resultObj, userMessage, conversationId);
-                                })
+                                if (result.choices?.length > 0) {
+                                    result.choices[0].messages.forEach((msg) => {
+                                        msg.id = uuid();
+                                        msg.date = new Date().toISOString();
+                                    })
+                                    setShowLoadingMessage(false);
+                                    result.choices[0].messages.forEach((resultObj) => {
+                                        processResultMessage(resultObj, userMessage, conversationId);
+                                    })
+                                }
                             }
-                            
+                            else if (result.error) {
+                                throw Error(result.error);
+                            }
                         }
                         catch (e) {
-                            console.error(e)
+                            console.error(e);
+                            throw e;
                          }
                     });
                 }

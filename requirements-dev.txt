@@ -8,5 +8,6 @@ langchain==0.0.340
 bs4==0.0.1
 urllib3==2.0.6
 pytest==7.4.0
+pytest-asyncio==0.23.2
 azure-storage-blob
 chardet

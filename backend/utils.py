@@ -24,6 +24,12 @@ async def format_as_ndjson(r):
         logging.exception("Exception while generating response stream: %s", error)
         yield json.dumps({"error": str(error)})
 
+def parse_multi_columns(columns: str) -> list:
+    if "|" in columns:
+        return columns.split("|")
+    else:
+        return columns.split(",")
+
 
 def fetchUserGroups(userToken, nextLink=None):
     # Recursively fetch group membership
