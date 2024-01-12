@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, FormEvent, useContext } from "react";
 import { useBoolean } from "@fluentui/react-hooks"
-import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from "@fluentui/react";
+import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text, TextField } from "@fluentui/react";
 import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
 
 import styles from "./Answer.module.css";
 
-import { AskResponse, Citation, FeedbackType, historyMessageFeedback } from "../../api";
+import { AskResponse, Citation, Feedback, FeedbackType, historyMessageFeedback } from "../../api";
 import { parseAnswer } from "./AnswerParser";
 
 import ReactMarkdown from "react-markdown";
@@ -22,11 +22,14 @@ export const Answer = ({
     answer,
     onCitationClicked
 }: Props) => {
-    const initializeAnswerFeedback = (answer: AskResponse) => {
+    const initializeAnswerFeedback = (answer: AskResponse): Feedback | undefined => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
-        if (Object.values(FeedbackType).includes(answer.feedback)) return answer.feedback;
-        return FeedbackType.Neutral;
+        if (Object.values(FeedbackType).includes(answer.feedback.type as FeedbackType)) return answer.feedback;
+        return {
+            type: FeedbackType.Neutral,
+            message: ""
+        };
     }
 
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
@@ -35,6 +38,7 @@ export const Answer = ({
     const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
     const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
     const [feedbackState, setFeedbackState] = useState(initializeAnswerFeedback(answer));
+    const [feedbackMessage, setFeedbackMessage] = useState(initializeAnswerFeedback(answer)?.message)
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<FeedbackType[]>([]);
@@ -87,13 +91,18 @@ export const Answer = ({
     const onLikeResponseClicked = async () => {
         if (answer.message_id == undefined) return;
 
-        let newFeedbackState = feedbackState;
+        let newFeedbackState: Feedback | undefined = feedbackState;
         // Set or unset the thumbs up state
-        if (feedbackState == FeedbackType.Positive) {
-            newFeedbackState = FeedbackType.Neutral;
+        if (feedbackState?.type == FeedbackType.Positive) {
+            if (newFeedbackState) {
+                newFeedbackState.type = FeedbackType.Neutral;
+            }
         }
         else {
-            newFeedbackState = FeedbackType.Positive;
+            newFeedbackState = {
+                type: FeedbackType.Positive,
+                message: ""
+            };
         }
         appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState } });
         setFeedbackState(newFeedbackState);
@@ -106,15 +115,21 @@ export const Answer = ({
         if (answer.message_id == undefined) return;
 
         let newFeedbackState = feedbackState;
-        if (feedbackState === undefined || feedbackState === FeedbackType.Neutral || feedbackState === FeedbackType.Positive) {
-            newFeedbackState = FeedbackType.Negative;
+        if (feedbackState === undefined || feedbackState.type === FeedbackType.Neutral || feedbackState.type === FeedbackType.Positive) {
+            newFeedbackState = {
+                type: FeedbackType.Negative,
+                message: ""
+            };
             setFeedbackState(newFeedbackState);
             setIsFeedbackDialogOpen(true);
         } else {
             // Reset negative feedback to neutral
-            newFeedbackState = FeedbackType.Neutral;
+            newFeedbackState = {
+                type: FeedbackType.Neutral,
+                message: ""
+            };
             setFeedbackState(newFeedbackState);
-            await historyMessageFeedback(answer.message_id, FeedbackType.Neutral);
+            await historyMessageFeedback(answer.message_id, newFeedbackState);
         }
         appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState }});
     }
@@ -133,9 +148,17 @@ export const Answer = ({
         setNegativeFeedbackList(feedbackList);
     };
 
+    const updateFeedbackMessage = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+        setFeedbackMessage(newValue || "");
+    };
+
     const onSubmitNegativeFeedback = async () => {
         if (answer.message_id == undefined) return;
-        await historyMessageFeedback(answer.message_id, negativeFeedbackList.join(","));
+        const feedback: Feedback=  {
+            type: negativeFeedbackList.join(","),
+            message: feedbackMessage || ""
+        }
+        await historyMessageFeedback(answer.message_id, feedback);
         resetFeedbackDialog();
     }
 
@@ -154,7 +177,7 @@ export const Answer = ({
                 <Checkbox label="The response is not from my data" id={FeedbackType.OutOfScope} defaultChecked={negativeFeedbackList.includes(FeedbackType.OutOfScope)} onChange={updateFeedbackList}></Checkbox>
                 <Checkbox label="Inaccurate or irrelevant" id={FeedbackType.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(FeedbackType.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
                 <Checkbox label="Other" id={FeedbackType.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
-                <textarea value={additionalContext} onChange={onAdditionalContextChange} />
+                <TextField key="feedbackInput" multiline label="Comments" value={feedbackMessage} onChange={updateFeedbackMessage}/>
             </Stack>
             <div onClick={() => setShowReportInappropriateFeedback(true)} className=".reportInappropriateContent">Report inappropriate content</div>
         </>);
@@ -189,13 +212,13 @@ export const Answer = ({
                                     aria-hidden="false"
                                     aria-label="Like this response"
                                     onClick={() => onLikeResponseClicked()}
-                                    style={feedbackState === FeedbackType.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={feedbackState?.type === FeedbackType.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                                 <ThumbDislike20Filled
                                     aria-hidden="false"
                                     aria-label="Dislike this response"
                                     onClick={() => onDislikeResponseClicked()}
-                                    style={(feedbackState !== FeedbackType.Positive && feedbackState !== FeedbackType.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={(feedbackState?.type !== FeedbackType.Positive && feedbackState?.type !== FeedbackType.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                             </Stack>}
                         </Stack.Item>
@@ -256,7 +279,10 @@ export const Answer = ({
             <Dialog 
                 onDismiss={() => {
                     resetFeedbackDialog();
-                    setFeedbackState(FeedbackType.Neutral);
+                    setFeedbackState({
+                        type: FeedbackType.Neutral,
+                        message: ""
+                    });
                 }}
                 hidden={!isFeedbackDialogOpen}
                 styles={{
