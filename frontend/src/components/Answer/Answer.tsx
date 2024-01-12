@@ -168,36 +168,6 @@ export const Answer = ({
         setNegativeFeedbackList([]);
     }
 
-    const UnhelpfulFeedbackContent = () => {
-        return (<>
-            <div>Why wasn't this response helpful?</div>
-            <Stack tokens={{childrenGap: 4}}>
-                <Checkbox label="Citations are missing" id={FeedbackType.MissingCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.MissingCitation)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Citations are wrong" id={FeedbackType.WrongCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.WrongCitation)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="The response is not from my data" id={FeedbackType.OutOfScope} defaultChecked={negativeFeedbackList.includes(FeedbackType.OutOfScope)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Inaccurate or irrelevant" id={FeedbackType.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(FeedbackType.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Other" id={FeedbackType.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
-                <TextField key="feedbackInput" multiline label="Comments" value={feedbackMessage} onChange={updateFeedbackMessage}/>
-            </Stack>
-            <div onClick={() => setShowReportInappropriateFeedback(true)} className=".reportInappropriateContent">Report inappropriate content</div>
-        </>);
-    }
-
-    const ReportInappropriateFeedbackContent = () => {
-        return (
-            <>
-                <div>The content is <span style={{ color: "red" }} >*</span></div>
-                <Stack tokens={{childrenGap: 4}}>
-                    <Checkbox label="Hate speech, stereotyping, demeaning" id={FeedbackType.HateSpeech} defaultChecked={negativeFeedbackList.includes(FeedbackType.HateSpeech)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Violent: glorification of violence, self-harm" id={FeedbackType.Violent} defaultChecked={negativeFeedbackList.includes(FeedbackType.Violent)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Sexual: explicit content, grooming" id={FeedbackType.Sexual} defaultChecked={negativeFeedbackList.includes(FeedbackType.Sexual)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Manipulative: devious, emotional, pushy, bullying" defaultChecked={negativeFeedbackList.includes(FeedbackType.Manipulative)} id={FeedbackType.Manipulative} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Other" id={FeedbackType.OtherHarmful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherHarmful)} onChange={updateFeedbackList}></Checkbox>
-                </Stack>
-            </>
-        );
-    }
-
     return (
         <>
             <Stack className={styles.answerContainer} tabIndex={0}>
@@ -308,8 +278,29 @@ export const Answer = ({
                 <Stack tokens={{childrenGap: 4}}>
                     <div>Your feedback will improve this experience.</div>
 
-                    {!showReportInappropriateFeedback ? <UnhelpfulFeedbackContent/> : <ReportInappropriateFeedbackContent/>}
-
+                    {!showReportInappropriateFeedback ? 
+                        <>
+                            <div>Why wasn't this response helpful?</div>
+                            <Stack tokens={{childrenGap: 4}}>
+                                <Checkbox label="Citations are missing" id={FeedbackType.MissingCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.MissingCitation)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Citations are wrong" id={FeedbackType.WrongCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.WrongCitation)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="The response is not from my data" id={FeedbackType.OutOfScope} defaultChecked={negativeFeedbackList.includes(FeedbackType.OutOfScope)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Inaccurate or irrelevant" id={FeedbackType.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(FeedbackType.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Other" id={FeedbackType.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
+                                <TextField key="feedbackInput" multiline label="Comments" value={feedbackMessage} onChange={updateFeedbackMessage} />
+                            </Stack>
+                            <div onClick={() => setShowReportInappropriateFeedback(true)} className=".reportInappropriateContent">Report inappropriate content</div>
+                        </> : 
+                        <>
+                            <div>The content is <span style={{ color: "red" }} >*</span></div>
+                            <Stack tokens={{childrenGap: 4}}>
+                                <Checkbox label="Hate speech, stereotyping, demeaning" id={FeedbackType.HateSpeech} defaultChecked={negativeFeedbackList.includes(FeedbackType.HateSpeech)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Violent: glorification of violence, self-harm" id={FeedbackType.Violent} defaultChecked={negativeFeedbackList.includes(FeedbackType.Violent)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Sexual: explicit content, grooming" id={FeedbackType.Sexual} defaultChecked={negativeFeedbackList.includes(FeedbackType.Sexual)} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Manipulative: devious, emotional, pushy, bullying" defaultChecked={negativeFeedbackList.includes(FeedbackType.Manipulative)} id={FeedbackType.Manipulative} onChange={updateFeedbackList}></Checkbox>
+                                <Checkbox label="Other" id={FeedbackType.OtherHarmful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherHarmful)} onChange={updateFeedbackList}></Checkbox>
+                            </Stack>
+                        </>}
                     <div>By pressing submit, your feedback will be visible to the application owner.</div>
 
                     <DefaultButton disabled={negativeFeedbackList.length < 1} onClick={onSubmitNegativeFeedback}>Submit</DefaultButton>
