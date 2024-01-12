@@ -8,13 +8,14 @@ from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
-from orchestrators.BaseOrchestrator import BaseOrchestrator
-
-Orchestrator = BaseOrchestrator()
+from orchestrators.utils import create_orchestrator_instance
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static")
+
+CUSTOM_ORCHESTRATOR_CLASS_NAME = os.environ.get("CUSTOM_ORCHESTRATOR_CLASS_NAME") or "DefaultOrchestrator"
+orchestrator = create_orchestrator_instance(CUSTOM_ORCHESTRATOR_CLASS_NAME)
 
 # Static Files
 @app.route("/")
@@ -126,9 +127,9 @@ def conversation_internal(request_body):
     try:
         use_data = should_use_data()
         if use_data:
-            return Orchestrator.conversation_with_data(request_body)
+            return orchestrator.conversation_with_data(request_body)
         else:
-            return Orchestrator.conversation_without_data(request_body)
+            return orchestrator.conversation_without_data(request_body)
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500

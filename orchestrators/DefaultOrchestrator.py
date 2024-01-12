@@ -3,7 +3,7 @@ import requests
 import openai
 from flask import  Response, request, jsonify
 
-class BaseOrchestrator(Orchestrator):
+class DefaultOrchestrator(Orchestrator):
     # Post chat info if data configured
     def conversation_with_data(self, request_body):
         # Set up request variables
