@@ -3,7 +3,7 @@ export type AskResponse = {
     citations: Citation[];
     error?: string;
     message_id?: string;
-    feedback?: Feedback;
+    feedback?: FeedbackType;
 };
 
 export type Citation = {
@@ -28,7 +28,7 @@ export type ChatMessage = {
     content: string;
     end_turn?: boolean;
     date: string;
-    feedback?: Feedback;
+    feedback?: FeedbackType;
 };
 
 export type Conversation = {
@@ -102,7 +102,7 @@ export type FrontendSettings = {
     feedback_enabled?: string | null;
 }
 
-export enum Feedback {
+export enum FeedbackType {
     Neutral = "neutral",
     Positive = "positive",
     Negative = "negative",

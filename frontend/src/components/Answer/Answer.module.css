@@ -173,3 +173,8 @@ sup {
     font-size: 10px;
     line-height: 10px;
 }
+
+.reportInappropriateContent {
+    color: #115EA3;
+    cursor: pointer;
+}

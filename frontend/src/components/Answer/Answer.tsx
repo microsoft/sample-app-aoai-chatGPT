@@ -5,7 +5,7 @@ import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
 
 import styles from "./Answer.module.css";
 
-import { AskResponse, Citation, Feedback, historyMessageFeedback } from "../../api";
+import { AskResponse, Citation, FeedbackType, historyMessageFeedback } from "../../api";
 import { parseAnswer } from "./AnswerParser";
 
 import ReactMarkdown from "react-markdown";
@@ -25,8 +25,8 @@ export const Answer = ({
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
-        if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
-        return Feedback.Neutral;
+        if (Object.values(FeedbackType).includes(answer.feedback)) return answer.feedback;
+        return FeedbackType.Neutral;
     }
 
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
@@ -37,7 +37,7 @@ export const Answer = ({
     const [feedbackState, setFeedbackState] = useState(initializeAnswerFeedback(answer));
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
-    const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
+    const [negativeFeedbackList, setNegativeFeedbackList] = useState<FeedbackType[]>([]);
     const appStateContext = useContext(AppStateContext)
     const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled; 
 
@@ -89,11 +89,11 @@ export const Answer = ({
 
         let newFeedbackState = feedbackState;
         // Set or unset the thumbs up state
-        if (feedbackState == Feedback.Positive) {
-            newFeedbackState = Feedback.Neutral;
+        if (feedbackState == FeedbackType.Positive) {
+            newFeedbackState = FeedbackType.Neutral;
         }
         else {
-            newFeedbackState = Feedback.Positive;
+            newFeedbackState = FeedbackType.Positive;
         }
         appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState } });
         setFeedbackState(newFeedbackState);
@@ -106,22 +106,22 @@ export const Answer = ({
         if (answer.message_id == undefined) return;
 
         let newFeedbackState = feedbackState;
-        if (feedbackState === undefined || feedbackState === Feedback.Neutral || feedbackState === Feedback.Positive) {
-            newFeedbackState = Feedback.Negative;
+        if (feedbackState === undefined || feedbackState === FeedbackType.Neutral || feedbackState === FeedbackType.Positive) {
+            newFeedbackState = FeedbackType.Negative;
             setFeedbackState(newFeedbackState);
             setIsFeedbackDialogOpen(true);
         } else {
             // Reset negative feedback to neutral
-            newFeedbackState = Feedback.Neutral;
+            newFeedbackState = FeedbackType.Neutral;
             setFeedbackState(newFeedbackState);
-            await historyMessageFeedback(answer.message_id, Feedback.Neutral);
+            await historyMessageFeedback(answer.message_id, FeedbackType.Neutral);
         }
         appStateContext?.dispatch({ type: 'SET_FEEDBACK_STATE', payload: { answerId: answer.message_id, feedback: newFeedbackState }});
     }
 
     const updateFeedbackList = (ev?: FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
         if (answer.message_id == undefined) return;
-        let selectedFeedback = (ev?.target as HTMLInputElement)?.id as Feedback;
+        let selectedFeedback = (ev?.target as HTMLInputElement)?.id as FeedbackType;
 
         let feedbackList = negativeFeedbackList.slice();
         if (checked) {
@@ -149,13 +149,14 @@ export const Answer = ({
         return (<>
             <div>Why wasn't this response helpful?</div>
             <Stack tokens={{childrenGap: 4}}>
-                <Checkbox label="Citations are missing" id={Feedback.MissingCitation} defaultChecked={negativeFeedbackList.includes(Feedback.MissingCitation)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Citations are wrong" id={Feedback.WrongCitation} defaultChecked={negativeFeedbackList.includes(Feedback.WrongCitation)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="The response is not from my data" id={Feedback.OutOfScope} defaultChecked={negativeFeedbackList.includes(Feedback.OutOfScope)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Inaccurate or irrelevant" id={Feedback.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(Feedback.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
-                <Checkbox label="Other" id={Feedback.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(Feedback.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
+                <Checkbox label="Citations are missing" id={FeedbackType.MissingCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.MissingCitation)} onChange={updateFeedbackList}></Checkbox>
+                <Checkbox label="Citations are wrong" id={FeedbackType.WrongCitation} defaultChecked={negativeFeedbackList.includes(FeedbackType.WrongCitation)} onChange={updateFeedbackList}></Checkbox>
+                <Checkbox label="The response is not from my data" id={FeedbackType.OutOfScope} defaultChecked={negativeFeedbackList.includes(FeedbackType.OutOfScope)} onChange={updateFeedbackList}></Checkbox>
+                <Checkbox label="Inaccurate or irrelevant" id={FeedbackType.InaccurateOrIrrelevant} defaultChecked={negativeFeedbackList.includes(FeedbackType.InaccurateOrIrrelevant)} onChange={updateFeedbackList}></Checkbox>
+                <Checkbox label="Other" id={FeedbackType.OtherUnhelpful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherUnhelpful)} onChange={updateFeedbackList}></Checkbox>
+                <textarea value={additionalContext} onChange={onAdditionalContextChange} />
             </Stack>
-            <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: "#115EA3", cursor: "pointer"}}>Report inappropriate content</div>
+            <div onClick={() => setShowReportInappropriateFeedback(true)} className=".reportInappropriateContent">Report inappropriate content</div>
         </>);
     }
 
@@ -164,11 +165,11 @@ export const Answer = ({
             <>
                 <div>The content is <span style={{ color: "red" }} >*</span></div>
                 <Stack tokens={{childrenGap: 4}}>
-                    <Checkbox label="Hate speech, stereotyping, demeaning" id={Feedback.HateSpeech} defaultChecked={negativeFeedbackList.includes(Feedback.HateSpeech)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Violent: glorification of violence, self-harm" id={Feedback.Violent} defaultChecked={negativeFeedbackList.includes(Feedback.Violent)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Sexual: explicit content, grooming" id={Feedback.Sexual} defaultChecked={negativeFeedbackList.includes(Feedback.Sexual)} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Manipulative: devious, emotional, pushy, bullying" defaultChecked={negativeFeedbackList.includes(Feedback.Manipulative)} id={Feedback.Manipulative} onChange={updateFeedbackList}></Checkbox>
-                    <Checkbox label="Other" id={Feedback.OtherHarmful} defaultChecked={negativeFeedbackList.includes(Feedback.OtherHarmful)} onChange={updateFeedbackList}></Checkbox>
+                    <Checkbox label="Hate speech, stereotyping, demeaning" id={FeedbackType.HateSpeech} defaultChecked={negativeFeedbackList.includes(FeedbackType.HateSpeech)} onChange={updateFeedbackList}></Checkbox>
+                    <Checkbox label="Violent: glorification of violence, self-harm" id={FeedbackType.Violent} defaultChecked={negativeFeedbackList.includes(FeedbackType.Violent)} onChange={updateFeedbackList}></Checkbox>
+                    <Checkbox label="Sexual: explicit content, grooming" id={FeedbackType.Sexual} defaultChecked={negativeFeedbackList.includes(FeedbackType.Sexual)} onChange={updateFeedbackList}></Checkbox>
+                    <Checkbox label="Manipulative: devious, emotional, pushy, bullying" defaultChecked={negativeFeedbackList.includes(FeedbackType.Manipulative)} id={FeedbackType.Manipulative} onChange={updateFeedbackList}></Checkbox>
+                    <Checkbox label="Other" id={FeedbackType.OtherHarmful} defaultChecked={negativeFeedbackList.includes(FeedbackType.OtherHarmful)} onChange={updateFeedbackList}></Checkbox>
                 </Stack>
             </>
         );
@@ -177,8 +178,6 @@ export const Answer = ({
     return (
         <>
             <Stack className={styles.answerContainer} tabIndex={0}>
-
-
                 <Stack.Item>
                     <Stack horizontal grow>
                         <Stack.Item grow>
@@ -190,13 +189,13 @@ export const Answer = ({
                                     aria-hidden="false"
                                     aria-label="Like this response"
                                     onClick={() => onLikeResponseClicked()}
-                                    style={feedbackState === Feedback.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={feedbackState === FeedbackType.Positive ? { color: "darkgreen", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                                 <ThumbDislike20Filled
                                     aria-hidden="false"
                                     aria-label="Dislike this response"
                                     onClick={() => onDislikeResponseClicked()}
-                                    style={(feedbackState !== Feedback.Positive && feedbackState !== Feedback.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
+                                    style={(feedbackState !== FeedbackType.Positive && feedbackState !== FeedbackType.Neutral && feedbackState !== undefined) ? { color: "darkred", cursor: "pointer" } : { color: "slategray", cursor: "pointer" }}
                                 />
                             </Stack>}
                         </Stack.Item>
@@ -257,7 +256,7 @@ export const Answer = ({
             <Dialog 
                 onDismiss={() => {
                     resetFeedbackDialog();
-                    setFeedbackState(Feedback.Neutral);
+                    setFeedbackState(FeedbackType.Neutral);
                 }}
                 hidden={!isFeedbackDialogOpen}
                 styles={{
