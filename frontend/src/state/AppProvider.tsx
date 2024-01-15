@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
-import { Conversation, ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings, FrontendSettings } from '../api';
+import { Conversation, ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings, FrontendSettings, Feedback } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
@@ -10,6 +10,7 @@ export interface AppState {
     filteredChatHistory: Conversation[] | null;
     currentChat: Conversation | null;
     frontendSettings: FrontendSettings | null;
+    feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative; };
 }
 
 export type Action =
@@ -25,6 +26,8 @@ export type Action =
     | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
     | { type: 'FETCH_FRONTEND_SETTINGS', payload: FrontendSettings | null }  // API Call
+    | { type: 'SET_FEEDBACK_STATE'; payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral } }
+    | { type: 'GET_FEEDBACK_STATE'; payload: string };
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
@@ -37,6 +40,7 @@ const initialState: AppState = {
         status: CosmosDBStatus.NotConfigured,
     },
     frontendSettings: null,
+    feedbackState: {}
 };
 
 export const AppStateContext = createContext<{
