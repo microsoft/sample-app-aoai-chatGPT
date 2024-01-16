@@ -1,4 +1,4 @@
-
+import logging
 from orchestrators.DefaultOrchestrator import DefaultOrchestrator
 from orchestrators.Orchestrator import Orchestrator
 
@@ -21,7 +21,7 @@ def create_orchestrator_instance(class_name: str) -> Orchestrator:
     module_name = f"orchestrators.{class_name}"
     
     try:
-        print(f"Attempting to construct '{class_name}' instance from '{module_name}' module ...")
+        logging.info(f"Attempting to construct '{class_name}' instance from '{module_name}' module ...")
 
         module = __import__(module_name, fromlist=[class_name])
         class_ = getattr(module, class_name)
@@ -31,5 +31,5 @@ def create_orchestrator_instance(class_name: str) -> Orchestrator:
 
         return class_()
     except Exception as e:
-        print(f"An error occurred constructing '{class_name}' instance from '{module_name}' module. Using default orchestrator. ERROR: {e}")
+        logging.exception(f"An error occurred constructing '{class_name}' instance from '{module_name}' module. Using default orchestrator. ERROR: {e}")
         return DefaultOrchestrator()
