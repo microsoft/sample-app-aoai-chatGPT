@@ -1,6 +1,5 @@
 import { Button, Dialog, DialogBody, DialogSurface, DialogTitle, DialogTrigger, Input, makeStyles, shorthands } from "@fluentui/react-components";
 import { Copy16Regular, History24Regular, Share24Regular } from "@fluentui/react-icons";
-import { set } from "lodash";
 import { useState } from "react";
 
 interface ShareButtonProps {

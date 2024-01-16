@@ -708,7 +708,6 @@ const Chat = () => {
                             </div>
                         )
                     }
-
                     <ChatHistoryPanel
                         open={appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured}
                     />

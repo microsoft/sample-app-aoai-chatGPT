@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useBoolean } from "@fluentui/react-hooks"
-import { FontIcon, Stack } from "@fluentui/react";
+import { useBoolean } from "@fluentui/react-hooks";
 
 import { AskResponse, Citation } from "../../api";
 import { parseAnswer } from "./AnswerParser";
@@ -8,8 +7,9 @@ import { parseAnswer } from "./AnswerParser";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
-import { Card, Text } from "@fluentui/react-components";
+import { Button, Card, Text } from "@fluentui/react-components";
 import { AnswerStyles } from "./AnswerStyles";
+import { ChevronDown24Regular, ChevronRight24Regular } from "@fluentui/react-icons";
 
 interface Props {
     answer: AskResponse;
@@ -60,21 +60,21 @@ export const Answer = ({
     return (
         <>
             <Card tabIndex={0}>
-                <Stack.Item grow>
+                <div>
                     <ReactMarkdown
                         linkTarget="_blank"
                         remarkPlugins={[remarkGfm, supersub]}
                         children={parsedAnswer.markdownFormatText}
                         className={styles.answerText}
                     />
-                </Stack.Item>
-                <Stack horizontal className={styles.answerFooter}>
+                </div>
+                <div className={styles.answerFooter}>
                     {!!parsedAnswer.citations.length && (
-                        <Stack.Item
+                        <div
                             onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleIsRefAccordionOpen() : null}
                         >
-                            <Stack style={{ width: "100%" }} >
-                                <Stack horizontal horizontalAlign='start' verticalAlign='center'>
+                            <div style={{ width: "100%" }} >
+                                <div>
                                     <Text
                                         className={styles.accordionTitle}
                                         onClick={toggleIsRefAccordionOpen}
@@ -84,18 +84,20 @@ export const Answer = ({
                                     >
                                         <span>{parsedAnswer.citations.length > 1 ? parsedAnswer.citations.length + " references" : "1 reference"}</span>
                                     </Text>
-                                    <FontIcon className={styles.accordionIcon}
-                                        onClick={handleChevronClick} iconName={chevronIsExpanded ? 'ChevronDown' : 'ChevronRight'}
+                                    <Button 
+                                    className={styles.accordionIcon}
+                                        onClick={handleChevronClick} 
+                                        icon={chevronIsExpanded ? <ChevronDown24Regular /> : <ChevronRight24Regular />}
                                     />
-                                </Stack>
+                                </div>
 
-                            </Stack>
-                        </Stack.Item>
+                            </div>
+                        </div>
                     )}
-                    <Stack.Item className={styles.answerDisclaimerContainer}>
+                    <div className={styles.answerDisclaimerContainer}>
                         <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
-                    </Stack.Item>
-                </Stack>
+                    </div>
+                </div>
                 {chevronIsExpanded &&
                     <div style={{ marginTop: 8, display: "flex", flexFlow: "wrap column", maxHeight: "150px", gap: "4px" }}>
                         {parsedAnswer.citations.map((citation, idx) => {

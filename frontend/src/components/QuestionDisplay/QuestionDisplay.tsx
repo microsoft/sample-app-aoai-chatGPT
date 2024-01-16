@@ -1,5 +1,5 @@
-import { Body1, Card } from '@fluentui/react-components';
 import * as React from 'react';
+import { Body1, Card } from '@fluentui/react-components';
 import { QuestionDisplayStyles } from './QuestionDisplayStyles';
 
 export interface IQuestionDisplayProps {

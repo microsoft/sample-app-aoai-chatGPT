@@ -1,8 +1,9 @@
-import { GroupedList, IGroup, IGroupHeaderProps, IRenderFunction, List, Stack, StackItem, Text } from '@fluentui/react';
+
 import React, { useContext } from 'react';
 import { AppStateContext } from '../../state/AppProvider';
 import { ChatHistoryListItemGroups } from './ChatHistoryListItem';
 import { Conversation } from '../../api/models';
+import { Text } from "@fluentui/react-components";
 
 interface ChatHistoryListProps {}
 
@@ -67,13 +68,13 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
     if(chatHistory && chatHistory.length > 0){
         groupedChatHistory = groupByMonth(chatHistory);
     }else{
-        return <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-            <StackItem>
+        return <div style={{ width: "100%", marginTop: 10 }}>
+            <div>
                 <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
                     <span>No chat history.</span>
                 </Text>
-            </StackItem>
-        </Stack>
+            </div>
+        </div>
     }
     
     return (

@@ -1,7 +1,6 @@
 
 import { useBoolean } from '@fluentui/react-hooks';
 
-import styles from "./ChatHistoryPanel.module.css"
 import { useContext } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import React from "react";
@@ -10,7 +9,6 @@ import { ChatHistoryLoadingState, historyDeleteAll } from "../../api";
 import { Text, Button, Drawer, DrawerBody, DrawerHeader, DrawerHeaderNavigation, Menu, MenuList, MenuPopover, MenuTrigger, Title3, Toolbar, ToolbarButton, Dialog, Spinner, DialogSurface, DialogTitle, DialogActions, DialogBody } from "@fluentui/react-components";
 import { Delete24Regular, Dismiss24Regular, MoreHorizontal24Filled } from "@fluentui/react-icons";
 import { ChatHistoryStyles } from "./ChatHistoryStyles";
-import { Stack, StackItem } from '@fluentui/react';
 
 interface ChatHistoryPanelProps {
     open: boolean | undefined;
@@ -96,16 +94,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                     </DrawerHeaderNavigation>
                 </DrawerHeader>
                 <DrawerBody>
-                    <Stack aria-label="chat history panel content"
-                        styles={{
-                            root: {
-                                display: "flex",
-                                flexGrow: 1,
-                                flexDirection: "column",
-                                paddingTop: '2.5px',
-                                maxWidth: "100%"
-                            },
-                        }}
+                    <div aria-label="chat history panel content"
                         style={{
                             display: "flex",
                             flexGrow: 1,
@@ -113,42 +102,48 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
                             flexWrap: "wrap",
                             padding: "1px"
                         }}>
-                        <Stack className={styles.chatHistoryListContainer}>
-                            {(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Success && appStateContext?.state.isCosmosDBAvailable.cosmosDB) && <ChatHistoryList />}
-                            {(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && appStateContext?.state.isCosmosDBAvailable) && <>
-                                <Stack>
-                                    <Stack horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-                                        <StackItem>
-                                            <Text style={{ alignSelf: 'center' }}>
-                                                {appStateContext?.state.isCosmosDBAvailable?.status && <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>}
-                                                {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
+                        <div>
+                            {
+                                (appStateContext?.state?.chatHistoryLoadingState === ChatHistoryLoadingState.Success && appStateContext?.state?.isCosmosDBAvailable?.cosmosDB) && <ChatHistoryList />
+                            }
+                            {
+                                (appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && appStateContext?.state.isCosmosDBAvailable) && <>
+                                    <div>
+                                        <div style={{ width: "100%", marginTop: 10 }}>
+                                            <div>
+                                                <Text style={{ alignSelf: 'center' }}>
+                                                    {appStateContext?.state.isCosmosDBAvailable?.status && <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>}
+                                                    {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
 
-                                            </Text>
-                                        </StackItem>
-                                        <StackItem>
-                                            <Text style={{ alignSelf: 'center' }}>
-                                                <span>Chat history can't be saved at this time</span>
-                                            </Text>
-                                        </StackItem>
-                                    </Stack>
-                                </Stack>
-                            </>}
-                            {appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading && <>
-                                <Stack>
-                                    <Stack horizontal horizontalAlign='center' verticalAlign='center' style={{ width: "100%", marginTop: 10 }}>
-                                        <StackItem style={{ justifyContent: 'center', alignItems: 'center' }}>
-                                            <Spinner style={{ alignSelf: "flex-start", height: "100%", marginRight: "5px" }} />
-                                        </StackItem>
-                                        <StackItem>
-                                            <Text style={{ alignSelf: 'center' }}>
-                                                <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
-                                            </Text>
-                                        </StackItem>
-                                    </Stack>
-                                </Stack>
-                            </>}
-                        </Stack>
-                    </Stack>
+                                                </Text>
+                                            </div>
+                                            <div>
+                                                <Text style={{ alignSelf: 'center' }}>
+                                                    <span>Chat history can't be saved at this time</span>
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            }
+                            {
+                                appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading && <>
+                                    <div>
+                                        <div style={{ width: "100%", marginTop: 10 }}>
+                                            <div style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                                <Spinner style={{ alignSelf: "flex-start", height: "100%", marginRight: "5px" }} />
+                                            </div>
+                                            <div>
+                                                <Text style={{ alignSelf: 'center' }}>
+                                                    <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            }
+                        </div>
+                    </div>
                 </DrawerBody>
             </Drawer>
             <Dialog
