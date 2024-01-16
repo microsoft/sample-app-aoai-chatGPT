@@ -13,11 +13,11 @@ class Orchestrator(ABC):
     DEBUG_LOGGING = DEBUG.lower() == "true"
 
     @abstractmethod
-    def conversation_with_data(self, request_body):
+    def conversation_with_data(self, request_body, message_uuid):
         pass
 
     @abstractmethod
-    def conversation_without_data(self, request_body):
+    def conversation_without_data(self, request_body, message_uuid):
         pass
 
     # Initialize search variables
@@ -90,6 +90,8 @@ class Orchestrator(ABC):
 
     SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
 
+    message_uuid = ""
+
     # methods to implement in orchestrator
     def fetchUserGroups(self, userToken, nextLink=None):
         # Recursively fetch group membership
@@ -134,6 +136,12 @@ class Orchestrator(ABC):
     def format_as_ndjson(self, obj: dict) -> str:
         return json.dumps(obj, ensure_ascii=False) + "\n"
 
+    def parse_multi_columns(columns: str) -> list:
+        if "|" in columns:
+            return columns.split("|")
+        else:
+            return columns.split(",")
+
     # Format request body and headers with relevant info based on search type
     def prepare_body_headers_with_data(self, request):
         request_messages = request.json["messages"]
@@ -155,6 +163,7 @@ class Orchestrator(ABC):
                 query_type = self.AZURE_SEARCH_QUERY_TYPE
             elif self.AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and self.AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
                 query_type = "semantic"
+
 
             # Set filter
             filter = None
@@ -183,7 +192,7 @@ class Orchestrator(ABC):
                             "vectorFields": self.AZURE_SEARCH_VECTOR_COLUMNS.split("|") if self.AZURE_SEARCH_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                        "topNDocuments": self.AZURE_SEARCH_TOP_K,
+                        "topNDocuments": int(self.AZURE_SEARCH_TOP_K),
                         "queryType": query_type,
                         "semanticConfiguration": self.AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if self.AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
                         "roleInformation": self.AZURE_OPENAI_SYSTEM_MESSAGE,
@@ -211,7 +220,7 @@ class Orchestrator(ABC):
                             "vectorFields": self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
-                        "topNDocuments": self.AZURE_COSMOSDB_MONGO_VCORE_TOP_K,
+                        "topNDocuments": int(self.AZURE_COSMOSDB_MONGO_VCORE_TOP_K),
                         "strictness": int(self.AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS),
                         "queryType": query_type,
                         "roleInformation": self.AZURE_OPENAI_SYSTEM_MESSAGE
@@ -236,11 +245,11 @@ class Orchestrator(ABC):
                                 "encodedApiKey": self.ELASTICSEARCH_ENCODED_API_KEY,
                                 "indexName": self.ELASTICSEARCH_INDEX,
                                 "fieldsMapping": {
-                                    "contentFields": self.ELASTICSEARCH_CONTENT_COLUMNS.split("|") if self.ELASTICSEARCH_CONTENT_COLUMNS else [],
+                                    "contentFields": self.parse_multi_columns(self.ELASTICSEARCH_CONTENT_COLUMNS) if self.ELASTICSEARCH_CONTENT_COLUMNS else [],
                                     "titleField": self.ELASTICSEARCH_TITLE_COLUMN if self.ELASTICSEARCH_TITLE_COLUMN else None,
                                     "urlField": self.ELASTICSEARCH_URL_COLUMN if self.ELASTICSEARCH_URL_COLUMN else None,
                                     "filepathField": self.ELASTICSEARCH_FILENAME_COLUMN if self.ELASTICSEARCH_FILENAME_COLUMN else None,
-                                    "vectorFields": self.ELASTICSEARCH_VECTOR_COLUMNS.split("|") if self.ELASTICSEARCH_VECTOR_COLUMNS else []
+                                    "vectorFields": self.parse_multi_columns(self.ELASTICSEARCH_VECTOR_COLUMNS) if self.ELASTICSEARCH_VECTOR_COLUMNS else []
                                 },
                                 "inScope": True if self.ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
                                 "topNDocuments": int(self.ELASTICSEARCH_TOP_K),
@@ -285,7 +294,7 @@ class Orchestrator(ABC):
         return body, headers
 
     # Format chat response with no streaming output
-    def formatApiResponseNoStreaming(self, rawResponse):
+    def formatApiResponseNoStreaming(rawResponse):
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
@@ -358,13 +367,13 @@ class Orchestrator(ABC):
         return response
         
     # Stream chat response with appropriate role referencing data source 
-    def stream_with_data(self, body, headers, endpoint, history_metadata={}):
+    def stream_with_data(self, body, headers, endpoint, message_uuid, history_metadata={}):
         s = requests.Session()
         try:
             with s.post(endpoint, json=body, headers=headers, stream=True) as r:
                 for line in r.iter_lines(chunk_size=10):
                     response = {
-                        "id": "",
+                        "id": message_uuid,
                         "model": "",
                         "created": 0,
                         "object": "",
@@ -385,8 +394,8 @@ class Orchestrator(ABC):
                                 continue
 
                         if 'error' in lineJson:
-                            yield self.format_as_ndjson(self, lineJson)
-                        response["id"] = lineJson["id"]
+                            yield self.format_as_ndjson(lineJson)
+                        response["id"] = message_uuid
                         response["model"] = lineJson["model"]
                         response["created"] = lineJson["created"]
                         response["object"] = lineJson["object"]
@@ -417,7 +426,7 @@ class Orchestrator(ABC):
             yield self.format_as_ndjson({"error" + str(e)})
 
     # Stream chat response with assistant role from default endpoint
-    def stream_without_data(self, response, history_metadata={}):
+    def stream_without_data(self, response, message_uuid, history_metadata={}):
         responseText = ""
         for line in response:
             if line["choices"]:
@@ -428,7 +437,7 @@ class Orchestrator(ABC):
                 responseText = deltaText
 
             response_obj = {
-                "id": line["id"],
+                "id": message_uuid,
                 "model": line["model"],
                 "created": line["created"],
                 "object": line["object"],

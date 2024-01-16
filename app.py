@@ -2,6 +2,7 @@ import json
 import os
 import logging
 import openai
+import uuid
 from azure.identity import DefaultAzureCredential
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
@@ -73,10 +74,17 @@ AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")
 AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
 AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get("AZURE_COSMOSDB_CONVERSATIONS_CONTAINER")
 AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
+AZURE_COSMOSDB_ENABLE_FEEDBACK = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "false").lower() == "true"
 
 # Frontend Settings via Environment Variables
-AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower()
+AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 frontend_settings = { "auth_enabled": AUTH_ENABLED }
+frontend_settings = { 
+    "auth_enabled": AUTH_ENABLED, 
+    "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and AZURE_COSMOSDB_DATABASE not in [None, ""],
+}
+
+message_uuid = ""
 
 # Initialize a CosmosDB client with AAD auth and containers for Chat History
 cosmos_conversation_client = None
@@ -93,7 +101,8 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
             cosmosdb_endpoint=cosmos_endpoint, 
             credential=credential, 
             database_name=AZURE_COSMOSDB_DATABASE,
-            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+            container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER,
+            enable_message_feedback = AZURE_COSMOSDB_ENABLE_FEEDBACK
         )
     except Exception as e:
         logging.exception("Exception in CosmosDB initialization", e)
@@ -121,15 +130,15 @@ def should_use_data():
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
     request_body = request.json
-    return conversation_internal(request_body)
+    return conversation_internal(request_body, message_uuid)
 
-def conversation_internal(request_body):
+def conversation_internal(request_body, message_uuid):
     try:
         use_data = should_use_data()
         if use_data:
-            return orchestrator.conversation_with_data(request_body)
+            return orchestrator.conversation_with_data(request_body, message_uuid)
         else:
-            return orchestrator.conversation_without_data(request_body)
+            return orchestrator.conversation_without_data(request_body, message_uuid)
     except Exception as e:
         logging.exception("Exception in /conversation")
         return jsonify({"error": str(e)}), 500
@@ -137,6 +146,8 @@ def conversation_internal(request_body):
 ## Conversation History API ## 
 @app.route("/history/generate", methods=["POST"])
 def add_conversation():
+    global message_uuid
+    message_uuid = str(uuid.uuid4())
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
 
@@ -162,6 +173,7 @@ def add_conversation():
         messages = request.json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "user":
             cosmos_conversation_client.create_message(
+                uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
@@ -173,7 +185,7 @@ def add_conversation():
         request_body = request.json
         history_metadata['conversation_id'] = conversation_id
         request_body['history_metadata'] = history_metadata
-        return conversation_internal(request_body)
+        return conversation_internal(request_body, message_uuid)
        
     except Exception as e:
         logging.exception("Exception in /history/generate")
@@ -204,12 +216,14 @@ def update_conversation():
             if len(messages) > 1 and messages[-2].get('role', None) == "tool":
                 # write the tool message first
                 cosmos_conversation_client.create_message(
+                    uuid=str(uuid.uuid4()),
                     conversation_id=conversation_id,
                     user_id=user_id,
                     input_message=messages[-2]
                 )
             # write the assistant message
             cosmos_conversation_client.create_message(
+                uuid=message_uuid,
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
@@ -223,6 +237,32 @@ def update_conversation():
        
     except Exception as e:
         logging.exception("Exception in /history/update")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/history/message_feedback", methods=["POST"])
+def update_message():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+
+    ## check request for message_id
+    message_id = request.json.get("message_id", None)
+    message_feedback = request.json.get("message_feedback", None)
+    try:
+        if not message_id:
+            return jsonify({"error": "message_id is required"}), 400
+
+        if not message_feedback:
+            return jsonify({"error": "message_feedback is required"}), 400
+
+        ## update the message in cosmos
+        updated_message = cosmos_conversation_client.update_message_feedback(user_id, message_id, message_feedback)
+        if updated_message:
+            return jsonify({"message": f"Successfully updated message with feedback {message_feedback}", "message_id": message_id}), 200
+        else:
+            return jsonify({"error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."}), 404
+
+    except Exception as e:
+        logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/history/delete", methods=["DELETE"])
@@ -284,7 +324,7 @@ def get_conversation():
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
-    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt']} for msg in conversation_messages]
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages] 
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
