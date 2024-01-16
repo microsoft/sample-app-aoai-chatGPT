@@ -15,7 +15,7 @@ def create_orchestrator_instance(class_name: str) -> Orchestrator:
     """
 
     if not class_name or class_name.strip() == "":
-        print("Class name not provided. Using default orchestrator ...")
+        logging.info("Class name not provided. Using default orchestrator ...")
         return DefaultOrchestrator()
     
     module_name = f"orchestrators.{class_name}"
