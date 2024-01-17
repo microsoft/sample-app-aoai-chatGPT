@@ -2,10 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\data",
-    "\\frontend",
+    "\\frontend\\public",
     "\\frontend\\src",
     "\\static"
   ],
-  "SelectedNode": "\\static\\Migros.ico",
+  "SelectedNode": "\\static\\index.html",
   "PreviewInSolutionExplorer": false
 }
