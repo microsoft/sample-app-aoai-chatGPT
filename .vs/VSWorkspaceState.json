@@ -1,14 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\backend",
+    "\\data",
     "\\frontend",
     "\\frontend\\src",
     "\\frontend\\src\\assets",
     "\\frontend\\src\\constants",
     "\\frontend\\src\\pages",
-    "\\frontend\\src\\pages\\chat"
+    "\\frontend\\src\\pages\\chat",
+    "\\static",
+    "\\static\\assets"
   ],
-  "SelectedNode": "\\frontend\\src\\pages\\chat\\Chat.module.css",
+  "SelectedNode": "\\static\\assets\\index-87c2be60.js",
   "PreviewInSolutionExplorer": false
 }
