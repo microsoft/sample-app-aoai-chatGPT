@@ -123,7 +123,7 @@ class Orchestrator(ABC):
     # Filter for permitted user groups    
     def generateFilterString(self, userToken):
         # Get list of groups user is a member of
-        userGroups = self.fetchUserGroups(self, userToken)
+        userGroups = self.fetchUserGroups(userToken)
 
         # Construct filter string
         if not userGroups:
@@ -133,7 +133,7 @@ class Orchestrator(ABC):
         return f"{self.AZURE_SEARCH_PERMITTED_GROUPS_COLUMN}/any(g:search.in(g, '{group_ids}'))"
 
     # Format response as newline delimited json
-    def format_as_ndjson(self, obj: dict) -> str:
+    def format_as_ndjson(obj: dict) -> str:
         return json.dumps(obj, ensure_ascii=False) + "\n"
 
     def parse_multi_columns(columns: str) -> list:
@@ -164,7 +164,6 @@ class Orchestrator(ABC):
             elif self.AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and self.AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
                 query_type = "semantic"
 
-
             # Set filter
             filter = None
             userToken = None
@@ -185,11 +184,11 @@ class Orchestrator(ABC):
                         "key": self.AZURE_SEARCH_KEY,
                         "indexName": self.AZURE_SEARCH_INDEX,
                         "fieldsMapping": {
-                            "contentFields": self.AZURE_SEARCH_CONTENT_COLUMNS.split("|") if self.AZURE_SEARCH_CONTENT_COLUMNS else [],
-                            "titleField": self.AZURE_SEARCH_TITLE_COLUMN if self.AZURE_SEARCH_TITLE_COLUMN else None,
+                            "contentFields": self.parse_multi_columns(self.AZURE_SEARCH_CONTENT_COLUMNS) if self.AZURE_SEARCH_CONTENT_COLUMNS else [],
+                            "titleField":self. AZURE_SEARCH_TITLE_COLUMN if self.AZURE_SEARCH_TITLE_COLUMN else None,
                             "urlField": self.AZURE_SEARCH_URL_COLUMN if self.AZURE_SEARCH_URL_COLUMN else None,
                             "filepathField": self.AZURE_SEARCH_FILENAME_COLUMN if self.AZURE_SEARCH_FILENAME_COLUMN else None,
-                            "vectorFields": self.AZURE_SEARCH_VECTOR_COLUMNS.split("|") if self.AZURE_SEARCH_VECTOR_COLUMNS else []
+                            "vectorFields": self.parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS) if self.AZURE_SEARCH_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
                         "topNDocuments": int(self.AZURE_SEARCH_TOP_K),
@@ -213,11 +212,11 @@ class Orchestrator(ABC):
                         "databaseName": self.AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                         "containerName": self.AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                         "fieldsMapping": {
-                            "contentFields": self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS.split("|") if self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                            "contentFields": self.parse_multi_columns(self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS) if self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
                             "titleField": self.AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
                             "urlField": self.AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
                             "filepathField": self.AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
-                            "vectorFields": self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                            "vectorFields": self.parse_multi_columns(self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS) if self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
                         "topNDocuments": int(self.AZURE_COSMOSDB_MONGO_VCORE_TOP_K),
@@ -256,7 +255,7 @@ class Orchestrator(ABC):
                                 "queryType": self.ELASTICSEARCH_QUERY_TYPE,
                                 "roleInformation": self.AZURE_OPENAI_SYSTEM_MESSAGE,
                                 "embeddingEndpoint": self.AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                                "embeddingKey": self.AZURE_OPENAI_EMBEDDING_KEY,
+                                "embeddingKey":self. AZURE_OPENAI_EMBEDDING_KEY,
                                 "embeddingModelId": self.ELASTICSEARCH_EMBEDDING_MODEL_ID,
                                 "strictness": int(self.ELASTICSEARCH_STRICTNESS)
                             }
@@ -320,7 +319,7 @@ class Orchestrator(ABC):
         return response
     
     # Format chat response with streaming output
-    def formatApiResponseStreaming(self, rawResponse):
+    def formatApiResponseStreaming(rawResponse):
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
@@ -373,7 +372,7 @@ class Orchestrator(ABC):
             with s.post(endpoint, json=body, headers=headers, stream=True) as r:
                 for line in r.iter_lines(chunk_size=10):
                     response = {
-                        "id": message_uuid,
+                        "id": "",
                         "model": "",
                         "created": 0,
                         "object": "",
@@ -425,8 +424,8 @@ class Orchestrator(ABC):
         except Exception as e:
             yield self.format_as_ndjson({"error" + str(e)})
 
-    # Stream chat response with assistant role from default endpoint
-    def stream_without_data(self, response, message_uuid, history_metadata={}):
+    # Post chat info if data not configured
+    def stream_without_data(self,response, message_uuid, history_metadata={}):
         responseText = ""
         for line in response:
             if line["choices"]:
@@ -449,4 +448,4 @@ class Orchestrator(ABC):
                 }],
                 "history_metadata": history_metadata
             }
-            yield self.format_as_ndjson(response_obj)
+            yield self.format_as_ndjson(response_obj)        

@@ -2,6 +2,10 @@ import json
 import os
 import logging
 import openai
+<<<<<<< HEAD
+=======
+import copy
+>>>>>>> main
 import uuid
 from azure.identity import DefaultAzureCredential
 from flask import Flask, request, jsonify, send_from_directory
@@ -78,7 +82,6 @@ AZURE_COSMOSDB_ENABLE_FEEDBACK = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK"
 
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
-frontend_settings = { "auth_enabled": AUTH_ENABLED }
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and AZURE_COSMOSDB_DATABASE not in [None, ""],
@@ -265,6 +268,33 @@ def update_message():
         logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/history/message_feedback", methods=["POST"])
+def update_message():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+
+    ## check request for message_id
+    message_id = request.json.get("message_id", None)
+    message_feedback = request.json.get("message_feedback", None)
+    try:
+        if not message_id:
+            return jsonify({"error": "message_id is required"}), 400
+        
+        if not message_feedback:
+            return jsonify({"error": "message_feedback is required"}), 400
+        
+        ## update the message in cosmos
+        updated_message = cosmos_conversation_client.update_message_feedback(user_id, message_id, message_feedback)
+        if updated_message:
+            return jsonify({"message": f"Successfully updated message with feedback {message_feedback}", "message_id": message_id}), 200
+        else:
+            return jsonify({"error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."}), 404
+        
+    except Exception as e:
+        logging.exception("Exception in /history/message_feedback")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/history/delete", methods=["DELETE"])
 def delete_conversation():
     ## get the user id from the request headers
@@ -324,7 +354,11 @@ def get_conversation():
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
+<<<<<<< HEAD
     messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages] 
+=======
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages]
+>>>>>>> main
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
