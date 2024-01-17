@@ -29,7 +29,7 @@ class DefaultOrchestrator(Orchestrator):
 
         # Return response if streaming is enabled
         else:
-            return Response(super().stream_with_data(body, headers, endpoint, message_uuid,  history_metadata), mimetype='text/event-stream')
+            return Response(super().stream_with_data(body, headers, endpoint, message_uuid, history_metadata), mimetype='text/event-stream')
 
     # Post chat info if data not configured
     def conversation_without_data(self, request_body, message_uuid):

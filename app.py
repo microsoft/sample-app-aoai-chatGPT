@@ -2,7 +2,6 @@ import json
 import os
 import logging
 import openai
-import copy
 import uuid
 from azure.identity import DefaultAzureCredential
 from flask import Flask, request, jsonify, send_from_directory
@@ -250,21 +249,20 @@ def update_message():
     try:
         if not message_id:
             return jsonify({"error": "message_id is required"}), 400
-        
+
         if not message_feedback:
             return jsonify({"error": "message_feedback is required"}), 400
-        
+
         ## update the message in cosmos
         updated_message = cosmos_conversation_client.update_message_feedback(user_id, message_id, message_feedback)
         if updated_message:
             return jsonify({"message": f"Successfully updated message with feedback {message_feedback}", "message_id": message_id}), 200
         else:
             return jsonify({"error": f"Unable to update message {message_id}. It either does not exist or the user does not have access to it."}), 404
-        
+
     except Exception as e:
         logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/history/delete", methods=["DELETE"])
 def delete_conversation():

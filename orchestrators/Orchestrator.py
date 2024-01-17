@@ -293,7 +293,7 @@ class Orchestrator(ABC):
         return body, headers
 
     # Format chat response with no streaming output
-    def formatApiResponseNoStreaming(self, rawResponse):
+    def formatApiResponseNoStreaming(rawResponse):
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
@@ -319,7 +319,7 @@ class Orchestrator(ABC):
         return response
     
     # Format chat response with streaming output
-    def formatApiResponseStreaming(rawResponse):
+    def formatApiResponseStreaming(self, rawResponse):
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
