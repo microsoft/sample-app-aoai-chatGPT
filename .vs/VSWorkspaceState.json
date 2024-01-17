@@ -1,12 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\data",
+    "\\backend",
+    "\\backend\\auth",
+    "\\backend\\history",
     "\\frontend",
-    "\\frontend\\public",
     "\\frontend\\src",
-    "\\static"
+    "\\frontend\\src\\assets",
+    "\\frontend\\src\\constants",
+    "\\frontend\\src\\pages",
+    "\\frontend\\src\\pages\\layout"
   ],
-  "SelectedNode": "\\frontend\\index.html",
+  "SelectedNode": "\\frontend\\src\\assets\\Send.svg",
   "PreviewInSolutionExplorer": false
 }
