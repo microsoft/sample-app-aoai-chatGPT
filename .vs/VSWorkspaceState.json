@@ -2,15 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\backend",
-    "\\backend\\auth",
-    "\\backend\\history",
     "\\frontend",
     "\\frontend\\src",
     "\\frontend\\src\\assets",
     "\\frontend\\src\\constants",
-    "\\frontend\\src\\pages",
-    "\\frontend\\src\\pages\\layout"
+    "\\frontend\\src\\pages"
   ],
-  "SelectedNode": "\\frontend\\src\\assets\\Send.svg",
   "PreviewInSolutionExplorer": false
 }
