@@ -9,7 +9,7 @@ class AppInsightsMiddleware:
         self.instrumentation_key = os.environ.get('AZURE_APPINSIGHTS_INSTRUMENTATIONKEY') or instrumentation_key
 
         if not self.instrumentation_key:
-            raise ValueError("An instrumentation key must be provided via the environment variable 'APPINSIGHTS_INSTRUMENTATIONKEY' or the 'instrumentation_key' argument.")
+            raise ValueError("An instrumentation key must be provided via the environment variable 'AZURE_APPINSIGHTS_INSTRUMENTATIONKEY' or the 'instrumentation_key' argument.")
 
         app.config['APPINSIGHTS_INSTRUMENTATIONKEY'] = self.instrumentation_key
         self.appinsights = AppInsights(app)
