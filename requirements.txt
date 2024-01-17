@@ -5,3 +5,4 @@ azure-search-documents==11.4.0b6
 azure-storage-blob==12.17.0
 python-dotenv==1.0.0
 azure-cosmos==4.5.0
+applicationinsights==0.11.10
