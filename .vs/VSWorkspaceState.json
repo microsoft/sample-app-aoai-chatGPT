@@ -2,10 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\data",
+    "\\frontend",
     "\\frontend\\public",
     "\\frontend\\src",
     "\\static"
   ],
-  "SelectedNode": "\\static\\index.html",
+  "SelectedNode": "\\frontend\\index.html",
   "PreviewInSolutionExplorer": false
 }
