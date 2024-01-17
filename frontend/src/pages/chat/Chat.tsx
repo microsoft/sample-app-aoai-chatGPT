@@ -591,7 +591,7 @@ const Chat = () => {
                                     aria-hidden="true"
                                 />
                                 <h1 className={styles.chatEmptyStateTitle}>Kullanmaya baþla...</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>Bu yapay zeka asistaný Migros BT Altyapý çalýþanlarý için özel tasarlanmýþtýr.</h2>
+                                <h2 className={styles.chatEmptyStateSubtitle}>Migros OpenAI.</h2>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">

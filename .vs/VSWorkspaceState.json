@@ -6,7 +6,9 @@
     "\\frontend\\src",
     "\\frontend\\src\\assets",
     "\\frontend\\src\\constants",
-    "\\frontend\\src\\pages"
+    "\\frontend\\src\\pages",
+    "\\frontend\\src\\pages\\chat"
   ],
+  "SelectedNode": "\\frontend\\src\\pages\\chat\\Chat.module.css",
   "PreviewInSolutionExplorer": false
 }
