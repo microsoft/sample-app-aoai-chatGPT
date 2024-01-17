@@ -16,13 +16,6 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
     const [question, setQuestion] = useState<string>("");
 
-    useEffect(() => {
-      const { askMe } = useParams();
-      if (askMe) {
-        onSend(askMe);
-      }
-    }, []);
-
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
             return;
