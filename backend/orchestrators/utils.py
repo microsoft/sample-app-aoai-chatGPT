@@ -1,6 +1,6 @@
 import logging
-from orchestrators.DefaultOrchestrator import DefaultOrchestrator
-from orchestrators.Orchestrator import Orchestrator
+from .DefaultOrchestrator import DefaultOrchestrator
+from .Orchestrator import Orchestrator
 
 
 def create_orchestrator_instance(class_name: str) -> Orchestrator:
@@ -18,7 +18,7 @@ def create_orchestrator_instance(class_name: str) -> Orchestrator:
         logging.info("Class name not provided. Using default orchestrator ...")
         return DefaultOrchestrator()
     
-    module_name = f"orchestrators.{class_name}"
+    module_name = f"backend.orchestrators.{class_name}"
     
     try:
         logging.info(f"Attempting to construct '{class_name}' instance from '{module_name}' module ...")
