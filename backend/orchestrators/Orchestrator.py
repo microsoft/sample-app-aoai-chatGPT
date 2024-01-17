@@ -136,7 +136,7 @@ class Orchestrator(ABC):
     def format_as_ndjson(self, obj: dict) -> str:
         return json.dumps(obj, ensure_ascii=False) + "\n"
 
-    def parse_multi_columns(columns: str) -> list:
+    def parse_multi_columns(self, columns: str) -> list:
         if "|" in columns:
             return columns.split("|")
         else:
