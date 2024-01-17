@@ -29,4 +29,10 @@ jobs:
         docker tag ${{ secrets.ACR_LOGIN_SERVER }}/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER ${{ secrets.ACR_LOGIN_SERVER }}/sample-app-aoai-chatgpt:latest;
         docker push ${{ secrets.ACR_LOGIN_SERVER }}/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
         docker push ${{ secrets.ACR_LOGIN_SERVER }}/sample-app-aoai-chatgpt:latest;
+
+        docker build . --file WebApp.Dockerfile --tag docker.pkg.github.com/${{ github.repository }}/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
+        docker tag docker.pkg.github.com/${{ github.repository }}/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER docker.pkg.github.com/${{ github.repository }}/sample-app-aoai-chatgpt:latest;
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin;
+        docker push docker.pkg.github.com/${{ github.repository }}/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
+        docker push docker.pkg.github.com/${{ github.repository }}/sample-app-aoai-chatgpt:latest;
       
