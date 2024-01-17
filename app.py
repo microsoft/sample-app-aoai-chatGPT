@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
-from orchestrators.utils import create_orchestrator_instance
+from backend.orchestrators.utils import create_orchestrator_instance
 
 load_dotenv()
 
