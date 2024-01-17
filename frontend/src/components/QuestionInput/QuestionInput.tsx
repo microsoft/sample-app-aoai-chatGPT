@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Stack, TextField } from "@fluentui/react";
 import { SendRegular } from "@fluentui/react-icons";
 import Send from "../../assets/Send.svg";
@@ -14,6 +15,13 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
     const [question, setQuestion] = useState<string>("");
+
+    useEffect(() => {
+      const { askMe } = useParams();
+      if (askMe) {
+        onSend(askMe);
+      }
+    }, []);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
