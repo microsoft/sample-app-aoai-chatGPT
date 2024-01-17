@@ -2,10 +2,7 @@ import json
 import os
 import logging
 import openai
-<<<<<<< HEAD
-=======
 import copy
->>>>>>> main
 import uuid
 from azure.identity import DefaultAzureCredential
 from flask import Flask, request, jsonify, send_from_directory
@@ -354,11 +351,7 @@ def get_conversation():
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
-<<<<<<< HEAD
-    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages] 
-=======
     messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages]
->>>>>>> main
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
