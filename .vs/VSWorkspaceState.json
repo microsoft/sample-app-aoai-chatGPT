@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\data",
+    "\\frontend",
+    "\\frontend\\src",
+    "\\frontend\\src\\assets",
+    "\\frontend\\src\\constants",
+    "\\frontend\\src\\pages",
+    "\\frontend\\src\\pages\\chat",
+    "\\static",
+    "\\static\\assets"
+  ],
+  "PreviewInSolutionExplorer": false
+}
