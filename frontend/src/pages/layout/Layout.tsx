@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
-import Contoso from "../../assets/Contoso.svg";
+import Contoso from "../../assets/png-transparent-library-oclc-logo-digital-library-columbus-metropolitan-library-public-library-cooperative-worldcat.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField, ICommandBarStyles, IButtonStyles } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
@@ -52,7 +52,7 @@ const Layout = () => {
                             aria-hidden="true"
                         />
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Contoso</h1>
+                            <h1 className={styles.headerTitle}>EZproxy AI</h1>
                         </Link>
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
