@@ -1,26 +1,12 @@
 import { makeStyles, shorthands } from "@fluentui/react-components";
 
 export const AnswerStyles = makeStyles({
-    answerContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        ...shorthands.padding('8.1285px'),
-        ...shorthands.gap('5.42px'),
-        //background: '#FFFFFF',
-        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12)',
-        ...shorthands.borderRadius('5.419px'),
-    },
+ 
     answerText: {
-        fontStyle: 'normal',
-        fontWeight: 400,
-        fontSize: '14px',
-        lineHeight: '20px',
-        ...shorthands.flex('none'),
+                ...shorthands.flex('none'),
         order: 1,
         alignSelf: 'stretch',
         flexGrow: 0,
-        ...shorthands.margin('11px'),
         whiteSpace: 'normal',
         wordWrap: 'break-word',
         maxWidth: '800px',
@@ -39,10 +25,6 @@ export const AnswerStyles = makeStyles({
         display: 'flex',
     },
     answerDisclaimer: {
-        fontStyle: 'normal',
-        fontWeight: 400,
-        fontSize: '12px',
-        lineHeight: '16px',
         display: 'flex',
         alignItems: 'center',
         textAlign: 'center',
@@ -53,10 +35,7 @@ export const AnswerStyles = makeStyles({
     citationContainer: {
         marginLeft: '10px',
         fontStyle: 'normal',
-        fontWeight: 600,
-        fontSize: '12px',
         lineHeight: '16px',
-        color: '#115EA3',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',

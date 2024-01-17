@@ -1,9 +1,6 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { ShieldLockRegular, ErrorCircleRegular, CalendarCancel16Regular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
+import { ShieldLockRegular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from "rehype-raw";
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
@@ -31,9 +28,10 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
-import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image, Card, Body1 } from "@fluentui/react-components";
+import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image } from "@fluentui/react-components";
 import { ChatStyles } from "./ChatStyles";
 import { QuestionDisplay } from "../../components/QuestionDisplay/QuestionDisplay";
+import { CitationDetails } from "../../components/CitationDetails/CitationDetails";
 
 const enum messageStatus {
     NotRunning = "Not Running",
@@ -688,26 +686,11 @@ const Chat = () => {
                         </div>
                     </div>
                     {/* Citation Panel */}
-                    {
-                        messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
-                            <div className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
-                                <div aria-label="Citations Panel Header Container" className={Newstyles.citationPanelHeaderContainer} >
-                                    <span aria-label="Citations" className={Newstyles.citationPanelHeader}>Citations</span>
-                                    <Button icon={<CalendarCancel16Regular />} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)} />
-                                </div>
-                                <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
-                                <div tabIndex={0}>
-                                    <ReactMarkdown
-                                        linkTarget="_blank"
-                                        className={styles.citationPanelContent}
-                                        children={activeCitation.content}
-                                        remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[rehypeRaw]}
-                                    />
-                                </div>
-                            </div>
-                        )
-                    }
+                    <CitationDetails
+                        open={((messages && messages.length > 0) && (isCitationPanelOpen && activeCitation)) ? true : false}
+                        citation={activeCitation}
+                        onClose={() => setIsCitationPanelOpen(false)}
+                    />
                     <ChatHistoryPanel
                         open={appStateContext?.state.isChatHistoryOpen && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured}
                     />
