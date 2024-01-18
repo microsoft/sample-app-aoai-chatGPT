@@ -9,11 +9,13 @@ from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
+from backend.appinsightsmiddleware import AppInsightsMiddleware
 from backend.orchestrators.utils import create_orchestrator_instance
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static")
+AppInsightsMiddleware(app)
 
 CUSTOM_ORCHESTRATOR_CLASS_NAME = os.environ.get("CUSTOM_ORCHESTRATOR_CLASS_NAME") or "DefaultOrchestrator"
 orchestrator = create_orchestrator_instance(CUSTOM_ORCHESTRATOR_CLASS_NAME)
