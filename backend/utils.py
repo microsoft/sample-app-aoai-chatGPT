@@ -69,9 +69,46 @@ def generateFilterString(userToken):
     group_ids = ", ".join([obj['id'] for obj in userGroups])
     return f"{AZURE_SEARCH_PERMITTED_GROUPS_COLUMN}/any(g:search.in(g, '{group_ids}'))"
 
-def format_stream_response(chatCompletionChunk, history_metadata):
+def format_non_streaming_response(chatCompletion, history_metadata, message_uuid=None):
     response_obj = {
-        "id": chatCompletionChunk.id,
+        "id": message_uuid if message_uuid else chatCompletion.id,
+        "model": chatCompletion.model,
+        "created": chatCompletion.created,
+        "object": chatCompletion.object,
+        "choices": [
+            {
+                "messages": []
+            }
+        ],
+        "history_metadata": history_metadata
+    }
+
+    if len(chatCompletion.choices) > 0:
+        message = chatCompletion.choices[0].message
+        if message:
+            if hasattr(message, "context") and message.context.get("messages"):
+                for m in message.context["messages"]:
+                    if m["role"] == "tool":
+                        response_obj["choices"][0]["messages"].append({
+                            "role": "tool",
+                            "content": m["content"]
+                        })
+            elif hasattr(message, "context"):
+                response_obj["choices"][0]["messages"].append({
+                    "role": "tool",
+                    "content": json.dumps(message.context),
+                })
+            response_obj["choices"][0]["messages"].append({
+                "role": "assistant",
+                "content": message.content,
+            })
+            return response_obj
+    
+    return {}
+
+def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=None):
+    response_obj = {
+        "id": message_uuid if message_uuid else chatCompletionChunk.id,
         "model": chatCompletionChunk.model,
         "created": chatCompletionChunk.created,
         "object": chatCompletionChunk.object,
@@ -93,10 +130,10 @@ def format_stream_response(chatCompletionChunk, history_metadata):
                         }
                         response_obj["choices"][0]["messages"].append(messageObj)
                         return response_obj
-            elif delta.role == "assistant":
+            if delta.role == "assistant" and hasattr(delta, "context"):
                 messageObj = {
                     "role": "assistant",
-                    "content": "",
+                    "context": delta.context,
                 }
                 response_obj["choices"][0]["messages"].append(messageObj)
                 return response_obj

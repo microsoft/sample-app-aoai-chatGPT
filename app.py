@@ -19,7 +19,7 @@ from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
 
-from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns
+from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns, format_non_streaming_response
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -528,20 +528,7 @@ async def complete_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
 
-    return {
-        "id": message_uuid,
-        "model": response.model,
-        "created": response.created,
-        "object": response.object,
-        "choices": [{
-            "messages": [{
-                "role": "assistant",
-                "content": response.choices[0].message.content,
-                "context": response.choices[0].message.get('context', None)
-            }]
-        }],
-        "history_metadata": history_metadata
-    }
+    return format_non_streaming_response(response, history_metadata, message_uuid)
 
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
@@ -549,7 +536,7 @@ async def stream_chat_request(request_body):
 
     async def generate():
         async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata)
+            yield format_stream_response(completionChunk, history_metadata, message_uuid)
 
     return generate()
 
