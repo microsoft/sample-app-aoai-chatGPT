@@ -8,9 +8,9 @@ import { Conversation } from '../../api/models';
 import { historyDelete, historyRename, historyList } from '../../api';
 import { useEffect, useRef, useState, useContext } from 'react';
 import { ChatHistoryStyles } from './ChatHistoryStyles';
-import { DialogType, ITextField, List } from '@fluentui/react';
-import { Button, Dialog, DialogActions, Divider, Input, Spinner, Text } from '@fluentui/react-components';
-import { Checkmark20Regular, Delete16Regular, Delete20Regular, Edit20Regular } from '@fluentui/react-icons';
+import { Button, Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle, Divider, Input, Spinner, Text } from '@fluentui/react-components';
+import { Checkmark20Regular, Delete20Regular, Dismiss20Regular, Edit20Regular } from '@fluentui/react-icons';
+import { List, ListItem } from "@fluentui/react-migration-v0-v9";
 
 interface ChatHistoryListItemCellProps {
     item?: Conversation;
@@ -50,27 +50,13 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     const [renameLoading, setRenameLoading] = useState(false);
     const [errorRename, setErrorRename] = useState<string | undefined>(undefined);
     const [textFieldFocused, setTextFieldFocused] = useState(false);
-    const textFieldRef = useRef<ITextField | null>(null);
 
     const appStateContext = React.useContext(AppStateContext)
     const isSelected = item?.id === appStateContext?.state.currentChat?.id;
-    const dialogContentProps = {
-        type: DialogType.close,
-        title: 'Are you sure you want to delete this item?',
-        closeButtonAriaLabel: 'Close',
-        subText: 'The history of this chat session will permanently removed.',
-    };
 
     if (!item) {
         return null;
     }
-
-    useEffect(() => {
-        if (textFieldFocused && textFieldRef.current) {
-            textFieldRef.current.focus();
-            setTextFieldFocused(false);
-        }
-    }, [textFieldFocused]);
 
     useEffect(() => {
         if (appStateContext?.state.currentChat?.id !== item?.id) {
@@ -115,9 +101,9 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             setTimeout(() => {
                 setErrorRename(undefined);
                 setTextFieldFocused(true);
-                if (textFieldRef.current) {
-                    textFieldRef.current.focus();
-                }
+                // if (textFieldRef.current) {
+                //     textFieldRef.current.focus();
+                // }
             }, 5000);
             return
         }
@@ -128,9 +114,9 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             setTimeout(() => {
                 setTextFieldFocused(true);
                 setErrorRename(undefined);
-                if (textFieldRef.current) {
-                    textFieldRef.current.focus();
-                }
+                // if (textFieldRef.current) {
+                //     textFieldRef.current.focus();
+                // }
             }, 5000);
         } else {
             setRenameLoading(false)
@@ -175,34 +161,34 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                     <div
                         style={{ width: '100%' }}
                     >
-                        <form aria-label='edit title form' onSubmit={(e) => handleSaveEdit(e)} style={{ padding: '5px 0px' }}>
+
+                        <div>
                             <div>
-                                <div>
+                                
                                     <Input
-                                        autoFocus={textFieldFocused}
+                                        
                                         value={editTitle}
                                         placeholder={item.title}
                                         onChange={chatHistoryTitleOnChange}
                                         onKeyDown={handleKeyPressEdit}
-                                        // errorMessage={errorRename}
                                         disabled={errorRename ? true : false}
                                     />
-                                </div>
-                                {
-                                    editTitle && (<div>
-                                        <div aria-label='action button group' className={styles.historyItemEditButtons}>
-                                            <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' icon={<Checkmark20Regular />} />
-                                            <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' icon={<Delete16Regular />} />
-                                        </div>
-                                    </div>)
-                                }
                             </div>
                             {
-                                errorRename && (
-                                    <Text role='alert' aria-label={errorRename} style={{ fontSize: 12, fontWeight: 400, color: 'rgb(164,38,44)' }}>{errorRename}</Text>
-                                )
+                                editTitle && (<div>
+                                    <div aria-label='action button group' className={styles.historyItemEditButtons}>
+                                        <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' icon={<Checkmark20Regular />} />
+                                        <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' icon={<Dismiss20Regular />} />
+                                    </div>
+                                </div>)
                             }
-                        </form>
+                        </div>
+                        {
+                            errorRename && (
+                                <Text role='alert' aria-label={errorRename} style={{ fontSize: 12, fontWeight: 400, color: 'rgb(164,38,44)' }}>{errorRename}</Text>
+                            )
+                        }
+
                     </div>
                 </> : <>
                     <div className={styles.historyItem}>
@@ -225,10 +211,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                 open={!hideDeleteDialog}
                 onOpenChange={toggleDeleteDialog}
             >
-                <DialogActions>
-                    <Button appearance='primary' onClick={onDelete}>Delete</Button>
-                    <Button onClick={toggleDeleteDialog}>Cancel</Button>
-                </DialogActions>
+                <DialogSurface>
+                    <DialogTitle>Are you sure you want to delete this item?</DialogTitle>
+                    <DialogBody>The history of this chat session will permanently removed.</DialogBody>
+                    <DialogActions>
+                        <Button appearance='primary' onClick={onDelete}>Delete</Button>
+                        <Button onClick={toggleDeleteDialog}>Cancel</Button>
+                    </DialogActions>
+                </DialogSurface>
             </Dialog>
         </div>
     );
@@ -251,11 +241,6 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
         }
     }
 
-    const onRenderCell = (item?: Conversation) => {
-        return (
-            <ChatHistoryListItemCell item={item} onSelect={() => handleSelectHistory(item)} />
-        );
-    };
 
     useEffect(() => {
         if (firstRender.current) {
@@ -304,7 +289,15 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
                 groupedChatHistory.map((group) => (
                     group.entries.length > 0 && <div key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
                         <div aria-label={group.month} className={styles.chatMonth}>{formatMonth(group.month)}</div>
-                        <List aria-label={`chat history list`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList} />
+                        <List aria-label={`chat history list`} className={styles.chatList}>
+                            {
+                                group.entries.map((item, index) => {
+                                    return <ListItem key={index} >
+                                        <ChatHistoryListItemCell item={item} onSelect={() => handleSelectHistory(item)} />
+                                    </ListItem>
+                                })
+                            }
+                        </List>
                         <div ref={observerTarget} />
                         <Divider style={{
                             width: '100%',

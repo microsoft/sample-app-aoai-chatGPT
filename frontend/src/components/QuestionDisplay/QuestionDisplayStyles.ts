@@ -4,6 +4,5 @@ export const QuestionDisplayStyles = makeStyles({
     card: {
         // fit content width
         width: 'fit-content',
-
     }
 });

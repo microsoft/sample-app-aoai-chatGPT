@@ -71,16 +71,6 @@ export const ChatStyles = makeStyles({
         alignItems: 'center',
     },
 
-    citationPanelHeader: {
-        fontStyle: 'normal',
-        fontWeight: 600,
-        fontSize: '18px',
-        lineHeight: '24px',
-        color: '#000000',
-        order: 0,
-        flexGrow: 0
-    },
-
     stopGeneratingContainer: {
         ...shorthands.margin('8px'),
     },
@@ -103,5 +93,16 @@ export const ChatStyles = makeStyles({
         maxWidth: '1080px',
         height: '165px',
     },
+
+    chatMessageError: {
+        ...shorthands.padding('20px'),
+        ...shorthands.borderRadius('8px'),
+        boxShadow: 'rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px',
+        ...shorthands.flex('none'),
+        order: 0,
+        flexGrow: 0,
+        maxWidth: '800px',
+        marginBottom: '12px',
+    },   
 
 });

@@ -12,7 +12,8 @@ export default function App() {
     return (
         <AppStateProvider>
             <FluentProvider
-                theme={teamsLightTheme}
+                theme={teamsDarkTheme}
+                style={{ minHeight: "100vh" }}
             >
                 <HashRouter>
                     <Routes>

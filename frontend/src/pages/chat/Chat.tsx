@@ -4,7 +4,6 @@ import { ShieldLockRegular, ErrorCircleRegular, Broom16Regular, Add16Regular, St
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
-import styles from "./Chat.module.css";
 import Azure from "../../assets/Azure.svg";
 
 import {
@@ -564,16 +563,16 @@ const Chat = () => {
         <div className={Newstyles.container} role="main">
             {showAuthMessage ? (
                 <div className={Newstyles.chatEmptyState}>
-                    <ShieldLockRegular className={styles.chatIcon} style={{ color: 'darkorange', height: "200px", width: "200px" }} />
-                    <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
-                    <h2 className={styles.chatEmptyStateSubtitle}>
+                    <ShieldLockRegular />
+                    <h1>Authentication Not Configured</h1>
+                    <h2>
                         This app does not have authentication configured. Please add an identity provider by finding your app in the
                         <Link href="https://portal.azure.com/" target="_blank"> Azure Portal </Link>
                         and following
                         <Link href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</Link>.
                     </h2>
-                    <Title2 className={styles.chatEmptyStateSubtitle} ><strong>Authentication configuration takes a few minutes to apply. </strong></Title2>
-                    <Title2 className={styles.chatEmptyStateSubtitle} ><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></Title2>
+                    <Title2><strong>Authentication configuration takes a few minutes to apply. </strong></Title2>
+                    <Title2><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></Title2>
                 </div>
             ) : (
                 <div className={Newstyles.container}>
@@ -582,7 +581,8 @@ const Chat = () => {
                             <div className={Newstyles.chatEmptyState}>
                                 <Image
                                     src={Azure}
-                                    className={styles.chatIcon}
+                                    height={62}
+                                    width={62}
                                     aria-hidden="true"
                                 />
                                 <Title1>Start chatting</Title1>
@@ -600,7 +600,12 @@ const Chat = () => {
                                                     />
                                                 </div>
                                             ) : (
-                                                answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                                                answer.role === "assistant" ? <div
+                                                    style={{
+                                                        marginBottom: '12px',
+                                                        maxWidth: '80%',
+                                                        display: 'flex'
+                                                    }}>
                                                     <Answer
                                                         answer={{
                                                             answer: answer.content,
@@ -608,12 +613,12 @@ const Chat = () => {
                                                         }}
                                                         onCitationClicked={c => onShowCitation(c)}
                                                     />
-                                                </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
-                                                    <div className={styles.chatMessageErrorContent}>
-                                                        <ErrorCircleRegular className={styles.errorIcon} style={{ color: "rgba(182, 52, 67, 1)" }} />
+                                                </div> : answer.role === ERROR ? <div className={Newstyles.chatMessageError}>
+                                                    <div className={Newstyles.chatMessageErrorContent}>
+                                                        <ErrorCircleRegular />
                                                         <span>Error</span>
                                                     </div>
-                                                    <span className={styles.chatMessageErrorContent}>{answer.content}</span>
+                                                    <span className={Newstyles.chatMessageErrorContent}>{answer.content}</span>
                                                 </div> : null
                                             )
                                         }
@@ -621,7 +626,7 @@ const Chat = () => {
                                 ))}
                                 {showLoadingMessage && (
                                     <>
-                                        <div className={styles.chatMessageGpt}>
+                                        <div>
                                             <Answer
                                                 answer={{
                                                     answer: "Generating answer...",
