@@ -136,7 +136,7 @@ class Orchestrator(ABC):
     def format_as_ndjson(self, obj: dict) -> str:
         return json.dumps(obj, ensure_ascii=False) + "\n"
 
-    def parse_multi_columns(columns: str) -> list:
+    def parse_multi_columns(self, columns: str) -> list:
         if "|" in columns:
             return columns.split("|")
         else:
@@ -164,7 +164,6 @@ class Orchestrator(ABC):
             elif self.AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and self.AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG:
                 query_type = "semantic"
 
-
             # Set filter
             filter = None
             userToken = None
@@ -185,11 +184,11 @@ class Orchestrator(ABC):
                         "key": self.AZURE_SEARCH_KEY,
                         "indexName": self.AZURE_SEARCH_INDEX,
                         "fieldsMapping": {
-                            "contentFields": self.AZURE_SEARCH_CONTENT_COLUMNS.split("|") if self.AZURE_SEARCH_CONTENT_COLUMNS else [],
+                            "contentFields": self.parse_multi_columns(self.AZURE_SEARCH_CONTENT_COLUMNS) if self.AZURE_SEARCH_CONTENT_COLUMNS else [],
                             "titleField": self.AZURE_SEARCH_TITLE_COLUMN if self.AZURE_SEARCH_TITLE_COLUMN else None,
                             "urlField": self.AZURE_SEARCH_URL_COLUMN if self.AZURE_SEARCH_URL_COLUMN else None,
                             "filepathField": self.AZURE_SEARCH_FILENAME_COLUMN if self.AZURE_SEARCH_FILENAME_COLUMN else None,
-                            "vectorFields": self.AZURE_SEARCH_VECTOR_COLUMNS.split("|") if self.AZURE_SEARCH_VECTOR_COLUMNS else []
+                            "vectorFields": self.parse_multi_columns(self.AZURE_SEARCH_VECTOR_COLUMNS) if self.AZURE_SEARCH_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
                         "topNDocuments": int(self.AZURE_SEARCH_TOP_K),
@@ -213,11 +212,11 @@ class Orchestrator(ABC):
                         "databaseName": self.AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
                         "containerName": self.AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,                    
                         "fieldsMapping": {
-                            "contentFields": self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS.split("|") if self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
+                            "contentFields": self.parse_multi_columns(self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS) if self.AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS else [],
                             "titleField": self.AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN else None,
                             "urlField": self.AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN else None,
                             "filepathField": self.AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN if self.AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN else None,
-                            "vectorFields": self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS.split("|") if self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
+                            "vectorFields": self.parse_multi_columns(self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS) if self.AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS else []
                         },
                         "inScope": True if self.AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true" else False,
                         "topNDocuments": int(self.AZURE_COSMOSDB_MONGO_VCORE_TOP_K),
@@ -425,7 +424,7 @@ class Orchestrator(ABC):
         except Exception as e:
             yield self.format_as_ndjson({"error" + str(e)})
 
-    # Stream chat response with assistant role from default endpoint
+    # Post chat info if data not configured
     def stream_without_data(self, response, message_uuid, history_metadata={}):
         responseText = ""
         for line in response:

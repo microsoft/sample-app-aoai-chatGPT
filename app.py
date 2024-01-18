@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.history.cosmosdbservice import CosmosConversationClient
-from orchestrators.utils import create_orchestrator_instance
+from backend.orchestrators.utils import create_orchestrator_instance
 
 load_dotenv()
 
@@ -78,7 +78,6 @@ AZURE_COSMOSDB_ENABLE_FEEDBACK = os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK"
 
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
-frontend_settings = { "auth_enabled": AUTH_ENABLED }
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and AZURE_COSMOSDB_DATABASE not in [None, ""],
@@ -324,7 +323,7 @@ def get_conversation():
     conversation_messages = cosmos_conversation_client.get_messages(user_id, conversation_id)
 
     ## format the messages in the bot frontend format
-    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages] 
+    messages = [{'id': msg['id'], 'role': msg['role'], 'content': msg['content'], 'createdAt': msg['createdAt'], 'feedback': msg.get('feedback')} for msg in conversation_messages]
 
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
