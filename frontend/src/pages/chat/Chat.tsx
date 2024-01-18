@@ -569,14 +569,13 @@ const Chat = () => {
       appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
     }
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramQuestion = urlParams.get('askmsr');
-   
     useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramQuestion = urlParams.get('askmsr');
       if (paramQuestion) {
         sendChatQuestion(paramQuestion);
       }
-    }, [paramQuestion]);
+    }, []);
 
     return (
         <div className={styles.container} role="main">
