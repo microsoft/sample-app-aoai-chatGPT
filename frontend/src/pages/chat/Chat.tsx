@@ -565,6 +565,18 @@ const Chat = () => {
         return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     }
 
+    const sendChatQuestion =  (question: string, id?: string | undefined) => {
+      appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
+    }
+    
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramQuestion = urlParams.get('askmsr');
+      if (paramQuestion) {
+        sendChatQuestion(paramQuestion);
+      }
+    }, []);
+
     return (
         <div className={styles.container} role="main">
             {showAuthMessage ? (
@@ -713,9 +725,7 @@ const Chat = () => {
                                 clearOnSend
                                 placeholder="Type a new question..."
                                 disabled={isLoading}
-                                onSend={(question, id) => {
-                                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
-                                }}
+                                onSend={sendChatQuestion}
                                 conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                             />
                         </Stack>
