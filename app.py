@@ -23,6 +23,12 @@ from backend.utils import format_as_ndjson, format_stream_response, generateFilt
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
+def create_app():
+    app = Quart(__name__)
+    app.register_blueprint(bp)
+    return app
+
+
 @bp.route("/")
 async def index():
     return await bp.send_static_file("index.html")
@@ -152,9 +158,10 @@ AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
 
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
+CHAT_HISTORY_ENABLED = AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
-    "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and AZURE_COSMOSDB_DATABASE not in [None, ""],
+    "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
 }
 
 message_uuid = ""
@@ -243,7 +250,7 @@ def init_openai_client(use_data=SHOULD_USE_DATA):
 
 def init_cosmosdb_client():
     cosmos_conversation_client = None
-    if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER:
+    if CHAT_HISTORY_ENABLED:
         try:
             cosmos_endpoint = f'https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/'
 
@@ -256,7 +263,8 @@ def init_cosmosdb_client():
                 cosmosdb_endpoint=cosmos_endpoint, 
                 credential=credential, 
                 database_name=AZURE_COSMOSDB_DATABASE,
-                container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+                container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER,
+                enable_message_feedback=AZURE_COSMOSDB_ENABLE_FEEDBACK
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -920,7 +928,4 @@ async def generate_title(conversation_messages):
         return messages[-2]['content']
 
 
-def create_app():
-    app = Quart(__name__)
-    app.register_blueprint(bp)
-    return app
+app = create_app()

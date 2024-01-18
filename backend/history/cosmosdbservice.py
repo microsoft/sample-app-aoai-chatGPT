@@ -138,7 +138,7 @@ class CosmosConversationClient():
         message = await self.container_client.read_item(item=message_id, partition_key=user_id)
         if message:
             message['feedback'] = feedback
-            resp = self.container_client.upsert_item(message)
+            resp = await self.container_client.upsert_item(message)
             return resp
         else:
             return False
