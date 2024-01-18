@@ -188,24 +188,28 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                                         disabled={errorRename ? true : false}
                                     />
                                 </div>
-                                {editTitle && (<div>
-                                    <div aria-label='action button group'>
-                                        <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' icon={<Checkmark20Regular />} />
-                                        <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' icon={<Delete16Regular />} />
-                                    </div>
-                                </div>)}
+                                {
+                                    editTitle && (<div>
+                                        <div aria-label='action button group' className={styles.historyItemEditButtons}>
+                                            <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? handleSaveEdit(e) : null} onClick={(e) => handleSaveEdit(e)} aria-label='confirm new title' icon={<Checkmark20Regular />} />
+                                            <Button role='button' disabled={errorRename !== undefined} onKeyDown={e => e.key === " " || e.key === 'Enter' ? cancelEditTitle() : null} onClick={() => cancelEditTitle()} aria-label='cancel edit title' icon={<Delete16Regular />} />
+                                        </div>
+                                    </div>)
+                                }
                             </div>
-                            {errorRename && (
-                                <Text role='alert' aria-label={errorRename} style={{ fontSize: 12, fontWeight: 400, color: 'rgb(164,38,44)' }}>{errorRename}</Text>
-                            )}
+                            {
+                                errorRename && (
+                                    <Text role='alert' aria-label={errorRename} style={{ fontSize: 12, fontWeight: 400, color: 'rgb(164,38,44)' }}>{errorRename}</Text>
+                                )
+                            }
                         </form>
                     </div>
                 </> : <>
-                    <div style={{ width: '100%' }}>
-                        <div className={styles.chatTitle}>{truncatedTitle}</div>
+                    <div className={styles.historyItem}>
+                        <div>{truncatedTitle}</div>
                         {(isSelected || isHovered) && <div>
-                            <Button className={styles.itemButton} icon={<Delete20Regular />} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null} />
-                            <Button className={styles.itemButton} icon={<Edit20Regular />} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null} />
+                            <Button appearance='transparent' icon={<Delete20Regular />} title="Delete" onClick={toggleDeleteDialog} onKeyDown={e => e.key === " " ? toggleDeleteDialog() : null} />
+                            <Button appearance='transparent' icon={<Edit20Regular />} title="Edit" onClick={onEdit} onKeyDown={e => e.key === " " ? onEdit() : null} />
                         </div>}
                     </div>
                 </>

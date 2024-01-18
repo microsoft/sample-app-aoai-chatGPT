@@ -69,5 +69,17 @@ export const ChatHistoryStyles = makeStyles({
         whiteSpace: 'nowrap',
         textOverflow: 'ellipsis',
     },
+    historyItem: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        ...shorthands.gap('5px'),
+    },
+    historyItemEditButtons: {
+        display: 'flex',
+        flexDirection: 'row',
+        marginTop: '5px',
+        ...shorthands.gap('5px'),
+    },
 
 });

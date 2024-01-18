@@ -4,7 +4,9 @@ export const ChatStyles = makeStyles({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        ...shorthands.padding('20px'),
+        paddingTop: '20px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
         boxSizing: 'border-box',
     },
 

@@ -12,7 +12,7 @@ export default function App() {
     return (
         <AppStateProvider>
             <FluentProvider
-                theme={teamsDarkTheme}
+                theme={teamsLightTheme}
             >
                 <HashRouter>
                     <Routes>

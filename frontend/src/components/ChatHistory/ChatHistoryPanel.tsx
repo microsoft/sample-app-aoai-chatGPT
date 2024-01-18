@@ -60,7 +60,7 @@ export function ChatHistoryPanel(props: ChatHistoryPanelProps) {
             <Drawer
                 open={showDrawer}
                 aria-label={"chat history panel"}
-                size='medium'
+                size='small'
                 position='end'
                 type='overlay'
             >
