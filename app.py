@@ -536,7 +536,8 @@ async def complete_chat_request(request_body):
         "choices": [{
             "messages": [{
                 "role": "assistant",
-                "content": response.choices[0].message.content
+                "content": response.choices[0].message.content,
+                "context": response.choices[0].message.get('context', None)
             }]
         }],
         "history_metadata": history_metadata
