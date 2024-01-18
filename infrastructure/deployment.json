@@ -616,8 +616,11 @@
                     }
                 ],
                 "databaseAccountOfferType": "Standard",
-                "enableAutomaticFailover": false,
-                "enableMultipleWriteLocations": false
+                "capabilities": [
+                    {
+                        "name": "EnableServerless"
+                    }
+                ]
             }
         },
         {
@@ -665,10 +668,6 @@
                             "/userId"
                         ],
                         "kind": "Hash"
-                    },
-                    "conflictResolutionPolicy": {
-                        "mode": "LastWriterWins",
-                        "conflictResolutionPath": "/_ts"
                     }
                 }
             }
