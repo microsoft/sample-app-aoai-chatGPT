@@ -570,10 +570,14 @@ const Chat = () => {
     }
     
     useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramQuestion = urlParams.get('askmsr');
-      if (paramQuestion) {
-        sendChatQuestion(paramQuestion);
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramQuestion = urlParams.get('askmsr');
+        if (paramQuestion) {
+          sendChatQuestion(paramQuestion);
+        }
+      } catch (error) {
+        console.error('Error occurred while processing URL parameters:', error);
       }
     }, []);
 
