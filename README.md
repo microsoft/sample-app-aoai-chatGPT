@@ -64,8 +64,8 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_VECTOR_COLUMNS`
     - `AZURE_SEARCH_QUERY_TYPE`
     - `AZURE_SEARCH_PERMITTED_GROUPS_COLUMN`
-    - `AZURE_OPENAI_EMBEDDING_ENDPOINT`
-    - `AZURE_OPENAI_EMBEDDING_KEY`
+    - `AZURE_SEARCH_STRICTNESS`
+    - `AZURE_OPENAI_EMBEDDING_NAME`
 
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app.
 4. You can see the local running app at http://127.0.0.1:5000.
@@ -78,6 +78,12 @@ To enable chat history, you will need to set up CosmosDB resources. The ARM temp
 - `AZURE_COSMOSDB_ACCOUNT_KEY`
 
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:5000.
+
+#### Local Setup: Enable Message Feedback
+To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
+
+/.env
+- `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
 
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
@@ -107,15 +113,81 @@ Deployment will take several minutes. When it completes, you should be able to n
 ### Add an identity provider
 After deployment, you will need to add an identity provider to provide authentication support in your app. See [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) for more information.
 
-If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. To remove this restriction, or add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. For example, disable the authorization check like so:
+If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. 
+
+To remove this restriction, you can add `AUTH_ENABLED=False` to the environment variables. This will disable authentication and allow anyone to access the chat functionality of your app. **This is not recommended for production apps.**
+
+To add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. 
+
+## Common Customization Scenarios
+Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
+
+### Scalability
+For apps published with `az webapp up` or from the Azure AI Studio, you can increase your app's ability to handle concurrent requests from multiple users with the following steps:
+1. Upgrade your App Service plan tier to a higher tier, for example tiers with more than one vCPU.
+
+2. Configure the following app setting on your App Service in the Azure Portal:
+- `PYTHON_ENABLE_GUNICORN_MULTIWORKERS`: true
+This will default to use a default worker count of (2 * numCores) + 1 and thread count of 1.
+If your App Service Plan has additional compute capacity and you want to increase the worker or thread count, you can figure these additional settings accordingly:
+- `PYTHON_GUNICORN_CUSTOM_WORKER_NUM`
+- `PYTHON_GUNICORN_CUSTOM_THREAD_NUM`
+
+See the [Oryx documentation](https://github.com/microsoft/Oryx/blob/main/doc/configuration.md) for more details on these settings.
+
+After adding the settings, be sure to save the configuration and then restart your app.
+
+### Debugging your deployed app
+First, add an environment variable on the app service resource called "DEBUG". Set this to "true".
+
+Next, enable logging on the app service. Go to "App Service logs" under Monitoring, and change Application logging to File System. Save the change.
+
+Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
+
+### Configuring vector search
+When using your own data with a vector index, ensure these settings are configured on your app:
+- `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
+- `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+- `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+
+### Updating the default chat logo and headers
+The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
 ```
-const getUserInfoList = async () => {
-        setShowAuthMessage(false);
-}
+<Stack className={styles.chatEmptyState}>
+    <img
+        src={Azure}
+        className={styles.chatIcon}
+        aria-hidden="true"
+    />
+    <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
+    <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+</Stack>
+```
+To update the logo, change `src={Azure}` to point to your own SVG file, which you can put in `frontend/src/assets`/
+To update the headers, change the strings "Start chatting" and "This chatbot is configured to answer your questions" to your desired values.
+
+### Changing Citation Display
+The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the title element is a clickable hyperlink if `url` is not a blob URL.
+
+```
+    <h5 
+        className={styles.citationPanelTitle} 
+        tabIndex={0} 
+        title={activeCitation.url && !activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} 
+        onClick={() => onViewSource(activeCitation)}
+    >{activeCitation.title}</h5>
+
+    const onViewSource = (citation: Citation) => {
+        if (citation.url && !citation.url.includes("blob.core")) {
+            window.open(citation.url, "_blank");
+        }
+    };
+
 ```
 
-## Best Practices
-Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to expose some of the settings in `app.py` in the UI for users to try out different behaviors. We recommend keeping these best practices in mind:
+
+### Best Practices
+We recommend keeping these best practices in mind:
 
 - Reset the chat session (clear chat) if the user changes any settings. Notify the user that their chat history will be lost.
 - Clearly communicate to the user what impact each setting will have on their experience.
@@ -142,6 +214,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_SEARCH_URL_COLUMN||Field from your Azure Cognitive Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
 |AZURE_SEARCH_VECTOR_COLUMNS||List of fields in your Azure Cognitive Search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
 |AZURE_SEARCH_PERMITTED_GROUPS_COLUMN||Field from your Azure Cognitive Search index that contains AAD group IDs that determine document-level access control.|
+|AZURE_SEARCH_STRICTNESS|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
 |AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
 |AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource.|
@@ -154,8 +227,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
-|AZURE_OPENAI_EMBEDDING_ENDPOINT||The endpoint for your Ada embedding model deployment if using vector search.
-|AZURE_OPENAI_EMBEDDING_KEY||The key for the Azure OpenAI resource with the Ada deployment to use with vector search.|
+|AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 
 
 ## Contributing

@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: push_documents_acs
+display_name: Push documents to Azure Cognitive Search Index
+version: 1
+
+inputs:
+  chunks_with_embeddings_file_path:
+    type: uri_file
+  config_file:
+    type: uri_file
+
+code: .
+
+environment: 
+  conda_file: conda.yml
+  image: mcr.microsoft.com/azureml/curated/python-sdk-v2:latest
+
+command: >-
+  python push_to_acs.py --input_data_path ${{inputs.chunks_with_embeddings_file_path}} --config_file ${{inputs.config_file}}
