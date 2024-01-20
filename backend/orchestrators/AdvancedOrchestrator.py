@@ -1,34 +1,22 @@
 import requests
+import os
 import copy
 import json
 import logging
 import openai
 from flask import Response, request, jsonify
 from .Orchestrator import Orchestrator
-
-class OpenAIContext():
-    def __init__(self, resource: str, model: str, endpoint: str, key: str, version: str):
-        self.resource = resource
-        self.model = model
-        self.endpoint = endpoint
-        self.key = key
-        self.version = version    
+from .LoadBalancer import LoadBalancer
 
 class AdvancedOrchestrator(Orchestrator):
-    def get_openai_context(self) -> OpenAIContext:
-        # TODO: Add logic to load balance between multiple OpenAI endpoints
-        # For now just configuring with the same endpoint that DefaultOrchestrator uses
-        return OpenAIContext(
-            resource = super().AZURE_OPENAI_RESOURCE,
-            model = super().AZURE_OPENAI_MODEL,
-            endpoint = super().AZURE_OPENAI_ENDPOINT,
-            key = super().AZURE_OPENAI_KEY,
-            version = super().AZURE_OPENAI_PREVIEW_API_VERSION
-        )
-        
     # Post chat info if data configured
     def conversation_with_data(self, request_body, message_uuid):
-        openai_context = self.get_openai_context()
+    
+        # Create a LoadBalancer object
+        load_balancer = LoadBalancer()
+
+        # Get a weighted random OpenAIContext object
+        openai_context = load_balancer.get_openai_context()
 
         # Set up request variables
         body, headers = self.prepare_body_headers_with_data(request, openai_context)
