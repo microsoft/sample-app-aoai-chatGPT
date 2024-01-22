@@ -11,14 +11,11 @@ from .LoadBalancer import LoadBalancer
 class AdvancedOrchestrator(Orchestrator):
     # Post chat info if data configured
     def conversation_with_data(self, request_body, message_uuid):
-        print('conv with data')
         # Create a LoadBalancer object
         load_balancer = LoadBalancer()
 
         # Get a weighted random OpenAIContext object
         openai_context = load_balancer.get_openai_context()
-        print(f'adv {openai_context}')
-        print(f'adv {openai_context["resource"]}')
 
         resource = openai_context["resource"]
         model = openai_context["model"]
@@ -53,15 +50,11 @@ class AdvancedOrchestrator(Orchestrator):
 
     # Post chat info if data not configured
     def conversation_without_data(self, request_body, message_uuid):
-        print('conv without data')
         # Create a LoadBalancer object
         load_balancer = LoadBalancer()
 
         # Get a weighted random OpenAIContext object
         openai_context = load_balancer.get_openai_context()
-
-        print(f'adv {openai_context}')
-        print(f'adv {openai_context["resource"]}')
 
         resource = openai_context["resource"]
         model = openai_context["model"]
@@ -129,7 +122,6 @@ class AdvancedOrchestrator(Orchestrator):
         
     # Format request body and headers with relevant info based on search type
     def prepare_body_headers_with_data(self, request, key):
-        print('in prepare body heads with data')
         request_messages = request.json["messages"]
 
         body = {

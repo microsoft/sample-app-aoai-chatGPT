@@ -50,11 +50,4 @@ class LoadBalancer:
                 if rand_num <= cumulative_weight:
                     selected_context_obj = self.contexts[i]
                     selected_context = selected_context_obj.to_dict()
-                    print(f'lb {selected_context}')
                     return selected_context
-
-# # Create a LoadBalancer object
-# load_balancer = LoadBalancer()
-
-# # Get a weighted random OpenAIContext object
-# openai_context = load_balancer.get_openai_context()

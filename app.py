@@ -19,7 +19,6 @@ AppInsightsMiddleware(app)
 
 CUSTOM_ORCHESTRATOR_CLASS_NAME = os.environ.get("CUSTOM_ORCHESTRATOR_CLASS_NAME") or "DefaultOrchestrator"
 orchestrator = create_orchestrator_instance(CUSTOM_ORCHESTRATOR_CLASS_NAME)
-print(CUSTOM_ORCHESTRATOR_CLASS_NAME)
 
 # Static Files
 @app.route("/")
@@ -138,7 +137,7 @@ def conversation_internal(request_body, message_uuid):
     try:
         use_data = should_use_data()
         if use_data:
-            return orchestrator.conversation_without_data(request_body, message_uuid)
+            return orchestrator.conversation_with_data(request_body, message_uuid)
         else:
             return orchestrator.conversation_without_data(request_body, message_uuid)
     except Exception as e:
@@ -155,7 +154,6 @@ def add_conversation():
 
     ## check request for conversation_id
     conversation_id = request.json.get("conversation_id", None)
-    print(f'add conv {conversation_id}')
 
     try:
         # make sure cosmos is configured
@@ -202,7 +200,6 @@ def update_conversation():
 
     ## check request for conversation_id
     conversation_id = request.json.get("conversation_id", None)
-    print(f'update {conversation_id}')
 
     try:
         # make sure cosmos is configured
@@ -211,12 +208,7 @@ def update_conversation():
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
         if not conversation_id:
-            # raise Exception("No conversation_id found")
-            title = generate_title(request.json["messages"])
-            conversation_dict = cosmos_conversation_client.create_conversation(user_id=user_id, title=title)
-            conversation_id = conversation_dict['id']
-            # history_metadata['title'] = title
-            # history_metadata['date'] = conversation_dict['createdAt']
+            raise Exception("No conversation_id found")
             
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
