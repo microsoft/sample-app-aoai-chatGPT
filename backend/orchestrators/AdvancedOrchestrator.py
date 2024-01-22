@@ -11,17 +11,25 @@ from .LoadBalancer import LoadBalancer
 class AdvancedOrchestrator(Orchestrator):
     # Post chat info if data configured
     def conversation_with_data(self, request_body, message_uuid):
-    
+        print('conv with data')
         # Create a LoadBalancer object
         load_balancer = LoadBalancer()
 
         # Get a weighted random OpenAIContext object
         openai_context = load_balancer.get_openai_context()
+        print(f'adv {openai_context}')
+        print(f'adv {openai_context["resource"]}')
+
+        resource = openai_context["resource"]
+        model = openai_context["model"]
+        endpoint_url = openai_context["endpoint_url"]
+        key = openai_context["key"]
+        version = openai_context["version"]
 
         # Set up request variables
-        body, headers = self.prepare_body_headers_with_data(request, openai_context)
-        base_url = openai_context.endpoint if openai_context.endpoint else f"https://{openai_context.resource}.openai.azure.com/"
-        endpoint = f"{base_url}openai/deployments/{openai_context.model}/extensions/chat/completions?api-version={openai_context.version}"
+        body, headers = self.prepare_body_headers_with_data(request, key)
+        base_url = endpoint_url if endpoint_url else f"https://{resource}.openai.azure.com/"
+        endpoint = f"{base_url}openai/deployments/{model}/extensions/chat/completions?api-version={version}"
         history_metadata = request_body.get("history_metadata", {})
 
         # Return response if streaming is not enabled
@@ -31,7 +39,7 @@ class AdvancedOrchestrator(Orchestrator):
             r = r.json()
 
             # Check for preview api version
-            if super().AZURE_OPENAI_PREVIEW_API_VERSION == "2023-06-01-preview":
+            if version == "2023-06-01-preview":
                 r['history_metadata'] = history_metadata
                 return Response(super().format_as_ndjson(r), status=status_code)
             else:
@@ -45,15 +53,28 @@ class AdvancedOrchestrator(Orchestrator):
 
     # Post chat info if data not configured
     def conversation_without_data(self, request_body, message_uuid):
-        openai_context = self.get_openai_context()
+        print('conv without data')
+        # Create a LoadBalancer object
+        load_balancer = LoadBalancer()
 
-        # TODO: Need to pass the context into the *args of the .create call below instead of using the global variables
+        # Get a weighted random OpenAIContext object
+        openai_context = load_balancer.get_openai_context()
+
+        print(f'adv {openai_context}')
+        print(f'adv {openai_context["resource"]}')
+
+        resource = openai_context["resource"]
+        model = openai_context["model"]
+        endpoint_url = openai_context["endpoint_url"]
+        key = openai_context["key"]
+        # version = openai_context["version"]
+
 
         # Setup for direct query to OpenAI
         openai.api_type = "azure"
-        openai.api_base = super().AZURE_OPENAI_ENDPOINT if super().AZURE_OPENAI_ENDPOINT else f"https://{super().AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+        openai.api_base = endpoint_url if endpoint_url else f"https://{resource}.openai.azure.com/"
         openai.api_version = "2023-08-01-preview"
-        openai.api_key = super().AZURE_OPENAI_KEY
+        openai.api_key = key
 
         # Configure request
         request_messages = request_body["messages"]
@@ -73,7 +94,7 @@ class AdvancedOrchestrator(Orchestrator):
 
         # Send request to chat completion
         response = openai.ChatCompletion.create(
-            engine=super().AZURE_OPENAI_MODEL,
+            engine=model,
             messages = messages,
             temperature=float(super().AZURE_OPENAI_TEMPERATURE),
             max_tokens=int(super().AZURE_OPENAI_MAX_TOKENS),
@@ -107,7 +128,8 @@ class AdvancedOrchestrator(Orchestrator):
             return Response(super().stream_without_data(response, history_metadata, message_uuid), mimetype='text/event-stream')
         
     # Format request body and headers with relevant info based on search type
-    def prepare_body_headers_with_data(self, request, openai_context: OpenAIContext):
+    def prepare_body_headers_with_data(self, request, key):
+        print('in prepare body heads with data')
         request_messages = request.json["messages"]
 
         body = {
@@ -250,7 +272,7 @@ class AdvancedOrchestrator(Orchestrator):
 
         headers = {
             'Content-Type': 'application/json',
-            'api-key': openai_context.key,
+            'api-key': key,
             "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
         }
 
