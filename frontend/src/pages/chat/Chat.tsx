@@ -532,6 +532,7 @@ const Chat = () => {
 
       if (AUTH_ENABLED !== undefined) {
         clearTimeout(timer);
+        if (!AUTH_ENABLED) return;
         getUserInfoList();
       }
 
