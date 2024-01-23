@@ -60,13 +60,13 @@ class AdvancedOrchestrator(Orchestrator):
         model = openai_context["model"]
         endpoint_url = openai_context["endpoint_url"]
         key = openai_context["key"]
-        # version = openai_context["version"]
+        version = openai_context["version"]
 
 
         # Setup for direct query to OpenAI
         openai.api_type = "azure"
         openai.api_base = endpoint_url if endpoint_url else f"https://{resource}.openai.azure.com/"
-        openai.api_version = "2023-08-01-preview"
+        openai.api_version = version
         openai.api_key = key
 
         # Configure request
