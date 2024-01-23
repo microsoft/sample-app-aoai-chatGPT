@@ -48,7 +48,7 @@ const Chat = () => {
     const [activeCitation, setActiveCitation] = useState<Citation>();
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const abortFuncs = useRef([] as AbortController[]);
-    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
     const [clearingChat, setClearingChat] = useState<boolean>(false);
@@ -94,17 +94,10 @@ const Chat = () => {
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
-        if (!AUTH_ENABLED) {
-            setShowAuthMessage(false);
-            return;
-        }
-        const userInfoList = await getUserInfo();
-        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
-            setShowAuthMessage(true);
-        }
-        else {
-            setShowAuthMessage(false);
-        }
+      const userInfoList = await getUserInfo();
+      if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
+        setShowAuthMessage(true);
+      }
     }
 
     let assistantMessage = {} as ChatMessage
@@ -530,7 +523,20 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        if (AUTH_ENABLED !== undefined) getUserInfoList();
+      //prevent flash of auth message onload
+      const timer = setTimeout(() => {
+        if (AUTH_ENABLED === undefined) {
+          setShowAuthMessage(true);
+        }
+      }, 2000);
+
+      if (AUTH_ENABLED !== undefined) {
+        clearTimeout(timer);
+        if (!AUTH_ENABLED) return;
+        getUserInfoList();
+      }
+
+      return () => clearTimeout(timer);
     }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
@@ -570,12 +576,18 @@ const Chat = () => {
     }
     
     useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramQuestion = urlParams.get('askmsr');
-      if (paramQuestion) {
-        sendChatQuestion(paramQuestion);
+      if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB){
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const paramQuestion = urlParams.get('askmsr');
+          if (paramQuestion) {
+            sendChatQuestion(paramQuestion);
+          }
+        } catch (error) {
+          console.error('Error occurred while processing URL parameters:', error);
+        }
       }
-    }, []);
+    }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
 
     return (
         <div className={styles.container} role="main">
