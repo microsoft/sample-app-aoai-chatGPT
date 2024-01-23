@@ -1,70 +1,80 @@
-import { CommandBarButton, DefaultButton, IButtonProps, IButtonStyles, ICommandBarStyles } from "@fluentui/react";
+import { Button, Dialog, DialogBody, DialogSurface, DialogTitle, DialogTrigger, Input, makeStyles, shorthands } from "@fluentui/react-components";
+import { Copy16Regular, History24Regular, Share24Regular } from "@fluentui/react-icons";
+import { useState } from "react";
 
-interface ShareButtonProps extends IButtonProps {
-    onClick: () => void;
-  }
-
-export const ShareButton: React.FC<ShareButtonProps> = ({onClick}) => {
-    const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
-        root: {
-          width: 86,
-          height: 32,
-          borderRadius: 4,
-          background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
-        //   position: 'absolute',
-        //   right: 20,
-          padding: '5px 12px',
-          marginRight: '20px'
-        },
-        icon: {
-          color: '#FFFFFF',
-        },
-        rootHovered: {
-          background: 'linear-gradient(135deg, #0F6CBD 0%, #2D87C3 51.04%, #8DDDD8 100%)',
-        },
-        label: {
-          fontWeight: 600,
-          fontSize: 14,
-          lineHeight: '20px',
-          color: '#FFFFFF',
-        },
-      };
-
-      return (
-        <CommandBarButton
-                styles={shareButtonStyles}
-                iconProps={{ iconName: 'Share' }}
-                onClick={onClick}
-                text="Share"
-        />
-      )
+interface ShareButtonProps {
+  onClick: () => void;
 }
 
-interface HistoryButtonProps extends IButtonProps {
-    onClick: () => void;
-    text: string;
-  }
+const ShareDialogStyles = makeStyles({
+  body: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    // align content center
+    justifyContent: "center",
+    alignItems: "center",
+    ...shorthands.gap("10px"),
+    ...shorthands.margin("10px"),
+  },
+});
 
-export const HistoryButton: React.FC<HistoryButtonProps> = ({onClick, text}) => {
-    const historyButtonStyles: ICommandBarStyles & IButtonStyles = {
-        root: {
-            width: '180px',
-            border: `1px solid #D1D1D1`,
-          },
-          rootHovered: {
-            border: `1px solid #D1D1D1`,
-          },
-          rootPressed: {
-            border: `1px solid #D1D1D1`,
-          },
-      };
+export const ShareButton: React.FC<ShareButtonProps> = ({ onClick }) => {
+  const styles = ShareDialogStyles();
+  const [copyClicked, setCopyClicked] = useState<boolean>(false);
+  const [copyText, setCopyText] = useState<string>("Copy URL");
 
-      return (
-        <DefaultButton
-            text={text}
-            iconProps={{ iconName: 'History' }}
-            onClick={onClick}
-            styles={historyButtonStyles}
-        />
-      )
+  const handleCopyClick = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopyClicked(true);
+    setCopyText("Copied!");
+  };
+
+  return (
+    <Dialog
+      modalType="non-modal"
+
+    >
+      <DialogTrigger disableButtonEnhancement>
+        <Button appearance="primary" icon={<Share24Regular />}>Share</Button>
+      </DialogTrigger>
+      <DialogSurface>
+        <DialogBody>
+          <DialogTitle>Share the web app</DialogTitle>
+          <div className={styles.body}>
+            <Input
+              defaultValue={window.location.href}
+              readOnly
+            />
+            <Button
+              appearance="primary"
+              icon={<Copy16Regular />}
+              tabIndex={0}
+              aria-label="Copy"
+              onClick={handleCopyClick}
+              onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCopyClick() : null}
+            >
+              {copyText}
+            </Button>
+          </div>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
+  )
+}
+
+interface HistoryButtonProps {
+  onClick: () => void;
+  text: string;
+}
+
+export const HistoryButton: React.FC<HistoryButtonProps> = ({ onClick, text }) => {
+  return (
+    <Button
+      icon={<History24Regular />}
+      onClick={onClick}
+    >
+      {text}
+    </Button>
+  )
 }
