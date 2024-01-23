@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import { Header } from "../../components/Header/Header";
 import { LayoutStyles } from "./LayoutStyles";
+import Footer from "../../components/Footer/Footer";
 
 const Layout = () => {
     const styles = LayoutStyles();
@@ -37,6 +38,7 @@ const Layout = () => {
                 appStateContext={appStateContext}
             />
             <Outlet />
+            <Footer />
         </div>
     );
 };
