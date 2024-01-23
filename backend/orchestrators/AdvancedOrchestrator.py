@@ -1,5 +1,4 @@
 import requests
-import os
 import copy
 import json
 import logging
@@ -9,13 +8,14 @@ from .Orchestrator import Orchestrator
 from .LoadBalancer import LoadBalancer
 
 class AdvancedOrchestrator(Orchestrator):
+    def __init__(self):
+        # Create a LoadBalancer object
+        self.load_balancer = LoadBalancer()
+        
     # Post chat info if data configured
     def conversation_with_data(self, request_body, message_uuid):
-        # Create a LoadBalancer object
-        load_balancer = LoadBalancer()
-
         # Get a weighted random OpenAIContext object
-        openai_context = load_balancer.get_openai_context()
+        openai_context = self.load_balancer.get_openai_context()
 
         resource = openai_context["resource"]
         model = openai_context["model"]
@@ -50,18 +50,14 @@ class AdvancedOrchestrator(Orchestrator):
 
     # Post chat info if data not configured
     def conversation_without_data(self, request_body, message_uuid):
-        # Create a LoadBalancer object
-        load_balancer = LoadBalancer()
-
         # Get a weighted random OpenAIContext object
-        openai_context = load_balancer.get_openai_context()
+        openai_context = self.load_balancer.get_openai_context()
 
         resource = openai_context["resource"]
         model = openai_context["model"]
         endpoint_url = openai_context["endpoint_url"]
         key = openai_context["key"]
         version = openai_context["version"]
-
 
         # Setup for direct query to OpenAI
         openai.api_type = "azure"
