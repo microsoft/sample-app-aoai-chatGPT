@@ -578,7 +578,15 @@
                         {
                             "name": "ELASTICSEARCH_EMBEDDING_MODEL_ID",
                             "value": "[parameters('ElasticsearchEmbeddingModelId')]"
-                        }
+                        },
+                        {
+                            "name": "UWSGI_PROCESSES",
+                            "value": "2"
+                        },
+                        {
+                            "name": "UWSGI_THREADS",
+                            "value": "2"
+                        }                        
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"
                 }
