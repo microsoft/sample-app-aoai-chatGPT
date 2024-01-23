@@ -11,13 +11,13 @@ class DefaultOrchestrator(Orchestrator):
         base_url = super().AZURE_OPENAI_ENDPOINT if super().AZURE_OPENAI_ENDPOINT else f"https://{super().AZURE_OPENAI_RESOURCE}.openai.azure.com/"
         endpoint = f"{base_url}openai/deployments/{super().AZURE_OPENAI_MODEL}/extensions/chat/completions?api-version={super().AZURE_OPENAI_PREVIEW_API_VERSION}"
         history_metadata = request_body.get("history_metadata", {})
-
+        id = super().conversation_client.create_conversation_item(request_body, super().AZURE_OPENAI_RESOURCE, super().AZURE_OPENAI_MODEL, super().AZURE_OPENAI_TEMPERATURE)
+        history_metadata["conversation_id"] = id
         # Return response if streaming is not enabled
         if not super().SHOULD_STREAM:
             r = requests.post(endpoint, headers=headers, json=body)
             status_code = r.status_code
             r = r.json()
-
             # Check for preview api version
             if super().AZURE_OPENAI_PREVIEW_API_VERSION == "2023-06-01-preview":
                 r['history_metadata'] = history_metadata
