@@ -118,7 +118,7 @@ class AdvancedOrchestrator(Orchestrator):
         
         # Format and return response if streaming is enabled
         else:
-            return Response(super().stream_without_data(response, history_metadata, message_uuid), mimetype='text/event-stream')
+            return Response(super().stream_without_data(response, message_uuid, history_metadata), mimetype='text/event-stream')
         
     # Format request body and headers with relevant info based on search type
     def prepare_body_headers_with_data(self, request, key):

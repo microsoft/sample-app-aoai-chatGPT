@@ -445,4 +445,7 @@ def generate_title(conversation_messages):
         return messages[-2]['content']
 
 if __name__ == "__main__":
-    app.run()
+    if DEBUG.lower() == "true":
+        app.run(debug=True, use_debugger=True, use_reloader=True)
+    else:
+        app.run()

@@ -88,4 +88,4 @@ class DefaultOrchestrator(Orchestrator):
         
         # Format and return response if streaming is enabled
         else:
-            return Response(super().stream_without_data(response, history_metadata, message_uuid), mimetype='text/event-stream')
+            return Response(super().stream_without_data(response, message_uuid, history_metadata), mimetype='text/event-stream')
