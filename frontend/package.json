@@ -12,6 +12,7 @@
     "@fluentui/react-components": "^9.43.2",
     "@fluentui/react-hooks": "^8.6.29",
     "@fluentui/react-icons": "^2.0.195",
+    "@fluentui/react-migration-v0-v9": "^9.1.11",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "react": "^18.2.0",
