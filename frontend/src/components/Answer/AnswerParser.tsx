@@ -1,7 +1,6 @@
 import { AskResponse, Citation } from "../../api";
 import { cloneDeep } from "lodash-es";
 
-
 type ParsedAnswer = {
     citations: Citation[];
     markdownFormatText: string;
@@ -26,7 +25,6 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
           filteredCitations.push(citation);
         }
     })
-
 
     return {
         citations: filteredCitations,
