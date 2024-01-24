@@ -640,12 +640,14 @@ def add_conversation():
         ## then write it to the conversation history in cosmos
         messages = request.json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "user":
-            cosmos_conversation_client.create_message(
+            createdMessageValue = cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
             )
+            if createdMessageValue == "Conversation not found":
+                raise Exception("Conversation not found for the given conversation ID: " + conversation_id + ".")
         else:
             raise Exception("No user message found")
         

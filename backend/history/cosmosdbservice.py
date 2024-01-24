@@ -131,6 +131,8 @@ class CosmosConversationClient():
         if resp:
             ## update the parent conversations's updatedAt field with the current message's createdAt datetime value
             conversation = self.get_conversation(user_id, conversation_id)
+            if not conversation:
+                return "Conversation not found"
             conversation['updatedAt'] = message['createdAt']
             self.upsert_conversation(conversation)
             return resp
