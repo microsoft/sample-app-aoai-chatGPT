@@ -1,4 +1,4 @@
-import { makeStyles, shorthands } from "@fluentui/react-components";
+import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
 
 export const HeaderStyles = makeStyles({
     container: {
@@ -26,5 +26,18 @@ export const HeaderStyles = makeStyles({
     headerIcon: {
         height: '32px',
         width: '32px'
-    }
+    },
+    headerTitle: {
+        color: tokens.colorNeutralForeground1,
+        // on hover hide underline for link
+        '&:hover': {
+            ...shorthands.textDecoration('none'),
+            color: tokens.colorNeutralForeground1,
+        },
+        // on press hide underline for link
+        '&:active': {
+            ...shorthands.textDecoration('none'),
+            color: tokens.colorNeutralForeground1,
+        },
+    },
 });
