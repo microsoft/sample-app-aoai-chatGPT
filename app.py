@@ -4,7 +4,7 @@ import logging
 import openai
 import uuid
 from azure.identity import DefaultAzureCredential
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from dotenv import load_dotenv
 
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -14,7 +14,7 @@ from backend.orchestrators.utils import create_orchestrator_instance
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static", template_folder="static")
 AppInsightsMiddleware(app)
 
 CUSTOM_ORCHESTRATOR_CLASS_NAME = os.environ.get("CUSTOM_ORCHESTRATOR_CLASS_NAME") or "DefaultOrchestrator"
@@ -23,7 +23,12 @@ orchestrator = create_orchestrator_instance(CUSTOM_ORCHESTRATOR_CLASS_NAME)
 # Static Files
 @app.route("/")
 def index():
-    return app.send_static_file("index.html")
+    AppConfig = {
+        "REACT_APP_THEME": os.environ.get("REACT_APP_THEME", "light"),
+    }
+
+    # Render the React's index.html with additional context
+    return render_template('index.html', app_config=AppConfig)
 
 @app.route("/favicon.ico")
 def favicon():
