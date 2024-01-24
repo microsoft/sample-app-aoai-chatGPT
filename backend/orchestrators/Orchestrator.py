@@ -379,7 +379,8 @@ class Orchestrator(ABC):
 
         return response
         
-    # Stream chat response with appropriate role referencing data source 
+    # Stream chat response with appropriate role referencing data source
+    @conversation_client.log_stream 
     def stream_with_data(self, body, headers, endpoint, message_uuid, history_metadata={}):
         s = requests.Session()
         try:
@@ -418,7 +419,6 @@ class Orchestrator(ABC):
 
                         if role == "tool":
                             response["choices"][0]["messages"].append(lineJson["choices"][0]["messages"][0]["delta"])
-                            self.conversation_client.update_conversation_item(response, history_metadata["conversation_id"])
                             yield self.format_as_ndjson(response)
                         elif role == "assistant": 
                             if response['apim-request-id'] and self.DEBUG_LOGGING: 
@@ -427,7 +427,6 @@ class Orchestrator(ABC):
                                 "role": "assistant",
                                 "content": ""
                             })
-                            self.conversation_client.update_conversation_item(response, history_metadata["conversation_id"])
                             yield self.format_as_ndjson(response)
                         else:
                             deltaText = lineJson["choices"][0]["messages"][0]["delta"]["content"]
@@ -436,13 +435,12 @@ class Orchestrator(ABC):
                                     "role": "assistant",
                                     "content": deltaText
                                 })
-                                self.conversation_client.update_conversation_item(response, history_metadata["conversation_id"])
                                 yield self.format_as_ndjson(response)
         except Exception as e:
-            self.conversation_client.update_conversation_item(response, history_metadata["conversation_id"], e)
             yield self.format_as_ndjson({"error" + str(e)})
 
     # Post chat info if data not configured
+    @conversation_client.log_stream
     def stream_without_data(self, response, message_uuid, history_metadata={}):
         responseText = ""
         for line in response:
