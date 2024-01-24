@@ -1,7 +1,14 @@
 import { Theme, teamsDarkTheme, teamsLightTheme, webDarkTheme, webLightTheme, teamsHighContrastTheme } from "@fluentui/react-components";
 
 export default class ThemeService {
-    public getTheme(theme?: string): Theme {
+    public getTheme(theme?: string ): Theme {
+
+        let themeNumber = this.getUrlParameterThemeNumber();
+        
+        if (themeNumber !== undefined) {
+            return this.getThemeByNumber(themeNumber);
+        }
+
         if (theme) {
             switch (theme) {
                 case "dark":
@@ -18,7 +25,8 @@ export default class ThemeService {
                     return webLightTheme;
             }
         }
-        return this.getThemeByNumber(this.getUrlParameterThemeNumber());
+
+        return webLightTheme;
     }
 
     private getThemeByNumber(themeNumber: number): Theme {
@@ -38,10 +46,10 @@ export default class ThemeService {
         }
     }
 
-    getUrlParameterThemeNumber(): number {
+    public getUrlParameterThemeNumber(): number | undefined {
         const urlParams = new URLSearchParams(window.location.search);
         const themeNumber = urlParams.get('theme');
-        return themeNumber ? parseInt(themeNumber) : 0;
+        return themeNumber ? parseInt(themeNumber) : undefined;
     }
 
 };
