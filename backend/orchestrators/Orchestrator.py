@@ -100,10 +100,11 @@ class Orchestrator(ABC):
 
     message_uuid = ""
 
-    conversation_client = ConversationTelemetryClient(cosmosdb_endpoint=str(AZURE_COSMOSDB_ENDPOINT), 
-                                                          credential=str(AZURE_COSMOSDB_ACCOUNT_KEY), 
-                                                          database_name=str(AZURE_COSMOSDB_DATABASE_NAME), 
-                                                          container_name=str(AZURE_COSMOSDB_CONTAINER_NAME)
+    conversation_client = ConversationTelemetryClient(
+        cosmosdb_endpoint=str(AZURE_COSMOSDB_ENDPOINT),
+        credential=str(AZURE_COSMOSDB_ACCOUNT_KEY),
+        database_name=str(AZURE_COSMOSDB_DATABASE_NAME),
+        container_name=str(AZURE_COSMOSDB_CONTAINER_NAME)
     )
 
     # methods to implement in orchestrator
