@@ -49,10 +49,7 @@ class ConversationTelemetryClient():
             'id': conversation_id
         }
 
-        try:
-            self.container_client.upsert_item(conversation_item)
-        except Exception as e:
-            logging.error(f"Error: {e} - {traceback.format_exc()}")
+        self.upsert_conversation_item(conversation_item)
 
         return history_metadata
     
