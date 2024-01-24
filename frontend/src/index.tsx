@@ -12,7 +12,7 @@ import ThemeService from "./services/themeService";
 export default function App() {
     // Create instance of themeservice 
     const themeService = new ThemeService();
-    const currentTheme = themeService.getTheme();
+    const currentTheme = themeService.getTheme(window.REACT_APP_THEME ? window.REACT_APP_THEME : undefined);
     return (
         <AppStateProvider>
             <FluentProvider

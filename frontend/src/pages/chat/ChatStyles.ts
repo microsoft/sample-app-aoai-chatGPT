@@ -34,6 +34,8 @@ export const ChatStyles = makeStyles({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+        maxWidth: '700px',
+        ...shorthands.gap('10px'),
     },
 
     chatMessageErrorContent: {

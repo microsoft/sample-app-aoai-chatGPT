@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Contoso from "../../assets/Contoso.svg";
+import LogoImage from "../../assets/chatIcon.svg";
 import { useContext, useEffect, useState } from "react";
 import { AppStateContext } from "../../state/AppProvider";
 import { Header } from "../../components/Header/Header";
@@ -32,7 +32,7 @@ const Layout = () => {
     return (
         <div className={styles.container}>
             <Header
-                azureImageUrl={Contoso}
+                azureImageUrl={LogoImage}
                 onShareClick={handleShareClick}
                 onHistoryClick={handleHistoryClick}
                 appStateContext={appStateContext}
