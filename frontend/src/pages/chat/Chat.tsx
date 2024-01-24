@@ -4,7 +4,7 @@ import { ShieldLockRegular, ErrorCircleRegular, Broom16Regular, Add16Regular, St
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
-import Contoso from "../../assets/Contoso.svg";
+import LogoImage from "../../assets/chatIcon.svg";
 
 import {
     ChatMessage,
@@ -572,13 +572,13 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <div className={styles.chatEmptyState}>
                                 <Image
-                                    src={Contoso}
-                                    height={62}
-                                    width={62}
+                                    src={LogoImage}
+                                    height={120}
+                                    width={120}
                                     aria-hidden="true"
                                 />
-                                <Title1>Start chatting</Title1>
-                                <Subtitle2>This chatbot is configured to answer your questions</Subtitle2>
+                                <Title1>Questions about Research Forum?</Title1>
+                                <Subtitle2 align="center">The Research Forum series explores recent research advances, bold new ideas, and important discussions with the global research community.</Subtitle2>
                             </div>
                         ) : (
                             <div className={styles.chatMessageStream} role="log">
