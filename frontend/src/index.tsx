@@ -12,7 +12,7 @@ import ThemeService from "./services/themeService";
 export default function App() {
     // Create instance of themeservice 
     const themeService = new ThemeService();
-    const currentTheme = themeService.getTheme(false);
+    const currentTheme = themeService.getTheme();
     return (
         <AppStateProvider>
             <FluentProvider
