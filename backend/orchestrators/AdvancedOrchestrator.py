@@ -84,6 +84,15 @@ class AdvancedOrchestrator(Orchestrator):
                     "content": message["content"]
                 })
 
+        history_metadata = request_body.get("history_metadata", {})
+        history_metadata = super().conversation_client.create_conversation_item(
+            request_body,
+            super().AZURE_OPENAI_RESOURCE,
+            super().AZURE_OPENAI_MODEL,
+            super().AZURE_OPENAI_TEMPERATURE,
+            history_metadata
+        )
+        
         # Send request to chat completion
         response = openai.ChatCompletion.create(
             engine=model,
@@ -94,9 +103,6 @@ class AdvancedOrchestrator(Orchestrator):
             stop=super().AZURE_OPENAI_STOP_SEQUENCE.split("|") if super().AZURE_OPENAI_STOP_SEQUENCE else None,
             stream=super().SHOULD_STREAM
         )
-
-        history_metadata = request_body.get("history_metadata", {})
-        history_metadata = super().conversation_client.create_conversation_item(request_body, super().AZURE_OPENAI_RESOURCE, super().AZURE_OPENAI_MODEL, super().AZURE_OPENAI_TEMPERATURE, history_metadata)
 
         # Format and return response if streaming is not enabled
         if not super().SHOULD_STREAM:

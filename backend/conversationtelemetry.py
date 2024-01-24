@@ -57,6 +57,7 @@ class ConversationTelemetryClient():
         conversation_item = self.get_conversation_item(r['history_metadata']['conversation_id'])
         if conversation_item:
             conversation_item["answer"] = r
+            conversation_item["response_timestamp"] = datetime.now().isoformat()
             self.upsert_conversation_item(conversation_item)
         else:
             return
