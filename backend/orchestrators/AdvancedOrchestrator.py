@@ -14,14 +14,19 @@ class AdvancedOrchestrator(Orchestrator):
         
     # Post chat info if data configured
     def conversation_with_data(self, request_body, message_uuid):
+        logging.debug(f"ADV ORCH COVO W/ DATA")
         # Get a weighted random OpenAIContext object
         openai_context = self.load_balancer.get_openai_context()
+
+        logging.debug(f"OPENAI CONTEXT: {openai_context}")
 
         resource = openai_context["resource"]
         model = openai_context["model"]
         endpoint_url = openai_context["endpoint_url"]
         key = openai_context["key"]
         version = openai_context["version"]
+
+        logging.debug(f"KEY: {key}")
 
         # Set up request variables
         body, headers = self.prepare_body_headers_with_data(request, key)
