@@ -702,9 +702,7 @@ const Chat = () => {
                                         clearOnSend
                                         placeholder="Type a new question..."
                                         disabled={isLoading}
-                                        onSend={(question, id) => {
-                                            appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
-                                        }}
+                                        onSend={sendChatQuestion}
                                         conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                                     />
                                 </div>
