@@ -56,9 +56,29 @@ class ConversationTelemetryClient():
     def log_non_stream(self, r):
         conversation_item = self.get_conversation_item(r['history_metadata']['conversation_id'])
         if conversation_item:
-            conversation_item["answer"] = r
-            conversation_item["response_timestamp"] = datetime.now().isoformat()
-            self.upsert_conversation_item(conversation_item)
+            try:
+                conversation_item["answer"] = {
+                    "id": r["id"],
+                    "model": r["model"],
+                    "created": r["created"],
+                    "object": r["object"],
+                    "choices":[{
+                        "messages": [
+                            r["choices"][0]["messages"][1]
+                        ]
+                    }],
+                    "apim-request-id": r["apim-request-id"] if "apim-request-id" in r else "",
+                    "history_metadata": r["history_metadata"] if "history_metadata" in r else ""
+                }
+                conversation_item["tool"] = json.loads(r["choices"][0]["messages"][0]["content"])
+                conversation_item["response_timestamp"] = datetime.now().isoformat()
+                self.upsert_conversation_item(conversation_item)
+            except Exception as e:
+                conversation_item["error"] = str(e)
+                conversation_item["error_timestamp"] = datetime.now().isoformat()
+                conversation_item["error_traceback"] = traceback.format_exc()
+                logging.error(traceback.format_exc())
+                self.upsert_conversation_item(conversation_item)
         else:
             return
     
@@ -91,7 +111,7 @@ class ConversationTelemetryClient():
             role = result["choices"][0]["messages"][0]["role"]
             conversation_item["response_timestamp"] = datetime.now().isoformat()
             if role == "tool":
-                conversation_item["tool"] = result["choices"][0]["messages"][0]["content"]
+                conversation_item["tool"] = json.loads(result["choices"][0]["messages"][0]["content"])
             elif role == "assistant":
                 if "answer" in conversation_item:
                     conversation_item["answer"]["choices"][0]["messages"][0]["content"] += result["choices"][0]["messages"][0]["content"]
