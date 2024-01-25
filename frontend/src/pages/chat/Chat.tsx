@@ -74,7 +74,12 @@ const Chat = () => {
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
     useEffect(() => {
-        if (appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail && hideErrorDialog) {
+        if (appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.NotWorking 
+            || appStateContext?.state.isCosmosDBAvailable?.status === CosmosDBStatus.InvalidCredentials 
+            || appStateContext?.state.isCosmosDBAvailable?.status.includes(CosmosDBStatus.InvalidDatabase) 
+            || appStateContext?.state.isCosmosDBAvailable?.status.includes(CosmosDBStatus.InvalidContainer) 
+            && appStateContext.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail 
+            && hideErrorDialog) {
             let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
             setErrorMsg({
                 title: "Chat history is not enabled",

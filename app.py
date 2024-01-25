@@ -144,6 +144,7 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
         )
     except Exception as e:
         logging.exception("Exception in CosmosDB initialization", e)
+        cosmodb_error = str(e)
         cosmos_conversation_client = None
 
 
@@ -877,7 +878,14 @@ def ensure_cosmos():
         return jsonify({"error": "CosmosDB is not configured"}), 404
     
     if not cosmos_conversation_client or not cosmos_conversation_client.ensure():
-        return jsonify({"error": "CosmosDB is not working"}), 500
+        if cosmodb_error == "Invalid credentials":
+            return jsonify({"error": cosmodb_error}), 401
+        elif cosmodb_error == "Invalid CosmosDB database name":
+            return jsonify({"error": f"{cosmodb_error} {AZURE_COSMOSDB_DATABASE} for account {AZURE_COSMOSDB_ACCOUNT}"}), 422
+        elif cosmodb_error == "Invalid CosmosDB container name":
+            return jsonify({"error": f"{cosmodb_error}: {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"}), 422
+        else:
+            return jsonify({"error": "CosmosDB is not working"}), 500
 
     return jsonify({"message": "CosmosDB is configured and working"}), 200
 
