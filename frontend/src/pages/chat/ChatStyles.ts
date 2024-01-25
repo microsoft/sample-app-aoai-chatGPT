@@ -29,13 +29,18 @@ export const ChatStyles = makeStyles({
     },
 
     chatEmptyState: {
-        flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         maxWidth: '700px',
         ...shorthands.gap('10px'),
+        width: '100%',
+        textAlign: 'center',
+        marginTop: '100px',
+        marginBottom: '100px',
+        marginLeft: 'auto',
+        marginRight: 'auto',
     },
 
     chatMessageErrorContent: {

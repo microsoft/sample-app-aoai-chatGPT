@@ -46,6 +46,10 @@ export default class ThemeService {
         }
     }
 
+    public isThemeDarkOrHighContrast(theme: Theme): boolean {
+        return theme === teamsDarkTheme || theme === webDarkTheme || theme === teamsHighContrastTheme;
+    }
+    
     public getUrlParameterThemeNumber(): number | undefined {
         const urlParams = new URLSearchParams(window.location.search);
         const themeNumber = urlParams.get('theme');
