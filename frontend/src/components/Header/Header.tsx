@@ -18,12 +18,9 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 <div className={styles.titleContainer}>
                     <Image
                         src={props.azureImageUrl}
-                        className={styles.headerIcon}
                         aria-hidden="true"
-                    />
-                    <Link href="/" className={styles.headerTitle}>
-                        <Title3>MSR Chat</Title3>
-                    </Link>
+                        width={150}
+                        className={styles.logoImage}                    />
                 </div>
                 <div className={styles.rightCommandBar}>
                     {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&

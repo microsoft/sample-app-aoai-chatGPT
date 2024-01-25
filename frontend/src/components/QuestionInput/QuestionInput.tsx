@@ -1,7 +1,8 @@
 import { useState } from "react";
-import {  Send32Regular } from "@fluentui/react-icons";
-import { Button, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Send32Regular } from "@fluentui/react-icons";
+import { Button, Caption1, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import { QuestionInputStyles } from "./QuestionInputStyles";
+import { ComplianceMessage } from "../ComplianceMessage/ComplianceMessage";
 
 interface Props {
     onSend: (question: string, id?: string) => void;
@@ -46,25 +47,31 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     return (
         <div className={Newstyles.container}>
-            <Textarea
-                className={Newstyles.textInput}
-                placeholder={placeholder}
-                rows={5}
-                value={question}
-                onChange={onQuestionChange}
-                onKeyDown={onEnterPress}
-            />
-            <Button
-                appearance="transparent"
-                className={Newstyles.sendButton}
-                role="button"
-                tabIndex={0}
-                aria-label="Ask question button"
-                onClick={sendQuestion}
-                onKeyDown={e => e.key === "Enter" || e.key === " " ? sendQuestion() : null}
-                icon={<Send32Regular />}
-                disabled={sendQuestionDisabled}
-            />
+            <div className={Newstyles.form}>
+                <Textarea
+                    className={Newstyles.textInput}
+                    placeholder={placeholder}
+                    rows={5}
+                    value={question}
+                    onChange={onQuestionChange}
+                    onKeyDown={onEnterPress}
+                />
+                <Button
+                    appearance="transparent"
+                    className={Newstyles.sendButton}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Ask question button"
+                    onClick={sendQuestion}
+                    onKeyDown={e => e.key === "Enter" || e.key === " " ? sendQuestion() : null}
+                    icon={<Send32Regular />}
+                    disabled={sendQuestionDisabled}
+                />
+            </div>
+            <div className={Newstyles.footer}>
+                <Caption1 className={Newstyles.footerText}><i>AI may generate incorrect answers, please check citations for accuracy.</i></Caption1>
+                <ComplianceMessage />
+            </div>
         </div>
     );
 };

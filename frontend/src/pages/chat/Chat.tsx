@@ -27,7 +27,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
-import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image } from "@fluentui/react-components";
+import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image, Caption1 } from "@fluentui/react-components";
 import { ChatStyles } from "./ChatStyles";
 import { QuestionDisplay } from "../../components/QuestionDisplay/QuestionDisplay";
 import { CitationDetails } from "../../components/CitationDetails/CitationDetails";
@@ -685,6 +685,7 @@ const Chat = () => {
                                         }}
                                         conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                                     />
+                                  
                                 </div>
                             </div>
                         </div>
