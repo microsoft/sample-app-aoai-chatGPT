@@ -357,11 +357,20 @@ def prepare_body_headers_with_data(request):
             
         logging.debug(f"REQUEST BODY: {json.dumps(body_clean, indent=4)}")
 
-    headers = {
-        'Content-Type': 'application/json',
-        'api-key': AZURE_OPENAI_KEY,
-        "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
-    }
+    if not AZURE_OPENAI_KEY:
+        default_credential = DefaultAzureCredential()
+        access_token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer ${access_token.token}',
+            "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
+        }
+    else:
+        headers = {
+            'Content-Type': 'application/json',
+            'api-key': AZURE_OPENAI_KEY,
+            "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
+        }
 
     return body, headers
 
@@ -546,7 +555,17 @@ def conversation_without_data(request_body):
     openai.api_type = "azure"
     openai.api_base = AZURE_OPENAI_ENDPOINT if AZURE_OPENAI_ENDPOINT else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
     openai.api_version = "2023-08-01-preview"
-    openai.api_key = AZURE_OPENAI_KEY
+
+    # Initialize token for OpenAI calls using DefaultAzureCredential
+    if not AZURE_OPENAI_KEY:
+        default_credential = DefaultAzureCredential()
+        access_token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+        openai.api_key = access_token.token
+        openai.api_type = "azure_ad"
+    else:
+        openai.api_key = AZURE_OPENAI_KEY
+        openai.api_type = "azure"
+    
 
     request_messages = request_body["messages"]
     messages = [
@@ -900,7 +919,17 @@ def generate_title(conversation_messages):
         openai.api_type = "azure"
         openai.api_base = base_url
         openai.api_version = "2023-03-15-preview"
-        openai.api_key = AZURE_OPENAI_KEY
+
+        # Initialize token for OpenAI calls using DefaultAzureCredential
+        if not AZURE_OPENAI_KEY:
+            default_credential = DefaultAzureCredential()
+            access_token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+            openai.api_key = access_token.token
+            openai.api_type = "azure_ad"
+        else:
+            openai.api_key = AZURE_OPENAI_KEY
+            openai.api_type = "azure"
+        
         completion = openai.ChatCompletion.create(    
             engine=AZURE_OPENAI_MODEL,
             messages=messages,
