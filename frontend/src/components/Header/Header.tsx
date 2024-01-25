@@ -21,7 +21,7 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                         className={styles.headerIcon}
                         aria-hidden="true"
                     />
-                    <Link href="/" >
+                    <Link href="/" className={styles.headerTitle}>
                         <Title3>MSR Chat</Title3>
                     </Link>
                 </div>
