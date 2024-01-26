@@ -4,7 +4,7 @@ import { Image, Link, Title3 } from '@fluentui/react-components';
 import { CosmosDBStatus } from '../../api';
 import { HistoryButton, ShareButton } from '../common/Button';
 
-export interface IHeaderProps { 
+export interface IHeaderProps {
     azureImageUrl: string;
     onShareClick: () => void;
     onHistoryClick: () => void;
@@ -15,24 +15,24 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
     const styles = HeaderStyles();
     return (
         <div className={styles.container}>
-                <div className={styles.titleContainer}>
-                    <Image
-                        src={props.azureImageUrl}
-                        aria-hidden="true"
-                        width={140}
-                        className={styles.logoImage}                    
-                        />
-                        <Title3> | </Title3>
-                     <Link href="/" className={styles.headerTitle}>
-                        <Title3>MSR Chat</Title3>
-                    </Link>
-                </div>
-                <div className={styles.rightCommandBar}>
-                    {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
-                        <HistoryButton onClick={props.onHistoryClick} text={props.appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
-                    }
-                    <ShareButton onClick={props.onShareClick} />
-                </div>
+            <div className={styles.titleContainer}>
+                <Image
+                    src={props.azureImageUrl}
+                    aria-hidden="true"
+                    width={150}
+                    className={styles.logoImage}
+                />
+                <Title3 style={{ marginBottom: '4px' }}> | </Title3>
+                <Link href="/" className={styles.headerTitle}>
+                    <Title3>MSR Chat</Title3>
+                </Link>
+            </div>
+            <div className={styles.rightCommandBar}>
+                {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
+                    <HistoryButton onClick={props.onHistoryClick} text={props.appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
+                }
+                <ShareButton onClick={props.onShareClick} />
+            </div>
         </div>
     );
 };
