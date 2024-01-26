@@ -13,6 +13,7 @@ export default function App() {
     // Create instance of themeservice 
     const themeService = new ThemeService();
     const currentTheme = themeService.getTheme(window.REACT_APP_THEME ? window.REACT_APP_THEME : undefined);
+    const isDarkTheme =  themeService.isThemeDarkOrHighContrast(currentTheme);
     return (
         <AppStateProvider>
             <FluentProvider
@@ -21,7 +22,7 @@ export default function App() {
             >
                 <HashRouter>
                     <Routes>
-                        <Route path="/" element={<Layout />}>
+                        <Route path="/" element={<Layout isDarkTheme={isDarkTheme}/>}>
                             <Route index element={<Chat />} />
                             <Route path="*" element={<NoPage />} />
                         </Route>

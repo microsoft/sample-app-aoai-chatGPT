@@ -23,10 +23,6 @@ export const HeaderStyles = makeStyles({
         ...shorthands.gap('12px'),
     },
 
-    headerIcon: {
-        height: '32px',
-        width: '32px'
-    },
     headerTitle: {
         color: tokens.colorNeutralForeground1,
         // on hover hide underline for link
@@ -39,5 +35,9 @@ export const HeaderStyles = makeStyles({
             ...shorthands.textDecoration('none'),
             color: tokens.colorNeutralForeground1,
         },
+    },
+
+    logoImage: {
+        marginRight: '10px',
     },
 });

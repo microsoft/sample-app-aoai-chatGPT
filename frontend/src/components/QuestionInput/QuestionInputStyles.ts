@@ -4,6 +4,13 @@ export const QuestionInputStyles = makeStyles({
     container: {
         width: '100%',
         display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    form: {
+        width: '100%',
+        display: 'flex',
     },
 
     textInput: {
@@ -17,6 +24,18 @@ export const QuestionInputStyles = makeStyles({
         top: '30px',
         color: tokens.colorBrandForeground1
     },
+
+    footer: {
+        display: 'flex',
+        flexDirection: 'row',
+        verticalAlign: 'middle',
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingRight: '25px',
+    },
+    footerText: {
+        verticalAlign: 'middle',
+        marginTop: '5px',
+    },
 });
 
-  

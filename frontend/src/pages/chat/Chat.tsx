@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { ShieldLockRegular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
+import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
@@ -27,7 +27,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
-import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image } from "@fluentui/react-components";
+import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger, Title1, Subtitle2, Image, Caption1, Subtitle1 } from "@fluentui/react-components";
 import { ChatStyles } from "./ChatStyles";
 import { QuestionDisplay } from "../../components/QuestionDisplay/QuestionDisplay";
 import { CitationDetails } from "../../components/CitationDetails/CitationDetails";
@@ -48,7 +48,7 @@ const Chat = () => {
     const [activeCitation, setActiveCitation] = useState<Citation>();
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
     const abortFuncs = useRef([] as AbortController[]);
-    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(true);
+    const [showAuthMessage, setShowAuthMessage] = useState<boolean>(false);
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
     const [clearingChat, setClearingChat] = useState<boolean>(false);
@@ -77,19 +77,12 @@ const Chat = () => {
 
     useEffect(() => {
         setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
-    }, [appStateContext?.state.chatHistoryLoadingState])
+    }, [appStateContext?.state.chatHistoryLoadingState]);
 
     const getUserInfoList = async () => {
-        if (!AUTH_ENABLED) {
-            setShowAuthMessage(false);
-            return;
-        }
         const userInfoList = await getUserInfo();
         if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
             setShowAuthMessage(true);
-        }
-        else {
-            setShowAuthMessage(false);
         }
     }
 
@@ -516,7 +509,18 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        if (AUTH_ENABLED !== undefined) getUserInfoList();
+        //prevent flash of auth message onload
+        const timer = setTimeout(() => {
+          if (AUTH_ENABLED === undefined) {
+            setShowAuthMessage(true);
+          }
+        }, 2000);
+        if (AUTH_ENABLED !== undefined) {
+          clearTimeout(timer);
+          if (!AUTH_ENABLED) return;
+          getUserInfoList();
+        }
+        return () => clearTimeout(timer);
     }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
@@ -551,20 +555,36 @@ const Chat = () => {
         return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     }
 
+    const sendChatQuestion =  (question: string, id?: string | undefined) => {
+      appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
+    }
+
+    useEffect(() => {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramQuestion = urlParams.get('askmsr');
+            if (paramQuestion) {
+              sendChatQuestion(paramQuestion);
+            }
+          } catch (error) {
+            console.error('Error occurred while processing URL parameters:', error);
+          }
+      }, []);
+
     return (
         <div className={styles.container} role="main">
             {showAuthMessage ? (
                 <div className={styles.chatEmptyState}>
-                    <ShieldLockRegular />
-                    <h1>Authentication Not Configured</h1>
-                    <h2>
+                    <ShieldLock48Regular />
+                    <Title1 align="center">Authentication Not Configured</Title1>
+                    <Subtitle1 align="center">
                         This app does not have authentication configured. Please add an identity provider by finding your app in the
                         <Link href="https://portal.azure.com/" target="_blank"> Azure Portal </Link>
                         and following
                         <Link href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank"> these instructions</Link>.
-                    </h2>
-                    <Title2><strong>Authentication configuration takes a few minutes to apply. </strong></Title2>
-                    <Title2><strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong></Title2>
+                    </Subtitle1>
+                    <Subtitle1 align="center">Authentication configuration takes a few minutes to apply.</Subtitle1>
+                    <Subtitle1 align="center">If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</Subtitle1>
                 </div>
             ) : (
                 <div className={styles.container}>
@@ -680,11 +700,10 @@ const Chat = () => {
                                         clearOnSend
                                         placeholder="Type a new question..."
                                         disabled={isLoading}
-                                        onSend={(question, id) => {
-                                            appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
-                                        }}
+                                        onSend={sendChatQuestion}
                                         conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                                     />
+                                  
                                 </div>
                             </div>
                         </div>
