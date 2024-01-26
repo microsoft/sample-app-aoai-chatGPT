@@ -1,9 +1,6 @@
 import random
 import os
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class OpenAIContext():
     def __init__(self, resource: str, model: str, endpoint_url: str, key: str, weight: float, version: str):
@@ -81,4 +78,5 @@ class LoadBalancer:
         for i, cumulative_weight in enumerate(self.all_weights): # Iterate through the list of cumulative weights for comparison with the random number
             if rand_num <= cumulative_weight: # Compares the random number to the cumulative weight
                 selected_context = self.contexts[i].to_dict() # Get the endpoint context based on the randomly selected weight
+                print(f'selecting context: {selected_context}')
                 return selected_context
