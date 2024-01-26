@@ -592,7 +592,7 @@ const Chat = () => {
                                     width={120}
                                     aria-hidden="true"
                                 />
-                                <Title1>Questions about Research Forum?</Title1>
+                                <Title1>Questions about Microsoft Research Forum?</Title1>
                                 <Subtitle2 align="center">The Research Forum series explores recent research advances, bold new ideas, and important discussions with the global research community.</Subtitle2>
                                 <SuggestionButtons 
                                     onButtonClick={sendChatQuestion}
