@@ -509,18 +509,10 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        //prevent flash of auth message onload
-        const timer = setTimeout(() => {
-          if (AUTH_ENABLED === undefined) {
-            setShowAuthMessage(true);
-          }
-        }, 2000);
         if (AUTH_ENABLED !== undefined) {
-          clearTimeout(timer);
           if (!AUTH_ENABLED) return;
           getUserInfoList();
         }
-        return () => clearTimeout(timer);
     }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
