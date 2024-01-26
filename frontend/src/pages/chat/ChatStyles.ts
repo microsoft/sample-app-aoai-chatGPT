@@ -29,6 +29,7 @@ export const ChatStyles = makeStyles({
     },
 
     chatEmptyState: {
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -37,7 +38,6 @@ export const ChatStyles = makeStyles({
         ...shorthands.gap('10px'),
         width: '100%',
         textAlign: 'center',
-        marginTop: '40px',
         marginLeft: 'auto',
         marginRight: 'auto',
     },
