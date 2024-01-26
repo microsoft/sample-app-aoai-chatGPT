@@ -552,7 +552,7 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+        if (appStateContext?.state.chatHistoryLoadingState !== ChatHistoryLoadingState.Loading) {
           try {
             const urlParams = new URLSearchParams(window.location.search);
             const paramQuestion = urlParams.get('askmsr');
@@ -563,7 +563,7 @@ const Chat = () => {
             console.error('Error occurred while processing URL parameters:', error);
           }
         }
-      }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
+      }, [appStateContext?.state.chatHistoryLoadingState]);
 
     return (
         <div className={styles.container} role="main">
