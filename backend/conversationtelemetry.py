@@ -80,6 +80,7 @@ class ConversationTelemetryClient():
         Returns:
             None
         """
+        if not self.enabled: return
         conversation_id = r.get("history_metadata", {}).get("conversation_id", "")
         conversation_item = self.get_conversation_item(conversation_id)
         if not conversation_item:
