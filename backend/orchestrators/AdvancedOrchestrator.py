@@ -33,6 +33,7 @@ class AdvancedOrchestrator(Orchestrator):
         base_url = endpoint_url if endpoint_url else f"https://{resource}.openai.azure.com/"
         endpoint = f"{base_url}openai/deployments/{model}/extensions/chat/completions?api-version={version}"
         history_metadata = request_body.get("history_metadata", {})
+        history_metadata = super().conversation_client.create_conversation_item(request_body, super().AZURE_OPENAI_RESOURCE, super().AZURE_OPENAI_MODEL, super().AZURE_OPENAI_TEMPERATURE, history_metadata)
 
         # Return response if streaming is not enabled
         if not super().SHOULD_STREAM:
@@ -43,10 +44,12 @@ class AdvancedOrchestrator(Orchestrator):
             # Check for preview api version
             if version == "2023-06-01-preview":
                 r['history_metadata'] = history_metadata
+                super().conversation_client.log_non_stream(r)
                 return Response(super().format_as_ndjson(r), status=status_code)
             else:
                 result = super().formatApiResponseNoStreaming(r)
                 result['history_metadata'] = history_metadata
+                super().conversation_client.log_non_stream(result)
                 return Response(super().format_as_ndjson(result), status=status_code)
 
         # Return response if streaming is enabled
@@ -86,6 +89,15 @@ class AdvancedOrchestrator(Orchestrator):
                     "content": message["content"]
                 })
 
+        history_metadata = request_body.get("history_metadata", {})
+        history_metadata = super().conversation_client.create_conversation_item(
+            request_body,
+            super().AZURE_OPENAI_RESOURCE,
+            super().AZURE_OPENAI_MODEL,
+            super().AZURE_OPENAI_TEMPERATURE,
+            history_metadata
+        )
+        
         # Send request to chat completion
         response = openai.ChatCompletion.create(
             engine=model,
@@ -96,8 +108,6 @@ class AdvancedOrchestrator(Orchestrator):
             stop=super().AZURE_OPENAI_STOP_SEQUENCE.split("|") if super().AZURE_OPENAI_STOP_SEQUENCE else None,
             stream=super().SHOULD_STREAM
         )
-
-        history_metadata = request_body.get("history_metadata", {})
 
         # Format and return response if streaming is not enabled
         if not super().SHOULD_STREAM:
@@ -114,7 +124,7 @@ class AdvancedOrchestrator(Orchestrator):
                 }],
                 "history_metadata": history_metadata
             }
-
+            self.conversation_client.log_non_stream(response_obj)
             return jsonify(response_obj), 200
         
         # Format and return response if streaming is enabled

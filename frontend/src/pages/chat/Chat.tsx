@@ -553,18 +553,18 @@ const Chat = () => {
     }
 
     useEffect(() => {
-        if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const paramQuestion = urlParams.get('askmsr');
-                if (paramQuestion) {
-                    sendChatQuestion(paramQuestion);
-                }
-            } catch (error) {
-                console.error('Error occurred while processing URL parameters:', error);
+        if (appStateContext?.state.chatHistoryLoadingState !== ChatHistoryLoadingState.Loading) {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramQuestion = urlParams.get('askmsr');
+            if (paramQuestion) {
+              sendChatQuestion(paramQuestion);
             }
+          } catch (error) {
+            console.error('Error occurred while processing URL parameters:', error);
+          }
         }
-    }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
+      }, [appStateContext?.state.chatHistoryLoadingState]);
 
     return (
         <div className={styles.container} role="main">
