@@ -24,6 +24,7 @@ export const HeaderStyles = makeStyles({
     },
 
     headerTitle: {
+        marginLeft: '5px',
         color: tokens.colorNeutralForeground1,
         // on hover hide underline for link
         '&:hover': {
