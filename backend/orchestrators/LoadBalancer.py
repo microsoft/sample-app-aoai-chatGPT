@@ -78,5 +78,4 @@ class LoadBalancer:
         for i, cumulative_weight in enumerate(self.all_weights): # Iterate through the list of cumulative weights for comparison with the random number
             if rand_num <= cumulative_weight: # Compares the random number to the cumulative weight
                 selected_context = self.contexts[i].to_dict() # Get the endpoint context based on the randomly selected weight
-                print(f'selecting context: {selected_context}')
                 return selected_context
