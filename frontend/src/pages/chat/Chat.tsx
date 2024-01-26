@@ -31,6 +31,7 @@ import { Button, Link, Title2, Dialog, DialogSurface, DialogBody, DialogTitle, D
 import { ChatStyles } from "./ChatStyles";
 import { QuestionDisplay } from "../../components/QuestionDisplay/QuestionDisplay";
 import { CitationDetails } from "../../components/CitationDetails/CitationDetails";
+import { SuggestionButtons } from "../../components/SuggestionButtons/SuggestionButtons";
 
 const enum messageStatus {
     NotRunning = "Not Running",
@@ -510,8 +511,8 @@ const Chat = () => {
 
     useEffect(() => {
         if (AUTH_ENABLED !== undefined) {
-          if (!AUTH_ENABLED) return;
-          getUserInfoList();
+            if (!AUTH_ENABLED) return;
+            getUserInfoList();
         }
     }, [AUTH_ENABLED]);
 
@@ -547,23 +548,23 @@ const Chat = () => {
         return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     }
 
-    const sendChatQuestion =  (question: string, id?: string | undefined) => {
-      appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
+    const sendChatQuestion = (question: string, id?: string | undefined) => {
+        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
     }
 
     useEffect(() => {
         if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
-          try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramQuestion = urlParams.get('askmsr');
-            if (paramQuestion) {
-              sendChatQuestion(paramQuestion);
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramQuestion = urlParams.get('askmsr');
+                if (paramQuestion) {
+                    sendChatQuestion(paramQuestion);
+                }
+            } catch (error) {
+                console.error('Error occurred while processing URL parameters:', error);
             }
-          } catch (error) {
-            console.error('Error occurred while processing URL parameters:', error);
-          }
         }
-      }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
+    }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
 
     return (
         <div className={styles.container} role="main">
@@ -593,6 +594,9 @@ const Chat = () => {
                                 />
                                 <Title1>Questions about Research Forum?</Title1>
                                 <Subtitle2 align="center">The Research Forum series explores recent research advances, bold new ideas, and important discussions with the global research community.</Subtitle2>
+                                <SuggestionButtons 
+                                    onButtonClick={sendChatQuestion}
+                                />
                             </div>
                         ) : (
                             <div className={styles.chatMessageStream} role="log">
@@ -656,7 +660,7 @@ const Chat = () => {
                             <div className={styles.stopGeneratingContainer}>
                                 {
                                     // isLoading show Stop Generating button
-                                    isLoading && (
+                                    (isLoading && messages && messages.length > 0) && (
                                         <Button
                                             icon={<Stop24Regular />}
                                             aria-label="Stop generating"
@@ -697,7 +701,7 @@ const Chat = () => {
                                         onSend={sendChatQuestion}
                                         conversationId={appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined}
                                     />
-                                  
+
                                 </div>
                             </div>
                         </div>
