@@ -509,18 +509,10 @@ const Chat = () => {
     }, [processMessages]);
 
     useEffect(() => {
-        //prevent flash of auth message onload
-        const timer = setTimeout(() => {
-          if (AUTH_ENABLED === undefined) {
-            setShowAuthMessage(true);
-          }
-        }, 2000);
         if (AUTH_ENABLED !== undefined) {
-          clearTimeout(timer);
           if (!AUTH_ENABLED) return;
           getUserInfoList();
         }
-        return () => clearTimeout(timer);
     }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
@@ -560,6 +552,7 @@ const Chat = () => {
     }
 
     useEffect(() => {
+        if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
           try {
             const urlParams = new URLSearchParams(window.location.search);
             const paramQuestion = urlParams.get('askmsr');
@@ -569,7 +562,8 @@ const Chat = () => {
           } catch (error) {
             console.error('Error occurred while processing URL parameters:', error);
           }
-      }, []);
+        }
+      }, [appStateContext?.state.isCosmosDBAvailable?.cosmosDB]);
 
     return (
         <div className={styles.container} role="main">
