@@ -51,7 +51,7 @@ class ConversationTelemetryClient():
         # Create conversation id
         id = str(uuid.uuid4())
         history_metadata["conversation_id"] = id
-        conversation_id = request_body.get("history_metadata", {}).get("conversation_id", "")
+        conversation_id = messages[0].get("id", "")
         user_input = messages[-1]
         
         # Create conversation item
