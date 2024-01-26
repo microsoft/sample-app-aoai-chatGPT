@@ -410,6 +410,14 @@ const Chat = () => {
                 } else {
                     if (!result.history_metadata) {
                         console.error("Error retrieving data.", result);
+                        console.log("errorMessage", errorMessage)
+                        let errorChatMsg: ChatMessage = {
+                            id: uuid(),
+                            role: ERROR,
+                            content: errorMessage,
+                            date: new Date().toISOString()
+                        } 
+                        setMessages([...messages, userMessage, errorChatMsg])
                         setIsLoading(false);
                         setShowLoadingMessage(false);
                         abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
