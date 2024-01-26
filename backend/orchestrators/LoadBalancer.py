@@ -2,9 +2,6 @@ import logging
 import random
 import os
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class OpenAIContext():
     def __init__(self, resource: str, model: str, endpoint_url: str, key: str, weight: float, version: str):

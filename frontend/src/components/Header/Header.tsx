@@ -18,10 +18,12 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 <div className={styles.titleContainer}>
                     <Image
                         src={props.azureImageUrl}
-                        className={styles.headerIcon}
                         aria-hidden="true"
-                    />
-                    <Link href="/" className={styles.headerTitle}>
+                        width={140}
+                        className={styles.logoImage}                    
+                        />
+                        <Title3> | </Title3>
+                     <Link href="/" className={styles.headerTitle}>
                         <Title3>MSR Chat</Title3>
                     </Link>
                 </div>

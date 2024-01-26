@@ -158,8 +158,9 @@ class Orchestrator(ABC):
             return columns.split(",")
 
     # Format request body and headers with relevant info based on search type
-    def prepare_body_headers_with_data(self, request):
+    def prepare_body_headers_with_data(self, request, **kwargs):
         request_messages = request.json["messages"]
+        key=kwargs.get('key', self.AZURE_OPENAI_KEY)
 
         body = {
             "messages": request_messages,
@@ -301,7 +302,7 @@ class Orchestrator(ABC):
 
         headers = {
             'Content-Type': 'application/json',
-            'api-key': self.AZURE_OPENAI_KEY,
+            'api-key': key,
             "x-ms-useragent": "GitHubSampleWebApp/PublicAPI/3.0.0"
         }
 

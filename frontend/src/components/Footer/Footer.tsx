@@ -20,8 +20,6 @@ function Footer() {
                 <Caption1Strong className={styles.footerText}>Privacy & Cookies</Caption1Strong>
             </Link>
             <Caption1Strong className={styles.footerText}>|</Caption1Strong>
-            <Caption1Strong className={styles.footerText}>We do not retain your chat data.</Caption1Strong>
-            <Caption1Strong className={styles.footerText}>|</Caption1Strong>
             <Caption1Strong className={styles.footerText}>
                 &copy; {new Date().getFullYear()} Microsoft
             </Caption1Strong>
