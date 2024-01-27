@@ -1,0 +1,25 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: chunk_documents
+display_name: Crack and Chunk Documents
+version: 1
+
+inputs:
+  input_data_path:
+    type: uri_folder
+  config_file:
+    type: uri_file
+
+outputs:
+  document_chunks_file_path:
+    type: uri_file
+
+code: .
+
+environment: 
+  conda_file: conda.yml
+  image: mcr.microsoft.com/azureml/curated/python-sdk-v2:latest
+
+command: >-
+  python chunk_documents.py --input_data_path ${{inputs.input_data_path}} --config_file ${{inputs.config_file}} --output_file_path ${{outputs.document_chunks_file_path}}

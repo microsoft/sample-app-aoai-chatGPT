@@ -35,8 +35,8 @@ export const fetchChatHistoryInit = (): Conversation[] | null => {
     return chatHistorySampleData;
 }
 
-export const historyList = async (): Promise<Conversation[] | null> => {
-    const response = await fetch("/history/list", {
+export const historyList = async (offset=0): Promise<Conversation[] | null> => {
+    const response = await fetch(`/history/list?offset=${offset}`, {
         method: "GET",
     }).then(async (res) => {
         const payload = await res.json();
@@ -94,6 +94,7 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
                     role: msg.role,
                     date: msg.createdAt,
                     content: msg.content,
+                    feedback: msg.feedback ?? undefined
                 }
                 messages.push(message)
             });
@@ -297,3 +298,40 @@ export const historyEnsure = async (): Promise<CosmosDBHealth> => {
     return response;
 }
 
+export const frontendSettings = async (): Promise<Response | null> => {
+    const response = await fetch("/frontend_settings", {
+        method: "GET",
+    }).then((res) => {
+        return res.json()
+    }).catch((err) => {
+        console.error("There was an issue fetching your data.");
+        return null
+    })
+
+    return response
+}
+export const historyMessageFeedback = async (messageId: string, feedback: string): Promise<Response> => {
+    const response = await fetch("/history/message_feedback", {
+        method: "POST",
+        body: JSON.stringify({
+            message_id: messageId,
+            message_feedback: feedback
+        }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    .then((res) => {
+        return res
+    })
+    .catch((err) => {
+        console.error("There was an issue logging feedback.");
+        let errRes: Response = {
+            ...new Response,
+            ok: false,
+            status: 500,
+        }
+        return errRes;
+    })
+    return response;
+}
