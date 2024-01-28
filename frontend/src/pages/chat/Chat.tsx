@@ -10,7 +10,7 @@ import { isEmpty } from "lodash-es";
 import DOMPurify from 'dompurify';
 
 import styles from "./Chat.module.css";
-import Azure from "../../assets/app.jpeg";
+import oclcTransparentLogo from "../../assets/OCLC_Logo.jpg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
 import {
@@ -588,12 +588,12 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={Contoso}
+                                    src={oclcTransparentLogo}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>EZproxy chat prototype</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is grounded on over 1,800 EZproxy documents. Ask your question below</h2>
+                                <h1 className={styles.chatEmptyStateTitle}>GPM Sandbox</h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is private to OCLC and is avilable for AI experimentation</h2>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">

@@ -1,6 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import styles from "./Layout.module.css";
-import Azure from "../../assets/png-transparent-library-oclc-logo-digital-library-columbus-metropolitan-library-public-library-cooperative-worldcat.png";
+import oclcTransparentLogo from "../../assets/png-transparent-library-oclc-logo-digital-library-columbus-metropolitan-library-public-library-cooperative-worldcat.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField, ICommandBarStyles, IButtonStyles } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
@@ -47,7 +47,7 @@ const Layout = () => {
                 <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
                     <Stack horizontal verticalAlign="center">
                         <img
-                            src={Contoso}
+                            src={oclcTransparentLogo}
                             className={styles.headerIcon}
                             aria-hidden="true"
                         />
