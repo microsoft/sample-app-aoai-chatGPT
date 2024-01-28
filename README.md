@@ -137,6 +137,18 @@ See the [Oryx documentation](https://github.com/microsoft/Oryx/blob/main/doc/con
 
 After adding the settings, be sure to save the configuration and then restart your app.
 
+For apps published with `One click Azure deployment` you can increase your app's ability to handle concurrent requests from multiple users with the following steps:
+1. Upgrade your App Service plan tier to a higher tier, for example tiers with more than one vCPU.
+
+2. Configure the following app settings on your App Service in the Azure Portal:
+- `UWSGI_PROCESSES`: 5 (may be higher or lower depending on your App Service Plan tier)
+- `UWSGI_THREADS`: 5 (may be higher or lower depending on your App Service Plan tier)
+
+After adding the settings, be sure to save the configuration and then restart your app.
+
+> In case you build your own docker image based on the `WebApp.Dockerfile` and host it in a App Serice, you can also increase your app's ability to handle concurrent requests from multiple users with the above steps.
+When you host your container not in an App Service you can add this seetings as container environment variable.
+
 ### Debugging your deployed app
 First, add an environment variable on the app service resource called "DEBUG". Set this to "true".
 
