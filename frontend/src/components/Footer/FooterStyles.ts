@@ -8,7 +8,7 @@ export const FooterStyles = makeStyles({
         justifyContent: 'center',
         ...shorthands.textDecoration('none'),
         ...shorthands.gap('8px'),
-        marginTop: '15px',
+        marginTop: '10px',
     },
 
     footerIcon: {
