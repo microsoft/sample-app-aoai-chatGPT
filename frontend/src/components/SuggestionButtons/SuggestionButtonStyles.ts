@@ -5,9 +5,7 @@ export const SuggestionButtonStyles = makeStyles({
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        // center horizontally
         alignItems: 'center',
-        // center vertically
         justifyContent: 'center',
         ...shorthands.gap('5px'),
         marginTop: '25px',
