@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from azure.cosmos.aio import CosmosClient  
+from azure.cosmos.aio import CosmosClient, exceptions
   
 class CosmosConversationClient():
     
@@ -9,10 +9,27 @@ class CosmosConversationClient():
         self.credential = credential
         self.database_name = database_name
         self.container_name = container_name
-        self.cosmosdb_client = CosmosClient(self.cosmosdb_endpoint, credential=credential)
-        self.database_client = self.cosmosdb_client.get_database_client(database_name)
-        self.container_client = self.database_client.get_container_client(container_name)
         self.enable_message_feedback = enable_message_feedback
+        try:
+            self.cosmosdb_client = CosmosClient(self.cosmosdb_endpoint, credential=credential)
+        except exceptions.CosmosHttpResponseError as e:
+            if e.status_code == 401:
+                raise ValueError("Invalid credentials") from e
+            else:
+                print("An error occurred:", e)
+
+        try:
+            self.database_client = self.cosmosdb_client.get_database_client(database_name)
+            self.database_client.read()
+        except exceptions.CosmosResourceNotFoundError:
+            raise ValueError("Invalid CosmosDB database name") 
+        
+        try:
+            self.container_client = self.database_client.get_container_client(container_name)
+            self.container_client.read()
+        except exceptions.CosmosResourceNotFoundError:
+            raise ValueError("Invalid CosmosDB container name") 
+        
 
     async def ensure(self):
         try:
@@ -128,6 +145,8 @@ class CosmosConversationClient():
         if resp:
             ## update the parent conversations's updatedAt field with the current message's createdAt datetime value
             conversation = await self.get_conversation(user_id, conversation_id)
+            if not conversation:
+                return "Conversation not found"
             conversation['updatedAt'] = message['createdAt']
             await self.upsert_conversation(conversation)
             return resp

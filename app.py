@@ -615,12 +615,14 @@ async def add_conversation():
         ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "user":
-            await cosmos_conversation_client.create_message(
+            createdMessageValue = await cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
             )
+            if createdMessageValue == "Conversation not found":
+                raise Exception("Conversation not found for the given conversation ID: " + conversation_id + ".")
         else:
             raise Exception("No user message found")
         
@@ -899,12 +901,24 @@ async def ensure_cosmos():
     if not AZURE_COSMOSDB_ACCOUNT:
         return jsonify({"error": "CosmosDB is not configured"}), 404
     
-    cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
-        return jsonify({"error": "CosmosDB is not working"}), 500
+    try:
+        cosmos_conversation_client = init_cosmosdb_client()
+        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+            return jsonify({"error": "CosmosDB is not configured or not working"}), 500
+        await cosmos_conversation_client.cosmosdb_client.close()
+        return jsonify({"message": "CosmosDB is configured and working"}), 200
+    except Exception as e:
+        logging.exception("Exception in /history/ensure")
+        cosmos_exception = str(e)
+        if "Invalid credentials" in cosmos_exception:
+            return jsonify({"error": cosmos_exception}), 401
+        elif "Invalid CosmosDB database name" in cosmos_exception:
+            return jsonify({"error": f"{cosmos_exception} {AZURE_COSMOSDB_DATABASE} for account {AZURE_COSMOSDB_ACCOUNT}"}), 422
+        elif "Invalid CosmosDB container name" in cosmos_exception:
+            return jsonify({"error": f"{cosmos_exception}: {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"}), 422
+        else:
+            return jsonify({"error": "CosmosDB is not working"}), 500
 
-    await cosmos_conversation_client.cosmosdb_client.close()
-    return jsonify({"message": "CosmosDB is configured and working"}), 200
 
 async def generate_title(conversation_messages):
     ## make sure the messages are sorted by _ts descending
