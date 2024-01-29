@@ -9,8 +9,7 @@ export const SuggestionButtonStyles = makeStyles({
         alignItems: 'center',
         // center vertically
         justifyContent: 'center',
-        ...shorthands.gap('10px'),
-        marginTop: '40px',
+        ...shorthands.gap('5px'),
+        marginTop: '25px',
     },
-
 });

@@ -24,7 +24,7 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 />
                 <Title3 style={{ marginBottom: '4px' }}> | </Title3>
                 <Link href="/" className={styles.headerTitle}>
-                    <Title3>MSR Chat</Title3>
+                    <Title3>Research copilot experience</Title3>
                 </Link>
             </div>
             <div className={styles.rightCommandBar}>
