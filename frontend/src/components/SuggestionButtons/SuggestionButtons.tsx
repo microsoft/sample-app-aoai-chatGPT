@@ -20,7 +20,7 @@ export const SuggestionButtons: React.FunctionComponent<ISuggestionButtonsProps>
         {
             questions.map((questionText, index) => {
                 return (
-                    <Button appearance='subtle' key={index} onClick={() => props.onButtonClick(questionText)}>{questionText}</Button>
+                    <Button appearance='subtle' size='small' key={index} onClick={() => props.onButtonClick(questionText)}>{questionText}</Button>
                 )
             })
         }

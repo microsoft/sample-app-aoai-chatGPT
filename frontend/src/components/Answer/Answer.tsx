@@ -53,7 +53,6 @@ export const Answer = ({
     }, [isRefAccordionOpen]);
 
     useEffect(() => {
-        console.log("USE EFFECT: ", answer, FEEDBACK_ENABLED);
         if (answer.message_id == undefined) return;
 
         let currentFeedbackState;
