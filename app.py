@@ -144,6 +144,7 @@ if AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_CONVERS
         )
     except Exception as e:
         logging.exception("Exception in CosmosDB initialization", e)
+        cosmodb_error = str(e)
         cosmos_conversation_client = None
 
 
@@ -640,12 +641,14 @@ def add_conversation():
         ## then write it to the conversation history in cosmos
         messages = request.json["messages"]
         if len(messages) > 0 and messages[-1]['role'] == "user":
-            cosmos_conversation_client.create_message(
+            createdMessageValue = cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
             )
+            if createdMessageValue == "Conversation not found":
+                raise Exception("Conversation not found for the given conversation ID: " + conversation_id + ".")
         else:
             raise Exception("No user message found")
         
@@ -875,7 +878,14 @@ def ensure_cosmos():
         return jsonify({"error": "CosmosDB is not configured"}), 404
     
     if not cosmos_conversation_client or not cosmos_conversation_client.ensure():
-        return jsonify({"error": "CosmosDB is not working"}), 500
+        if cosmodb_error == "Invalid credentials":
+            return jsonify({"error": cosmodb_error}), 401
+        elif cosmodb_error == "Invalid CosmosDB database name":
+            return jsonify({"error": f"{cosmodb_error} {AZURE_COSMOSDB_DATABASE} for account {AZURE_COSMOSDB_ACCOUNT}"}), 422
+        elif cosmodb_error == "Invalid CosmosDB container name":
+            return jsonify({"error": f"{cosmodb_error}: {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"}), 422
+        else:
+            return jsonify({"error": "CosmosDB is not working"}), 500
 
     return jsonify({"message": "CosmosDB is configured and working"}), 200
 
