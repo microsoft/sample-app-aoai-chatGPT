@@ -4,9 +4,9 @@ from applicationinsights.flask.ext import AppInsights
 class AppInsightsMiddleware:
     """Middleware for integrating Application Insights with a Flask application."""
 
-    def __init__(self, app, instrumentation_key = None) -> None:
+    def __init__(self, app, instrumentation_key = os.environ.get('AZURE_APPINSIGHTS_INSTRUMENTATIONKEY', None)) -> None:
         if instrumentation_key and app:
             self.app = app
-            self.instrumentation_key = os.environ.get('AZURE_APPINSIGHTS_INSTRUMENTATIONKEY') or instrumentation_key
+            self.instrumentation_key =  instrumentation_key
             app.config['APPINSIGHTS_INSTRUMENTATIONKEY'] = self.instrumentation_key
             self.appinsights = AppInsights(app)
