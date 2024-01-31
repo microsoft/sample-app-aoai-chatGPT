@@ -162,9 +162,12 @@ AZURE_SPEECH_KEY = os.environ.get("AZURE_SPEECH_KEY")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_DATABASE and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
+SPEECH_ENABLED = os.environ.get("AZURE_SPEECH_ENABLED", "false").lower() == "true"
+
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
+    "speech_enabled": SPEECH_ENABLED,
 }
 
 message_uuid = ""

@@ -108,6 +108,7 @@ export type ErrorMessage = {
 
 export type FrontendSettings = {
     auth_enabled?: string | null;
+    speech_enabled?: boolean;
     feedback_enabled?: string | null;
 }
 

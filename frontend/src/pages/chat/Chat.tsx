@@ -44,6 +44,7 @@ const enum messageStatus {
 const Chat = () => {
     const appStateContext = useContext(AppStateContext)
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
+    const SPEECH_ENABLED = appStateContext?.state.frontendSettings?.speech_enabled;
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -765,6 +766,7 @@ const Chat = () => {
                                 clearOnSend
                                 placeholder="Type a new question..."
                                 disabled={isLoading}
+                                speechEnabled={SPEECH_ENABLED}
                                 onSend={(question, id) => {
                                     appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
                                 }}
