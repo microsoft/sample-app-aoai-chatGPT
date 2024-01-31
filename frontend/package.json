@@ -15,6 +15,7 @@
     "dompurify": "^3.0.8",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
+    "microsoft-cognitiveservices-speech-sdk": "^1.34.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^7.0.1",
