@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
-from azure.cosmos.aio import CosmosClient, exceptions
+from azure.cosmos.aio import CosmosClient
+from azure.cosmos import exceptions
   
 class CosmosConversationClient():
     
@@ -16,33 +17,34 @@ class CosmosConversationClient():
             if e.status_code == 401:
                 raise ValueError("Invalid credentials") from e
             else:
-                print("An error occurred:", e)
+                raise ValueError("Invalid CosmosDB endpoint") from e
 
         try:
             self.database_client = self.cosmosdb_client.get_database_client(database_name)
-            self.database_client.read()
         except exceptions.CosmosResourceNotFoundError:
             raise ValueError("Invalid CosmosDB database name") 
         
         try:
             self.container_client = self.database_client.get_container_client(container_name)
-            self.container_client.read()
         except exceptions.CosmosResourceNotFoundError:
             raise ValueError("Invalid CosmosDB container name") 
         
 
     async def ensure(self):
+        if not self.cosmosdb_client or not self.database_client or not self.container_client:
+            return False, "CosmosDB client not initialized correctly"
+            
         try:
-            if not self.cosmosdb_client or not self.database_client or not self.container_client:
-                return False
-            
-            container_info = await self.container_client.read()
-            if not container_info:
-                return False
-            
-            return True
+            database_info = await self.database_client.read()
         except:
-            return False
+            return False, f"CosmosDB database {self.database_name} on account {self.cosmosdb_endpoint} not found"
+        
+        try:
+            container_info = await self.container_client.read()
+        except:
+            return False, f"CosmosDB container {self.container_name} not found"
+            
+        return True, "CosmosDB client initialized successfully"
 
     async def create_conversation(self, user_id, title = ''):
         conversation = {

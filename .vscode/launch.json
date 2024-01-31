@@ -8,7 +8,7 @@
       "module": "quart",
       "cwd": "${workspaceFolder}",
       "env": {
-          "QUART_APP": "main:app",
+          "QUART_APP": "app:app",
           "QUART_ENV": "development",
           "QUART_DEBUG": "0"
       },

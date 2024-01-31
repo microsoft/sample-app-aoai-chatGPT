@@ -359,33 +359,33 @@ def get_configured_data_source():
                     "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
                 }
             }
-    # TODO: when Elasticsearch authentication is fixed, uncomment this
-    # elif DATASOURCE_TYPE == "Elasticsearch":
-    #     if ELASTICSEARCH_QUERY_TYPE:
-    #         query_type = ELASTICSEARCH_QUERY_TYPE
+    elif DATASOURCE_TYPE == "Elasticsearch":
+        if ELASTICSEARCH_QUERY_TYPE:
+            query_type = ELASTICSEARCH_QUERY_TYPE
 
-    #     data_source ={
-    #             "type": "Elasticsearch",
-    #             "parameters": {
-    #                 "endpoint": ELASTICSEARCH_ENDPOINT,
-    #                 "authentication": {},
-    #                 "encodedApiKey": ELASTICSEARCH_ENCODED_API_KEY,
-    #                 "indexName": ELASTICSEARCH_INDEX,
-    #                 "fieldsMapping": {
-    #                     "contentFields": parse_multi_columns(ELASTICSEARCH_CONTENT_COLUMNS) if ELASTICSEARCH_CONTENT_COLUMNS else [],
-    #                     "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
-    #                     "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
-    #                     "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
-    #                     "vectorFields": parse_multi_columns(ELASTICSEARCH_VECTOR_COLUMNS) if ELASTICSEARCH_VECTOR_COLUMNS else []
-    #                 },
-    #                 "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
-    #                 "topNDocuments": int(ELASTICSEARCH_TOP_K) if ELASTICSEARCH_TOP_K else int(SEARCH_TOP_K),
-    #                 "queryType": query_type,
-    #                 "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
-    #                 "strictness": int(ELASTICSEARCH_STRICTNESS) if ELASTICSEARCH_STRICTNESS else int(SEARCH_STRICTNESS)
-    #             }
-    #         }
-        
+        data_source = {
+            "type": "Elasticsearch",
+            "parameters": {
+                "endpoint": ELASTICSEARCH_ENDPOINT,
+                "authentication": {
+                    "type": "EncodedAPIKey",
+                    "encodedApiKey": ELASTICSEARCH_ENCODED_API_KEY
+                },
+                "indexName": ELASTICSEARCH_INDEX,
+                "fieldsMapping": {
+                    "contentFields": parse_multi_columns(ELASTICSEARCH_CONTENT_COLUMNS) if ELASTICSEARCH_CONTENT_COLUMNS else [],
+                    "titleField": ELASTICSEARCH_TITLE_COLUMN if ELASTICSEARCH_TITLE_COLUMN else None,
+                    "urlField": ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None,
+                    "filepathField": ELASTICSEARCH_FILENAME_COLUMN if ELASTICSEARCH_FILENAME_COLUMN else None,
+                    "vectorFields": parse_multi_columns(ELASTICSEARCH_VECTOR_COLUMNS) if ELASTICSEARCH_VECTOR_COLUMNS else []
+                },
+                "inScope": True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                "topNDocuments": int(ELASTICSEARCH_TOP_K) if ELASTICSEARCH_TOP_K else int(SEARCH_TOP_K),
+                "queryType": query_type,
+                "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                "strictness": int(ELASTICSEARCH_STRICTNESS) if ELASTICSEARCH_STRICTNESS else int(SEARCH_STRICTNESS)
+            }
+        }
     elif DATASOURCE_TYPE == "AzureMLIndex":
         if AZURE_MLINDEX_QUERY_TYPE:
             query_type = AZURE_MLINDEX_QUERY_TYPE
@@ -441,7 +441,7 @@ def get_configured_data_source():
 
     if "vector" in query_type.lower() and DATASOURCE_TYPE != "AzureMLIndex":
         embeddingDependency = {}
-        if AZURE_OPENAI_EMBEDDING_NAME and DATASOURCE_TYPE != "Elasticsearch":
+        if AZURE_OPENAI_EMBEDDING_NAME:
             embeddingDependency = {
                 "type": "DeploymentName",
                 "deploymentName": AZURE_OPENAI_EMBEDDING_NAME
@@ -599,7 +599,7 @@ async def add_conversation():
     try:
         # make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        if not cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
@@ -651,7 +651,7 @@ async def update_conversation():
     try:
         # make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        if not cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
@@ -734,7 +734,7 @@ async def delete_conversation():
         
         ## make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        if not cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos first
@@ -759,7 +759,7 @@ async def list_conversations():
 
     ## make sure cosmos is configured
     cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+    if not cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
 
     ## get the conversations from cosmos
@@ -787,7 +787,7 @@ async def get_conversation():
     
     ## make sure cosmos is configured
     cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+    if not cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
 
     ## get the conversation object and the related messages from cosmos
@@ -819,7 +819,7 @@ async def rename_conversation():
     
     ## make sure cosmos is configured
     cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+    if not cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
     
     ## get the conversation from cosmos
@@ -847,7 +847,7 @@ async def delete_all_conversations():
     try:
         ## make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        if not cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         conversations = await cosmos_conversation_client.get_conversations(user_id, offset=0, limit=None)
@@ -884,7 +884,7 @@ async def clear_messages():
         
         ## make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        if not cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos
@@ -903,8 +903,12 @@ async def ensure_cosmos():
     
     try:
         cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client or not await cosmos_conversation_client.ensure():
+        success, err = await cosmos_conversation_client.ensure()
+        if not cosmos_conversation_client or not success:
+            if err:
+                return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
+        
         await cosmos_conversation_client.cosmosdb_client.close()
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
