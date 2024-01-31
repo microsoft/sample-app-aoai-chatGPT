@@ -19,6 +19,18 @@
     margin-right: 12px;
 }
 
+.questionSpeechButtonContainer {
+    position: absolute;
+    right: 25px;
+    bottom: 55px; 
+    cursor: pointer;
+}
+
+.questionSpeechButton {
+    width: 24px;
+    height: 23px;
+}
+
 .questionInputSendButtonContainer {
     position: absolute;
     right: 24px;

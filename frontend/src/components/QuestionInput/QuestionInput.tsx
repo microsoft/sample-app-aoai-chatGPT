@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
-import { SendRegular } from "@fluentui/react-icons";
+import { MicRegular, MicFilled, SendRegular } from "@fluentui/react-icons";
 import Send from "../../assets/Send.svg";
 import styles from "./QuestionInput.module.css";
+import { AudioConfig, SpeechRecognizer, SpeechConfig, AutoDetectSourceLanguageConfig, ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
+import { getSpeechAuthToken } from "../../api";
 
 interface Props {
     onSend: (question: string, id?: string) => void;
@@ -14,6 +16,7 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
     const [question, setQuestion] = useState<string>("");
+    const [speechActive, setSpeechActive] = useState<boolean>(false);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -42,6 +45,30 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         setQuestion(newValue || "");
     };
 
+    const speechToTextFromMicrophoneInput = async () => {
+        const auth = await getSpeechAuthToken();
+
+        if (auth) {
+            setSpeechActive(true)
+            const speechConfig = SpeechConfig.fromAuthorizationToken(auth.access_token, auth.region);
+            const autoDetectSourceLanguageConfig = AutoDetectSourceLanguageConfig.fromLanguages(["en-US", "de-DE", "zh-CN", "nl-NL"]);
+            const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
+            const recognizer = SpeechRecognizer.FromConfig(speechConfig, autoDetectSourceLanguageConfig, audioConfig);
+
+            recognizer.recognizeOnceAsync(result => {
+                if (result.reason === ResultReason.RecognizedSpeech) {
+                    setQuestion(result.text);
+                    sendQuestion();
+                } else {
+                    console.error('Speech was cancelled or could not be recognized. Ensure your microphone is working properly.');
+                }
+                setSpeechActive(false);
+            });
+        } else {
+            console.error('Speech was cancelled. Auth token cannot be retrieved.');
+        }
+    }
+
     const sendQuestionDisabled = disabled || !question.trim();
 
     return (
@@ -56,6 +83,19 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
             />
+            <div className={styles.questionSpeechButtonContainer} 
+                role="button" 
+                tabIndex={1}
+                aria-label="Speech input button"
+                onClick={() => speechToTextFromMicrophoneInput()}
+                onKeyDown={e => e.key === "Enter" || e.key === " " ? speechToTextFromMicrophoneInput() : null}
+            >
+                { speechActive ? 
+                    <MicFilled className={styles.questionSpeechButton}/>
+                    :
+                    <MicRegular className={styles.questionSpeechButton}/>
+                }
+            </div>
             <div className={styles.questionInputSendButtonContainer} 
                 role="button" 
                 tabIndex={0}
