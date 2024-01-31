@@ -155,6 +155,9 @@ AZURE_MLINDEX_URL_COLUMN = os.environ.get("AZURE_MLINDEX_URL_COLUMN")
 AZURE_MLINDEX_VECTOR_COLUMNS = os.environ.get("AZURE_MLINDEX_VECTOR_COLUMNS")
 AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
 
+# Speech
+AZURE_SPEECH_REGION = os.environ.get("AZURE_SPEECH_REGION")
+AZURE_SPEECH_KEY = os.environ.get("AZURE_SPEECH_KEY")
 
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
