@@ -1,4 +1,4 @@
-import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
+import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus, SpeechAuth } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
@@ -300,6 +300,17 @@ export const historyEnsure = async (): Promise<CosmosDBHealth> => {
         }
     })
     return response;
+}
+
+export async function getSpeechAuthToken(): Promise<SpeechAuth|void> {
+    const response = await fetch('/speech/issueToken');
+    if (!response.ok) {
+        console.log("Can't retrieve access token, speech will be disabled.")
+        return;
+    }
+
+    const payload = await response.json();
+    return payload;
 }
 
 export const frontendSettings = async (): Promise<Response | null> => {
