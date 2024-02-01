@@ -27,6 +27,7 @@ export const Answer = ({
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
+        if (answer.feedback.split(",").length > 1) return Feedback.Negative;
         if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
         return Feedback.Neutral;
     }
@@ -41,7 +42,7 @@ export const Answer = ({
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext)
-    const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled; 
+    const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB; 
     
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
