@@ -27,7 +27,6 @@ RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \
 COPY . /usr/src/app/  
 COPY --from=frontend /home/node/app/static  /usr/src/app/static/
 WORKDIR /usr/src/app  
-ENV UWSGI_PROCESSES=2
-ENV UWSGI_THREADS=1
+
 EXPOSE 80  
-CMD uwsgi --processes $UWSGI_PROCESSES --threads $UWSGI_THREADS --http :80 --wsgi-file app.py --callable app -b 32768
+CMD ["python", "-m", "gunicorn", "app:app"]
