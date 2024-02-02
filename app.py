@@ -25,11 +25,11 @@ from backend.utils import format_as_ndjson, format_stream_response, generateFilt
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 # Branding settings (optional)
-BRANDING_TITLE = os.environ.get("BRANDING_TITLE", "Contoso")
+BRANDING_TITLE = os.environ.get("BRANDING_TITLE") or "Contoso"
 BRANDING_LOGO = os.environ.get("BRANDING_LOGO")
 BRANDING_CHAT_LOGO = os.environ.get("BRANDING_CHAT_LOGO")
-BRANDING_CHAT_TITLE = os.environ.get("BRANDING_CHAT_TITLE", "Start chatting")
-BRANDING_CHAT_DESCRIPTION = os.environ.get("BRANDING_CHAT_DESCRIPTION", "This chatbot is configured to answer your questions")
+BRANDING_CHAT_TITLE = os.environ.get("BRANDING_CHAT_TITLE") or "Start chatting"
+BRANDING_CHAT_DESCRIPTION = os.environ.get("BRANDING_CHAT_DESCRIPTION") or "This chatbot is configured to answer your questions"
 
 def create_app():
     app = Quart(__name__)
