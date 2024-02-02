@@ -167,7 +167,7 @@ The landing chat page logo and headers are specified in `frontend/src/pages/chat
 ```
 <Stack className={styles.chatEmptyState}>
     <img
-        src={Azure}
+        src={Contoso}
         className={styles.chatIcon}
         aria-hidden="true"
     />
@@ -175,7 +175,7 @@ The landing chat page logo and headers are specified in `frontend/src/pages/chat
     <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
 </Stack>
 ```
-To update the logo, change `src={Azure}` to point to your own SVG file, which you can put in `frontend/src/assets`/
+To update the logo, change `src={Contoso}` to point to your own SVG file, which you can put in `frontend/src/assets`/
 To update the headers, change the strings "Start chatting" and "This chatbot is configured to answer your questions" to your desired values.
 
 ### Changing Citation Display
