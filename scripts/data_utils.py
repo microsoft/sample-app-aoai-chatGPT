@@ -1,12 +1,14 @@
 """Data utilities for index preparation."""
 import ast
-from asyncio import sleep
 import html
 import json
 import os
 import re
 import requests
 import openai
+import re
+import tempfile
+import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -18,6 +20,7 @@ import tiktoken
 from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
@@ -31,7 +34,9 @@ FILE_FORMAT_DICT = {
         "shtml": "html",
         "htm": "html",
         "py": "python",
-        "pdf": "pdf"
+        "pdf": "pdf",
+        "docx": "docx",
+        "pptx": "pptx"
     }
 
 RETRY_COUNT = 5
@@ -70,30 +75,33 @@ class PdfTextSplitter(TextSplitter):
         self._length_function = length_function
         self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
 
-    def extract_caption(self, s, type):
+    def extract_caption(self, text):
         separator = self._separators[-1]
         for _s in self._separators:
             if _s == "":
                 separator = _s
                 break
-            if _s in s:
+            if _s in text:
                 separator = _s
                 break
+        
         # Now that we have the separator, split the text
         if separator:
-            lines = s.split(separator)
+            lines = text.split(separator)
         else:
-            lines = list(s)
-
+            lines = list(text)
+        
+        # remove empty lines
+        lines = [line for line in lines if line!='']
         caption = ""
-        if type == "prefix": #find the last heading and the last line before the table
-            if len(s.split(f"<{PDF_HEADERS['title']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
-            if len(s.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
-               caption +=  s.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
-            caption += "\n"+ lines[-1]
-        else: # find the first line after the table
-            caption += lines[0]
+        
+        if len(text.split(f"<{PDF_HEADERS['title']}>"))>1:
+            caption +=  text.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
+        if len(text.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
+            caption +=  text.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
+        
+        caption += "\n"+ lines[-1].strip()
+
         return caption
     
     def split_text(self, text: str) -> List[str]:
@@ -102,18 +110,23 @@ class PdfTextSplitter(TextSplitter):
         splits = text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
-
-        table_caption_prefix = self.extract_caption(splits[0], "prefix")
+        
+        table_caption_prefix = ""
+        if len(final_chunks)>0:
+            table_caption_prefix += self.extract_caption(final_chunks[-1]) # extracted from the last chunk before the table
         for part in splits[1:]:
             table, rest = part.split(end_tag)
-            table_caption_suffix = self.extract_caption(rest, "suffix")
             table = start_tag + table + end_tag 
-            minitables = self.chunk_table(table, "\n".join([table_caption_prefix, table_caption_suffix]))
+            minitables = self.chunk_table(table, table_caption_prefix)
             final_chunks.extend(minitables)
 
-            if rest!="":
-                final_chunks.extend(self.chunk_rest(rest))
-            table_caption_prefix = self.extract_caption(rest, "prefix")
+            if rest.strip()!="":
+                text_minichunks = self.chunk_rest(rest)
+                final_chunks.extend(text_minichunks)
+                table_caption_prefix = self.extract_caption(text_minichunks[-1])
+            else:
+                table_caption_prefix = ""
+            
 
         final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
 
@@ -160,7 +173,7 @@ class PdfTextSplitter(TextSplitter):
                 headers += re.search("<th.*>.*</th>", table).group() # extract the header out. Opening tag may contain rowspan/colspan
             splits = table.split(self._table_tags["row_open"]) #split by row tag
             tables = []
-            current_table = caption
+            current_table = caption + "\n"
             for part in splits:
                 if len(part)>0:
                     if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
@@ -442,6 +455,32 @@ class ChunkingResult:
     # some chunks might be skipped to small number of tokens
     skipped_chunks: int = 0
 
+def extractStorageDetailsFromUrl(url):
+    matches = re.fullmatch(r'https:\/\/([^\/.]*)\.blob\.core\.windows\.net\/([^\/]*)\/(.*)', url)
+    if not matches:
+        raise Exception(f"Not a valid blob storage URL: {url}")
+    return (matches.group(1), matches.group(2), matches.group(3))
+
+def downloadBlobUrlToLocalFolder(blob_url, local_folder, credential):
+    (storage_account, container_name, path) = extractStorageDetailsFromUrl(blob_url)
+    container_url = f'https://{storage_account}.blob.core.windows.net/{container_name}'
+    container_client = ContainerClient.from_container_url(container_url, credential=credential)
+    if path and not path.endswith('/'):
+        path = path + '/'
+
+    last_destination_folder = None
+    for blob in container_client.list_blobs(name_starts_with=path):
+        relative_path = blob.name[len(path):]
+        destination_path = os.path.join(local_folder, relative_path)
+        destination_folder = os.path.dirname(destination_path)
+        if destination_folder != last_destination_folder:
+            os.makedirs(destination_folder, exist_ok=True)
+            last_destination_folder = destination_folder
+        blob_client = container_client.get_blob_client(blob.name)
+        with open(file=destination_path, mode='wb') as local_file:
+            stream = blob_client.download_blob()
+            local_file.write(stream.readall())
+
 def get_files_recursively(directory_path: str) -> List[str]:
     """Gets all files in the given directory recursively.
     Args:
@@ -698,7 +737,7 @@ def chunk_content(
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
                         except:
-                            sleep(30)
+                            time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
                     
@@ -763,7 +802,7 @@ def chunk_file(
             raise UnsupportedFormatError(f"{file_name} is not supported")
 
     cracked_pdf = False
-    if file_format == "pdf":
+    if file_format in ["pdf", "docx", "pptx"]:
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
@@ -849,6 +888,44 @@ def process_file(
         result =None
     return result, is_error
 
+def chunk_blob_container(
+        blob_url: str,
+        credential,
+        ignore_errors: bool = True,
+        num_tokens: int = 1024,
+        min_chunk_size: int = 10,
+        url_prefix = None,
+        token_overlap: int = 0,
+        extensions_to_process: List[str] = list(FILE_FORMAT_DICT.keys()),
+        form_recognizer_client = None,
+        use_layout = False,
+        njobs=4,
+        add_embeddings = False,
+        azure_credential = None,
+        embedding_endpoint = None
+):
+    with tempfile.TemporaryDirectory() as local_data_folder:
+        print(f'Downloading {blob_url} to local folder')
+        downloadBlobUrlToLocalFolder(blob_url, local_data_folder, credential)
+        print(f'Downloaded.')
+
+        result = chunk_directory(
+            local_data_folder,
+            ignore_errors=ignore_errors,
+            num_tokens=num_tokens,
+            min_chunk_size=min_chunk_size,
+            url_prefix=url_prefix,
+            token_overlap=token_overlap,
+            extensions_to_process=extensions_to_process,
+            form_recognizer_client=form_recognizer_client,
+            use_layout=use_layout,
+            njobs=njobs,
+            add_embeddings=add_embeddings,
+            azure_credential=azure_credential,
+            embedding_endpoint=embedding_endpoint
+        )
+
+    return result
 
 
 def chunk_directory(
@@ -898,8 +975,7 @@ def chunk_directory(
 
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
-        # for file_path in tqdm(files_to_process):
-        for file_path in files_to_process:
+        for file_path in tqdm(files_to_process):
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
@@ -947,14 +1023,14 @@ def chunk_directory(
 
 class SingletonFormRecognizerClient:
     instance = None
-    url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
-    key = os.getenv("FORM_RECOGNIZER_KEY")
-
     def __new__(cls, *args, **kwargs):
         if not cls.instance:
             print("SingletonFormRecognizerClient: Creating instance of Form recognizer per process")
-            if cls.url and cls.key:
-                cls.instance = DocumentAnalysisClient(endpoint=cls.url, credential=AzureKeyCredential(cls.key))
+            url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
+            key = os.getenv("FORM_RECOGNIZER_KEY")
+            if url and key:
+                cls.instance = DocumentAnalysisClient(
+                        endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
             else:
                 print("SingletonFormRecognizerClient: Skipping since credentials not provided. Assuming NO form recognizer extensions(like .pdf) in directory")
                 cls.instance = object() # dummy object
@@ -965,4 +1041,4 @@ class SingletonFormRecognizerClient:
 
     def __setstate__(self, state):
         url, key = state
-        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key))
+        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
