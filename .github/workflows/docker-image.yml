@@ -1,6 +1,10 @@
 name: Docker Image CI
 
 on:
+  workflow_dispatch:
+    branches: 
+    - sawidder/workflow
+
   push:
     branches:
     - main
