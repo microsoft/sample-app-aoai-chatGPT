@@ -101,9 +101,18 @@ export type ErrorMessage = {
     subtitle: string
 }
 
+export type Branding = {
+    title: string;
+    chat_title: string;
+    chat_description: string;
+    logo?: string;
+    chat_logo?: string;
+}
+
 export type FrontendSettings = {
     auth_enabled?: string | null;
     feedback_enabled?: string | null;
+    branding?: Branding;
 }
 
 export enum Feedback {

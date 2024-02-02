@@ -13,6 +13,7 @@ const Layout = () => {
     const [copyClicked, setCopyClicked] = useState<boolean>(false);
     const [copyText, setCopyText] = useState<string>("Copy URL");
     const appStateContext = useContext(AppStateContext)
+    const branding = appStateContext?.state.frontendSettings?.branding;
 
     const handleShareClick = () => {
         setIsSharePanelOpen(true);
@@ -47,12 +48,12 @@ const Layout = () => {
                 <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
                     <Stack horizontal verticalAlign="center">
                         <img
-                            src={Contoso}
+                            src={branding?.logo ? branding.logo : Contoso}
                             className={styles.headerIcon}
                             aria-hidden="true"
                         />
                         <Link to="/" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Contoso</h1>
+                            <h1 className={styles.headerTitle}>{branding?.title}</h1>
                         </Link>
                     </Stack>
                     <Stack horizontal tokens={{ childrenGap: 4 }}>
