@@ -12,6 +12,7 @@ from quart import (
     make_response,
     request,
     send_from_directory,
+    render_template
 )
 
 from openai import AsyncAzureOpenAI
@@ -21,7 +22,14 @@ from backend.history.cosmosdbservice import CosmosConversationClient
 
 from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns, format_non_streaming_response
 
-bp = Blueprint("routes", __name__, static_folder='static')
+bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
+
+# Branding settings (optional)
+BRANDING_TITLE = os.environ.get("BRANDING_TITLE", "Contoso")
+BRANDING_LOGO = os.environ.get("BRANDING_LOGO")
+BRANDING_CHAT_LOGO = os.environ.get("BRANDING_CHAT_LOGO")
+BRANDING_CHAT_TITLE = os.environ.get("BRANDING_CHAT_TITLE", "Start chatting")
+BRANDING_CHAT_DESCRIPTION = os.environ.get("BRANDING_CHAT_DESCRIPTION", "This chatbot is configured to answer your questions")
 
 def create_app():
     app = Quart(__name__)
@@ -31,7 +39,7 @@ def create_app():
 
 @bp.route("/")
 async def index():
-    return await bp.send_static_file("index.html")
+    return await render_template("index.html", title=BRANDING_TITLE)
 
 @bp.route("/favicon.ico")
 async def favicon():
@@ -162,6 +170,13 @@ CHAT_HISTORY_ENABLED = AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_DATABASE and AZ
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
+    "branding": {
+        "title": BRANDING_TITLE,
+        "logo": BRANDING_LOGO,
+        "chat_logo": BRANDING_CHAT_LOGO or BRANDING_LOGO,
+        "chat_title": BRANDING_CHAT_TITLE,
+        "chat_description": BRANDING_CHAT_DESCRIPTION
+    }
 }
 
 message_uuid = ""
