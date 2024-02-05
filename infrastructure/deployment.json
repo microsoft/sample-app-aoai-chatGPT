@@ -251,6 +251,13 @@
                 "description": "Azure OpenAI Embedding Deployment Name"
             }
         },
+        "AzureOpenAITitlePrompt": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure OpenAI prompt to generate conversation title"
+            }
+        },
         "WebAppEnableChatHistory": {
             "type": "bool",
             "defaultValue": false,
@@ -510,6 +517,10 @@
                         {
                             "name": "AZURE_OPENAI_EMBEDDING_NAME",
                             "value": "[parameters('AzureOpenAIEmbeddingName')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_TITLE_PROMPT",
+                            "value": "[parameters('AzureOpenAITitlePrompt')]"
                         },
                         {
                             "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
