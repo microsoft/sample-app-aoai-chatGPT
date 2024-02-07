@@ -147,7 +147,7 @@ When using your own data with a vector index, ensure these settings are configur
 
 ### Updating the default chat logo and headers
 
-Some elements, like the title and logo of the interface can be modified via [Environment variables](#environment-variables). 
+The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of [environment variables](#environment-variables).
 
 To make additional updates to the front-end, you can modify the source (`frontend/src`). After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
