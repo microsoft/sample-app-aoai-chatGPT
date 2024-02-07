@@ -24,7 +24,7 @@ from backend.utils import format_as_ndjson, format_stream_response, generateFilt
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
-# Branding settings (optional)
+# UI configuration (optional)
 UI_TITLE = os.environ.get("UI_TITLE") or "Contoso"
 UI_LOGO = os.environ.get("UI_LOGO")
 UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")

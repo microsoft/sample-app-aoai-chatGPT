@@ -101,7 +101,7 @@ export type ErrorMessage = {
     subtitle: string
 }
 
-export type Branding = {
+export type UI = {
     title: string;
     chat_title: string;
     chat_description: string;
@@ -112,7 +112,7 @@ export type Branding = {
 export type FrontendSettings = {
     auth_enabled?: string | null;
     feedback_enabled?: string | null;
-    branding?: Branding;
+    ui?: UI;
 }
 
 export enum Feedback {
