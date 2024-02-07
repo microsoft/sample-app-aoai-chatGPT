@@ -146,20 +146,10 @@ When using your own data with a vector index, ensure these settings are configur
 - `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 ### Updating the default chat logo and headers
-The landing chat page logo and headers are specified in `frontend/src/pages/chat/Chat.tsx`:
-```
-<Stack className={styles.chatEmptyState}>
-    <img
-        src={Contoso}
-        className={styles.chatIcon}
-        aria-hidden="true"
-    />
-    <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-    <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
-</Stack>
-```
-To update the logo, change `src={Contoso}` to point to your own SVG file, which you can put in `frontend/src/assets`/
-To update the headers, change the strings "Start chatting" and "This chatbot is configured to answer your questions" to your desired values.
+
+Some elements, like the title and logo of the interface can be modified via [Environment variables](#environment-variables). 
+
+To make additional updates to the front-end, you can modify the source (`frontend/src`). After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
 ### Changing Citation Display
 The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the title element is a clickable hyperlink if `url` is not a blob URL.
@@ -223,11 +213,11 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
-|UI_TITLE|| Chat title (left-top) and page title (HTML)
-|UI_LOGO|| Logo (left-top)
-|UI_CHAT_LOGO|| Logo (chat window)
-|UI_CHAT_TITLE|| Title (chat window)
-|UI_CHAT_DESCRIPTION|| Description (chat window)
+|UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
+|UI_LOGO|Defaults to Contoso logo. Configure the URL to your logo image to modify.| Logo (left-top)
+|UI_CHAT_LOGO| Defaults to Contoso logo. Configure the URL to your logo image to modify. | Logo (chat window)
+|UI_CHAT_TITLE|Start chatting| Title (chat window)
+|UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
 
 ## Contributing
 
