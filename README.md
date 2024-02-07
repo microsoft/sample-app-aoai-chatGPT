@@ -124,8 +124,17 @@ To remove this restriction, you can add `AUTH_ENABLED=False` to the environment 
 
 To add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. 
 
-## Common Customization Scenarios
-Feel free to fork this repository and make your own modifications to the UX or backend logic. For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. 
+### Common Customization Scenarios (e.g. updating the default chat logo and headers)
+
+The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of [environment variables](#environment-variables).
+
+- `UI_TITLE`
+- `UI_LOGO`
+- `UI_CHAT_TITLE`
+- `UI_CHAT_LOGO`
+- `UI_CHAT_DESCRIPTION`
+
+Feel free to fork this repository and make your own modifications to the UX or backend logic. You can modify the source (`frontend/src`). For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
 ### Scalability
 You can configure the number of threads and workers in `gunicorn.conf.py`. After making a change, redeploy your app using the commands listed above.
@@ -144,12 +153,6 @@ When using your own data with a vector index, ensure these settings are configur
 - `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
 - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
 - `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
-
-### Updating the default chat logo and headers
-
-The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of [environment variables](#environment-variables).
-
-To make additional updates to the front-end, you can modify the source (`frontend/src`). After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
 ### Changing Citation Display
 The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the title element is a clickable hyperlink if `url` is not a blob URL.
@@ -214,8 +217,8 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 |UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
-|UI_LOGO|Defaults to Contoso logo. Configure the URL to your logo image to modify.| Logo (left-top)
-|UI_CHAT_LOGO| Defaults to Contoso logo. Configure the URL to your logo image to modify. | Logo (chat window)
+|UI_LOGO|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
+|UI_CHAT_LOGO|| Logo (chat window). Defaults to Contoso logo. Configure the URL to your logo image to modify.
 |UI_CHAT_TITLE|Start chatting| Title (chat window)
 |UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
 
