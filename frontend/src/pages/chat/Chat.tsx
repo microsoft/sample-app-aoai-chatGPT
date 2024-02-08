@@ -192,6 +192,7 @@ const Chat = () => {
             if (response?.body) {
                 const reader = response.body.getReader();
 
+                let runningText = "";
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
                     const { done, value } = await reader.read();
@@ -202,7 +203,8 @@ const Chat = () => {
                     objects.forEach((obj) => {
                         try {
                             if (obj !== "" && obj !== "{}") {
-                                result = JSON.parse(obj);
+                                runningText += obj;
+                                result = JSON.parse(runningText);
                                 if (result.choices?.length > 0) {
                                     result.choices[0].messages.forEach((msg) => {
                                         msg.id = result.id;
@@ -216,11 +218,16 @@ const Chat = () => {
                                 else if (result.error) {
                                     throw Error(result.error);
                                 }
+                                runningText = "";
                             }
                         }
                         catch (e) {
-                            console.error(e);
-                            throw e;
+                            if (!(e instanceof SyntaxError)) {
+                                console.error(e);
+                                throw e;
+                            } else {
+                                console.log("Incomplete message. Continuing...")
+                            }
                         }
                     });
                 }
@@ -333,6 +340,7 @@ const Chat = () => {
             if (response?.body) {
                 const reader = response.body.getReader();
 
+                let runningText = "";
                 while (true) {
                     setProcessMessages(messageStatus.Processing)
                     const { done, value } = await reader.read();
@@ -343,7 +351,8 @@ const Chat = () => {
                     objects.forEach((obj) => {
                         try {
                             if (obj !== "" && obj !== "{}") {
-                                result = JSON.parse(obj);
+                                runningText += obj;
+                                result = JSON.parse(runningText);
                                 if (result.choices?.length > 0) {
                                     result.choices[0].messages.forEach((msg) => {
                                         msg.id = result.id;
@@ -354,14 +363,19 @@ const Chat = () => {
                                         processResultMessage(resultObj, userMessage, conversationId);
                                     })
                                 }
+                                runningText = "";
                             }
                             else if (result.error) {
                                 throw Error(result.error);
                             }
                         }
                         catch (e) {
-                            console.error(e);
-                            throw e;
+                            if (!(e instanceof SyntaxError)) {
+                                console.error(e);
+                                throw e;
+                            } else {
+                                console.log("Incomplete message. Continuing...")
+                            }
                          }
                     });
                 }
