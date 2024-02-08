@@ -222,11 +222,12 @@ const Chat = () => {
                             }
                         }
                         catch (e) {
-                            if (e !instanceof SyntaxError)
-                            {
+                            if (!(e instanceof SyntaxError)) {
                                 console.error(e);
                                 throw e;
-                            } 
+                            } else {
+                                console.log("Incomplete message. Continuing...")
+                            }
                         }
                     });
                 }
@@ -369,11 +370,11 @@ const Chat = () => {
                             }
                         }
                         catch (e) {
-                            if (e !instanceof SyntaxError) {
+                            if (!(e instanceof SyntaxError)) {
                                 console.error(e);
                                 throw e;
                             } else {
-                                console.log("Incomplete message. continuing")
+                                console.log("Incomplete message. Continuing...")
                             }
                          }
                     });
