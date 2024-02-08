@@ -5,7 +5,8 @@
 }
 
 .header {
-    background-color: #f2f2f2;
+    /* background-color: #f2f2f2; */
+    background-color: #a3a39e;
 }
 
 .headerContainer {
@@ -33,7 +34,8 @@
 
 .headerIcon {
     height: 32px;
-    width: 32px;
+    /* width: 32px; */
+    width: auto;
     margin-left: 36px;
 }
 
