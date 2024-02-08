@@ -1,9 +1,9 @@
 import { Outlet, Link } from "react-router-dom";
-import styles from "./Layout.module.css";
-import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
 import { CopyRegular, ShareRegular } from "@fluentui/react-icons";
 import { Dialog, Stack, TextField, ICommandBarStyles, IButtonStyles } from "@fluentui/react";
 import { useContext, useEffect, useState } from "react";
+import styles from "./Layout.module.css";
+import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
@@ -50,12 +50,13 @@ const Layout = () => {
                             src={Contoso}
                             className={styles.headerIcon}
                             aria-hidden="true"
+                            alt="eInfochips Eragon Co-Pilot Logo"
                         />
-                        <Link to="/" className={styles.headerTitleContainer}>
+                        <Link to="/" className={styles.headerTitleContainer} aria-label="eInfochips Eragon Co-Pilot Home">
                             <h1 className={styles.headerTitle}>eInfochips Eragon Co-Pilot</h1>
                         </Link>
                     </Stack>
-                    <Stack horizontal tokens={{ childrenGap: 4 }}>
+                    <Stack horizontal tokens={{ childrenGap: 10 }}>
                         {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
                             <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
                         }
@@ -77,8 +78,8 @@ const Layout = () => {
                                 background: "#FFFFFF",
                                 boxShadow: "0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)",
                                 borderRadius: "8px",
-                                maxHeight: '200px',
-                                minHeight: '100px',
+                                // maxHeight: '200px',
+                                // minHeight: '100px',
                             }
                         }
                     }]
@@ -88,8 +89,8 @@ const Layout = () => {
                     showCloseButton: true
                 }}
             >
-                <Stack horizontal verticalAlign="center" style={{ gap: "8px" }}>
-                    <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
+                <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 8 }} style={{ gap: "8px" }}>
+                    <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly underlined />
                     <div
                         className={styles.copyButtonContainer}
                         role="button"
@@ -97,6 +98,7 @@ const Layout = () => {
                         aria-label="Copy"
                         onClick={handleCopyClick}
                         onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCopyClick() : null}
+                        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
                     >
                         <CopyRegular className={styles.copyButton} />
                         <span className={styles.copyButtonText}>{copyText}</span>
