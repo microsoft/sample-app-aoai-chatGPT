@@ -5,7 +5,7 @@ import json
 import os
 import re
 import requests
-import openai
+from openai import AzureOpenAI
 import re
 import tempfile
 import time
@@ -623,18 +623,16 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
         base_url = endpoint_parts[0]
         deployment_id = endpoint_parts[1].split("/embeddings")[0]
 
-        openai.api_version = '2023-05-15'
-        openai.api_base = base_url
+        api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
 
         if azure_credential is not None:
-            openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-            openai.api_type = "azure_ad"
+            api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
         else:
-            openai.api_type = 'azure'
-            openai.api_key = key
+            api_key = key
 
-        embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
-        return embeddings['data'][0]["embedding"]
+        client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
+        embeddings = client.embeddings.create(model=deployment_id, input=text)
+        return embeddings.dict()['data'][0]['embedding']
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
