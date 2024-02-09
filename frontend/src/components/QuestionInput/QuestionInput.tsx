@@ -70,7 +70,6 @@ export const QuestionInput = ({ onSend, disabled, speechEnabled, placeholder, cl
         recognizer.recognizeOnceAsync(result => {
             if (result.reason === ResultReason.RecognizedSpeech) {
                 setQuestion(result.text);
-                sendQuestion();
             } else {
                 console.error('Speech was cancelled or could not be recognized. Ensure your microphone is working properly.');
             }
