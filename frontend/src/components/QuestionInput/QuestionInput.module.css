@@ -21,6 +21,7 @@
 
 .questionSpeechButtonContainer {
     position: absolute;
+    top: 20px;
     right: 25px;
     bottom: 55px; 
     cursor: pointer;
@@ -40,6 +41,7 @@
 .questionInputSendButton {
     width: 24px;
     height: 23px;
+    cursor: pointer;
 }
 
 .questionInputSendButtonDisabled {
