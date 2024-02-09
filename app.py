@@ -30,6 +30,7 @@ UI_LOGO = os.environ.get("UI_LOGO")
 UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")
 UI_CHAT_TITLE = os.environ.get("UI_CHAT_TITLE") or "Start chatting"
 UI_CHAT_DESCRIPTION = os.environ.get("UI_CHAT_DESCRIPTION") or "This chatbot is configured to answer your questions"
+UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
 
 def create_app():
     app = Quart(__name__)
@@ -39,7 +40,7 @@ def create_app():
 
 @bp.route("/")
 async def index():
-    return await render_template("index.html", title=UI_TITLE)
+    return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
 
 @bp.route("/favicon.ico")
 async def favicon():
