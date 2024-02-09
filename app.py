@@ -930,7 +930,7 @@ async def ensure_cosmos():
         else:
             return jsonify({"error": "CosmosDB is not working"}), 500
 
-@bp.route("/speech/issueToken", methods=["POST"])
+@bp.route("/speech/issueToken", methods=["GET"])
 async def speech_issue_token():
     """Generate short-lived (10 minutes) access token (JWT) for Azure Speech service."""
     if not AZURE_SPEECH_KEY:
