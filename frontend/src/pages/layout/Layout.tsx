@@ -56,13 +56,14 @@ const Layout = () => {
                             <h1 className={styles.headerTitle}>{ui?.title}</h1>
                         </Link>
                     </Stack>
-                    <Stack horizontal tokens={{ childrenGap: 4 }}>
-                        {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
-                            <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
-                        }
-                        <ShareButton onClick={handleShareClick} />
-                    </Stack>
-
+                    {ui?.show_share_button &&
+                        <Stack horizontal tokens={{ childrenGap: 4 }}>
+                            {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
+                                <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
+                            }
+                            <ShareButton onClick={handleShareClick} />
+                        </Stack>
+                    }
                 </Stack>
             </header>
             <Outlet />
