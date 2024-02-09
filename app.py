@@ -3,6 +3,7 @@ import json
 import os
 import logging
 import uuid
+import aiohttp
 from dotenv import load_dotenv
 
 from quart import (
@@ -929,6 +930,24 @@ async def ensure_cosmos():
         else:
             return jsonify({"error": "CosmosDB is not working"}), 500
 
+@bp.route("/speech/issueToken", methods=["POST"])
+async def speech_issue_token():
+    """Generate short-lived (10 minutes) access token (JWT) for Azure Speech service."""
+    if not AZURE_SPEECH_KEY:
+        return jsonify({"error": "Azure Speech key is not configured"}), 404
+    if not AZURE_SPEECH_REGION:
+        return jsonify({"error": "Azure Speech region is not configured"}), 404
+    
+    url = f"https://{AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken"
+    
+    try:
+        async with aiohttp.ClientSession() as session: 
+            async with session.post(url, headers={"Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY}) as response: 
+                access_token = await response.text()
+                return jsonify({"access_token": access_token, "region": AZURE_SPEECH_REGION}), 200
+    except Exception:
+        logging.exception("Exception in /speech/issueToken")
+        return jsonify({"error": "Azure Speech is not working."}), 500
 
 async def generate_title(conversation_messages):
     ## make sure the messages are sorted by _ts descending
