@@ -33,7 +33,7 @@
 
 .headerIcon {
     height: 32px;
-    width: 32px;
+    width: auto;
     margin-left: 36px;
 }
 
