@@ -1,3 +1,37 @@
+.layoutWithSidebar {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #f0f0f0;
+    padding: 20px;
+    box-sizing: border-box;
+    height: 100%;
+    border-right: 1px solid #ccc;
+}
+
+.mainContent {
+    flex-grow: 1;
+    overflow: auto;
+}
+
+.newConversationButton, .saveChatHistoryButton {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    text-align: center;
+}
+
+.newConversationButton:hover, .saveChatHistoryButton:hover {
+    background-color: #e7e7e7;
+}
+
 .layout {
     display: flex;
     flex-direction: column;
