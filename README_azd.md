@@ -20,6 +20,7 @@ If you're not using one of those options for opening the project, then you'll ne
     - [Node.js](https://nodejs.org/en/download/)
     - [Git](https://git-scm.com/downloads)
     - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
+    - [Rust](https://www.rust-lang.org/tools/install) 
     - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
 
 
