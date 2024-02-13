@@ -29,6 +29,27 @@ function check_resource_type() {
     fi
 }
 
+function check_user_mi_roles() {
+    subscription_id=$1
+    user_principal=$2
+    expected_roles=$3
+
+    echo "Checking MI roles for signed in user"
+
+    role_assignments=$(az role assignment list --subscription $subscription_id --assignee $user_principal --all --query="[].roleDefinitionName")
+    unmatched_role_assignments_count=$(echo $role_assignments | jq --argjson expected "$expected_roles" '$expected-. | length')
+
+    if [[ $unmatched_role_assignments_count > 0 ]]; then
+        echo "Signed-in user does not have the correct role assignments."
+        echo "Expected role assignments: ${expected_roles}"
+        echo "Actual role assignments: ${role_assignments}"
+        echo "Please run the following script to ensure that role assignments are set correctly for your user identity: https://github.com/microsoft/sample-app-aoai-chatGPT/blob/main/scripts/role_assignment.sh"
+        exit 1
+    fi
+
+    echo "MI roles for signed in user are valid!"
+}
+
 function check_mi_roles() {
     subscription_id=$1
     resource=$2
@@ -126,26 +147,26 @@ function check_gateway_subnet_connection() {
     echo "VPN gateway is attached to the virtual network!"
 }
 
-function check_ame_private_endpoint_connection() {
-    echo "Checking AME private endpoint connection..."
+function check_microsoft_managed_vnet_private_endpoint_connection() {
+    echo "Checking Microsoft-managed private endpoint connection..."
     resource=$1
 
-    ame_private_endpoint_connections=$(echo $resource | jq '.private_endpoints | map(select(.properties.privateEndpoint.id | startswith("/subscriptions/812f15d0-6b38-42a1-a3cf-fa00794f528b")))')
-    ame_private_endpoint_connections_count=$(echo $ame_private_endpoint_connections | jq 'length')
+    ms_private_endpoint_connections=$(echo $resource | jq '.private_endpoints | map(select(.properties.privateEndpoint.id | startswith("/subscriptions/812f15d0-6b38-42a1-a3cf-fa00794f528b")))')
+    ms_private_endpoint_connections_count=$(echo $ms_private_endpoint_connections | jq 'length')
 
-    if [[ $ame_private_endpoint_connections_count == 0 ]]; then
+    if [[ $ms_private_endpoint_connections_count == 0 ]]; then
         echo "No AOAI On Your Data-hosted private endpoint connection found"
-        echo "Please follow instructions here to request private endpoint access for your resource: TODO"
+        echo "Please follow instructions here to request private endpoint access for your resource: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/use-your-data-securely#disable-public-network-access-1"
         exit 1
     fi
 
-    approved_private_endpoint_count=$(echo $ame_private_endpoint_connections | jq 'map(select(.properties.privateLinkServiceConnectionState.status=="Approved")) | length')
-    pending_private_endpoint_count=$(echo $ame_private_endpoint_connections | jq 'map(select(.properties.privateLinkServiceConnectionState.status=="Pending")) | length')
+    approved_private_endpoint_count=$(echo $ms_private_endpoint_connections | jq 'map(select(.properties.privateLinkServiceConnectionState.status=="Approved")) | length')
+    pending_private_endpoint_count=$(echo $ms_private_endpoint_connections | jq 'map(select(.properties.privateLinkServiceConnectionState.status=="Pending")) | length')
 
     if [[ $approved_private_endpoint_count == 0 ]]; then
         if [[ $pending_private_endpoint_count == 0 ]]; then
             echo "No AOAI On Your Data-hosted private endpoint connection found"
-            echo "Please follow instructions here to request private endpoint access for your resource: TODO"
+            echo "Please follow instructions here to request private endpoint access for your resource: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/use-your-data-securely#disable-public-network-access-1"
             exit 1
         else
             echo "One or more AOAI On Your Data-hosted private endpoint connections was found for the provided Azure Search resource, but they are not in an approved state."
@@ -154,7 +175,7 @@ function check_ame_private_endpoint_connection() {
         fi
     fi
 
-    echo "AME private endpoint connection is valid!"
+    echo "Microsoft-managed private endpoint connection is valid!"
 }
 
 function check_bypass_azure_services_configuration() {
@@ -221,14 +242,14 @@ USAGE
 }
 
 # check that required tools are installed
-which az
+which az 1>/dev/null
 
 if [[ $? != 0 ]]; then
     echo "az CLI not found on PATH -- please install the az CLI and try again."
     exit 1
 fi
 
-which jq
+which jq 1>/dev/null
 
 if [[ $? != 0 ]]; then
     echo "jq not found on PATH -- please install the jq command using your distribution's package manager and try again."
@@ -306,6 +327,9 @@ elif [[ -z "$gateway_resource_id" ]]; then
 
 fi
 
+# Get signed-in user principal ID
+user_principal=$(az ad signed-in-user show --query "id" -o tsv)
+
 # Gather resource details
 jmes_vnet_query_string="{\
 type: type, \
@@ -350,10 +374,11 @@ check_resources_subnet_connection $subscription_id "$virtual_network_resource" "
 # 2) VNET also has a VPN gateway attached to it.
 check_gateway_subnet_connection $virtual_network_resource_id "$gateway_resource"
 
-# 3) Additional private endpoint connection to AME exists on search resource.
-check_ame_private_endpoint_connection "$acs_resource"
+# 3) Additional private endpoint connection to Microsoft-managed VNET exists on search resource.
+check_microsoft_managed_vnet_private_endpoint_connection "$acs_resource"
 
-# verify roles and scopes on each item.
+# verify roles and scopes on each item, and on the logged in user.
+check_user_mi_roles $subscription_id $user_principal "[\"Cognitive Services OpenAI Contributor\"]"
 check_mi_roles $subscription_id "$acs_resource" "[\"Cognitive Services OpenAI Contributor\",\"Storage Blob Data Contributor\"]"
 check_role_assignment_scope $subscription_id "$acs_resource" "Cognitive Services OpenAI Contributor" $aoai_resource_id
 check_role_assignment_scope $subscription_id "$acs_resource" "Storage Blob Data Contributor" $storage_account_resource_id
@@ -365,4 +390,4 @@ check_role_assignment_scope  $subscription_id "$aoai_resource" "Storage Blob Dat
 # check that ACS resource has both API key + RBAC enabled
 check_rbac "$acs_resource"
 
-echo "Success!"
+echo "Successfully validated all resources!"
