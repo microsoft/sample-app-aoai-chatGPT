@@ -1,37 +1,3 @@
-.layoutWithSidebar {
-    display: flex;
-    height: 100vh;
-}
-
-.sidebar {
-    width: 240px;
-    background-color: #f0f0f0;
-    padding: 20px;
-    box-sizing: border-box;
-    height: 100%;
-    border-right: 1px solid #ccc;
-}
-
-.mainContent {
-    flex-grow: 1;
-    overflow: auto;
-}
-
-.newConversationButton, .saveChatHistoryButton {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    text-align: center;
-}
-
-.newConversationButton:hover, .saveChatHistoryButton:hover {
-    background-color: #e7e7e7;
-}
-
 .layout {
     display: flex;
     flex-direction: column;
@@ -39,36 +5,11 @@
 }
 
 .header {
-    /* background-color: #f2f2f2; */
     background-color: #a3a39e;
-}
-
-.headerContainer {
-    display: flex;
-    justify-content: left;
-    align-items: center;
-}
-
-.headerTitleContainer {
-    display: flex;
-    align-items: center;
-    margin-left: 14px;
-    text-decoration: none;
-}
-
-.headerTitle {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 28px;
-    display: flex;
-    align-items: flex-end;
-    color: #242424;
 }
 
 .headerIcon {
     height: 32px;
-    /* width: 32px; */
     width: auto;
     margin-left: 36px;
 }
