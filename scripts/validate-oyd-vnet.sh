@@ -221,7 +221,7 @@ function usage() {
     cat <<USAGE
 
     Usage: $0 
-        --subscription_id <subscription_id>
+        --subscription-id <subscription_id>
         --azure-openai-resource-id <aoai_resource_id>
         --azure-search-resource-id <search_resource_id>
         --storage-account-resource-id <storage_account_resource_id>
@@ -293,6 +293,7 @@ while [ "$1" != "" ]; do
         LOG_DETAILS=1
         ;;
     *)
+        echo "Invalid arguments: $1"
         usage
         exit 1
         ;;
