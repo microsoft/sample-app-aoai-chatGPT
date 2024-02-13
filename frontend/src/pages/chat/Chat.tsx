@@ -23,9 +23,14 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import uuid from "react-uuid";
 import { isEmpty } from "lodash-es";
+import { TiHome } from "react-icons/ti";
 
 import styles from "./Chat.module.css";
 import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
+import SOM from "../../../public/som.webp";
+import SBC from "../../../public/SBC.webp";
+import DevKits from "../../../public/DevKits.webp";
+import Accessories from "../../../public/Accessories.webp";
 
 import {
   ChatMessage,
@@ -745,13 +750,30 @@ const Chat = () => {
                 <h1 className={styles.chatEmptyStateTitle}>Eragon Co-Pilot </h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>
                   This Co-Pilot is configured to answer your questions related
-                  to SoM, SBC & Dev Kits
+                  to SoM, SBC, Dev Kits & Accessories
                 </h2>
 
                 <div className={styles.boxesContainer}>
-                  <div className={styles.box}>SoM</div>
-                  <div className={styles.box}>SBC</div>
-                  <div className={styles.box}>Dev Kits</div>
+                  <div className={styles.boxContainer}>
+                    <img className={styles.box} src={SOM} alt="SOM" />
+                    <div className={styles.rectangle}>SOM</div>
+                  </div>
+                  <div className={styles.boxContainer}>
+                    <img className={styles.box} src={SBC} alt="SBC" />
+                    <div className={styles.rectangle}>SBC</div>
+                  </div>
+                  <div className={styles.boxContainer}>
+                    <img className={styles.box} src={DevKits} alt="DevKits" />
+                    <div className={styles.rectangle}>Dev Kits</div>
+                  </div>
+                  <div className={styles.boxContainer}>
+                    <img
+                      className={styles.box}
+                      src={Accessories}
+                      alt="Accessories"
+                    />
+                    <div className={styles.rectangle}>Accessories</div>
+                  </div>
                 </div>
 
               </Stack>
@@ -872,23 +894,15 @@ const Chat = () => {
                     aria-label="start a new chat button"
                   />
                 )}
-                <CommandBarButton
+                
+                <TiHome
                   role="button"
-                  styles={{
-                    icon: {
-                      color: "#FFFFFF",
-                    },
-                    iconDisabled: {
-                      color: "#BDBDBD !important",
-                    },
-                    root: {
-                      color: "#FFFFFF",
-                      background:
-                        "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                    },
-                    rootDisabled: {
-                      background: "#F0F0F0",
-                    },
+                  style={{
+                    color: "#FFFFFF", 
+                    background:
+                      "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                    height: 30,
+                    width: 30,
                   }}
                   className={
                     appStateContext?.state.isCosmosDBAvailable?.status !==
@@ -896,16 +910,16 @@ const Chat = () => {
                       ? styles.clearChatBroom
                       : styles.clearChatBroomNoCosmos
                   }
-                  iconProps={{ iconName: "Broom" }}
-                  onClick={
-                    appStateContext?.state.isCosmosDBAvailable?.status !==
-                    CosmosDBStatus.NotConfigured
-                      ? clearChat
-                      : newChat
-                  }
-                  disabled={disabledButton()}
+                  // icon="Broom"
+                  onClick={() => {
+                    if (!disabledButton()) {
+                      // Only call clearChat or newChat if not disabled
+                      appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat() : newChat();
+                    }
+                  }}
                   aria-label="clear chat button"
                 />
+
                 <Dialog
                   hidden={hideErrorDialog}
                   onDismiss={handleErrorDialogClose}
