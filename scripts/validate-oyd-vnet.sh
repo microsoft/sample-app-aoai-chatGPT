@@ -307,7 +307,7 @@ if [[ -z "$subscription_id" ]]; then
     usage
 
 elif [[ -z "$aoai_resource_id" ]]; then
-    echo "--azure-openai-resourc-id is a required argument"
+    echo "--azure-openai-resource-id is a required argument"
     usage
 
 elif [[ -z "$search_resource_id" ]]; then
@@ -331,38 +331,48 @@ fi
 # Get signed-in user principal ID
 user_principal=$(az ad signed-in-user show --query "id" -o tsv)
 
-# Gather resource details
+# JSON filters
 jmes_vnet_query_string="{\
 type: type, \
 subnets: properties.subnets[].{id: id, ip_configs: properties.ipConfigurations, private_endpoints: properties.privateEndpoints}\
 }"
 
 jq_filter="{id:.id,type:.type,auth_options:.properties.authOptions,private_endpoints:.properties.privateEndpointConnections,identity_principal:.identity.principalId,network_acls:.properties.networkAcls}"
-acs_resource=$(get_resource $search_resource_id "2023-11-01"  | jq -c $jq_filter)
-aoai_resource=$(get_resource $aoai_resource_id "2023-10-01-preview"  | jq -c $jq_filter)
-storage_resource=$(get_resource $storage_account_resource_id "2023-05-01"  | jq -c $jq_filter)
-data_resources=$(jq -n -c --argjson sa "$storage_resource" --argjson acs "$acs_resource" --argjson aoai "$aoai_resource" '[$sa, $acs, $aoai]')
-gateway_resource=$(az resource show --subscription $subscription_id --ids $gateway_resource_id)
-virtual_network_resource=$(az resource show --subscription $subscription_id --ids $virtual_network_resource_id --query="${jmes_vnet_query_string}")
 
-# verify resource types match expectation
+
+# get resources info and verify resource types match expectation
+acs_resource=$(get_resource $search_resource_id "2023-11-01"  | jq -c $jq_filter)
 if [[ $(get_resource_type_from_resource "$acs_resource") != "Microsoft.Search/searchServices" ]]; then
     echo "The value given for --azure-search-resource-id is not a valid Azure Search resource ID."
     exit 1
-elif [[ $(get_resource_type_from_resource "$aoai_resource") != "Microsoft.CognitiveServices/accounts" ]]; then
+fi
+
+aoai_resource=$(get_resource $aoai_resource_id "2023-10-01-preview"  | jq -c $jq_filter)
+if [[ $(get_resource_type_from_resource "$aoai_resource") != "Microsoft.CognitiveServices/accounts" ]]; then
     echo "The value given for --azure-openai-resource-id is not a valid Azure OpenAI resource ID."
     exit 1
-elif [[ $(get_resource_type_from_resource "$storage_resource") != "Microsoft.Storage/storageAccounts" ]]; then
+fi
+
+storage_resource=$(get_resource $storage_account_resource_id "2023-05-01"  | jq -c $jq_filter)
+if [[ $(get_resource_type_from_resource "$storage_resource") != "Microsoft.Storage/storageAccounts" ]]; then
     echo "The value given for --storage-account-resource-id is not a valid storage account resource ID."
     exit 1
-elif [[ $(get_resource_type_from_resource "$virtual_network_resource") != "Microsoft.Network/virtualNetworks" ]]; then
+fi
+
+virtual_network_resource=$(az resource show --subscription $subscription_id --ids $virtual_network_resource_id --query="${jmes_vnet_query_string}")
+if [[ $(get_resource_type_from_resource "$virtual_network_resource") != "Microsoft.Network/virtualNetworks" ]]; then
     echo $virtual_network_resource | jq
     echo "The value given for --virtual-network-resource-id is not a valid Azure Search resource ID."
     exit 1
-elif [[ $(get_resource_type_from_resource "$gateway_resource") != "Microsoft.Network/virtualNetworkGateways" ]]; then
+fi
+
+gateway_resource=$(az resource show --subscription $subscription_id --ids $gateway_resource_id)
+if [[ $(get_resource_type_from_resource "$gateway_resource") != "Microsoft.Network/virtualNetworkGateways" ]]; then
     echo "The value given for --gateway-resource-id is not a valid Azure Search resource ID."
     exit 1
 fi
+
+data_resources=$(jq -n -c --argjson sa "$storage_resource" --argjson acs "$acs_resource" --argjson aoai "$aoai_resource" '[$sa, $acs, $aoai]')
 
 # verify trusted services configuration.
 check_bypass_azure_services_configuration "$storage_resource"
