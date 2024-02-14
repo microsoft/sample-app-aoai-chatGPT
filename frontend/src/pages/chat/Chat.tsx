@@ -776,7 +776,6 @@ const Chat = () => {
                     <div className={styles.rectangle}>Accessories</div>
                   </div>
                 </div>
-
               </Stack>
             ) : (
               <div
@@ -873,9 +872,11 @@ const Chat = () => {
                   <IoCreateOutline
                     role="button"
                     style={{
-                        color: "#FFFFFF",
-                        background:
-                          "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                      color: "#FFFFFF",
+                      background:
+                        "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                      height: 30,
+                      width: 30,
                     }}
                     className={styles.newChatIcon}
                     onClick={() => {
@@ -886,11 +887,11 @@ const Chat = () => {
                     aria-label="start a new chat button"
                   />
                 )}
-                
+
                 <TiHome
                   role="button"
                   style={{
-                    color: "#FFFFFF", 
+                    color: "#FFFFFF",
                     background:
                       "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
                     height: 30,
@@ -906,7 +907,10 @@ const Chat = () => {
                   onClick={() => {
                     if (!disabledButton()) {
                       // Only call clearChat or newChat if not disabled
-                      appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat() : newChat();
+                      appStateContext?.state.isCosmosDBAvailable?.status !==
+                      CosmosDBStatus.NotConfigured
+                        ? clearChat()
+                        : newChat();
                     }
                   }}
                   aria-label="clear chat button"
