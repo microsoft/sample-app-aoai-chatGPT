@@ -53,9 +53,11 @@ export const HistoryButton: React.FC<HistoryButtonProps> = ({onClick, text}) => 
             // width: '180px',
             width: '70px',
             border: `1px solid #D1D1D1`,
+            background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%)',
           },
           rootHovered: {
             border: `1px solid #D1D1D1`,
+            background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(11 108 193) 33.63%, rgb(45 140 204) 70.31%, rgb(137 222 216) 100%)',
           },
           rootPressed: {
             border: `1px solid #D1D1D1`,
