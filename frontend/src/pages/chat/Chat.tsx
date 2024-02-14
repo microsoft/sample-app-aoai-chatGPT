@@ -24,6 +24,7 @@ import rehypeRaw from "rehype-raw";
 import uuid from "react-uuid";
 import { isEmpty } from "lodash-es";
 import { TiHome } from "react-icons/ti";
+import { IoCreateOutline } from "react-icons/io5";
 
 import styles from "./Chat.module.css";
 import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
@@ -869,28 +870,19 @@ const Chat = () => {
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !==
                   CosmosDBStatus.NotConfigured && (
-                  <CommandBarButton
+                  <IoCreateOutline
                     role="button"
-                    styles={{
-                      icon: {
-                        color: "#FFFFFF",
-                      },
-                      iconDisabled: {
-                        color: "#BDBDBD !important",
-                      },
-                      root: {
+                    style={{
                         color: "#FFFFFF",
                         background:
                           "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
-                      },
-                      rootDisabled: {
-                        background: "#F0F0F0",
-                      },
                     }}
                     className={styles.newChatIcon}
-                    iconProps={{ iconName: "Add" }}
-                    onClick={newChat}
-                    disabled={disabledButton()}
+                    onClick={() => {
+                      if (!disabledButton()) {
+                        newChat();
+                      }
+                    }}
                     aria-label="start a new chat button"
                   />
                 )}

@@ -12,7 +12,7 @@ import { MdVisibility } from "react-icons/md";
 import { MdVisibilityOff } from "react-icons/md";
 import styles from "./Layout.module.css";
 import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
-import { HistoryButton, ShareButton } from "../../components/common/Button";
+import { HistoryButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
 
