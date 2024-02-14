@@ -7,10 +7,11 @@ interface ShareButtonProps extends IButtonProps {
 export const ShareButton: React.FC<ShareButtonProps> = ({onClick}) => {
     const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
         root: {
-          width: 86,
+          width: 32,
           height: 32,
           borderRadius: 4,
-          background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
+          // background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
+          background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%)',
         //   position: 'absolute',
         //   right: 20,
           padding: '5px 12px',
@@ -20,7 +21,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({onClick}) => {
           color: '#FFFFFF',
         },
         rootHovered: {
-          background: 'linear-gradient(135deg, #0F6CBD 0%, #2D87C3 51.04%, #8DDDD8 100%)',
+          // background: 'linear-gradient(135deg, #0F6CBD 0%, #2D87C3 51.04%, #8DDDD8 100%)',
+          background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(11 108 193) 33.63%, rgb(45 140 204) 70.31%, rgb(137 222 216) 100%)',
         },
         label: {
           fontWeight: 600,
