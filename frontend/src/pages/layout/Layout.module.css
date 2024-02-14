@@ -9,6 +9,7 @@
     padding: 10px;
     align-items: center;
     display: flex; 
+    justify-content: space-between;
 }
 
 .headerIconMain{
@@ -25,13 +26,13 @@
     display: flex;
     flex-direction: column;    
     margin-left: auto;
-    justify-content: center;
 }
 
 .headerTitleContainer {
     display: flex;
     align-items: center;
     text-decoration: none;
+    justify-content: center;
 }
 
 .headerTitle {
@@ -42,7 +43,8 @@
     display: flex;
     color: #242424;
     text-align: center;
-    margin-left: 250px;
+    margin-left: 100px;
+    margin-right: 100px;
 }
 
 .shareButtonContainer {
