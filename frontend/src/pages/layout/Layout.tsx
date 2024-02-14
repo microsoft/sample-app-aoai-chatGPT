@@ -97,8 +97,6 @@ const Layout = () => {
                   boxShadow:
                     "0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)",
                   borderRadius: "8px",
-                  // maxHeight: '200px',
-                  // minHeight: '100px',
                 },
               },
             },
