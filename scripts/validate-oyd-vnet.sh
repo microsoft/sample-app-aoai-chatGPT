@@ -4,9 +4,7 @@ function get_resource() {
     resource_id=$1
     api_version=$2
 
-    access_token=$(az account get-access-token --resource https://management.azure.com --query "accessToken" --output tsv)
-
-    curl -s -X GET https://management.azure.com$resource_id?api-version=$api_version -H "Authorization: Bearer $access_token" -H "Accept: application/json"
+    az rest --method get --uri https://management.azure.com$resource_id?api-version=$api_version
 }
 
 function get_resource_id_from_resource() {
