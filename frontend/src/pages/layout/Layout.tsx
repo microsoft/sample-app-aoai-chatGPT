@@ -12,7 +12,7 @@ import { MdVisibility } from "react-icons/md";
 import { MdVisibilityOff } from "react-icons/md";
 import styles from "./Layout.module.css";
 import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
-import { HistoryButton } from "../../components/common/Button";
+import { HistoryButton, ContactUsButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
 
@@ -42,6 +42,10 @@ const Layout = () => {
 
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: "TOGGLE_CHAT_HISTORY" });
+  };
+
+  const handleContactUsClick = () => {
+    console.log("Clicked");
   };
 
   useEffect(() => {
@@ -95,7 +99,14 @@ const Layout = () => {
           <Stack horizontal tokens={{ childrenGap: 10 }}>
             {appStateContext?.state.isCosmosDBAvailable?.status !==
               CosmosDBStatus.NotConfigured && (
-              <HistoryButton onClick={handleHistoryClick} text="">
+              <HistoryButton
+                onClick={handleHistoryClick}
+                text={
+                  appStateContext?.state?.isChatHistoryOpen
+                    ? "Hide chat history"
+                    : "Show chat history"
+                }
+              >
                 {appStateContext?.state?.isChatHistoryOpen ? (
                   <MdVisibility />
                 ) : (
@@ -103,6 +114,17 @@ const Layout = () => {
                 )}
               </HistoryButton>
             )}
+
+            <ContactUsButton
+              onClick={handleContactUsClick}
+              text="Contact Us"
+            ></ContactUsButton>
+
+            {/* <button
+              className={styles.contactUsButton}
+              title="Contact Us"
+            >Contact Us</button> */}
+
           </Stack>
         </Stack>
       </header>

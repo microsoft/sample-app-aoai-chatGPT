@@ -1,123 +1,160 @@
 .layout {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .header {
-    background-color: #a3a39e;
-    padding: 10px;
-    align-items: center;
-    display: flex; 
-    justify-content: space-between;
+  background-color: #a3a39e;
+  padding: 10px;
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
-.headerIconMain{
-    width: auto;
+.headerIconMain {
+  width: auto;
 }
 
 .headerIcon {
-    height: 40px;
-    width: auto;
-    margin-left: 36px;
+  height: 40px;
+  width: auto;
+  margin-left: 36px;
 }
 
-.centerHeader{
-    display: flex;
-    flex-direction: column;    
-    margin-left: auto;
+.centerHeader {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
 }
 
 .headerTitleContainer {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  justify-content: center;
 }
 
 .headerTitle {
-    font-style: normal;
-    font-weight: 700;
-    font-size: 23px;
-    line-height: 28px;
-    display: flex;
-    color: #242424;
-    text-align: center;
-    margin-left: 150px;
-    margin-right: 200px;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 23px;
+  line-height: 28px;
+  display: flex;
+  color: #242424;
+  text-align: center;
+  margin-left: 150px;
+  margin-right: 200px;
+}
+
+.contactUsButton {
+  padding: 10px 20px;
+  height: 50px;
+  width: 150px;
+  background-color: radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%); /* Primary button color */
+  color: white; /* Text color */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px; /* Adjust based on your design */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Space between text and icon, if both are present */
+  transition: background-color 0.3s, transform 0.2s; /* Smooth transition for hover effects */
+}
+
+.contactUsButton:hover {
+  background-color: radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(11 108 193) 33.63%, rgb(45 140 204) 70.31%, rgb(137 222 216) 100%); /* Darker shade for hover state */
+  transform: translateY(-2px); /* Slight lift effect */
+}
+
+.contactUsButton:active {
+  transform: translateY(1px); /* Push effect on click */
+}
+
+.contactUsButton:disabled {
+  background-color: #cccccc; /* Disabled state */
+  cursor: not-allowed;
 }
 
 .shareButtonContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    width: 86px;
-    height: 32px;
-    background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
-    border-radius: 4px;
-    flex: none;
-    order: 1;
-    flex-grow: 0;
-    position: absolute;
-    right: 20px;
-    cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 12px;
+  gap: 4px;
+  width: 86px;
+  height: 32px;
+  background: radial-gradient(
+      109.81% 107.82% at 100.1% 90.19%,
+      #0f6cbd 33.63%,
+      #2d87c3 70.31%,
+      #8dddd8 100%
+    )
+    /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+  border-radius: 4px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  position: absolute;
+  right: 20px;
+  cursor: pointer;
 }
 
 .shareButton {
-    color: #FFFFFF;
+  color: #ffffff;
 }
 
 .shareButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #FFFFFF;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #ffffff;
 }
 
 .urlTextBox {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: #707070;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #707070;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
 }
 
 .copyButtonContainer {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 5px 12px;
-    gap: 4px;
-    background: #FFFFFF;
-    border: 1px solid #D1D1D1;
-    border-radius: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 12px;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
 }
 
 .copyButtonContainer:hover {
-    cursor: pointer;
-    background: #D1D1D1;
+  cursor: pointer;
+  background: #d1d1d1;
 }
 
 .copyButton {
-    color: #424242;
+  color: #424242;
 }
 
 .copyButtonText {
-    font-style: normal;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 20px;
-    display: flex;
-    align-items: center;
-    color: #242424;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #242424;
 }
