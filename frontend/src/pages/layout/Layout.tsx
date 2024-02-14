@@ -61,18 +61,30 @@ const Layout = () => {
           horizontalAlign="space-between"
         >
           <Stack horizontal verticalAlign="center">
-            <img
-              src={Contoso}
-              className={styles.headerIcon}
-              aria-hidden="true"
-              alt="eInfochips Eragon Co-Pilot Logo"
-            />
-            
+            <div className={styles.headerIconMain}>
+              <img
+                src={Contoso}
+                className={styles.headerIcon}
+                aria-hidden="true"
+                alt="eInfochips Eragon Co-Pilot Logo"
+              />
+            </div>
+            <div className={styles.centerHeader}>
+              <Link
+                to="/"
+                className={styles.headerTitleContainer}
+                aria-label="Eragon Copilot - FAE's Personal AI Assistant"
+              >
+                <h1 className={styles.headerTitle}>
+                  Eragon Copilot - FAE's Personal AI Assistant
+                </h1>
+              </Link>
+            </div>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 10 }}>
             {appStateContext?.state.isCosmosDBAvailable?.status !==
               CosmosDBStatus.NotConfigured && (
-                <HistoryButton onClick={handleHistoryClick} text="">
+              <HistoryButton onClick={handleHistoryClick} text="">
                 {appStateContext?.state?.isChatHistoryOpen ? (
                   <MdVisibility />
                 ) : (

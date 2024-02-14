@@ -28,10 +28,10 @@ import { IoCreateOutline } from "react-icons/io5";
 
 import styles from "./Chat.module.css";
 import Contoso from "../../assets/eic-arrow-logo-dark-1.png";
-import SOM from "../../../public/som.webp";
-import SBC from "../../../public/SBC.webp";
-import DevKits from "../../../public/DevKits.webp";
-import Accessories from "../../../public/Accessories.webp";
+import SOM from "../../../public/SOM.png";
+import SBC from "../../../public/SBC.png";
+import DevKits from "../../../public/DevKits.png";
+import Accessories from "../../../public/Accessories.png";
 
 import {
   ChatMessage,
@@ -748,10 +748,9 @@ const Chat = () => {
                   className={styles.chatIcon}
                   aria-hidden="true"
                 />
-                <h1 className={styles.chatEmptyStateTitle}>Eragon Co-Pilot </h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>
-                  This Co-Pilot is configured to answer your questions related
-                  to SoM, SBC, Dev Kits & Accessories
+                  This AI assistant is designed to answer your queries related to SoM, SBC, Development Kits &
+                  Accessories for the Qualcomm® Product Line and other processors.
                 </h2>
 
                 <div className={styles.boxesContainer}>

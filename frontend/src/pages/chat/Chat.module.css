@@ -70,8 +70,8 @@
   }
   
   .box {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     border: 1px solid #b8b3b3;
     display: flex;
     justify-content: center;

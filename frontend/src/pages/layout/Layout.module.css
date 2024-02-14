@@ -7,12 +7,42 @@
 .header {
     background-color: #a3a39e;
     padding: 10px;
+    align-items: center;
+    display: flex; 
+}
+
+.headerIconMain{
+    width: auto;
 }
 
 .headerIcon {
     height: 40px;
     width: auto;
     margin-left: 36px;
+}
+
+.centerHeader{
+    display: flex;
+    flex-direction: column;    
+    margin-left: auto;
+    justify-content: center;
+}
+
+.headerTitleContainer {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.headerTitle {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 23px;
+    line-height: 28px;
+    display: flex;
+    color: #242424;
+    text-align: center;
+    margin-left: 250px;
 }
 
 .shareButtonContainer {
