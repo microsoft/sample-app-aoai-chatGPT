@@ -69,6 +69,17 @@ const Layout = () => {
                 alt="eInfochips Eragon Co-Pilot Logo"
               />
             </div>
+            {/* Invisible Spacer with the same width as your HistoryButton if needed */}
+            <div style={{ visibility: "hidden" }}>
+              {/* Duplicate your HistoryButton component here but keep it invisible */}
+              <HistoryButton onClick={handleHistoryClick} text="" style={{ visibility: "hidden"}}>
+                {appStateContext?.state?.isChatHistoryOpen ? (
+                  <MdVisibility />
+                ) : (
+                  <MdVisibilityOff />
+                )}
+              </HistoryButton>
+            </div>
             <div className={styles.centerHeader}>
               <Link
                 to="/"
