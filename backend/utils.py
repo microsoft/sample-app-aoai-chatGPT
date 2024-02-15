@@ -71,7 +71,7 @@ def generateFilterString(userToken):
 
 def format_non_streaming_response(chatCompletion, history_metadata, message_uuid=None):
     response_obj = {
-        "id": message_uuid if message_uuid else chatCompletion.id,
+        "id": chatCompletion.id,
         "model": chatCompletion.model,
         "created": chatCompletion.created,
         "object": chatCompletion.object,
@@ -108,7 +108,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
 
 def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=None):
     response_obj = {
-        "id": message_uuid if message_uuid else chatCompletionChunk.id,
+        "id": chatCompletionChunk.id,
         "model": chatCompletionChunk.model,
         "created": chatCompletionChunk.created,
         "object": chatCompletionChunk.object,
