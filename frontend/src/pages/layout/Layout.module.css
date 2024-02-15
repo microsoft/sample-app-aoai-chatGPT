@@ -32,9 +32,6 @@
   flex: 1;
   justify-content: center;
   display: flex;
-  /* flex-grow: 1; */
-  /* flex-direction: column; */
-  /* margin-left: auto; */
   align-items: center;
 }
 
@@ -53,8 +50,6 @@
   display: flex;
   color: #242424;
   text-align: center;
-  /* margin-left: 150px;
-  margin-right: 200px; */
 }
 
 .buttonDiv {
@@ -62,7 +57,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  /* padding: 10px 20px; */
+  padding: 10px 20px;
 }
 
 .shareButtonContainer {
