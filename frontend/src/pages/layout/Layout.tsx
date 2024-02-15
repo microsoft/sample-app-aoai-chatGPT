@@ -73,17 +73,6 @@ const Layout = () => {
                 alt="eInfochips Eragon Co-Pilot Logo"
               />
             </div>
-
-            {/* hidden code */}
-            {/* <div style={{ visibility: "hidden" }}>
-              <HistoryButton onClick={handleHistoryClick} text="" style={{ visibility: "hidden"}}>
-                {appStateContext?.state?.isChatHistoryOpen ? (
-                  <MdVisibility />
-                ) : (
-                  <MdVisibilityOff />
-                )}
-              </HistoryButton>
-            </div> */}
             <div className={styles.centerHeader}>
               <Link
                 to="/"
