@@ -4,7 +4,7 @@ function get_resource() {
     resource_id=$1
     api_version=$2
 
-    az rest --method get --uri https://management.azure.com$resource_id?api-version=$api_version
+    az rest --method get --uri $resource_id?api-version=$api_version
 }
 
 function get_resource_id_from_resource() {
