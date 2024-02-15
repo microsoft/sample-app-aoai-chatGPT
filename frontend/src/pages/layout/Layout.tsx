@@ -115,12 +115,12 @@ const Layout = () => {
               </HistoryButton>
             )}
 
-            <Link to="sarthak.shah@einfochips.com">
+            <a href="mailto:sarthak.shah@einfochips.com" style={{ textDecoration: 'none' }}>
               <ContactUsButton
                 onClick={handleContactUsClick}
                 text="Contact Us"
               ></ContactUsButton>
-            </Link>
+            </a>
           </Stack>
         </Stack>
       </header>
