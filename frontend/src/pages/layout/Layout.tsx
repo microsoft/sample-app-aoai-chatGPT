@@ -121,12 +121,6 @@ const Layout = () => {
                 text="Contact Us"
               ></ContactUsButton>
             </Link>
-
-            {/* <button
-              className={styles.contactUsButton}
-              title="Contact Us"
-            >Contact Us</button> */}
-
           </Stack>
         </Stack>
       </header>
