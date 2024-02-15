@@ -115,10 +115,12 @@ const Layout = () => {
               </HistoryButton>
             )}
 
-            <ContactUsButton
-              onClick={handleContactUsClick}
-              text="Contact Us"
-            ></ContactUsButton>
+            <Link to="sarthak.shah@einfochips.com">
+              <ContactUsButton
+                onClick={handleContactUsClick}
+                text="Contact Us"
+              ></ContactUsButton>
+            </Link>
 
             {/* <button
               className={styles.contactUsButton}
