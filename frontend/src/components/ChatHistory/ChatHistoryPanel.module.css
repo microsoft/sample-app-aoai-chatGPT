@@ -1,7 +1,8 @@
 .container {
     max-height: calc(100vh - 100px);
     width: 300px;
-    
+    background-color:#ffffff;
+    border-radius: 8px;
 }
 
 .listContainer {
