@@ -60,11 +60,13 @@ const Layout = () => {
     <div className={styles.layout}>
       <header className={styles.header} role={"banner"}>
         <Stack
+          className={styles.stack}
           horizontal
           verticalAlign="center"
           horizontalAlign="space-between"
         >
           <Stack horizontal verticalAlign="center">
+            
             <div className={styles.headerIconMain}>
               <img
                 src={Contoso}
@@ -73,6 +75,7 @@ const Layout = () => {
                 alt="eInfochips Eragon Co-Pilot Logo"
               />
             </div>
+
             <div className={styles.centerHeader}>
               <Link
                 to="/"
@@ -84,9 +87,34 @@ const Layout = () => {
                 </h1>
               </Link>
             </div>
+            <div className={styles.buttonDiv}>
+              {appStateContext?.state.isCosmosDBAvailable?.status !==
+                CosmosDBStatus.NotConfigured && (
+                <HistoryButton
+                  onClick={handleHistoryClick}
+                  text={
+                    appStateContext?.state?.isChatHistoryOpen
+                      ? "Hide chat history"
+                      : "Show chat history"
+                  }
+                >
+                  {appStateContext?.state?.isChatHistoryOpen ? (
+                    <MdVisibility />
+                  ) : (
+                    <MdVisibilityOff />
+                  )}
+                </HistoryButton>
+              )}
+              <a href="mailto:sarthak.shah@einfochips.com" style={{ textDecoration: 'none' }}>
+                <ContactUsButton
+                  onClick={handleContactUsClick}
+                  text="Contact Us"
+                ></ContactUsButton>
+              </a>
+            </div>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 10 }}>
-            {appStateContext?.state.isCosmosDBAvailable?.status !==
+            {/* {appStateContext?.state.isCosmosDBAvailable?.status !==
               CosmosDBStatus.NotConfigured && (
               <HistoryButton
                 onClick={handleHistoryClick}
@@ -104,12 +132,15 @@ const Layout = () => {
               </HistoryButton>
             )}
 
-            <a href="mailto:sarthak.shah@einfochips.com" style={{ textDecoration: 'none' }}>
-              <ContactUsButton
-                onClick={handleContactUsClick}
-                text="Contact Us"
-              ></ContactUsButton>
-            </a>
+            <ContactUsButton
+              onClick={handleContactUsClick}
+              text="Contact Us"
+            ></ContactUsButton> */}
+
+            {/* <button
+              className={styles.contactUsButton}
+              title="Contact Us"
+            >Contact Us</button> */}
           </Stack>
         </Stack>
       </header>

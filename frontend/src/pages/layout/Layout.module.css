@@ -5,15 +5,26 @@
 }
 
 .header {
+  display: flex;
   background-color: #a3a39e;
   padding: 10px;
   align-items: center;
-  display: flex;
   justify-content: space-between;
+  width: 100%;
+}
+
+.stack {
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .headerIconMain {
-  width: auto;
+  flex: 0 0 auto;
+  /* width: auto; */
+  /* margin-right: auto; */
 }
 
 .headerIcon {
@@ -23,9 +34,13 @@
 }
 
 .centerHeader {
+  flex: 1;
+  justify-content: center;
   display: flex;
-  flex-direction: column;
-  margin-left: auto;
+  /* flex-grow: 1; */
+  /* flex-direction: column; */
+  /* margin-left: auto; */
+  align-items: center;
 }
 
 .headerTitleContainer {
@@ -47,35 +62,12 @@
   margin-right: 200px;
 }
 
-.contactUsButton {
-  padding: 10px 20px;
-  height: 50px;
-  width: 150px;
-  background-color: radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%); /* Primary button color */
-  color: white; /* Text color */
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px; /* Adjust based on your design */
+.buttonDiv {
+  flex: 0 0 auto;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: center;
-  gap: 8px; /* Space between text and icon, if both are present */
-  transition: background-color 0.3s, transform 0.2s; /* Smooth transition for hover effects */
-}
-
-.contactUsButton:hover {
-  background-color: radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(11 108 193) 33.63%, rgb(45 140 204) 70.31%, rgb(137 222 216) 100%); /* Darker shade for hover state */
-  transform: translateY(-2px); /* Slight lift effect */
-}
-
-.contactUsButton:active {
-  transform: translateY(1px); /* Push effect on click */
-}
-
-.contactUsButton:disabled {
-  background-color: #cccccc; /* Disabled state */
-  cursor: not-allowed;
+  /* padding: 10px 20px; */
 }
 
 .shareButtonContainer {
