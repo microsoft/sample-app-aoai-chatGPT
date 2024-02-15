@@ -5,7 +5,7 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById("aoai-Title").innerText = data.aoaiTitle;
-            }
+            });
     }
 
     window.onload = initialize;
