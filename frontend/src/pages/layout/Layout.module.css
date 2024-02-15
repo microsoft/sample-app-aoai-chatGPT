@@ -13,18 +13,13 @@
   width: 100%;
 }
 
-.stack {
+.customStack {
     width: 100%;
-    height: auto;
-    box-sizing: border-box;
-    justify-content: space-between;
-    align-items: center;
+    display: block !important;
 }
 
 .headerIconMain {
   flex: 0 0 auto;
-  /* width: auto; */
-  /* margin-right: auto; */
 }
 
 .headerIcon {
@@ -58,8 +53,8 @@
   display: flex;
   color: #242424;
   text-align: center;
-  margin-left: 150px;
-  margin-right: 200px;
+  /* margin-left: 150px;
+  margin-right: 200px; */
 }
 
 .buttonDiv {

@@ -60,13 +60,13 @@ const Layout = () => {
     <div className={styles.layout}>
       <header className={styles.header} role={"banner"}>
         <Stack
-          className={styles.stack}
+          className={styles.customStack}
           horizontal
           verticalAlign="center"
-          horizontalAlign="space-between"
+          horizontalAlign="end"
         >
           <Stack horizontal verticalAlign="center">
-            
+
             <div className={styles.headerIconMain}>
               <img
                 src={Contoso}
