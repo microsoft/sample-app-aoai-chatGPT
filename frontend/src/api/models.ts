@@ -100,6 +100,7 @@ export type ErrorMessage = {
 export type FrontendSettings = {
     auth_enabled?: string | null;
     feedback_enabled?: string | null;
+    header_title?: string | null;
 }
 
 export enum Feedback {
