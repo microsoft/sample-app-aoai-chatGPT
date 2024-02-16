@@ -24,7 +24,15 @@ export const Answer = ({
 }: Props) => {
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
+        if (answer.message_id == undefined) {
+            console.log("Message Id Undefined");
+            return undefined;
+        }
         if (answer.feedback == undefined) return undefined;
+        if (answer.feedback == undefined) {
+            console.log("Feedback is Undefined");
+            return undefined;
+        }
         if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
         return Feedback.Neutral;
     }
@@ -208,7 +216,6 @@ export const Answer = ({
                             </Stack>}
                         </Stack.Item>
                     </Stack>
-                    
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
                 {!!parsedAnswer.citations.length && (
@@ -230,7 +237,6 @@ export const Answer = ({
                                 onClick={handleChevronClick} iconName={chevronIsExpanded ? 'ChevronDown' : 'ChevronRight'}
                                 />
                             </Stack>
-                            
                         </Stack>
                     </Stack.Item>
                 )}
