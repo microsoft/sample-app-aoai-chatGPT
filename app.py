@@ -12,6 +12,7 @@ from quart import (
     make_response,
     request,
     send_from_directory,
+    render_template
 )
 
 from openai import AsyncAzureOpenAI
@@ -21,7 +22,16 @@ from backend.history.cosmosdbservice import CosmosConversationClient
 
 from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns, format_non_streaming_response
 
-bp = Blueprint("routes", __name__, static_folder='static')
+bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
+
+# UI configuration (optional)
+UI_TITLE = os.environ.get("UI_TITLE") or "Contoso"
+UI_LOGO = os.environ.get("UI_LOGO")
+UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")
+UI_CHAT_TITLE = os.environ.get("UI_CHAT_TITLE") or "Start chatting"
+UI_CHAT_DESCRIPTION = os.environ.get("UI_CHAT_DESCRIPTION") or "This chatbot is configured to answer your questions"
+UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
+UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
 
 def create_app():
     app = Quart(__name__)
@@ -31,7 +41,7 @@ def create_app():
 
 @bp.route("/")
 async def index():
-    return await bp.send_static_file("index.html")
+    return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
 
 @bp.route("/favicon.ico")
 async def favicon():
@@ -162,9 +172,15 @@ CHAT_HISTORY_ENABLED = AZURE_COSMOSDB_ACCOUNT and AZURE_COSMOSDB_DATABASE and AZ
 frontend_settings = { 
     "auth_enabled": AUTH_ENABLED, 
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
+    "ui": {
+        "title": UI_TITLE,
+        "logo": UI_LOGO,
+        "chat_logo": UI_CHAT_LOGO or UI_LOGO,
+        "chat_title": UI_CHAT_TITLE,
+        "chat_description": UI_CHAT_DESCRIPTION,
+        "show_share_button": UI_SHOW_SHARE_BUTTON
+    }
 }
-
-message_uuid = ""
 
 def should_use_data():
     global DATASOURCE_TYPE
@@ -536,7 +552,7 @@ async def complete_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
 
-    return format_non_streaming_response(response, history_metadata, message_uuid)
+    return format_non_streaming_response(response, history_metadata)
 
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
@@ -544,7 +560,7 @@ async def stream_chat_request(request_body):
 
     async def generate():
         async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata, message_uuid)
+            yield format_stream_response(completionChunk, history_metadata)
 
     return generate()
 
@@ -587,8 +603,6 @@ def get_frontend_settings():
 ## Conversation History API ## 
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
-    global message_uuid
-    message_uuid = str(uuid.uuid4())
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
 
@@ -672,7 +686,7 @@ async def update_conversation():
                 )
             # write the assistant message
             await cosmos_conversation_client.create_message(
-                uuid=message_uuid,
+                uuid=messages[-1]['id'],
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]
