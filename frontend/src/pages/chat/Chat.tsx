@@ -211,7 +211,9 @@ const Chat = () => {
                                         msg.id = result.id;
                                         msg.date = new Date().toISOString();
                                     })
-                                    setShowLoadingMessage(false);
+                                    if (result.choices[0].messages?.some(m => m.role === ASSISTANT)) {
+                                        setShowLoadingMessage(false);
+                                    }
                                     result.choices[0].messages.forEach((resultObj) => {
                                         processResultMessage(resultObj, userMessage, conversationId);
                                     })
@@ -359,7 +361,9 @@ const Chat = () => {
                                         msg.id = result.id;
                                         msg.date = new Date().toISOString();
                                     })
-                                    setShowLoadingMessage(false);
+                                    if (result.choices[0].messages?.some(m => m.role === ASSISTANT)) {
+                                        setShowLoadingMessage(false);
+                                    }
                                     result.choices[0].messages.forEach((resultObj) => {
                                         processResultMessage(resultObj, userMessage, conversationId);
                                     })
