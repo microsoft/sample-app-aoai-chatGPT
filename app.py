@@ -36,12 +36,13 @@ UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() ==
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
 
 @bp.route("/")
 async def index():
-    return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
+    return await render_template("index.html")
 
 @bp.route("/favicon.ico")
 async def favicon():
