@@ -35,7 +35,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({onClick}) => {
                 styles={shareButtonStyles}
                 iconProps={{ iconName: 'Share' }}
                 onClick={onClick}
-                text="Share"
+                text="分享"
         />
       )
 }
