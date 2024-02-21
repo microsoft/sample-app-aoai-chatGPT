@@ -6,7 +6,6 @@ export interface ISuggestionButtonsProps {
     onButtonClick: (questionText: string) => void;
 }
 
-
 const questions = [
     `How can AI help disrupt mental constructs?`,
     `Can AI help me be more successful?`,

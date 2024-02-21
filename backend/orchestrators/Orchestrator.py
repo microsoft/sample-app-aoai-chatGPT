@@ -4,13 +4,13 @@ import json
 import logging
 import requests
 import copy
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 from backend.conversationtelemetry import ConversationTelemetryClient
 # from DeepakSystemMessage import DeepakSystemMessage
 
 class Orchestrator(ABC):
-    load_dotenv()
+    # load_dotenv()
 
     # print(DeepakSystemMessage)
 
@@ -340,6 +340,7 @@ class Orchestrator(ABC):
     
     # Format chat response with streaming output
     def formatApiResponseStreaming(self, rawResponse):
+        print(rawResponse)
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
