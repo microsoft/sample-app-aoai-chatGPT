@@ -28,9 +28,6 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 </Link>
             </div>
             <div className={styles.rightCommandBar}>
-                {/* {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
-                    <HistoryButton onClick={props.onHistoryClick} text={props.appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
-                } */}
                 <ShareButton onClick={props.onShareClick} />
             </div>
         </div>
