@@ -24,13 +24,13 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 />
                 <Title3 style={{ marginBottom: '4px' }}> | </Title3>
                 <Link href="/" className={styles.headerTitle}>
-                    <Title3>Research copilot experience</Title3>
+                    <Title3>Ask Deepak copilot experience</Title3>
                 </Link>
             </div>
             <div className={styles.rightCommandBar}>
-                {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
+                {/* {(props.appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
                     <HistoryButton onClick={props.onHistoryClick} text={props.appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history"} />
-                }
+                } */}
                 <ShareButton onClick={props.onShareClick} />
             </div>
         </div>

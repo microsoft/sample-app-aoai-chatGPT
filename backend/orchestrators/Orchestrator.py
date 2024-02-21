@@ -7,9 +7,12 @@ import copy
 from dotenv import load_dotenv
 
 from backend.conversationtelemetry import ConversationTelemetryClient
+# from DeepakSystemMessage import DeepakSystemMessage
 
 class Orchestrator(ABC):
     load_dotenv()
+
+    # print(DeepakSystemMessage)
 
     DEBUG = os.environ.get("DEBUG", "false")
     DEBUG_LOGGING = DEBUG.lower() == "true"
@@ -42,7 +45,8 @@ class Orchestrator(ABC):
     AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
     AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
     AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-08-01-preview")
-    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+    # AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE")
 
     # Azure Search Settings
     AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
@@ -399,6 +403,7 @@ class Orchestrator(ABC):
                         "apim-request-id": "",
                         'history_metadata': history_metadata
                     }
+                    print(response)
                     if line:
                         if self.AZURE_OPENAI_PREVIEW_API_VERSION == '2023-06-01-preview':
                             lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
