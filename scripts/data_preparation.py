@@ -1,4 +1,5 @@
 """Data Preparation Script for an Azure Cognitive Search Index."""
+#region imports
 import argparse
 import dataclasses
 import json
@@ -13,8 +14,10 @@ from azure.identity import AzureCliCredential
 from azure.search.documents import SearchClient
 from tqdm import tqdm
 
-from data_utils import chunk_directory, chunk_blob_container
+from data_utils import chunk_directory, chunk_blob_container 
+#endregion
 
+#region common
 SUPPORTED_LANGUAGE_CODES = {
     "ar": "Arabic",
     "hy": "Armenian",
@@ -52,8 +55,10 @@ SUPPORTED_LANGUAGE_CODES = {
     "th": "Thai",
     "tr": "Turkish"
 }
+#endregion
 
 
+#region check_if_search_service_exists
 def check_if_search_service_exists(search_service_name: str,
     subscription_id: str,
     resource_group: str,
@@ -81,8 +86,9 @@ def check_if_search_service_exists(search_service_name: str,
 
     response = requests.get(url, headers=headers)
     return response.status_code == 200
+#endregion
 
-
+#region create_search_service
 def create_search_service(
     search_service_name: str,
     subscription_id: str,
@@ -131,7 +137,9 @@ def create_search_service(
     if response.status_code != 201:
         raise Exception(
             f"Failed to create search service. Error: {response.text}")
+#endregion
 
+#region create_or_update_search_index
 def create_or_update_search_index(
         service_name, 
         subscription_id=None, 
@@ -141,11 +149,12 @@ def create_or_update_search_index(
         credential=None, 
         language=None,
         vector_config_name=None,
-        admin_key=None):
-    
+        admin_key=None,
+        apiversion="2023-07-01-Preview"):
+
     if credential is None and admin_key is None:
         raise ValueError("credential and admin key cannot be None")
-    
+
     if not admin_key:
         admin_key = json.loads(
             subprocess.run(
@@ -154,93 +163,198 @@ def create_or_update_search_index(
                 capture_output=True,
             ).stdout
         )["primaryKey"]
-
-    url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
-    headers = {
-        "Content-Type": "application/json",
-        "api-key": admin_key,
-    }
-
-    body = {
-        "fields": [
-            {
-                "name": "id",
-                "type": "Edm.String",
-                "searchable": True,
-                "key": True,
-            },
-            {
-                "name": "content",
-                "type": "Edm.String",
-                "searchable": True,
-                "sortable": False,
-                "facetable": False,
-                "filterable": False,
-                "analyzer": f"{language}.lucene" if language else None,
-            },
-            {
-                "name": "title",
-                "type": "Edm.String",
-                "searchable": True,
-                "sortable": False,
-                "facetable": False,
-                "filterable": False,
-                "analyzer": f"{language}.lucene" if language else None,
-            },
-            {
-                "name": "filepath",
-                "type": "Edm.String",
-                "searchable": True,
-                "sortable": False,
-                "facetable": False,
-                "filterable": False,
-            },
-            {
-                "name": "url",
-                "type": "Edm.String",
-                "searchable": True,
-            },
-            {
-                "name": "metadata",
-                "type": "Edm.String",
-                "searchable": True,
-            },
-        ],
-        "suggesters": [],
-        "scoringProfiles": [],
-        "semantic": {
-            "configurations": [
-                {
-                    "name": semantic_config_name,
-                    "prioritizedFields": {
-                        "titleField": {"fieldName": "title"},
-                        "prioritizedContentFields": [{"fieldName": "content"}],
-                        "prioritizedKeywordsFields": [],
-                    },
-                }
-            ]
-        },
-    }
-
-    if vector_config_name:
-        body["fields"].append({
-            "name": "contentVector",
-            "type": "Collection(Edm.Single)",
-            "searchable": True,
-            "retrievable": True,
-            "dimensions": 1536,
-            "vectorSearchConfiguration": vector_config_name
-        })
-
-        body["vectorSearch"] = {
-            "algorithmConfigurations": [
-                {
-                    "name": vector_config_name,
-                    "kind": "hnsw"
-                }
-            ]
+    
+    if (apiversion == "2023-07-01-Preview"):
+        url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=" +apiversion
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": admin_key,
         }
 
+        body = {
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "Edm.String",
+                    "searchable": True,
+                    "key": True,
+                },
+                {
+                    "name": "content",
+                    "type": "Edm.String",
+                    "searchable": True,
+                    "sortable": False,
+                    "facetable": False,
+                    "filterable": False,
+                    "analyzer": f"{language}.lucene" if language else None,
+                },
+                {
+                    "name": "title",
+                    "type": "Edm.String",
+                    "searchable": True,
+                    "sortable": False,
+                    "facetable": False,
+                    "filterable": False,
+                    "analyzer": f"{language}.lucene" if language else None,
+                },
+                {
+                    "name": "filepath",
+                    "type": "Edm.String",
+                    "searchable": True,
+                    "sortable": False,
+                    "facetable": False,
+                    "filterable": False,
+                },
+                {
+                    "name": "url",
+                    "type": "Edm.String",
+                    "searchable": True,
+                },
+                {
+                    "name": "metadata",
+                    "type": "Edm.String",
+                    "searchable": True,
+                },
+            ],
+            "suggesters": [],
+            "scoringProfiles": [],
+            "semantic": {
+                "configurations": [
+                    {
+                        "name": semantic_config_name,
+                        "prioritizedFields": {
+                            "titleField": {"fieldName": "title"},
+                            "prioritizedContentFields": [{"fieldName": "content"}],
+                            "prioritizedKeywordsFields": [],
+                        },
+                    }
+                ]
+            },
+        }
+
+        if vector_config_name:
+            body["fields"].append({
+                "name": "contentVector",
+                "type": "Collection(Edm.Single)",
+                "searchable": True,
+                "retrievable": True,
+                "dimensions": 1536,
+                "vectorSearchConfiguration": vector_config_name
+            })
+
+            body["vectorSearch"] = {
+                "algorithmConfigurations": [
+                    {
+                        "name": vector_config_name,
+                        "kind": "hnsw"
+                    }
+                ]
+            }
+    else:        
+            url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=" + apiversion
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": admin_key,
+            }
+
+            body = {
+                "fields": [
+                    {
+                        "name": "id",
+                        "type": "Edm.String",
+                        "key": True,
+                        "filterable": True
+                    },
+                    {
+                    "name": "content",
+                    "type": "Edm.String",
+                    "searchable": True,
+                    "retrievable": True,
+                    "analyzer": f"{language}.lucene" if language else None,
+                    },
+                    
+                    {
+                        "name": "title",
+                        "type": "Edm.String",
+                        "searchable": True,
+                        "filterable": True,
+                        "sortable": True,
+                        "retrievable": True,
+                        "analyzer": f"{language}.lucene" if language else None,
+                    },
+                    # {
+                    # "name": "titleVector",
+                    # "type": "Collection(Edm.Single)",
+                    # "searchable": true,
+                    # "retrievable": true,
+                    # "dimensions": 1536,
+                    # "vectorSearchProfile": "my-default-vector-profile"
+                    # },
+                    {
+                        "name": "filepath",
+                        "type": "Edm.String",
+                        "searchable": True,
+                    
+                        "filterable": False,
+                    },
+                    {
+                        "name": "url",
+                        "type": "Edm.String",
+                        "searchable": True,
+                    },
+                    {
+                        "name": "metadata",
+                        "type": "Edm.String",
+                        "searchable": True,
+                    },
+                ],
+                "suggesters": [],
+                "scoringProfiles": [],
+                "semantic": {
+                    "configurations": [
+                        {
+                            "name": semantic_config_name,
+                            "prioritizedFields": {
+                                "titleField": {"fieldName": "title"},
+                                "prioritizedContentFields": [{"fieldName": "content"}],
+                                "prioritizedKeywordsFields": [],
+                            },
+                        }
+                    ]
+                },
+            }
+
+            if vector_config_name:
+                body["fields"].append({
+                    "name": "contentVector",
+                    "type": "Collection(Edm.Single)",
+                    "searchable": True,
+                    "retrievable": True,
+                    "dimensions": 1536,
+                    "vectorSearchProfile": vector_config_name
+                    
+                })
+
+                body["vectorSearch"] =   {
+            "algorithms": [
+                {
+                    "name": "my-hnsw-config-1",
+                        "kind": "hnsw",
+                        "hnswParameters": {
+                            "m": 4,
+                            "efConstruction": 400,
+                            "efSearch": 500,
+                            "metric": "cosine"
+                        }
+                } 
+            ],
+            "profiles": [
+            {
+                "name":  vector_config_name,
+                "algorithm": "my-hnsw-config-1"
+            }
+            ]
+        }
     response = requests.put(url, json=body, headers=headers)
     if response.status_code == 201:
         print(f"Created search index {index_name}")
@@ -250,8 +364,9 @@ def create_or_update_search_index(
         raise Exception(f"Failed to create search index. Error: {response.text}")
     
     return True
+#endregion
 
-
+#region upload_documents_to_index
 def upload_documents_to_index(service_name, subscription_id, resource_group, index_name, docs, credential=None, upload_batch_size = 50, admin_key=None):
     if credential is None and admin_key is None:
         raise ValueError("credential and admin_key cannot be None")
@@ -278,7 +393,7 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
                 capture_output=True,
             ).stdout
         )["primaryKey"]
-
+ 
     search_client = SearchClient(
         endpoint=endpoint,
         index_name=index_name,
@@ -298,16 +413,19 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         if num_failures > 0:
             raise Exception(f"INDEXING FAILED for {num_failures} documents. Please recreate the index."
                             f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}")
+#endregion
 
-def validate_index(service_name, subscription_id, resource_group, index_name):
+#region validate_index
+def validate_index(service_name, subscription_id, resource_group, index_name, admin_key):
     api_version = "2021-04-30-Preview"
-    admin_key = json.loads(
-        subprocess.run(
-            f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
-            shell=True,
-            capture_output=True,
-        ).stdout
-    )["primaryKey"]
+    
+    # admin_key = json.loads(
+    #     subprocess.run(
+    #         f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+    #         shell=True,
+    #         capture_output=True,
+    #     ).stdout
+    # )["primaryKey"]
 
     headers = {
         "Content-Type": "application/json", 
@@ -338,7 +456,9 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
             else:
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
+#endregion
 
+#region create_index
 def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
@@ -364,11 +484,41 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     except Exception as e:
         print(f"Unable to verify if search service exists. Error: {e}")
         print("Proceeding to attempt to create index.")
-
+        
     # create or update search index with compatible schema
-    admin_key = os.environ.get("AZURE_SEARCH_ADMIN_KEY", None)
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None), admin_key=admin_key):
+    admin_key = config.get("search_key", None)    
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, 
+                                         language, vector_config_name=config.get("vector_config_name", None), admin_key=admin_key,apiversion = config.get("apiversion", "2023-07-01-Preview")):
         raise Exception(f"Failed to create or update index {index_name}")
+    
+    # # chunk directory
+    # embedding_model_endpoint
+    # add_embeddings = False
+    # base_url=None
+    # deployment_id = None
+    # if config.get("vector_config_name") and embedding_model_endpoint:
+      
+    #     add_embeddings = True
+    #     endpoint_parts = embedding_model_endpoint.split("/openai/deployments/")
+    #     base_url = endpoint_parts[0]
+    #     deployment_id = endpoint_parts[1].split("/embeddings")[0]
+    # result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+    #                          azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+    #                          add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint,
+    #                          api_version=config["AZURE_OPENAI_API_VERSION"],api_key=config["AZURE_OPENAI_API_KEY"],api_type=config["AZURE_OEPNAI_API_TYPE"],
+    #                          api_base_url=base_url,        api_deployment_id=deployment_id)
+
+    # if len(result.chunks) == 0:
+    #     raise Exception("No chunks found. Please check the data path and chunk size.")
+
+    # print(f"Processed {result.total_files} files")
+    # print(f"Unsupported formats: {result.num_unsupported_format_files} files")
+    # print(f"Files with errors: {result.num_files_with_errors} files")
+    # print(f"Found {len(result.chunks)} chunks")
+
+    # # upload documents to index
+    # print("Uploading documents to index...")
+    # upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
     
     data_configs = []
     if "data_path" in config:
@@ -385,15 +535,21 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         add_embeddings = False
         if config.get("vector_config_name") and embedding_model_endpoint:
             add_embeddings = True
-
+        endpoint_parts = embedding_model_endpoint.split("/openai/deployments/")
+        base_url = endpoint_parts[0]
+        deployment_id = endpoint_parts[1].split("/embeddings")[0]
+        print("data prep" + config["table_chunk"])
         if "blob.core" in data_config["path"]:
             result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                 azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                chunkTables=config["table_chunk"],num_tokens_table=config["table_chunk_size"])
         elif os.path.exists(data_config["path"]):
-            result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
-                                    azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+            result = chunk_directory(config["data_path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+                              azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
+                              add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint,
+                              api_version=config["AZURE_OPENAI_API_VERSION"],api_key=config["AZURE_OPENAI_API_KEY"],api_type=config["AZURE_OEPNAI_API_TYPE"],
+                              api_base_url=base_url,api_deployment_id=deployment_id, chunkTables=config["table_chunk"],num_tokens_table=config["table_chunk_size"])
         else:
             raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
@@ -407,55 +563,69 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
         # upload documents to index
         print("Uploading documents to index...")
-        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential,50,admin_key=config["search_key"])
+         
 
     # check if index is ready/validate index
     print("Validating index...")
-    validate_index(service_name, subscription_id, resource_group, index_name)
+    validate_index(service_name, subscription_id, resource_group, index_name,admin_key=config["search_key"])
     print("Index validation completed")
+#endregion
 
-
+#region valid_range
 def valid_range(n):
     n = int(n)
     if n < 1 or n > 32:
         raise argparse.ArgumentTypeError("njobs must be an Integer between 1 and 32.")
     return n
+#endregion
 
+#region main
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, help="Path to config file containing settings for data preparation")
-    parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
-    parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
-    parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
+    # parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
+    # parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
+    # parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
     parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
-    parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-03-15-preview'")
-    parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
-    parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
+    # parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-03-15-preview'")
+    # parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
+    # parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
     args = parser.parse_args()
 
     with open(args.config) as f:
         config = json.load(f)
+        
 
     credential = AzureCliCredential()
     form_recognizer_client = None
 
     print("Data preparation script started")
-    if args.search_admin_key:
-        os.environ["AZURE_SEARCH_ADMIN_KEY"] = args.search_admin_key
-
-    if args.form_rec_resource and args.form_rec_key:
-        os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
-        os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
+    # if args.search_admin_key:
+    #     os.environ["AZURE_SEARCH_ADMIN_KEY"] = args.search_admin_key
+        
+    # if args.form_rec_resource and args.form_rec_key:
+    #     os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
+    #     os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
+    for index_config in config:
+        
+        FORM_RECOGNIZER_ENDPOINT = index_config["FORM_RECOGNIZER_ENDPOINT"]
+        FORM_REC_KEY= index_config["FORM_RECOGNIZER_KEY"]
+        form_rec_use_layout=index_config["form_rec_use_layout"] 
+        AZURE_OPENAI_EMBEDDING_ENDPOINT = index_config["AZURE_OPENAI_EMBEDDING_ENDPOINT"] 
+        
+    if FORM_RECOGNIZER_ENDPOINT:
         if args.njobs==1:
-            form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
-        print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
+            form_recognizer_client = DocumentAnalysisClient(endpoint=FORM_RECOGNIZER_ENDPOINT, credential=AzureKeyCredential(str(FORM_REC_KEY)))
+        print(f"Using Form Recognizer resource {FORM_RECOGNIZER_ENDPOINT} for PDF cracking, with the {form_rec_use_layout} model.")
 
     for index_config in config:
         print("Preparing data for index:", index_config["index_name"])
-        if index_config.get("vector_config_name") and not args.embedding_model_endpoint:
-            raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
+        #if index_config.get("vector_config_name") and not args.embedding_model_endpoint:
+        #    raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
-        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
+        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=AZURE_OPENAI_EMBEDDING_ENDPOINT, use_layout=form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
+#endregion

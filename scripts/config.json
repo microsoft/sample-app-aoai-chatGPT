@@ -5,10 +5,24 @@
         "subscription_id": "<subscription id>",
         "resource_group": "<resource group name>",
         "search_service_name": "<search service name to use or create>",
+        "search_key":"",
         "index_name": "<index name to use or create>",
-        "chunk_size": 1024,
-        "token_overlap": 128,
+        "chunk_size": 256,  
+        "token_overlap": 0,
         "semantic_config_name": "default",
-        "language": "<Language to support for example use 'en' for English. Checked supported languages here under lucene - https://learn.microsoft.com/en-us/azure/search/index-add-language-analyzers"
+        "vector_config_name": "default",
+        "language": "en",
+        "apiversion": "2023-07-01-Preview",
+        "AZURE_OPENAI_API_KEY": "",
+        "AZURE_OPENAI_SERVICE_NAME":"gptdevbench-aoai",
+        "AZURE_OPENAI_API_VERSION": "2023-06-01-preview",
+        "AZURE_OPENAI_EMBEDDING_DEPLOYMENT": "ada",
+        "AZURE_OPENAI_EMBEDDING_ENDPOINT" :"https://gptdevbench-aoai.openai.azure.com/openai/deployments/ada/embeddings?api-version=2023-07-01-preview",
+        "AZURE_OEPNAI_API_TYPE": "azure",
+        "FORM_RECOGNIZER_ENDPOINT": "https://wednesday-fr.cognitiveservices.azure.com/",
+        "FORM_RECOGNIZER_KEY": "",
+        "form_rec_use_layout" : "Layout",
+        "table_chunk": "false",
+        "table_chunk_size": 256
     }
-]
+] 
