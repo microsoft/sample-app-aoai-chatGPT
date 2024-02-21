@@ -4,16 +4,10 @@ import json
 import logging
 import requests
 import copy
-# from dotenv import load_dotenv
 
 from backend.conversationtelemetry import ConversationTelemetryClient
-# from DeepakSystemMessage import DeepakSystemMessage
 
 class Orchestrator(ABC):
-    # load_dotenv()
-
-    # print(DeepakSystemMessage)
-
     DEBUG = os.environ.get("DEBUG", "false")
     DEBUG_LOGGING = DEBUG.lower() == "true"
 
@@ -340,7 +334,6 @@ class Orchestrator(ABC):
     
     # Format chat response with streaming output
     def formatApiResponseStreaming(self, rawResponse):
-        print(rawResponse)
         if 'error' in rawResponse:
             return {"error": rawResponse["error"]}
         response = {
@@ -404,7 +397,6 @@ class Orchestrator(ABC):
                         "apim-request-id": "",
                         'history_metadata': history_metadata
                     }
-                    print(response)
                     if line:
                         if self.AZURE_OPENAI_PREVIEW_API_VERSION == '2023-06-01-preview':
                             lineJson = json.loads(line.lstrip(b'data:').decode('utf-8'))
