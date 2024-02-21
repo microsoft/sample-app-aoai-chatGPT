@@ -196,6 +196,8 @@ export const Answer = ({
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
+                            <p>Feedback enabled: {FEEDBACK_ENABLED}</p>
+                            <p>Message Id: {answer.message_id}</p>
                             {FEEDBACK_ENABLED && answer.message_id !== undefined && <Stack horizontal horizontalAlign="space-between">
                                 <ThumbLike20Filled
                                     aria-hidden="false"
