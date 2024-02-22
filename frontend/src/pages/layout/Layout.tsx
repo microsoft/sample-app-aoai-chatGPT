@@ -72,7 +72,7 @@ const Layout = () => {
                 src={Contoso}
                 className={styles.headerIcon}
                 aria-hidden="true"
-                alt="eInfochips Eragon Co-Pilot Logo"
+                alt="eInfochips Co-Pilot Logo"
               />
             </div>
 
@@ -80,10 +80,10 @@ const Layout = () => {
               <Link
                 to="/"
                 className={styles.headerTitleContainer}
-                aria-label="Eragon Copilot - FAE's Personal AI Assistant"
+                aria-label="eInfochips Copilot - FAE's Personal AI Assistant"
               >
                 <h1 className={styles.headerTitle}>
-                  Eragon Copilot - FAE's Personal AI Assistant
+                  eInfochips Copilot - FAE's Personal AI Assistant
                 </h1>
               </Link>
             </div>
