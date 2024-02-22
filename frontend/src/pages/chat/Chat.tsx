@@ -4,7 +4,7 @@ import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
-import LogoImage from "../../assets/chatIcon.svg";
+import Deepak from "../../assets/deepak.png";
 
 import {
     ChatMessage,
@@ -587,7 +587,7 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <div className={styles.chatEmptyState}>
                                 <Image
-                                    src={LogoImage}
+                                    src={Deepak}
                                     height={120}
                                     width={120}
                                     aria-hidden="true"
