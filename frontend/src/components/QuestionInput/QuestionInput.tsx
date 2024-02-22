@@ -14,6 +14,7 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
     const [question, setQuestion] = useState<string>("");
+    const [isComposing, setIsComposing] = useState<boolean>(false)
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -32,7 +33,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     };
 
     const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
-        if (ev.key === "Enter" && !ev.shiftKey) {
+        if (ev.key === "Enter" && !ev.shiftKey && !isComposing) {
             ev.preventDefault();
             sendQuestion();
         }
@@ -43,6 +44,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     };
 
     const sendQuestionDisabled = disabled || !question.trim();
+
+    const onCompositionStart = () => setIsComposing(true)
+    const onCompositionEnd = () => setIsComposing(false)
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
@@ -55,6 +59,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                 value={question}
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
+                onCompositionStart={onCompositionStart}
+                onCompositionEnd={onCompositionEnd}
             />
             <div className={styles.questionInputSendButtonContainer} 
                 role="button" 
