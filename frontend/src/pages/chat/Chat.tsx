@@ -74,6 +74,8 @@ const Chat = () => {
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
     useEffect(() => {
         if (appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working  
             && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
@@ -201,8 +203,10 @@ const Chat = () => {
 
                     var text = new TextDecoder("utf-8").decode(value);
                     const objects = text.split("\n");
-                    objects.forEach((obj) => {
+                    for(const obj of objects) {
+                    // objects.forEach((obj) => {
                         try {
+                            // console.log("obj: " + new Date());
                             if (obj !== "" && obj !== "{}") {
                                 runningText += obj;
                                 result = JSON.parse(runningText);
@@ -223,6 +227,7 @@ const Chat = () => {
                                 }
                                 runningText = "";
                             }
+                            await sleep(50);
                         }
                         catch (e) {
                             if (!(e instanceof SyntaxError)) {
@@ -232,7 +237,7 @@ const Chat = () => {
                                 console.log("Incomplete message. Continuing...")
                             }
                         }
-                    });
+                    }
                 }
                 conversation.messages.push(toolMessage, assistantMessage)
                 appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation });
