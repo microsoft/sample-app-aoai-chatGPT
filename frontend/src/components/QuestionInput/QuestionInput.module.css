@@ -54,3 +54,10 @@
     width: 27px;
     height: 30px;
 }
+
+
+@media (max-width: 480px) {
+    .questionInputContainer {
+        left: 16.5%;
+    }
+}

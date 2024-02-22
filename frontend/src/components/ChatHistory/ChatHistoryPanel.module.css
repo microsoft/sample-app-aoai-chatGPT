@@ -1,7 +1,6 @@
 .container {
     max-height: calc(100vh - 100px);
     width: 300px;
-    
 }
 
 .listContainer {
@@ -71,4 +70,10 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+    .container {
+        width: 100%; 
+    }
 }
