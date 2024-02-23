@@ -9,6 +9,7 @@ export interface IMicrophoneProps {
     onSpeech: (text: string) => void;
     onRecordingStart: () => void;
     onRecordingEnd: () => void;
+    disabled: boolean;
 }
 
 
@@ -18,7 +19,11 @@ export const Microphone: React.FunctionComponent<IMicrophoneProps> = (props: Rea
     const styles = MicrophoneStyles();
 
     const [microphoneActive, setmicrophoneActive] = React.useState<boolean>(false);
-    const [microphoneDisabled, setmicrophoneDisabled] = React.useState<boolean>(false);
+    const [microphoneDisabled, setmicrophoneDisabled] = React.useState<boolean>(props.disabled);
+
+    React.useEffect(() => {
+        setmicrophoneDisabled(props.disabled);
+    }, [props.disabled]);
 
     const getTextFromSpeech = async (): Promise<void> => {
         setmicrophoneActive(true);

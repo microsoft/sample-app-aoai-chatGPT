@@ -39,13 +39,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         if (disabled || !questionText.trim()) {
             return;
         }
-
-        if (conversationId) {
-            onSend(questionText, conversationId);
-        } else {
-            onSend(questionText);
-        }
-
+         setQuestion(questionText);
     };
 
     const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
@@ -54,7 +48,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
             sendQuestion();
         }
     };
-
 
     const onQuestionChange = (ev: React.ChangeEvent<HTMLTextAreaElement>, data: TextareaOnChangeData): void => {
         setQuestion(data.value || "");
@@ -80,6 +73,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
                             onSpeech={sendQuestionFromMicrophone}
                             onRecordingStart={() => { setMicrophoneActive(true); }}
                             onRecordingEnd={() => { setMicrophoneActive(false); }}
+                            disabled={disabled || microphoneActive}
                         />
                     }
                     <Button
