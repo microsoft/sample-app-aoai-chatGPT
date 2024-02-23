@@ -6,3 +6,4 @@ azure-storage-blob==12.17.0
 python-dotenv==1.0.0
 azure-cosmos==4.5.0
 applicationinsights==0.11.10
+flask[async]==2.3.2

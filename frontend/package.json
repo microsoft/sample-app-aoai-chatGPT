@@ -15,6 +15,7 @@
     "@fluentui/react-migration-v0-v9": "^9.1.11",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
+    "microsoft-cognitiveservices-speech-sdk": "^1.35.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^7.0.1",
