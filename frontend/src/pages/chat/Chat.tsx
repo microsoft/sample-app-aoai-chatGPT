@@ -592,8 +592,8 @@ const Chat = () => {
                                     width={120}
                                     aria-hidden="true"
                                 />
-                                <Title1>Ask Deepak</Title1>
-                                <Subtitle2 align="center">Ask the Deepak Chopra chatbot questions about AI, medicine and ethics.</Subtitle2>
+                                <span className={styles.title}>Ask Deepak</span>
+                                <span className={styles.subtitle}>Ask the Deepak Chopra chatbot questions about AI, medicine and ethics.</span>
                                 <SuggestionButtons 
                                     onButtonClick={sendChatQuestion}
                                 />

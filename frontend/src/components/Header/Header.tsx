@@ -19,16 +19,15 @@ export const Header: React.FunctionComponent<IHeaderProps> = (props: React.Props
                 <Image
                     src={props.azureImageUrl}
                     aria-hidden="true"
-                    width={150}
                     className={styles.logoImage}
                 />
-                <Title3 style={{ marginBottom: '4px' }}> | </Title3>
+                <span className={styles.verticalBar}>|</span>
                 <Link href="/" className={styles.headerTitle}>
-                    <Title3>Ask Deepak</Title3>
+                    Ask Deepak
                 </Link>
             </div>
             <div className={styles.rightCommandBar}>
-                <ShareButton onClick={props.onShareClick} />
+                <ShareButton className={styles.shareButton} onClick={props.onShareClick} />
             </div>
         </div>
     );

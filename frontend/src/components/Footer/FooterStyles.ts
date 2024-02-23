@@ -19,5 +19,8 @@ export const FooterStyles = makeStyles({
     footerText: {
         display: 'flex',
         alignItems: 'center',
+        '@media (max-width: 400px)': {
+            fontSize: '10px'
+        }
     },
 });
