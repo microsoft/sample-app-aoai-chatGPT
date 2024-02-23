@@ -173,3 +173,11 @@ sup {
     font-size: 10px;
     line-height: 10px;
 }
+
+@media (max-width: 480px) {
+    .answerFooter, .answerDisclaimerContainer{
+        flex-direction: column;
+        align-items: left; 
+        gap: 4px; 
+    }
+}
