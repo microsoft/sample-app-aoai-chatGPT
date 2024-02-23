@@ -4,7 +4,7 @@ import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
-import LogoImage from "../../assets/chatIcon.svg";
+import Deepak from "../../assets/deepak.png";
 
 import {
     ChatMessage,
@@ -588,13 +588,13 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <div className={styles.chatEmptyState}>
                                 <Image
-                                    src={LogoImage}
+                                    src={Deepak}
                                     height={120}
                                     width={120}
                                     aria-hidden="true"
                                 />
-                                <Title1>Questions about Microsoft Research Forum?</Title1>
-                                <Subtitle2 align="center">The Research Forum series explores recent research advances, bold new ideas, and important discussions with the global research community.</Subtitle2>
+                                <span className={styles.title}>Ask Deepak</span>
+                                <span className={styles.subtitle}>Ask the Deepak Chopra chatbot questions about AI, medicine and ethics.</span>
                                 <SuggestionButtons 
                                     onButtonClick={sendChatQuestion}
                                 />
