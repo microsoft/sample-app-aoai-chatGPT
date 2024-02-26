@@ -98,7 +98,7 @@ You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-
 If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following two commands from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
 
 1. `az webapp up --runtime PYTHON:3.11 --sku B1 --name <new-app-name> --resource-group <resource-group-name> --location <azure-region> --subscription <subscription-name>`
-1. `az webapp config set --startup-file "python -m gunicorn app:app" --name <new-app-name>`
+1. `az webapp config set --startup-file "python3 -m gunicorn app:app" --name <new-app-name>`
 
 If you've deployed the app previously, first run this command to update the appsettings to allow local code deployment:
 
@@ -111,7 +111,7 @@ Check the SKU in the same way. Use the abbreviated SKU name in the argument belo
 Then, use these commands to deploy your local code to the existing app:
 
 1. `az webapp up --runtime <runtime-stack> --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
-1. `az webapp config set --startup-file "python -m gunicorn app:app" --name <existing-app-name>`
+1. `az webapp config set --startup-file "python3 -m gunicorn app:app" --name <existing-app-name>`
 
 Make sure that the app name and resource group match exactly for the app that was previously deployed.
 
