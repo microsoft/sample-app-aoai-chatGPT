@@ -69,7 +69,7 @@ export const Answer = ({
         let citationFilename = "";
 
         if (citation.filepath) {
-            const part_i = citation.part_index ?? parseInt(citation.chunk_id) + 1;
+            const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '');
             if (truncate && citation.filepath.length > filePathTruncationLimit) {
                 const citationLength = citation.filepath.length;
                 citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`;
