@@ -7,13 +7,14 @@ export type AskResponse = {
 };
 
 export type Citation = {
+    part_index?: number;
     content: string;
     id: string;
     title: string | null;
     filepath: string | null;
     url: string | null;
     metadata: string | null;
-    chunk_id: string | null;
+    chunk_id: string;
     reindex_id: string | null;
 }
 
