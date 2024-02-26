@@ -22,9 +22,6 @@ from backend.history.cosmosdbservice import CosmosConversationClient
 
 from backend.utils import format_as_ndjson, format_stream_response, generateFilterString, parse_multi_columns, format_non_streaming_response
 
-# load dotenv
-load_dotenv()
-
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 # UI configuration (optional)
@@ -54,6 +51,8 @@ async def favicon():
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
+
+load_dotenv()
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")

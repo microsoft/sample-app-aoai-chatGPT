@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Python: Sample App Backend",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "quart",
       "cwd": "${workspaceFolder}",
