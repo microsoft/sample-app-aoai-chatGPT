@@ -104,10 +104,26 @@ class PdfTextSplitter(TextSplitter):
 
         return caption
     
+    def mask_urls(self, text) -> Tuple[Dict[str, str], str]:
+
+        def find_urls(string):
+            regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^()\s<>]+|\(([^()\s<>]+|(\([^()\s<>]+\)))*\))+(?:\(([^()\s<>]+|(\([^()\s<>]+\)))*\)|[^()\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+            urls = re.findall(regex, string)
+            return [x[0] for x in urls]
+        url_dict = {}
+        masked_text = text
+        urls = set(find_urls(text))
+
+        for i, url in enumerate(urls):
+            masked_text = masked_text.replace(url, f"##URL{i}##")
+            url_dict[f"##URL{i}##"] = url
+        return url_dict, masked_text
+
     def split_text(self, text: str) -> List[str]:
+        url_dict, masked_text = self.mask_urls(text)
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
-        splits = text.split(start_tag)
+        splits = masked_text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
         
@@ -128,7 +144,7 @@ class PdfTextSplitter(TextSplitter):
                 table_caption_prefix = ""
             
 
-        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size, url_dict)]
 
         return final_final_chunks
 
@@ -593,11 +609,17 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
     full_text = "".join([page_text for _, _, page_text in page_map])
     return full_text
 
-def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> Generator[Tuple[str, int], None, None]:
+def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
+    def unmask_urls(text, url_dict={}):
+        if "##URL" in text:
+            for key, value in url_dict.items():
+                text = text.replace(key, value)
+        return text
     # TODO: solve for token overlap
     current_chunk = ""
     total_size = 0
     for chunked_content in chunked_content_list:
+        chunked_content = unmask_urls(chunked_content, url_dict)
         chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
         if total_size > 0:
             new_size = total_size + chunk_size

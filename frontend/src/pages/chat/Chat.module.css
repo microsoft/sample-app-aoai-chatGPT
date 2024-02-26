@@ -53,7 +53,6 @@
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
-    display: flex;
     align-items: flex-end;
     text-align: center;
     letter-spacing: -0.01em;
@@ -323,4 +322,27 @@ a {
 .viewSourceButton:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .chatInput {
+        width: 90%;
+        max-width: 90%;
+    }
+
+    .newChatIcon {
+        left: 0px;
+    }
+
+    .clearChatBroom {
+        left: 0px;
+    }
+
+    .clearChatBroomNoCosmos {
+        left: 0px;
+    }
+
+    .chatEmptyStateTitle {
+        line-height: 36px;
+    }
 }

@@ -36,6 +36,7 @@ UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() ==
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
 
@@ -181,8 +182,6 @@ frontend_settings = {
         "show_share_button": UI_SHOW_SHARE_BUTTON
     }
 }
-
-message_uuid = ""
 
 def should_use_data():
     global DATASOURCE_TYPE
@@ -554,7 +553,7 @@ async def complete_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
 
-    return format_non_streaming_response(response, history_metadata, message_uuid)
+    return format_non_streaming_response(response, history_metadata)
 
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
@@ -562,7 +561,7 @@ async def stream_chat_request(request_body):
 
     async def generate():
         async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata, message_uuid)
+            yield format_stream_response(completionChunk, history_metadata)
 
     return generate()
 
@@ -605,8 +604,6 @@ def get_frontend_settings():
 ## Conversation History API ## 
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
-    global message_uuid
-    message_uuid = str(uuid.uuid4())
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user['user_principal_id']
 
@@ -690,7 +687,7 @@ async def update_conversation():
                 )
             # write the assistant message
             await cosmos_conversation_client.create_message(
-                uuid=message_uuid,
+                uuid=messages[-1]['id'],
                 conversation_id=conversation_id,
                 user_id=user_id,
                 input_message=messages[-1]

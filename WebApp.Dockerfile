@@ -17,8 +17,7 @@ RUN apk add --no-cache --virtual .build-deps \
     openssl-dev \  
     curl \  
     && apk add --no-cache \  
-    libpq \  
-    && pip install --no-cache-dir uwsgi  
+    libpq 
   
 COPY requirements.txt /usr/src/app/  
 RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \  
@@ -27,6 +26,6 @@ RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \
 COPY . /usr/src/app/  
 COPY --from=frontend /home/node/app/static  /usr/src/app/static/
 WORKDIR /usr/src/app  
-
 EXPOSE 80  
-CMD ["python", "-m", "gunicorn", "app:app"]
+
+CMD ["gunicorn"  , "-b", "0.0.0.0:80", "app:app"]
