@@ -600,7 +600,7 @@ const Chat = () => {
     };
 
     const onViewSource = (citation: Citation) => {
-        if (citation.url && !citation.url.includes("aaa")) {
+        if (citation.url && citation.url.includes("blob.core")) {
             window.open(citation.url, "_blank");
         }
     };
@@ -782,7 +782,7 @@ const Chat = () => {
                                 <span aria-label="Citations" className={styles.citationPanelHeader}>Citations</span>
                                 <IconButton iconProps={{ iconName: 'Cancel' }} aria-label="Close citations panel" onClick={() => setIsCitationPanelOpen(false)} />
                             </Stack>
-                            <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && !activeCitation.url.includes("aaa") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
+                            <h5 className={styles.citationPanelTitle} tabIndex={0} title={activeCitation.url && activeCitation.url.includes("blob.core") ? activeCitation.url : activeCitation.title ?? ""} onClick={() => onViewSource(activeCitation)}>{activeCitation.title}</h5>
                             <div tabIndex={0}>
                                 <ReactMarkdown
                                     linkTarget="_blank"
