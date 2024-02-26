@@ -33,7 +33,7 @@ echo Starting backend
 echo.    
 cd ..  
 start http://127.0.0.1:50505
-call uvicorn app:app  --port 50505 --reload
+call python -m uvicorn app:app  --port 50505 --reload
 if "%errorlevel%" neq "0" (    
     echo Failed to start backend    
     exit /B %errorlevel%    
