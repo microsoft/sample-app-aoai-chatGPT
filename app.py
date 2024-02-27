@@ -309,6 +309,8 @@ def get_configured_data_source():
         if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
             userToken = request.headers.get('X-MS-TOKEN-AAD-ACCESS-TOKEN', "")
             logging.debug(f"USER TOKEN is {'present' if userToken else 'not present'}")
+            if not userToken:
+                raise Exception("Document-level access control is enabled, but user access token could not be fetched.")
 
             filter = generateFilterString(userToken)
             logging.debug(f"FILTER: {filter}")
@@ -579,7 +581,7 @@ async def conversation_internal(request_body):
     
     except Exception as ex:
         logging.exception(ex)
-        if ex.status_code:
+        if hasattr(ex, "status_code"):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
