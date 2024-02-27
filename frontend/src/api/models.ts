@@ -7,6 +7,7 @@ export type AskResponse = {
 };
 
 export type Citation = {
+    part_index?: number;
     content: string;
     id: string;
     title: string | null;
