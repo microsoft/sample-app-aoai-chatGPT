@@ -1,8 +1,9 @@
 azure-identity==1.14.0
-Flask==2.3.2
+Flask[async]==2.3.2
 openai==0.27.7
 azure-search-documents==11.4.0b6
 azure-storage-blob==12.17.0
 python-dotenv==1.0.0
 azure-cosmos==4.5.0
 applicationinsights==0.11.10
+aiohttp==3.9.2
