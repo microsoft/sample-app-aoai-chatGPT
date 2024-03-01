@@ -61,9 +61,10 @@ export const HistoryButton: React.FC<HistoryButtonProps> = ({
 }) => {
   const historyButtonStyles: ICommandBarStyles & IButtonStyles = {
     root: {
-      width: '180px',
+      width: "180px",
       // width: "70px",
       alignItems: "center",
+      justifyContent: "end",
       border: `1px solid #D1D1D1`,
       background:
         "radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%)",
@@ -75,6 +76,9 @@ export const HistoryButton: React.FC<HistoryButtonProps> = ({
     },
     rootPressed: {
       border: `1px solid #D1D1D1`,
+    },
+    label: {
+      color: "#FFFFFF",
     },
   };
 
@@ -94,13 +98,15 @@ interface HistoryButtonProps extends IButtonProps {
 }
 
 export const ContactUsButton: React.FC<ContactUsButtonProps> = ({
-  onClick,
+  // onClick,
   text,
 }) => {
   const contactUsButtonStyles: ICommandBarStyles & IButtonStyles = {
     root: {
-      width: '150px',
+      // width: '150px',
+      width: "auto",
       alignItems: "center",
+      justifyContent: "end",
       border: `1px solid #D1D1D1`,
       background:
         "radial-gradient(109.81% 107.82% at 100.1% 90.19%, rgb(15, 108, 189) 33.63%, rgb(45, 135, 195) 70.31%, rgb(141, 221, 216) 100%)",
@@ -113,18 +119,21 @@ export const ContactUsButton: React.FC<ContactUsButtonProps> = ({
     rootPressed: {
       border: `1px solid #D1D1D1`,
     },
+    label: {
+      color: "#FFFFFF",
+    },
   };
 
   return (
     <DefaultButton
       text={text}
-      onClick={onClick}
+      // onClick={onClick}
       styles={contactUsButtonStyles}
     />
   );
 };
 
 interface ContactUsButtonProps extends IButtonProps {
-  onClick: () => void;
+  // onClick: () => void;
   text: string;
 }
