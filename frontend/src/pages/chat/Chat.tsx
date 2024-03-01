@@ -17,6 +17,7 @@ import {
   ShieldLockRegular,
   ErrorCircleRegular,
 } from "@fluentui/react-icons";
+import { FaMicrophone } from "react-icons/fa";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -749,8 +750,9 @@ const Chat = () => {
                   aria-hidden="true"
                 />
                 <h2 className={styles.chatEmptyStateSubtitle}>
-                  This AI assistant is designed to answer your queries related to SoM, SBC, Development Kits &
-                  Accessories for the Qualcomm® Product Line and other processors.
+                  This AI assistant is designed to answer your queries related
+                  to SoM, SBC, Development Kits & Accessories for the Qualcomm®
+                  Product Line and other processors.
                 </h2>
 
                 <div className={styles.boxesContainer}>
@@ -914,7 +916,7 @@ const Chat = () => {
                   }}
                   aria-label="clear chat button"
                 />
-
+                <FaMicrophone className={styles.microphoneIconStyle} />
                 <Dialog
                   hidden={hideErrorDialog}
                   onDismiss={handleErrorDialogClose}
