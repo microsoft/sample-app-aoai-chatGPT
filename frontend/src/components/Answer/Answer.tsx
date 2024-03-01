@@ -272,7 +272,6 @@ export const Answer = ({
                 }}
                 hidden={!isFeedbackDialogOpen}
                 styles={{
-                    
                     main: [{
                         selectors: {
                           ['@media (min-width: 480px)']: {
