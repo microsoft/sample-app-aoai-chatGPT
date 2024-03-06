@@ -19,6 +19,33 @@ export const ChatStyles = makeStyles({
         ...shorthands.padding('30px'),
         boxSizing: 'border-box',
         backgroundColor: tokens.colorNeutralBackground1,
+        '@media (max-width: 400px)': {
+            ...shorthands.padding('15px'),
+            height: 'calc(100vh - 130px)',
+        },
+    },
+
+    title: {
+        paddingTop: '15px',
+        fontSize: '24px',
+        lineHeight: '32px',
+        fontWeight: '600',
+        '@media (max-width: 400px)': {
+            fontSize: '18px',
+            lineHeight: '24px',
+            fontWeight: '600',
+        },
+    },
+
+    subtitle: {
+        fontSize: '16px',
+        lineHeight: '22px',
+        fontWeight: '600',
+        '@media (max-width: 400px)': {
+            fontSize: '14px',
+            lineHeight: '18px',
+            fontWeight: '600',
+        },
     },
 
     questionDisplayRow: {
@@ -40,6 +67,9 @@ export const ChatStyles = makeStyles({
         textAlign: 'center',
         marginLeft: 'auto',
         marginRight: 'auto',
+        '@media (max-width: 400px)': {
+            ...shorthands.gap('0px'),
+        }
     },
 
     chatMessageErrorContent: {

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 interface ShareButtonProps {
   onClick: () => void;
+  className?: string;
 }
 
 const ShareDialogStyles = makeStyles({

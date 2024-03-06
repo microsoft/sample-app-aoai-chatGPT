@@ -7,10 +7,9 @@ import copy
 from dotenv import load_dotenv
 
 from backend.conversationtelemetry import ConversationTelemetryClient
+load_dotenv()
 
 class Orchestrator(ABC):
-    load_dotenv()
-
     DEBUG = os.environ.get("DEBUG", "false")
     DEBUG_LOGGING = DEBUG.lower() == "true"
 
@@ -42,7 +41,8 @@ class Orchestrator(ABC):
     AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
     AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
     AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-08-01-preview")
-    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+    # AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+    AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE")
 
     # Azure Search Settings
     AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")

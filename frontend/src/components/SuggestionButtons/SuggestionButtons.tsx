@@ -16,7 +16,7 @@ export const SuggestionButtons: React.FunctionComponent<ISuggestionButtonsProps>
     const styles = SuggestionButtonStyles();
     return (
     <div className={styles.container}>
-        <Subtitle2><i>Get started with an example question below:</i></Subtitle2>
+        <span className={styles.prompt}><i>Get started with an example question below:</i></span>
         {
             questions.map((questionText, index) => {
                 return (

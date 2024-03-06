@@ -18,10 +18,27 @@ export const QuestionInputStyles = makeStyles({
         boxShadow: tokens.shadow8,
     },
 
-    sendButton: {
+    twoButtonContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        right: '50px',
+        top: '10px',
+    },
+
+    oneButtonContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         position: 'relative',
         right: '50px',
         top: '30px',
+    },
+
+    sendButton: {
         color: tokens.colorBrandForeground1
     },
 

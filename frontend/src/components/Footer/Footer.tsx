@@ -8,7 +8,7 @@ function Footer() {
         <div
             className={styles.footerContainer}
         >
-            <Link href="https://support.microsoft.com/contactus">
+            <Link href="mailto:mcrinfo@microsoft.com">
                 <Caption1Strong className={styles.footerText}>Contact Us</Caption1Strong>
             </Link>
             <Caption1Strong className={styles.footerText}>|</Caption1Strong>

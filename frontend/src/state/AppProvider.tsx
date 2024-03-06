@@ -11,6 +11,7 @@ export interface AppState {
     currentChat: Conversation | null;
     frontendSettings: FrontendSettings | null;
     feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative; };
+    speech_enabled: boolean | undefined;
 }
 
 export type Action =
@@ -40,7 +41,8 @@ const initialState: AppState = {
         status: CosmosDBStatus.NotConfigured,
     },
     frontendSettings: null,
-    feedbackState: {}
+    feedbackState: {},
+    speech_enabled: undefined,
 };
 
 export const AppStateContext = createContext<{
