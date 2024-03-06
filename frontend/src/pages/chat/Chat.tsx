@@ -4,7 +4,7 @@ import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
 
-import Deepak from "../../assets/deepak.png";
+import LogoImage from "../../assets/chatIcon.svg";
 
 import {
     ChatMessage,
@@ -555,17 +555,17 @@ const Chat = () => {
 
     useEffect(() => {
         if (appStateContext?.state.chatHistoryLoadingState !== ChatHistoryLoadingState.Loading) {
-          try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const paramQuestion = urlParams.get('askmsr');
-            if (paramQuestion) {
-              sendChatQuestion(paramQuestion);
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramQuestion = urlParams.get('askmsr');
+                if (paramQuestion) {
+                    sendChatQuestion(paramQuestion);
+                }
+            } catch (error) {
+                console.error('Error occurred while processing URL parameters:', error);
             }
-          } catch (error) {
-            console.error('Error occurred while processing URL parameters:', error);
-          }
         }
-      }, [appStateContext?.state.chatHistoryLoadingState]);
+    }, [appStateContext?.state.chatHistoryLoadingState]);
 
     return (
         <div className={styles.container} role="main">
@@ -588,14 +588,14 @@ const Chat = () => {
                         {!messages || messages.length < 1 ? (
                             <div className={styles.chatEmptyState}>
                                 <Image
-                                    src={Deepak}
+                                    src={LogoImage}
                                     height={120}
                                     width={120}
                                     aria-hidden="true"
                                 />
-                                <span className={styles.title}>Ask Deepak</span>
-                                <span className={styles.subtitle}>Ask the Deepak Chopra chatbot questions about AI, medicine and ethics.</span>
-                                <SuggestionButtons 
+                                <span className={styles.title}>Questions about Microsoft Research Forum?</span>
+                                <span className={styles.subtitle}>The Research Forum series explores recent research advances, bold new ideas, and important discussions with the global research community.</span>
+                                <SuggestionButtons
                                     onButtonClick={sendChatQuestion}
                                 />
                             </div>
