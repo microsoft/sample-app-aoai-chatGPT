@@ -4,8 +4,10 @@ import json
 import logging
 import requests
 import copy
+from dotenv import load_dotenv
 
 from backend.conversationtelemetry import ConversationTelemetryClient
+load_dotenv()
 
 class Orchestrator(ABC):
     DEBUG = os.environ.get("DEBUG", "false")
