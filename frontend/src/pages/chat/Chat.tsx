@@ -602,7 +602,7 @@ const Chat = () => {
                         ) : (
                             <div className={styles.chatMessageStream} role="log">
                                 {messages.map((answer, index) => (
-                                    <>
+                                    <div key={`answer-${index}`}>
                                         {
                                             answer.role === "user" ? (
                                                 <div className={styles.questionDisplayRow}>
@@ -625,6 +625,7 @@ const Chat = () => {
                                                             feedback: answer.feedback
                                                         }}
                                                         onCitationClicked={c => onShowCitation(c)}
+                                                        isLastAnswer={index === messages.length - 1}
                                                     />
                                                 </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
                                                     <div className={styles.chatMessageErrorContent}>
@@ -635,7 +636,7 @@ const Chat = () => {
                                                 </div> : null
                                             )
                                         }
-                                    </>
+                                    </div>
                                 ))}
                                 {showLoadingMessage && (
                                     <>
@@ -650,6 +651,7 @@ const Chat = () => {
                                                     citations: []
                                                 }}
                                                 onCitationClicked={() => null}
+                                                isLastAnswer={true}
                                             />
                                         </div>
                                     </>

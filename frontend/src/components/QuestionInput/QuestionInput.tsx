@@ -4,6 +4,8 @@ import { Button, Caption1, Textarea, TextareaOnChangeData } from "@fluentui/reac
 import { QuestionInputStyles } from "./QuestionInputStyles";
 import { ComplianceMessage } from "../ComplianceMessage/ComplianceMessage";
 import { Microphone } from "../Microphone/Microphone";
+import React from "react";
+import { AppStateContext } from "../../state/AppProvider";
 
 interface Props {
     onSend: (question: string, id?: string) => void;
@@ -15,11 +17,13 @@ interface Props {
 }
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId, speechEnabled }: Props) => {
+    const appStateContext = React.useContext(AppStateContext);
     const Newstyles = QuestionInputStyles();
     const [question, setQuestion] = useState<string>("");
     const [microphoneActive, setMicrophoneActive] = useState<boolean>(false);
 
     const sendQuestion = () => {
+        appStateContext?.state.audioService?.stopAudioPlayback();
         if (disabled || !question.trim()) {
             return;
         }
@@ -39,7 +43,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         if (disabled || !questionText.trim()) {
             return;
         }
-         setQuestion(questionText);
+         const _questionText = question + " " + questionText.trim();
+         setQuestion(_questionText);
     };
 
     const onEnterPress = (ev: React.KeyboardEvent<Element>) => {

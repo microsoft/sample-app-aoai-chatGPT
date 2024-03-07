@@ -11,15 +11,18 @@ import { Link, Button, Caption1, Card, CardFooter, Text, Checkbox, CheckboxOnCha
 import { AnswerStyles } from "./AnswerStyles";
 import { ChevronDown24Regular, ChevronRight24Regular, ThumbDislike20Filled, ThumbLike20Filled, ThumbLike20Regular, ThumbDislike20Regular } from "@fluentui/react-icons";
 import { AppStateContext } from "../../state/AppProvider";
+import { SpeakText } from "../SpeakText/SpeakText";
 
 interface Props {
     answer: AskResponse;
     onCitationClicked: (citedDocument: Citation) => void;
+    isLastAnswer: boolean;
 }
 
 export const Answer = ({
     answer,
-    onCitationClicked
+    onCitationClicked,
+    isLastAnswer
 }: Props) => {
     const styles = AnswerStyles();
 
@@ -42,6 +45,7 @@ export const Answer = ({
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext);
     const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled;
+    const SPEECH_ENABLED = appStateContext?.state.frontendSettings?.speech_enabled;
 
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
@@ -219,6 +223,10 @@ export const Answer = ({
                         children={parsedAnswer.markdownFormatText}
                         className={styles.answerText}
                     />
+                    {
+                        SPEECH_ENABLED && isLastAnswer &&  <SpeakText answer={answer} /> 
+                    }
+                   
                 </div>
                 <div className={styles.answerFooter}>
                     {!!parsedAnswer.citations.length && (

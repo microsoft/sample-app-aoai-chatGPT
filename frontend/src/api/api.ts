@@ -299,11 +299,11 @@ export const historyEnsure = async (): Promise<CosmosDBHealth> => {
     return response;
 }
 
-export async function getSpeechAuthToken(): Promise<SpeechAuth | void> {
+export async function getSpeechAuthToken(): Promise<SpeechAuth | undefined> {
     const response = await fetch('/speech/issueToken');
     if (!response.ok) {
         console.log("Can't retrieve access token, speech will be disabled.")
-        return;
+        return undefined;
     }
     const tokenJson = await response.json();
     // Create expires time 9 minutes from now
