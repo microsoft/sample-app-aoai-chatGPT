@@ -2,6 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "connections_sharepointonline_name": {
+            "defaultValue": "sharepointonline",
+            "type": "String"
+        },
         "storageAccounts_armqueue2_name": {
             "defaultValue": "armqueue2",
             "type": "String"
@@ -226,10 +230,31 @@
             ]
         },
         {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_sharepointonline_name')]",
+            "location": "[variables('location')]",
+            "kind": "V1",
+            "properties": {
+                "customParameterValues": {},
+                "nonSecretParameterValues": {},
+                "api": {
+                    "name": "[parameters('connections_sharepointonline_name')]",
+                    "displayName": "SharePoint",
+                    "description": "SharePoint helps organizations share and collaborate with colleagues, partners, and customers. You can connect to SharePoint Online or to an on-premises SharePoint 2013 or 2016 farm using the On-Premises Data Gateway to manage documents and list items.",
+                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1676/1.0.1676.3617/', parameters('connections_sharepointonline_name'), '/icon.png')]",
+                    "brandColor": "#036C70",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', parameters('connections_sharepointonline_name'))]",
+                    "type": "Microsoft.Web/locations/managedApis"
+                },
+                "testLinks": []
+            }
+        },
+        {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
             "name": "[parameters('workflows_logicapptest720_name')]",
-            "location": "eastus",
+            "location": "[variables('location')]",
             "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
@@ -237,7 +262,8 @@
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('connections_azurequeues_name'))]"
+                "[resourceId('Microsoft.Web/connections', parameters('connections_azurequeues_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
             ],
             "properties": {
                 "state": "Enabled",
@@ -248,6 +274,10 @@
                         "$connections": {
                             "defaultValue": {},
                             "type": "Object"
+                        },
+                        "SharePointUrl": {
+                            "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
+                            "type": "String"
                         },
                         "queueName": {
                             "type": "string"
@@ -276,7 +306,25 @@
                             }
                         }
                     },
-                    "actions": {},
+                    "actions": {
+                        "Send_an_HTTP_request_to_SharePoint": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "method": "GET",
+                                    "uri": "_api/Web/SiteGroups"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/httprequest"
+                            }
+                        }
+                    },
                     "outputs": {}
                 },
                 "parameters": {
@@ -292,6 +340,11 @@
                                     }
                                 },
                                 "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azurequeues_name'))]"
+                            },
+                            "sharepointonline": {
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_sharepointonline_name'))]",
+                                "connectionName": "[parameters('connections_sharepointonline_name')]",
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_sharepointonline_name'))]"
                             }
                         }
                     },
