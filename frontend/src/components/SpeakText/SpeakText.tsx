@@ -10,14 +10,11 @@ export const SpeakText: React.FunctionComponent<ISpeakTextProps> = (props: React
     const appStateContext = React.useContext(AppStateContext);
     
     React.useEffect(() => {
-       
             appStateContext?.state.audioService?.speakAnswer(props.answer);
-        
     }, [props.answer]);
-    
+
   return (
     <>
-
     </>
   );
 };

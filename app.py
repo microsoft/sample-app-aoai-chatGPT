@@ -143,6 +143,7 @@ def should_use_data():
 
 @app.route("/conversation", methods=["GET", "POST"])
 def conversation():
+    message_uuid = str(uuid.uuid4())
     request_body = request.json
     return conversation_internal(request_body, message_uuid)
 

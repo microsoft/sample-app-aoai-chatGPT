@@ -450,6 +450,8 @@ const Chat = () => {
         abortFuncs.current.forEach(a => a.abort());
         setShowLoadingMessage(false);
         setIsLoading(false);
+        // stop audio playback
+        appStateContext?.state.audioService?.stopAudioPlayback();
     }
 
     useEffect(() => {
@@ -647,6 +649,7 @@ const Chat = () => {
                                         }}>
                                             <Answer
                                                 answer={{
+                                                    message_id: "genenerating",
                                                     answer: "Generating answer...",
                                                     citations: []
                                                 }}
