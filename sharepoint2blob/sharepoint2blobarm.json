@@ -22,12 +22,16 @@
             "defaultValue": "azurequeues",
             "type": "String"
         },
-        "workflows_logicapptest720_name": {
-            "defaultValue": "logicapptest720",
+        "connections_azureblob_name": {
+            "defaultValue": "azureblob",
             "type": "String"
         },
         "workflows_folder_expansion_logic_app_name": {
             "defaultValue": "folder-expansion-logic-app",
+            "type": "String"
+        },
+        "workflows_file_processing_logic_app_name": {
+            "defaultValue": "file-processing-logic-app",
             "type": "String"
         }
     },
@@ -259,6 +263,41 @@
              "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', parameters('storageAccounts_armblobqueue_name'), 'default','pending-folders')]",
                 "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('storageAccounts_armblobqueue_name'), 'Microsoft.Authorization', variables('queueRoleGuidId'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_azureblob_name')]",
+            "location": "[variables('location')]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "MyAzureBlobConnection",
+                "customParameterValues": {},
+                "authenticatedUser": {},
+                "connectionState": "Enabled",
+                "parameterValueSet": {
+                    "name": "managedIdentityAuth",
+                    "values": {}
+                },
+                "api": {
+                    "name": "[parameters('connections_azureblob_name')]",
+                    "displayName": "Azure Blob",
+                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1680/1.0.1680.3652/', parameters('connections_azureblob_name'), '/icon.png')]",
+                    "brandColor": "#0072C6",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', parameters('connections_azureblob_name'))]",
+                    "type": "Microsoft.Web/locations/managedApis"
+                },
+                "testLinks": [
+                    {
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/', parameters('connections_azureblob_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
+                        "method": "get"
+                    }
+                ]
+            },
+             "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('storageAccounts_armblobqueue_name'), 'default','sharepoint')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('storageAccounts_armblobqueue_name'), 'Microsoft.Authorization', variables('blobRoleGuidId'))]"
             ]
         },
         {
@@ -749,6 +788,699 @@
                     "storageAccountName": {
                         "value": "[parameters('storageAccounts_armblobqueue_name')]"
                     }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_file_processing_logic_app_name')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_azureblob_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_azurequeues_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+            ],
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
+                }
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "SharePointUrl": {
+                            "defaultValue": "[parameters('SharePointUrl')]",
+                            "type": "String"
+                        },
+                        "storageAccountName": {
+                            "type": "String"
+                        },
+                        "BlobContainerName": {
+                            "defaultValue": "sharepoint",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "When_there_are_messages_in_a_queue_(V2)": {
+                            "recurrence": {
+                                "frequency": "Second",
+                                "interval": 3
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Second",
+                                "interval": 3
+                            },
+                            "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-files')}/message_trigger"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition": {
+                            "actions": {
+                                "For_each_Blob_permitted_id": {
+                                    "foreach": "@variables('BlobPermittedIds')",
+                                    "actions": {
+                                        "Membership_Test": {
+                                            "actions": {},
+                                            "runAfter": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Set_variable_PermissionsChanged": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "PermissionsChanged",
+                                                            "value": true
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "contains": [
+                                                            "@body('Join')",
+                                                            "@items('For_each_Blob_permitted_id')"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "For_each_permission_in_Sharepoint_API_Response": {
+                                    "foreach": "@variables('FileUsersArray')",
+                                    "actions": {
+                                        "Condition_2": {
+                                            "actions": {},
+                                            "runAfter": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Set_variable_PermissionsChanged_2": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "PermissionsChanged",
+                                                            "value": true
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "contains": [
+                                                            "@outputs('GetBlobMetadata')['headers']?['x-ms-meta-permittedIds']",
+                                                            "@items('For_each_permission_in_Sharepoint_API_Response')"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "For_each_Blob_permitted_id": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "If_PermissinsChanged_": {
+                                    "actions": {
+                                        "HTTP": {
+                                            "runAfter": {},
+                                            "type": "Http",
+                                            "inputs": {
+                                                "authentication": {
+                                                    "audience": "https://storage.azure.com/",
+                                                     "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                                    "type": "ManagedServiceIdentity"
+                                                },
+                                                "headers": {
+                                                    "x-ms-blob-type": "BlockBlob",
+                                                    "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
+                                                    "x-ms-meta-lastmodified": "@body('Get_file_metadata_2')?['LastModified']",
+                                                    "x-ms-meta-permittedIds": "[[@body('Join')]",
+                                                    "x-ms-version": "2019-02-02"
+                                                },
+                                                "method": "PUT",
+                                                "queries": {
+                                                    "comp": "metadata"
+                                                },
+                                                "uri": "@{concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/',parameters('BlobContainerName'),body('Parse_JSON_-_Queue')?['fileRelativePath'],body('Parse_JSON_-_Queue')?['fileName'])}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "For_each_permission_in_Sharepoint_API_Response": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@variables('PermissionsChanged')",
+                                                    true
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Set_variable": {
+                                    "runAfter": {},
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "BlobPermittedIds",
+                                        "value": "@split(outputs('GetBlobMetadata')['headers']?['x-ms-meta-permittedIds'],',')"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_BlobPermittedIds": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Create_blob_(V2)_2": {
+                                        "runAfter": {
+                                            "Get_file_content_2": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "body": "@body('Get_file_content_2')",
+                                            "headers": {
+                                                "ReadFileMetadataFromServer": true
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/files",
+                                            "queries": {
+                                                "folderPath": "@{concat(parameters('BlobContainerName'),body('Parse_JSON_-_Queue')?['fileRelativePath'])}",
+                                                "name": "@body('Parse_JSON_-_Queue')?['fileName']",
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    },
+                                    "Get_file_content_2": {
+                                        "runAfter": {},
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/files/@{encodeURIComponent(encodeUriComponent(concat('/Shared documents',body('Parse_JSON_-_Queue')?['fileRelativePath'],body('Parse_JSON_-_Queue')?['fileName'])))}/content",
+                                            "queries": {
+                                                "inferContentType": true
+                                            }
+                                        }
+                                    },
+                                    "HTTP_2": {
+                                        "runAfter": {
+                                            "Create_blob_(V2)_2": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "type": "Http",
+                                        "inputs": {
+                                            "authentication": {
+                                                "audience": "https://storage.azure.com/",
+                                                "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                                "type": "ManagedServiceIdentity"
+                                            },
+                                            "headers": {
+                                                "x-ms-blob-type": "BlockBlob",
+                                                "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
+                                                "x-ms-meta-lastmodified": "@body('Get_file_metadata_2')?['LastModified']",
+                                                "x-ms-meta-permittedIds": "[[@{body('Join')}]",
+                                                "x-ms-version": "2019-02-02"
+                                            },
+                                            "method": "PUT",
+                                            "queries": {
+                                                "comp": "metadata"
+                                            },
+                                            "uri": "@{concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/',parameters('BlobContainerName'),body('Parse_JSON_-_Queue')?['fileRelativePath'],body('Parse_JSON_-_Queue')?['fileName'])}"
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@outputs('GetBlobMetadata')['statusCode']",
+                                            200
+                                        ]
+                                    },
+                                    {
+                                        "equals": [
+                                            "@outputs('GetBlobMetadata')['headers']?['x-ms-meta-lastmodified']",
+                                            "@body('Get_file_metadata_2')?['LastModified']"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Delete_message_(V2)": {
+                            "runAfter": {
+                                "Condition": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "delete",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-files')}/messages/@{encodeURIComponent(triggerBody()?['MessageId'])}",
+                                "queries": {
+                                    "popreceipt": "@triggerBody()?['PopReceipt']"
+                                }
+                            }
+                        },
+                        "For_each_permission_in_the_file": {
+                            "foreach": "@body('Select_FileSharingInformation')",
+                            "actions": {
+                                "Switch": {
+                                    "runAfter": {},
+                                    "cases": {
+                                        "Case": {
+                                            "case": 8,
+                                            "actions": {
+                                                "Filter_array_-_users": {
+                                                    "runAfter": {},
+                                                    "type": "Query",
+                                                    "inputs": {
+                                                        "from": "@body('Parse_JSON_-_Queue')?['users']",
+                                                        "where": "@and(equals(item()?['GroupId'], items('For_each_permission_in_the_file')['groupId']),equals(item()?['principleType'], 4))"
+                                                    }
+                                                },
+                                                "For_each_user_in_filtered_users": {
+                                                    "foreach": "@body('Filter_array_-_users')",
+                                                    "actions": {
+                                                        "Append_to_array_variable": {
+                                                            "runAfter": {},
+                                                            "type": "AppendToArrayVariable",
+                                                            "inputs": {
+                                                                "name": "FileUsersArray",
+                                                                "value": "@{split(items('For_each_user_in_filtered_users')['loginName'],'|')[2]}"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Filter_array_-_users": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "Foreach"
+                                                }
+                                            }
+                                        },
+                                        "Case_2": {
+                                            "case": 4,
+                                            "actions": {
+                                                "Append_to_array_variable_2": {
+                                                    "runAfter": {},
+                                                    "type": "AppendToArrayVariable",
+                                                    "inputs": {
+                                                        "name": "FileUsersArray",
+                                                        "value": "@split(items('For_each_permission_in_the_file')['loginName'],'|')[2]"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": {
+                                        "actions": {}
+                                    },
+                                    "expression": "@items('For_each_permission_in_the_file')?['principalType']",
+                                    "type": "Switch"
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_-_FileUsersArray": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "GetBlobMetadata": {
+                            "runAfter": {
+                                "Get_file_metadata_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "authentication": {
+                                    "audience": "https://storage.azure.com/",
+                                    "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "headers": {
+                                    "x-ms-blob-type": "BlockBlob",
+                                    "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
+                                    "x-ms-version": "2019-02-02"
+                                },
+                                "method": "GET",
+                                "queries": {
+                                    "comp": "metadata"
+                                },
+                                "uri": "@{concat('https://',parameters('storageAccountName'),'.blob.core.windows.net/',parameters('BlobContainerName'),body('Parse_JSON_-_Queue')?['fileRelativePath'],body('Parse_JSON_-_Queue')?['fileName'])}"
+                            }
+                        },
+                        "Get_File_Sharing_Information": {
+                            "runAfter": {
+                                "Parse_JSON_-_Queue": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "method": "POST",
+                                    "uri": "@{concat('_api/web/Lists(@a1)/GetItemById(@a2)/GetSharingInformation?@a1=%27',encodeUriComponent(replace(replace(body('Parse_JSON_-_Queue')?['listName'],'{',''),'}','')),'%27&@a2=',body('Parse_JSON_-_Queue')?['Id'],'%27&$Expand=pickerSettings,permissionsInformation,sharingLinkTemplates,addressBarLinkSettings')}"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/httprequest"
+                            }
+                        },
+                        "Get_file_metadata_2": {
+                            "runAfter": {
+                                "Join": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/files/@{encodeURIComponent(encodeUriComponent(concat('/Shared documents',body('Parse_JSON_-_Queue')?['fileRelativePath'],body('Parse_JSON_-_Queue')?['fileName'])))}"
+                            }
+                        },
+                        "Initialize_variable_-_FileUsersArray": {
+                            "runAfter": {
+                                "Select_FileSharingInformation": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "FileUsersArray",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_BlobPermittedIds": {
+                            "runAfter": {
+                                "Initialize_variable_PermissionsChanged": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "BlobPermittedIds",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_PermissionsChanged": {
+                            "runAfter": {
+                                "GetBlobMetadata": [
+                                    "Succeeded",
+                                    "TimedOut",
+                                    "Skipped",
+                                    "Failed"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "PermissionsChanged",
+                                        "type": "boolean",
+                                        "value": false
+                                    }
+                                ]
+                            }
+                        },
+                        "Join": {
+                            "runAfter": {
+                                "For_each_permission_in_the_file": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Join",
+                            "inputs": {
+                                "from": "@variables('FileUsersArray')",
+                                "joinWith": ","
+                            }
+                        },
+                        "Parse_JSON_-_FileSharingInformation": {
+                            "runAfter": {
+                                "Get_File_Sharing_Information": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('Get_File_Sharing_Information')",
+                                "schema": {
+                                    "properties": {
+                                        "d": {
+                                            "properties": {
+                                                "permissionsInformation": {
+                                                    "properties": {
+                                                        "principals": {
+                                                            "properties": {
+                                                                "results": {
+                                                                    "items": {
+                                                                        "properties": {
+                                                                            "principal": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "loginName": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "principalType": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "userPrincipalName": {
+                                                                                        "type": [
+                                                                                            "string",
+                                                                                            "null"
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    },
+                                                                    "type": "array"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "Parse_JSON_-_Queue": {
+                            "runAfter": {},
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@triggerBody()?['MessageText']",
+                                "schema": {
+                                    "properties": {
+                                        "Id": {
+                                            "type": "string"
+                                        },
+                                        "fileExtension": {
+                                            "type": "string"
+                                        },
+                                        "fileName": {
+                                            "type": "string"
+                                        },
+                                        "fileRef": {
+                                            "type": "string"
+                                        },
+                                        "fileRelativePath": {
+                                            "type": "string"
+                                        },
+                                        "listName": {
+                                            "type": "string"
+                                        },
+                                        "users": {
+                                            "items": {
+                                                "properties": {
+                                                    "GroupId": {
+                                                        "type": "integer"
+                                                    },
+                                                    "Id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "LoginName": {
+                                                        "type": "string"
+                                                    },
+                                                    "PrincipleType": {
+                                                        "type": "integer"
+                                                    },
+                                                    "Title": {
+                                                        "type": "string"
+                                                    },
+                                                    "UPN": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "Select_FileSharingInformation": {
+                            "runAfter": {
+                                "Parse_JSON_-_FileSharingInformation": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Select",
+                            "inputs": {
+                                "from": "@body('Parse_JSON_-_FileSharingInformation')?['d']?['permissionsInformation']?['principals']?['results']",
+                                "select": {
+                                    "UPN": "@item()?['principal']?['userPrincipalName']",
+                                    "groupId": "@item()?['principal']?['id']",
+                                    "loginName": "@item()?['principal']?['loginName']",
+                                    "name": "@item()?['principal']?['name']",
+                                    "principalType": "@item()?['principal']?['principalType']"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_azureblob_name'))]",
+                                "connectionName": "[parameters('connections_azureblob_name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azureblob_name'))]"
+                            },
+                            "azurequeues": {
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_azurequeues_name'))]",
+                                "connectionName": "[parameters('connections_azurequeues_name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azurequeues_name'))]"
+                            },
+                            "sharepointonline": {
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_sharepointonline_name'))]",
+                                "connectionName": "[parameters('connections_sharepointonline_name')]",
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_sharepointonline_name'))]"
+                            }
+                        }
+                    },
+                    "SharePointUrl": {
+                        "value": "[parameters('SharePointUrl')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                    }
+
                 }
             }
         }
