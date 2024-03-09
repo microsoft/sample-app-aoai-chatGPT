@@ -2,6 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "SharePointUrl": {
+            "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
+            "type": "String"
+        },
         "connections_sharepointonline_name": {
             "defaultValue": "sharepointonline",
             "type": "String"
@@ -20,6 +24,10 @@
         },
         "workflows_logicapptest720_name": {
             "defaultValue": "logicapptest720",
+            "type": "String"
+        },
+        "workflows_folder_expansion_logic_app_name": {
+            "defaultValue": "folder-expansion-logic-app",
             "type": "String"
         }
     },
@@ -277,7 +285,7 @@
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
-            "name": "[parameters('workflows_logicapptest720_name')]",
+            "name": "[parameters('workflows_folder_expansion_logic_app_name')]",
             "location": "[variables('location')]",
             "identity": {
                 "type": "UserAssigned",
@@ -300,22 +308,22 @@
                             "type": "Object"
                         },
                         "SharePointUrl": {
-                            "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
+                            "defaultValue": "[parameters('SharePointUrl')]",
                             "type": "String"
                         },
-                        "queueName": {
-                            "type": "string"
+                        "storageAccountName": {
+                            "type": "String"
                         }
                     },
                     "triggers": {
                         "When_there_are_messages_in_a_queue_(V2)": {
                             "recurrence": {
                                 "frequency": "Second",
-                                "interval": 3
+                                "interval": 1
                             },
                             "evaluatedRecurrence": {
                                 "frequency": "Second",
-                                "interval": 3
+                                "interval": 1
                             },
                             "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
                             "type": "ApiConnection",
@@ -326,12 +334,350 @@
                                     }
                                 },
                                 "method": "get",
-                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('queueName')))}/queues/@{encodeURIComponent('pending-folders')}/message_trigger"
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/message_trigger"
                             }
                         }
                     },
                     "actions": {
+                        "Delete_message_(V2)": {
+                            "runAfter": {
+                                "For_each_Item_in_the_list": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "delete",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages/@{encodeURIComponent(triggerBody()?['MessageId'])}",
+                                "queries": {
+                                    "popreceipt": "@triggerBody()?['PopReceipt']"
+                                }
+                            }
+                        },
+                        "For_Each_Group_Find_Users": {
+                            "foreach": "@body('SharepointGroups')",
+                            "actions": {
+                                "For_each": {
+                                    "foreach": "@body('GroupUsers')",
+                                    "actions": {
+                                        "Append_to_array_variable_2": {
+                                            "runAfter": {},
+                                            "type": "AppendToArrayVariable",
+                                            "inputs": {
+                                                "name": "UsersArray",
+                                                "value": "@items('For_each')"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "GroupUsers": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "GroupUsers": {
+                                    "runAfter": {
+                                        "GroupUsers_JSON": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Select",
+                                    "inputs": {
+                                        "from": "@body('GroupUsers_JSON')?['d']?['results']",
+                                        "select": {
+                                            "GroupId": "@items('For_Each_Group_Find_Users')?['ID']",
+                                            "Id": "@item()?['Id']",
+                                            "LoginName": "@item()?['LoginName']",
+                                            "PrincipleType": "@item()?['PrincipalType']",
+                                            "Title": "@item()?['Title']",
+                                            "UPN": "@item()?['UserPrincipalName']"
+                                        }
+                                    }
+                                },
+                                "GroupUsers_JSON": {
+                                    "runAfter": {
+                                        "Send_an_HTTP_request_to_SharePoint_4": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('Send_an_HTTP_request_to_SharePoint_4')",
+                                        "schema": {
+                                            "properties": {
+                                                "d": {
+                                                    "properties": {
+                                                        "results": {
+                                                            "items": {
+                                                                "properties": {
+                                                                    "Id": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "LoginName": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "PrincipalType": {
+                                                                        "type": "integer"
+                                                                    },
+                                                                    "Title": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "UserPrincipalName": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "Send_an_HTTP_request_to_SharePoint_4": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "method": "GET",
+                                            "uri": "_api/Web/SiteGroups/GetById(@{items('For_Each_Group_Find_Users')?['ID']})/Users"
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/httprequest"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_UsersArray": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "For_each_Item_in_the_list": {
+                            "foreach": "@body('Parse_JSON')?['ListData']?['Row']",
+                            "actions": {
+                                "Condition": {
+                                    "actions": {
+                                        "Insert_folder_into_pending-folders_queue": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": "@{substring(items('For_each_Item_in_the_list')?['FileRef'],indexOf(items('For_each_Item_in_the_list')?['FileRef'], '/Shared documents'))}",
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "else": {
+                                        "actions": {
+                                            "Insert_file_into_pending-files_queue": {
+                                                "runAfter": {},
+                                                "type": "ApiConnection",
+                                                "inputs": {
+                                                    "body": "{\n\"Id\": \"@{items('For_each_Item_in_the_list')?['ID']}\",\n\"fileRef\": \"@{items('For_each_Item_in_the_list')?['FileRef']}\",\n\"fileRelativePath\": \"@{split(slice(items('For_each_Item_in_the_list')?['FileRef'],0,lastIndexOf(items('For_each_Item_in_the_list')?['FileRef'],items('For_each_Item_in_the_list')?['FileLeafRef'])),'/Shared Documents')[1]}\",\n\"fileName\": \"@{items('For_each_Item_in_the_list')?['FileLeafRef']}\",\n\"fileExtension\": \"@{items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']}\",\n\"listName\":\"@{body('Parse_JSON')?['listName']}\",\n\"users\": @{variables('UsersArray')}\n}",
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-files')}/messages"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@items('For_each_Item_in_the_list')?['FSObjType']",
+                                                    "1"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                }
+                            },
+                            "runAfter": {
+                                "Set_Current_ListName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Groups_JSON": {
+                            "runAfter": {
+                                "Send_an_HTTP_request_to_SharePoint_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('Send_an_HTTP_request_to_SharePoint_2')",
+                                "schema": {
+                                    "properties": {
+                                        "d": {
+                                            "properties": {
+                                                "results": {
+                                                    "items": {
+                                                        "properties": {
+                                                            "Id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "LoginName": {
+                                                                "type": "string"
+                                                            },
+                                                            "PrincipalType": {
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "Id",
+                                                            "LoginName",
+                                                            "PrincipalType"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "Initialize_UsersArray": {
+                            "runAfter": {
+                                "SharepointGroups": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "UsersArray",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {
+                                "For_Each_Group_Find_Users": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "SharePointEntryPoint",
+                                        "type": "string",
+                                        "value": "@{split(parameters('SharePointUrl'),'.com')[1]}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_JSON": {
+                            "runAfter": {
+                                "Send_an_HTTP_request_to_SharePoint": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@body('Send_an_HTTP_request_to_SharePoint')",
+                                "schema": {
+                                    "properties": {
+                                        "ListData": {
+                                            "properties": {
+                                                "Row": {
+                                                    "items": {
+                                                        "properties": {
+                                                            "FSObjType": {
+                                                                "type": "string"
+                                                            },
+                                                            "FileLeafRef": {
+                                                                "type": "string"
+                                                            },
+                                                            "FileLeafRef.Suffix": {
+                                                                "type": "string"
+                                                            },
+                                                            "FileRef": {
+                                                                "type": "string"
+                                                            },
+                                                            "ID": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "listName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
                         "Send_an_HTTP_request_to_SharePoint": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "body": "{\n\"parameters\":{\n\"RenderOptions\":1480455,\"AllowMultipleValueFilterForTaxonomyFields\":true,\"AddRequiredFields\":true,\"RequireFolderColoringFields\":true}}",
+                                    "method": "POST",
+                                    "uri": "@{concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27',encodeUriComponent(variables('SharePointEntryPoint')),encodeUriComponent('/Shared Documents'),'%27&RootFolder=',encodeUriComponent(variables('SharePointEntryPoint')), encodeUriComponent(triggerBody()?['MessageText']))}"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/httprequest"
+                            }
+                        },
+                        "Send_an_HTTP_request_to_SharePoint_2": {
                             "runAfter": {},
                             "type": "ApiConnection",
                             "inputs": {
@@ -346,6 +692,31 @@
                                 },
                                 "method": "post",
                                 "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('SharePointUrl')))}/httprequest"
+                            }
+                        },
+                        "Set_Current_ListName": {
+                            "runAfter": {
+                                "Parse_JSON": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Compose",
+                            "inputs": "@replace(replace(body('Parse_JSON')?['listName'],'{',''),'}','')"
+                        },
+                        "SharepointGroups": {
+                            "runAfter": {
+                                "Groups_JSON": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Select",
+                            "inputs": {
+                                "from": "@body('Groups_JSON')?['d']?['results']",
+                                "select": {
+                                    "ID": "@item()?['Id']",
+                                    "LoginName": "@item()?['LoginName']",
+                                    "PrincipleType": "@item()?['PrincipalType']"
+                                }
                             }
                         }
                     },
@@ -372,7 +743,10 @@
                             }
                         }
                     },
-                    "queueName": {
+                    "SharePointUrl": {
+                                "value": "[parameters('SharePointUrl')]"
+                    },
+                    "storageAccountName": {
                         "value": "[parameters('storageAccounts_armblobqueue_name')]"
                     }
                 }
