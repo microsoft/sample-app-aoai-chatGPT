@@ -6,7 +6,7 @@ This folder contains the ARM template of a sample Logic App that can sync your S
 
 Click the following button to deploy the sample Logic App to your Azure Subscription.
 
-[![Deploy to Azure](https://github.com/MicrosoftDocs/azure-docs/raw/main/articles/media/template-deployments/deploy-to-azure.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fquickstarts%2Fmicrosoft.logic%2Flogic-app-create%2Fazuredeploy.json)
+[![Deploy to Azure](https://github.com/MicrosoftDocs/azure-docs/raw/main/articles/media/template-deployments/deploy-to-azure.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fblob%2Ffshakerin%2Fsp%2Fpland%2Fsharepoint2blob%2Fsharepoint2blobarm.json/uiFormDefinitionUri/https%3A%2F%2Fgithub.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fblob%2Ffshakerin%2Fsp%2Fpland%2Fsharepoint2blob%2FcreateUIDefinition.json)
 
 
 
