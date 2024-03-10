@@ -962,7 +962,7 @@
                                     "type": "SetVariable",
                                     "inputs": {
                                         "name": "BlobPermittedIds",
-                                        "value": "@split(outputs('GetBlobMetadata')['headers']?['x-ms-meta-permittedIds'],',')"
+                                        "value": "@split(replace(substring(outputs('GetBlobMetadata')['headers']?['x-ms-meta-permittedIds'],1),']',''),',')"
                                     }
                                 }
                             },
