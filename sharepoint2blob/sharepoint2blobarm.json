@@ -6,32 +6,8 @@
             "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
             "type": "String"
         },
-        "connections_sharepointonline_name": {
-            "defaultValue": "sharepointonline",
-            "type": "String"
-        },
         "storageAccounts_armblobqueue_name": {
             "defaultValue": "armqueue2",
-            "type": "String"
-        },
-        "userAssignedIdentities_sharepoint2blob_mi_name": {
-            "defaultValue": "sharepoint2blob-mi",
-            "type": "String"
-        },
-        "connections_azurequeues_name": {
-            "defaultValue": "azurequeues",
-            "type": "String"
-        },
-        "connections_azureblob_name": {
-            "defaultValue": "azureblob",
-            "type": "String"
-        },
-        "workflows_folder_expansion_logic_app_name": {
-            "defaultValue": "folder-expansion-logic-app",
-            "type": "String"
-        },
-        "workflows_file_processing_logic_app_name": {
-            "defaultValue": "file-processing-logic-app",
             "type": "String"
         }
     },
@@ -40,13 +16,19 @@
         "storageBlobContributorRoleId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
         "location": "[resourceGroup().location]",
         "queueRoleGuidId": "[guid(uniqueString('queue'))]",
-        "blobRoleGuidId": "[guid(uniqueString('blob'))]"
+        "blobRoleGuidId": "[guid(uniqueString('blob'))]",
+        "connections_sharepointonline_name": "sharepointonline",
+        "userAssignedIdentities_sharepoint2blob_mi_name": "sharepoint2blob-mi",
+        "connections_azurequeues_name": "azurequeues",
+        "connections_azureblob_name": "azureblob",
+        "workflows_folder_expansion_logic_app_name": "folder-expansion-logic-app",
+        "workflows_file_processing_logic_app_name": "file-processing-logic-app"
     },
     "resources": [
         {
             "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
             "apiVersion": "2023-07-31-preview",
-            "name": "[parameters('userAssignedIdentities_sharepoint2blob_mi_name')]",
+            "name": "[variables('userAssignedIdentities_sharepoint2blob_mi_name')]",
             "location": "[variables('location')]"
         },
         {
@@ -207,7 +189,7 @@
                 "_comment1": "Role definition IDs from: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage",
                 "roleDefinitionId": "[variables('queueContributorRoleId')]",
                 "_comment2": "Something like: /subscriptions/my-subscription/resourceGroups/my-other-resource-group/providers/Microsoft.ManagedIdentity/userAssignedIdentities/myManagedIdentity",
-                "principalId": "[reference(parameters('userAssignedIdentities_sharepoint2blob_mi_name'), '2018-11-30').principalId]",
+                "principalId": "[reference(variables('userAssignedIdentities_sharepoint2blob_mi_name'), '2018-11-30').principalId]",
                 "principalType": "ServicePrincipal"
             },
             "dependsOn": [
@@ -222,7 +204,7 @@
                 "_comment1": "Role definition IDs from: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage",
                 "roleDefinitionId": "[variables('storageBlobContributorRoleId')]",
                 "_comment2": "Something like: /subscriptions/my-subscription/resourceGroups/my-other-resource-group/providers/Microsoft.ManagedIdentity/userAssignedIdentities/myManagedIdentity",
-                "principalId": "[reference(parameters('userAssignedIdentities_sharepoint2blob_mi_name'), '2018-11-30').principalId]",
+                "principalId": "[reference(variables('userAssignedIdentities_sharepoint2blob_mi_name'), '2018-11-30').principalId]",
                 "principalType": "ServicePrincipal"
             },
             "dependsOn": [
@@ -232,7 +214,7 @@
         {
             "type": "Microsoft.Web/connections",
             "apiVersion": "2016-06-01",
-            "name": "[parameters('connections_azurequeues_name')]",
+            "name": "[variables('connections_azurequeues_name')]",
             "location": "[variables('location')]",
             "kind": "V1",
             "properties": {
@@ -245,17 +227,17 @@
                     "values": {}
                 },
                 "api": {
-                    "name": "[parameters('connections_azurequeues_name')]",
+                    "name": "[variables('connections_azurequeues_name')]",
                     "displayName": "Azure Queues",
                     "description": "Azure Queue storage provides cloud messaging between application components. Queue storage also supports managing asynchronous tasks and building process work flows.",
-                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1680/1.0.1680.3652/', parameters('connections_azurequeues_name'), '/icon.png')]",
+                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1680/1.0.1680.3652/', variables('connections_azurequeues_name'), '/icon.png')]",
                     "brandColor": "#0072C6",
-                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', parameters('connections_azurequeues_name'))]",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', variables('connections_azurequeues_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/', parameters('connections_azurequeues_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/', variables('connections_azurequeues_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
@@ -268,7 +250,7 @@
         {
             "type": "Microsoft.Web/connections",
             "apiVersion": "2016-06-01",
-            "name": "[parameters('connections_azureblob_name')]",
+            "name": "[variables('connections_azureblob_name')]",
             "location": "[variables('location')]",
             "kind": "V1",
             "properties": {
@@ -281,16 +263,16 @@
                     "values": {}
                 },
                 "api": {
-                    "name": "[parameters('connections_azureblob_name')]",
+                    "name": "[variables('connections_azureblob_name')]",
                     "displayName": "Azure Blob",
-                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1680/1.0.1680.3652/', parameters('connections_azureblob_name'), '/icon.png')]",
+                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1680/1.0.1680.3652/', variables('connections_azureblob_name'), '/icon.png')]",
                     "brandColor": "#0072C6",
-                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', parameters('connections_azureblob_name'))]",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', variables('connections_azureblob_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": [
                     {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/', parameters('connections_azureblob_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
+                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/', variables('connections_azureblob_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
                         "method": "get"
                     }
                 ]
@@ -303,19 +285,19 @@
         {
             "type": "Microsoft.Web/connections",
             "apiVersion": "2016-06-01",
-            "name": "[parameters('connections_sharepointonline_name')]",
+            "name": "[variables('connections_sharepointonline_name')]",
             "location": "[variables('location')]",
             "kind": "V1",
             "properties": {
                 "customParameterValues": {},
                 "nonSecretParameterValues": {},
                 "api": {
-                    "name": "[parameters('connections_sharepointonline_name')]",
+                    "name": "[variables('connections_sharepointonline_name')]",
                     "displayName": "SharePoint",
                     "description": "SharePoint helps organizations share and collaborate with colleagues, partners, and customers. You can connect to SharePoint Online or to an on-premises SharePoint 2013 or 2016 farm using the On-Premises Data Gateway to manage documents and list items.",
-                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1676/1.0.1676.3617/', parameters('connections_sharepointonline_name'), '/icon.png')]",
+                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1676/1.0.1676.3617/', variables('connections_sharepointonline_name'), '/icon.png')]",
                     "brandColor": "#036C70",
-                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', parameters('connections_sharepointonline_name'))]",
+                    "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/', variables('connections_sharepointonline_name'))]",
                     "type": "Microsoft.Web/locations/managedApis"
                 },
                 "testLinks": []
@@ -324,17 +306,17 @@
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
-            "name": "[parameters('workflows_folder_expansion_logic_app_name')]",
+            "name": "[variables('workflows_folder_expansion_logic_app_name')]",
             "location": "[variables('location')]",
             "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
+                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('connections_azurequeues_name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_sharepointonline_name'))]"
             ],
             "properties": {
                 "state": "Enabled",
@@ -765,20 +747,20 @@
                     "$connections": {
                         "value": {
                             "azurequeues": {
-                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_azurequeues_name'))]",
-                                "connectionName": "[parameters('connections_azurequeues_name')]",
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_azurequeues_name'))]",
+                                "connectionName": "[variables('connections_azurequeues_name')]",
                                 "connectionProperties": {
                                     "authentication": {
-                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                         "type": "ManagedServiceIdentity"
                                     }
                                 },
-                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azurequeues_name'))]"
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_azurequeues_name'))]"
                             },
                             "sharepointonline": {
-                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_sharepointonline_name'))]",
-                                "connectionName": "[parameters('connections_sharepointonline_name')]",
-                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_sharepointonline_name'))]"
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_sharepointonline_name'))]",
+                                "connectionName": "[variables('connections_sharepointonline_name')]",
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_sharepointonline_name'))]"
                             }
                         }
                     },
@@ -794,18 +776,18 @@
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
-            "name": "[parameters('workflows_file_processing_logic_app_name')]",
+            "name": "[variables('workflows_file_processing_logic_app_name')]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('connections_azureblob_name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('connections_azurequeues_name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_azureblob_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_sharepointonline_name'))]"
             ],
             "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
+                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
                 }
             },
             "properties": {
@@ -940,14 +922,14 @@
                                             "inputs": {
                                                 "authentication": {
                                                     "audience": "https://storage.azure.com/",
-                                                     "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                                     "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                                     "type": "ManagedServiceIdentity"
                                                 },
                                                 "headers": {
                                                     "x-ms-blob-type": "BlockBlob",
                                                     "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
                                                     "x-ms-meta-lastmodified": "@body('Get_file_metadata_2')?['LastModified']",
-                                                    "x-ms-meta-permittedIds": "[[@body('Join')]",
+                                                    "x-ms-meta-permittedIds": "[@body('Join')]",
                                                     "x-ms-version": "2019-02-02"
                                                 },
                                                 "method": "PUT",
@@ -1048,7 +1030,7 @@
                                         "inputs": {
                                             "authentication": {
                                                 "audience": "https://storage.azure.com/",
-                                                "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                                "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                                 "type": "ManagedServiceIdentity"
                                             },
                                             "headers": {
@@ -1181,7 +1163,7 @@
                             "inputs": {
                                 "authentication": {
                                     "audience": "https://storage.azure.com/",
-                                    "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                    "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                     "type": "ManagedServiceIdentity"
                                 },
                                 "headers": {
@@ -1446,31 +1428,31 @@
                     "$connections": {
                         "value": {
                             "azureblob": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_azureblob_name'))]",
-                                "connectionName": "[parameters('connections_azureblob_name')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', variables('connections_azureblob_name'))]",
+                                "connectionName": "[variables('connections_azureblob_name')]",
                                 "connectionProperties": {
                                     "authentication": {
-                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                         "type": "ManagedServiceIdentity"
                                     }
                                 },
-                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azureblob_name'))]"
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_azureblob_name'))]"
                             },
                             "azurequeues": {
-                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_azurequeues_name'))]",
-                                "connectionName": "[parameters('connections_azurequeues_name')]",
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_azurequeues_name'))]",
+                                "connectionName": "[variables('connections_azurequeues_name')]",
                                 "connectionProperties": {
                                     "authentication": {
-                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',parameters('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
                                         "type": "ManagedServiceIdentity"
                                     }
                                 },
-                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_azurequeues_name'))]"
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_azurequeues_name'))]"
                             },
                             "sharepointonline": {
-                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',parameters('connections_sharepointonline_name'))]",
-                                "connectionName": "[parameters('connections_sharepointonline_name')]",
-                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',parameters('connections_sharepointonline_name'))]"
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_sharepointonline_name'))]",
+                                "connectionName": "[variables('connections_sharepointonline_name')]",
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_sharepointonline_name'))]"
                             }
                         }
                     },
