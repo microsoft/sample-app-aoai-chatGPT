@@ -516,8 +516,6 @@
                                     "runAfter": {},
                                     "else": {
                                         "actions": {
-                                            "Condition_file_extension": {
-                                                "actions": {
                                             "Insert_file_into_pending-files_queue": {
                                                 "runAfter": {},
                                                 "type": "ApiConnection",
@@ -531,38 +529,6 @@
                                                     "method": "post",
                                                     "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-files')}/messages"
                                                 }
-                                            }
-                                                },
-                                                "runAfter": {},
-                                                "expression": {
-                                                    "or": [
-                                                        {
-                                                            "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
-                                                                "pdf"
-                                                            ]
-                                                        },
-                                                        {
-                                                            "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
-                                                                "docx"
-                                                            ]
-                                                        },
-                                                        {
-                                                            "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
-                                                                "pptx"
-                                                            ]
-                                                        },
-                                                        {
-                                                            "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
-                                                                "txt"
-                                                            ]
-                                                        }
-                                                    ]
-                                                },
-                                                "type": "If"
                                             }
                                         }
                                     },
