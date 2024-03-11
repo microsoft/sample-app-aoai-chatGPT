@@ -42,7 +42,7 @@ export class AudioService {
             console.error('Speech was cancelled. Synthesizer cannot be retrieved.');
             return;
         }
-        if(answer.message_id === undefined || answer.answer === undefined) {
+        if (answer.message_id === undefined || answer.answer === undefined) {
             return;
         }
         if (this.currentSpokenText.message_id === answer.message_id && this.currentSpokenText.text === answer.answer) {
@@ -55,7 +55,10 @@ export class AudioService {
         if (answer.message_id === this.currentSpokenText.message_id) {
             // texttospeak will be equal to answer.answer string minus the currentSpokenText.text
             textToSpeak = answer.answer.replace(this.currentSpokenText.text || "", "");
+        } else {
+            textToSpeak = answer.answer;
         }
+
         if (answer.message_id !== this.currentSpokenText.message_id) {
             this.createNewSynthesiser();
         }
@@ -65,8 +68,7 @@ export class AudioService {
         };
         // remove markup from text
         textToSpeak = textToSpeak.replace(/<[^>]*>?/gm, '');
-        // get audio data 
-
+        
         this.synthesiser.speakTextAsync(textToSpeak);
     }
 
@@ -85,7 +87,11 @@ export class AudioService {
     }
 
     public stopAudioPlayback = (): void => {
-        this.audioPlayer.internalAudio.pause();
+        try {
+            this.audioPlayer.internalAudio.pause();
+        } catch (error) {
+            console.error('Error stopping audio playback:', error);
+        }
     }
 
     private createNewSynthesiser = (): void => {
@@ -101,10 +107,15 @@ export class AudioService {
 
     public toggleMute = (): void => {
         this.audioMuted = !this.audioMuted;
-        if(this.audioMuted) {
-            this.audioPlayer.mute();
-        } else {
-            this.audioPlayer.unmute();
+        try {
+            if (this.audioMuted) {
+                this.audioPlayer.mute();
+            } else {
+                this.audioPlayer.unmute();
+            }
+        } catch (error) {
+            console.error('Error toggling audio mute:', error);
+
         }
     }
 }

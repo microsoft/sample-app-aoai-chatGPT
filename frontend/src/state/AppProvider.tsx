@@ -30,7 +30,8 @@ export type Action =
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
     | { type: 'FETCH_FRONTEND_SETTINGS', payload: FrontendSettings | null }  // API Call
     | { type: 'SET_FEEDBACK_STATE'; payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral } }
-    | { type: 'GET_FEEDBACK_STATE'; payload: string };
+    | { type: 'GET_FEEDBACK_STATE'; payload: string }
+    | { type: 'SET_AUDIO_SERVICE'; payload: AudioService };
 
 
 const initialState: AppState = {
@@ -123,6 +124,15 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
         }
         getFrontendSettings();
     }, []);
+
+    // use effect to check if audio is enabled and then create service and set state
+    useEffect(() => {
+        // check frontend settings if audio is enabled and set state
+        if (state.frontendSettings?.speech_enabled) {
+            dispatch({ type: 'SET_AUDIO_SERVICE', payload: new AudioService() });
+        }
+    }
+    , [state.frontendSettings?.speech_enabled]);
 
     return (
         <AppStateContext.Provider value={{ state, dispatch }}>

@@ -226,7 +226,6 @@ export const Answer = ({
                     {
                         SPEECH_ENABLED && isLastAnswer &&  <SpeakText answer={answer} /> 
                     }
-                   
                 </div>
                 <div className={styles.answerFooter}>
                     {!!parsedAnswer.citations.length && (

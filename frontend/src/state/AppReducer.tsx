@@ -74,7 +74,12 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
                     ...state.feedbackState,
                     [action.payload.answerId]: action.payload.feedback,
                 },
-            };    
+            };   
+        case 'SET_AUDIO_SERVICE':
+            return {
+                ...state,
+                audioService: action.payload
+            };
         default:
             return state;
       }

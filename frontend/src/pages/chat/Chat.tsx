@@ -418,6 +418,7 @@ const Chat = () => {
     }
 
     const clearChat = async () => {
+        appStateContext?.state.audioService?.stopAudioPlayback();
         setClearingChat(true)
         if (appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB) {
             let response = await historyClear(appStateContext?.state.currentChat.id)
@@ -439,6 +440,7 @@ const Chat = () => {
     };
 
     const newChat = () => {
+        appStateContext?.state.audioService?.stopAudioPlayback();
         setProcessMessages(messageStatus.Processing)
         setMessages([])
         setIsCitationPanelOpen(false);
@@ -557,7 +559,6 @@ const Chat = () => {
     }
 
     const toggleAudioMute = () => {
-        console.log(audioMuted);
         setAudioMuted(!audioMuted);
         appStateContext?.state.audioService?.toggleMute();
     }
