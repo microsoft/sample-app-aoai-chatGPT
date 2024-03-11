@@ -15,8 +15,8 @@
         "queueContributorRoleId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
         "storageBlobContributorRoleId": "[concat(subscription().Id, '/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
         "location": "[resourceGroup().location]",
-        "queueRoleGuidId": "[guid(uniqueString('queue'))]",
-        "blobRoleGuidId": "[guid(uniqueString('blob'))]",
+        "queueRoleGuidId": "[guid(uniqueString(concat(resourceGroup().id,'queue')))]",
+        "blobRoleGuidId": "[guid(uniqueString(concat(resourceGroup().id,'blob')))]",
         "connections_sharepointonline_name": "sharepointonline",
         "userAssignedIdentities_sharepoint2blob_mi_name": "sharepoint2blob-mi",
         "connections_azurequeues_name": "azurequeues",
@@ -315,6 +315,8 @@
                 }
             },
             "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_azureblob_name'))]",
                 "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]",
                 "[resourceId('Microsoft.Web/connections', variables('connections_sharepointonline_name'))]"
             ],
@@ -360,9 +362,152 @@
                         }
                     },
                     "actions": {
+                        "Condition_3": {
+                            "actions": {
+                                "For_each_blob_file": {
+                                    "foreach": "@body('Lists_blobs_(V2)')?['value']",
+                                    "actions": {
+                                        "Condition_-_is_folder": {
+                                            "actions": {
+                                                "Condition_2": {
+                                                    "actions": {
+                                                        "For_each_2": {
+                                                            "foreach": "@body('Lists_Folder_blobs')?['value']",
+                                                            "actions": {
+                                                                "Delete_blob_(V2)": {
+                                                                    "runAfter": {},
+                                                                    "type": "ApiConnection",
+                                                                    "inputs": {
+                                                                        "headers": {
+                                                                            "SkipDeleteIfFileNotFoundOnServer": false
+                                                                        },
+                                                                        "host": {
+                                                                            "connection": {
+                                                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                                            }
+                                                                        },
+                                                                        "method": "delete",
+                                                                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/files/@{encodeURIComponent(encodeURIComponent(items('For_each_2')?['Path']))}"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "Lists_Folder_blobs": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Foreach"
+                                                        },
+                                                        "Lists_Folder_blobs": {
+                                                            "runAfter": {},
+                                                            "type": "ApiConnection",
+                                                            "inputs": {
+                                                                "host": {
+                                                                    "connection": {
+                                                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                                    }
+                                                                },
+                                                                "method": "get",
+                                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/foldersV2/@{encodeURIComponent(encodeURIComponent(items('For_each_blob_file')?['Path']))}",
+                                                                "queries": {
+                                                                    "nextPageMarker": "",
+                                                                    "useFlatListing": false
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {},
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "not": {
+                                                                    "contains": [
+                                                                        "@body('Join_file_names_in_FileNameList')",
+                                                                        "@replace(items('For_each_blob_file')?['Name'],'/','')"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                }
+                                            },
+                                            "runAfter": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Condition_4": {
+                                                        "actions": {
+                                                            "Delete_blob_(V2)_2": {
+                                                                "runAfter": {},
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "headers": {
+                                                                        "SkipDeleteIfFileNotFoundOnServer": false
+                                                                    },
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                                        }
+                                                                    },
+                                                                    "method": "delete",
+                                                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/files/@{encodeURIComponent(encodeURIComponent(items('For_each_blob_file')?['Path']))}"
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {},
+                                                        "expression": {
+                                                            "and": [
+                                                                {
+                                                                    "not": {
+                                                                        "contains": [
+                                                                            "@body('Join_file_names_in_FileNameList')",
+                                                                            "@items('For_each_blob_file')?['Name']"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        "type": "If"
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@items('For_each_blob_file')?['IsFolder']",
+                                                            true
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "type": "Foreach"
+                                }
+                            },
+                            "runAfter": {
+                                "Join_file_names_in_FileNameList": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@int(outputs('Lists_blobs_(V2)')?['statusCode'])",
+                                            200
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
                         "Delete_message_(V2)": {
                             "runAfter": {
-                                "For_each_Item_in_the_list": [
+                                "Condition_3": [
                                     "Succeeded"
                                 ]
                             },
@@ -496,6 +641,18 @@
                         "For_each_Item_in_the_list": {
                             "foreach": "@body('Parse_JSON')?['ListData']?['Row']",
                             "actions": {
+                                "Append_to_FileNameList": {
+                                    "runAfter": {
+                                        "Condition": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "AppendToArrayVariable",
+                                    "inputs": {
+                                        "name": "FileNameList",
+                                        "value": "@items('For_each_Item_in_the_list')?['FileLeafRef']"
+                                    }
+                                },
                                 "Condition": {
                                     "actions": {
                                         "Insert_folder_into_pending-folders_queue": {
@@ -580,7 +737,7 @@
                                 }
                             },
                             "runAfter": {
-                                "Set_Current_ListName": [
+                                "Initialize_variable_FileNameList": [
                                     "Succeeded"
                                 ]
                             },
@@ -661,6 +818,59 @@
                                         "value": "@{split(parameters('SharePointUrl'),'.com')[1]}"
                                     }
                                 ]
+                            }
+                        },
+                        "Initialize_variable_FileNameList": {
+                            "runAfter": {
+                                "Set_Current_ListName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "FileNameList",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        },
+                        "Join_file_names_in_FileNameList": {
+                            "runAfter": {
+                                "For_each_Item_in_the_list": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Join",
+                            "inputs": {
+                                "from": "@variables('FileNameList')",
+                                "joinWith": ","
+                            }
+                        },
+                        "Lists_blobs_(V2)": {
+                            "runAfter": {
+                                "Parse_JSON": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "metadata": {
+                                "JTJmc2hhcmVwb2ludA==": "/sharepoint"
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/foldersV2/@{encodeURIComponent(encodeURIComponent(replace(toLower(triggerBody()?['MessageText']),'/shared documents', '/sharepoint')))}",
+                                "queries": {
+                                    "nextPageMarker": "",
+                                    "useFlatListing": false
+                                }
                             }
                         },
                         "Parse_JSON": {
@@ -751,8 +961,11 @@
                         },
                         "Set_Current_ListName": {
                             "runAfter": {
-                                "Parse_JSON": [
-                                    "Succeeded"
+                                "Lists_blobs_(V2)": [
+                                    "Succeeded",
+                                    "TimedOut",
+                                    "Skipped",
+                                    "Failed"
                                 ]
                             },
                             "type": "Compose",
@@ -780,6 +993,17 @@
                 "parameters": {
                     "$connections": {
                         "value": {
+                            "azureblob": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', variables('connections_azureblob_name'))]",
+                                "connectionName": "[variables('connections_azureblob_name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_azureblob_name'))]"
+                            },
                             "azurequeues": {
                                 "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_azurequeues_name'))]",
                                 "connectionName": "[variables('connections_azurequeues_name')]",
@@ -1496,7 +1720,6 @@
                     "storageAccountName": {
                         "value": "[parameters('storageAccounts_armblobqueue_name')]"
                     }
-
                 }
             }
         }
