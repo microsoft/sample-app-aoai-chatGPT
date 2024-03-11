@@ -17,7 +17,7 @@ export class AudioService {
         message_id: string | undefined;
         text: string | undefined;
     } = {
-            message_id: "genenerating",
+            message_id: "",
             text: undefined
         };
 
