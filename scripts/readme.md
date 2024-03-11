@@ -21,7 +21,8 @@ Follow the instructions in this section to prepare your data locally. This is ea
         "token_overlap": 128 // number of tokens to overlap between chunks
         "semantic_config_name": "default",
         "language": "en" // setting to set language of your documents. Change if your documents are not in English. Look in data_preparation.py for SUPPORTED_LANGUAGE_CODES,
-        "vector_config_name": "default" // used if adding vectors to index
+        "vector_config_name": "default" // used if adding vectors to index,
+        "vector_dim": 1536 // Only applicable for ada-003 models
     }
 ]
 ```
@@ -121,6 +122,11 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 - Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
 
       `python data_preparation.py --config config.json --embedding-model-endpoint "<embedding endpoint>"`
+
+#### Reduced dimension Ingestion
+You can set `vector_dim` setting in the config.json to a value like 256 or 512 to reduce the dimension of the vectors. This can be useful if you have a large number of documents and want to reduce the size of the index. 
+The default value is te maximum dimension of the model, which is 1536 for ada-003-small and 3072 for ada-003-large.
+Please note that this is applicable only for ada-003 models.
 
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 

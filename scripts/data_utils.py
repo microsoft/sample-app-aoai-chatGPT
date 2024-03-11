@@ -632,8 +632,21 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
+import numpy as np
+def normalize_l2(x):
+    x = np.array(x)
+    if x.ndim == 1:
+        norm = np.linalg.norm(x)
+        if norm == 0:
+            return x
+        return x / norm
+    else:
+        norm = np.linalg.norm(x, 2, axis=1, keepdims=True)
+        return np.where(norm == 0, x, x / norm)
 
-def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
+def get_embedding(text, embedding_model_endpoint=None,
+                  embedding_model_key=None, azure_credential=None,
+                  vector_dim=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
@@ -654,9 +667,20 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
 
         client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
         embeddings = client.embeddings.create(model=deployment_id, input=text)
-        return embeddings.dict()['data'][0]['embedding']
+        if vector_dim:
+            if not isinstance(vector_dim, int):
+                print(f"vector_dim should be an integer, but got {vector_dim}")
+                raise Exception("vector_dim should be an integer")
+            else:
+                cut_dim = embeddings.data[0].embedding[:vector_dim]
+                norm_dim = normalize_l2(cut_dim).tolist()
+                return norm_dim
+        else:
+            return embeddings.dict()['data'][0]['embedding']
+
 
     except Exception as e:
+        print(e)
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
 
 
@@ -713,7 +737,8 @@ def chunk_content(
     use_layout = False,
     add_embeddings = False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    vector_dim = None
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -754,7 +779,9 @@ def chunk_content(
                 if add_embeddings:
                     for _ in range(RETRY_COUNT):
                         try:
-                            doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
+                            doc.contentVector = get_embedding(chunk, azure_credential=azure_credential,
+                                                              embedding_model_endpoint=embedding_endpoint,
+                                                              vector_dim=vector_dim)
                             break
                         except:
                             time.sleep(30)
@@ -803,7 +830,8 @@ def chunk_file(
     use_layout = False,
     add_embeddings=False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    vector_dim = None
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -851,7 +879,8 @@ def chunk_file(
         use_layout=use_layout,
         add_embeddings=add_embeddings,
         azure_credential=azure_credential,
-        embedding_endpoint=embedding_endpoint
+        embedding_endpoint=embedding_endpoint,
+        vector_dim=vector_dim
     )
 
 
@@ -868,7 +897,8 @@ def process_file(
         use_layout = False,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        vector_dim = None
     ):
 
     if not form_recognizer_client:
@@ -894,7 +924,8 @@ def process_file(
             use_layout=use_layout,
             add_embeddings=add_embeddings,
             azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            vector_dim=vector_dim
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
@@ -922,7 +953,8 @@ def chunk_blob_container(
         njobs=4,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        vector_dim = None
 ):
     with tempfile.TemporaryDirectory() as local_data_folder:
         print(f'Downloading {blob_url} to local folder')
@@ -942,7 +974,8 @@ def chunk_blob_container(
             njobs=njobs,
             add_embeddings=add_embeddings,
             azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            vector_dim=vector_dim
         )
 
     return result
@@ -961,7 +994,8 @@ def chunk_directory(
         njobs=4,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        vector_dim = None
 ):
     """
     Chunks the given directory recursively
@@ -1003,7 +1037,8 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint,
+                                    vector_dim=vector_dim)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -1019,7 +1054,7 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint, vector_dim=vector_dim)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:
