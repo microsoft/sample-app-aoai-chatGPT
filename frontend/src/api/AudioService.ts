@@ -11,6 +11,7 @@ export class AudioService {
     private synthesiserAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
     private speechConfig: SpeechConfig | undefined;
     private speechToken: SpeechAuth | undefined;
+    public audioMuted = false;
 
     private currentSpokenText: {
         message_id: string | undefined;
@@ -56,8 +57,6 @@ export class AudioService {
             textToSpeak = answer.answer.replace(this.currentSpokenText.text || "", "");
         }
         if (answer.message_id !== this.currentSpokenText.message_id) {
-            console.log("New synthesiser! New message IDs:", answer.message_id, " , ",this.currentSpokenText.message_id);
-            console.log("ANSWER", answer.answer);
             this.createNewSynthesiser();
         }
         this.currentSpokenText = {
@@ -97,6 +96,15 @@ export class AudioService {
         this.synthesiserAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
         if (this.speechConfig) {
             this.synthesiser = new SpeechSynthesizer(this.speechConfig, this.synthesiserAudioConfig);
+        }
+    }
+
+    public toggleMute = (): void => {
+        this.audioMuted = !this.audioMuted;
+        if(this.audioMuted) {
+            this.audioPlayer.mute();
+        } else {
+            this.audioPlayer.unmute();
         }
     }
 }

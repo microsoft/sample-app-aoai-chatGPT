@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
+import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular, Speaker024Regular, SpeakerMuteRegular, Speaker224Regular } from "@fluentui/react-icons";
 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
@@ -56,6 +56,7 @@ const Chat = () => {
     const [clearingChat, setClearingChat] = useState<boolean>(false);
     const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+    const [audioMuted, setAudioMuted] = useState<boolean>(false);
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
@@ -555,6 +556,12 @@ const Chat = () => {
         appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
     }
 
+    const toggleAudioMute = () => {
+        console.log(audioMuted);
+        setAudioMuted(!audioMuted);
+        appStateContext?.state.audioService?.toggleMute();
+    }
+
     useEffect(() => {
         if (appStateContext?.state.chatHistoryLoadingState !== ChatHistoryLoadingState.Loading) {
             try {
@@ -676,6 +683,21 @@ const Chat = () => {
                                         >
                                             Stop generating
                                         </Button>
+                                    )
+                                }
+                                {
+                                    // If audio is enabled, show speaker icon for mute/unmute
+                                    SPEECH_ENABLED && (
+                                        <Button
+                                            appearance="transparent"
+                                            size="large"
+                                            icon={audioMuted ? <SpeakerMuteRegular /> : <Speaker224Regular />}
+                                            aria-label={audioMuted ? "Unmute" : "Mute"}
+                                            tabIndex={0}
+                                            onClick={toggleAudioMute}
+                                            onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleAudioMute() : null}
+                                            title={audioMuted ? "Unmute" : "Mute"}
+                                        />
                                     )
                                 }
                             </div>

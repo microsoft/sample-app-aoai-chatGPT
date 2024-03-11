@@ -57,6 +57,8 @@ export const Microphone: React.FunctionComponent<IMicrophoneProps> = (props: Rea
     };
 
     const onMicrophoneClick = async () => {
+        // stop audio playback
+        appStateContext?.state.audioService?.stopAudioPlayback();
         getTextFromSpeech();
     };
 
@@ -66,11 +68,12 @@ export const Microphone: React.FunctionComponent<IMicrophoneProps> = (props: Rea
                 title="Start recording"
                 appearance='transparent'
                 size='large'
+                aria-label="Start recording"
                 icon={
                     microphoneActive ?
-                        <MicRecord24Filled className={styles.micIconRecording} width={100} />
+                        <MicRecord24Filled className={styles.micIconRecording} />
                         :
-                        <MicSparkle24Regular className={styles.microphone} />
+                        <MicSparkle24Regular className={microphoneDisabled ? "" : styles.microphone} />
                 }
                 onClick={onMicrophoneClick}
                 disabled={microphoneDisabled}
