@@ -4,11 +4,11 @@ import { getSpeechAuthToken } from "./api";
 
 export class AudioService {
     public recognizer: SpeechRecognizer | undefined;
-    private synthesiser: SpeechSynthesizer | undefined;
+    private synthesizer: SpeechSynthesizer | undefined;
     private autoDetectSourceLanguageConfig = AutoDetectSourceLanguageConfig.fromLanguages(["en-US", "de-DE", "zh-CN", "nl-NL"]);
     private recognizerAudioConfig = AudioConfig.fromDefaultMicrophoneInput();
     private audioPlayer = new SpeakerAudioDestination();
-    private synthesiserAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
+    private synthesizerAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
     private speechConfig: SpeechConfig | undefined;
     private speechToken: SpeechAuth | undefined;
     public audioMuted = false;
@@ -32,13 +32,13 @@ export class AudioService {
         } else {
             this.speechConfig = SpeechConfig.fromAuthorizationToken(this.speechToken.access_token, this.speechToken.region);
             this.recognizer = SpeechRecognizer.FromConfig(this.speechConfig, this.autoDetectSourceLanguageConfig, this.recognizerAudioConfig);
-            this.synthesiser = new SpeechSynthesizer(this.speechConfig, this.synthesiserAudioConfig);
+            this.synthesizer = new SpeechSynthesizer(this.speechConfig, this.synthesizerAudioConfig);
         }
 
     }
 
     public speakAnswer = async (answer: AskResponse): Promise<void> => {
-        if (!this.synthesiser) {
+        if (!this.synthesizer) {
             console.error('Speech was cancelled. Synthesizer cannot be retrieved.');
             return;
         }
@@ -60,7 +60,7 @@ export class AudioService {
         }
 
         if (answer.message_id !== this.currentSpokenText.message_id) {
-            this.createNewSynthesiser();
+            this.createNewSynthesizer();
         }
         this.currentSpokenText = {
             message_id: answer.message_id,
@@ -68,8 +68,8 @@ export class AudioService {
         };
         // remove markup from text
         textToSpeak = textToSpeak.replace(/<[^>]*>?/gm, '');
-        
-        this.synthesiser.speakTextAsync(textToSpeak);
+
+        this.synthesizer.speakTextAsync(textToSpeak);
     }
 
     public refreshSpeechToken = async (): Promise<void> => {
@@ -82,7 +82,7 @@ export class AudioService {
         } else {
             this.speechConfig = SpeechConfig.fromAuthorizationToken(this.speechToken.access_token, this.speechToken.region);
             this.recognizer = SpeechRecognizer.FromConfig(this.speechConfig, this.autoDetectSourceLanguageConfig, this.recognizerAudioConfig);
-            this.synthesiser = new SpeechSynthesizer(this.speechConfig, this.synthesiserAudioConfig);
+            this.synthesizer = new SpeechSynthesizer(this.speechConfig, this.synthesizerAudioConfig);
         }
     }
 
@@ -94,14 +94,14 @@ export class AudioService {
         }
     }
 
-    private createNewSynthesiser = (): void => {
+    private createNewSynthesizer = (): void => {
         this.audioPlayer.internalAudio.pause();
         this.audioPlayer.close();
-        this.synthesiser?.close();
+        this.synthesizer?.close();
         this.audioPlayer = new SpeakerAudioDestination();
-        this.synthesiserAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
+        this.synthesizerAudioConfig = AudioConfig.fromSpeakerOutput(this.audioPlayer);
         if (this.speechConfig) {
-            this.synthesiser = new SpeechSynthesizer(this.speechConfig, this.synthesiserAudioConfig);
+            this.synthesizer = new SpeechSynthesizer(this.speechConfig, this.synthesizerAudioConfig);
         }
     }
 

@@ -657,7 +657,7 @@ const Chat = () => {
                                         }}>
                                             <Answer
                                                 answer={{
-                                                    message_id: "genenerating",
+                                                    message_id: "generating",
                                                     answer: "Generating answer...",
                                                     citations: []
                                                 }}
