@@ -86,17 +86,17 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
     if len(chatCompletion.choices) > 0:
         message = chatCompletion.choices[0].message
         if message:
-            if hasattr(message, "context") and message.context.get("messages"):
-                for m in message.context["messages"]:
-                    if m["role"] == "tool":
-                        response_obj["choices"][0]["messages"].append({
-                            "role": "tool",
-                            "content": m["content"]
-                        })
-            elif hasattr(message, "context"):
+            # if hasattr(message, "context") and message.context.get("messages"):
+            #     for m in message.context["messages"]:
+            #         if m["role"] == "tool":
+            #             response_obj["choices"][0]["messages"].append({
+            #                 "role": "tool",
+            #                 "content": m["content"]
+            #             })
+            if hasattr(message, "context"):
                 response_obj["choices"][0]["messages"].append({
                     "role": "tool",
-                    "content": json.dumps(message.context),
+                    "content": message.context,
                 })
             response_obj["choices"][0]["messages"].append({
                 "role": "assistant",
@@ -121,15 +121,9 @@ def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=N
     if len(chatCompletionChunk.choices) > 0:
         delta = chatCompletionChunk.choices[0].delta
         if delta:
-            if hasattr(delta, "context") and delta.context.get("messages"):
-                for m in delta.context["messages"]:
-                    if m["role"] == "tool":
-                        messageObj = {
-                            "role": "tool",
-                            "content": m["content"]
-                        }
-                        response_obj["choices"][0]["messages"].append(messageObj)
-                        return response_obj
+            if hasattr(delta, "context"):
+                response_obj["choices"][0]["messages"].append(delta.context)
+                return response_obj
             if delta.role == "assistant" and hasattr(delta, "context"):
                 messageObj = {
                     "role": "assistant",
