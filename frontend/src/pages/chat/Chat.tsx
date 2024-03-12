@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular } from "@fluentui/react-icons";
+import { ShieldLock48Regular, ErrorCircleRegular, Broom16Regular, Add16Regular, Stop24Regular, Speaker024Regular, SpeakerMuteRegular, Speaker224Regular } from "@fluentui/react-icons";
 
 import uuid from 'react-uuid';
 import { isEmpty } from "lodash-es";
@@ -56,6 +56,7 @@ const Chat = () => {
     const [clearingChat, setClearingChat] = useState<boolean>(false);
     const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+    const [audioMuted, setAudioMuted] = useState<boolean>(false);
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
@@ -417,6 +418,7 @@ const Chat = () => {
     }
 
     const clearChat = async () => {
+        appStateContext?.state.audioService?.stopAudioPlayback();
         setClearingChat(true)
         if (appStateContext?.state.currentChat?.id && appStateContext?.state.isCosmosDBAvailable.cosmosDB) {
             let response = await historyClear(appStateContext?.state.currentChat.id)
@@ -438,6 +440,7 @@ const Chat = () => {
     };
 
     const newChat = () => {
+        appStateContext?.state.audioService?.stopAudioPlayback();
         setProcessMessages(messageStatus.Processing)
         setMessages([])
         setIsCitationPanelOpen(false);
@@ -450,6 +453,8 @@ const Chat = () => {
         abortFuncs.current.forEach(a => a.abort());
         setShowLoadingMessage(false);
         setIsLoading(false);
+        // stop audio playback
+        appStateContext?.state.audioService?.stopAudioPlayback();
     }
 
     useEffect(() => {
@@ -553,6 +558,11 @@ const Chat = () => {
         appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
     }
 
+    const toggleAudioMute = () => {
+        setAudioMuted(!audioMuted);
+        appStateContext?.state.audioService?.toggleMute();
+    }
+
     useEffect(() => {
         if (appStateContext?.state.chatHistoryLoadingState !== ChatHistoryLoadingState.Loading) {
             try {
@@ -602,7 +612,7 @@ const Chat = () => {
                         ) : (
                             <div className={styles.chatMessageStream} role="log">
                                 {messages.map((answer, index) => (
-                                    <>
+                                    <div key={`answer-${index}`}>
                                         {
                                             answer.role === "user" ? (
                                                 <div className={styles.questionDisplayRow}>
@@ -625,6 +635,7 @@ const Chat = () => {
                                                             feedback: answer.feedback
                                                         }}
                                                         onCitationClicked={c => onShowCitation(c)}
+                                                        isLastAnswer={index === messages.length - 1}
                                                     />
                                                 </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
                                                     <div className={styles.chatMessageErrorContent}>
@@ -635,7 +646,7 @@ const Chat = () => {
                                                 </div> : null
                                             )
                                         }
-                                    </>
+                                    </div>
                                 ))}
                                 {showLoadingMessage && (
                                     <>
@@ -646,10 +657,12 @@ const Chat = () => {
                                         }}>
                                             <Answer
                                                 answer={{
+                                                    message_id: "generating",
                                                     answer: "Generating answer...",
                                                     citations: []
                                                 }}
                                                 onCitationClicked={() => null}
+                                                isLastAnswer={true}
                                             />
                                         </div>
                                     </>
@@ -671,6 +684,21 @@ const Chat = () => {
                                         >
                                             Stop generating
                                         </Button>
+                                    )
+                                }
+                                {
+                                    // If audio is enabled, show speaker icon for mute/unmute
+                                    SPEECH_ENABLED && (
+                                        <Button
+                                            appearance="transparent"
+                                            size="large"
+                                            icon={audioMuted ? <SpeakerMuteRegular /> : <Speaker224Regular />}
+                                            aria-label={audioMuted ? "Unmute" : "Mute"}
+                                            tabIndex={0}
+                                            onClick={toggleAudioMute}
+                                            onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleAudioMute() : null}
+                                            title={audioMuted ? "Unmute" : "Mute"}
+                                        />
                                     )
                                 }
                             </div>
