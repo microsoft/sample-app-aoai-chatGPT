@@ -30,7 +30,7 @@ UI_LOGO = os.environ.get("UI_LOGO")
 UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")
 UI_CHAT_TITLE = os.environ.get("UI_CHAT_TITLE") or "Ask Mainstreet"
 UI_CHAT_DESCRIPTION = os.environ.get("UI_CHAT_DESCRIPTION") or "This chatbot is configured to answer your questions"
-UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
+UI_FAVICON = os.environ.get("UI_FAVICON")
 UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
 
 def create_app():
@@ -44,9 +44,9 @@ def create_app():
 async def index():
     return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
 
-@bp.route("/favicon.ico")
+@bp.route("/msfavicon.png")
 async def favicon():
-    return await bp.send_static_file("favicon.ico")
+    return await bp.send_static_file("msfavicon.png")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
