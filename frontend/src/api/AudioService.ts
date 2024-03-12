@@ -1,6 +1,7 @@
 import { SpeechConfig, AutoDetectSourceLanguageConfig, AudioConfig, SpeechRecognizer, SpeechSynthesizer, ResultReason, SpeakerAudioDestination } from "microsoft-cognitiveservices-speech-sdk";
 import { AskResponse, SpeechAuth } from "./models";
 import { getSpeechAuthToken } from "./api";
+import { parseAnswer } from "../components/Answer/AnswerParser";
 
 export class AudioService {
     public recognizer: SpeechRecognizer | undefined;
@@ -37,37 +38,44 @@ export class AudioService {
 
     }
 
-    public speakAnswer = async (answer: AskResponse): Promise<void> => {
+    public speakAnswer = async (message_id: string, answer_text: string): Promise<void> => {
+    
         if (!this.synthesizer) {
             console.error('Speech was cancelled. Synthesizer cannot be retrieved.');
             return;
         }
-        if (answer.message_id === undefined || answer.answer === undefined) {
+        if (message_id === undefined || answer_text === undefined) {
             return;
         }
-        if (this.currentSpokenText.message_id === answer.message_id && this.currentSpokenText.text === answer.answer) {
+        if (this.currentSpokenText.message_id === message_id && this.currentSpokenText.text === answer_text) {
             return;
         }
         // refresh token checks if token is expired and gets a new one if it is
         await this.refreshSpeechToken();
         let textToSpeak = "";
 
-        if (answer.message_id === this.currentSpokenText.message_id) {
-            // texttospeak will be equal to answer.answer string minus the currentSpokenText.text
-            textToSpeak = answer.answer.replace(this.currentSpokenText.text || "", "");
+        if (message_id === this.currentSpokenText.message_id) {
+            // text to speak will be equal to answer.answer string minus the currentSpokenText.text
+            textToSpeak = answer_text.replace(this.currentSpokenText.text || "", "");
         } else {
-            textToSpeak = answer.answer;
+            textToSpeak = answer_text;
         }
 
-        if (answer.message_id !== this.currentSpokenText.message_id) {
+        if (message_id !== this.currentSpokenText.message_id) {
             this.createNewSynthesizer();
         }
         this.currentSpokenText = {
-            message_id: answer.message_id,
-            text: answer.answer
+            message_id: message_id,
+            text: answer_text
         };
+        
         // remove markup from text
         textToSpeak = textToSpeak.replace(/<[^>]*>?/gm, '');
+
+        // replace ^1^ ^2^ etc to speak "references one, two, three, etc"
+        textToSpeak = textToSpeak.replace(/\^(\d+)\^/g, (match, p1) => {
+            return `reference ${p1}, `;
+        });
 
         this.synthesizer.speakTextAsync(textToSpeak);
     }

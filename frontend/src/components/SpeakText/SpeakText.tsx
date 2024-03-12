@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AppStateContext } from '../../state/AppProvider';
 import { AskResponse } from '../../api';
+import { parseAnswer } from '../Answer/AnswerParser';
 
 export interface ISpeakTextProps {
     answer: AskResponse;
@@ -10,7 +11,9 @@ export const SpeakText: React.FunctionComponent<ISpeakTextProps> = (props: React
     const appStateContext = React.useContext(AppStateContext);
     
     React.useEffect(() => {
-            appStateContext?.state.audioService?.speakAnswer(props.answer);
+            const answer_id = props.answer.message_id;
+            const answer_text = parseAnswer(props.answer).markdownFormatText;
+            appStateContext?.state.audioService?.speakAnswer(answer_id ? answer_id : "", answer_text);
     }, [props.answer]);
 
   return (
