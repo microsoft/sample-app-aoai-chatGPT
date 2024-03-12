@@ -103,6 +103,9 @@ export class AudioService {
         if (this.speechConfig) {
             this.synthesizer = new SpeechSynthesizer(this.speechConfig, this.synthesizerAudioConfig);
         }
+        if(this.audioMuted){
+            this.audioPlayer.mute();
+        }
     }
 
     public toggleMute = (): void => {
