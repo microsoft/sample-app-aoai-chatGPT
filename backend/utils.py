@@ -86,13 +86,6 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
     if len(chatCompletion.choices) > 0:
         message = chatCompletion.choices[0].message
         if message:
-            # if hasattr(message, "context") and message.context.get("messages"):
-            #     for m in message.context["messages"]:
-            #         if m["role"] == "tool":
-            #             response_obj["choices"][0]["messages"].append({
-            #                 "role": "tool",
-            #                 "content": m["content"]
-            #             })
             if hasattr(message, "context"):
                 response_obj["choices"][0]["messages"].append({
                     "role": "tool",
