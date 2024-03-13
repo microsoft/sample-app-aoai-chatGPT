@@ -24,6 +24,9 @@ from backend.utils import format_as_ndjson, format_stream_response, generateFilt
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
+# Current minimum Azure OpenAI version supported
+MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION="2024-02-15-preview"
+
 # UI configuration (optional)
 UI_TITLE = os.environ.get("UI_TITLE") or "Contoso"
 UI_LOGO = os.environ.get("UI_LOGO")
@@ -220,6 +223,10 @@ SHOULD_USE_DATA = should_use_data()
 def init_openai_client(use_data=SHOULD_USE_DATA):
     azure_openai_client = None
     try:
+        # API version check
+        if AZURE_OPENAI_PREVIEW_API_VERSION < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION:
+            raise Exception(f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'")
+        
         # Endpoint
         if not AZURE_OPENAI_ENDPOINT and not AZURE_OPENAI_RESOURCE:
             raise Exception("AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required")
