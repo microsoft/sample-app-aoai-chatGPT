@@ -43,6 +43,7 @@ export const Answer = ({
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext)
     const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB; 
+    const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer 
     
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
@@ -187,7 +188,7 @@ export const Answer = ({
                             <ReactMarkdown
                                 linkTarget="_blank"
                                 remarkPlugins={[remarkGfm, supersub]}
-                                children={DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags})}
+                                children={SANITIZE_ANSWER ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags}) : parsedAnswer.markdownFormatText}
                                 className={styles.answerText}
                             />
                         </Stack.Item>
