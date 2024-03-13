@@ -1188,6 +1188,7 @@
                                                     "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
                                                     "x-ms-meta-lastmodified": "@body('Get_file_metadata_2')?['LastModified']",
                                                     "x-ms-meta-permittedIds": "[[@{body('Join')}]",
+                                                    "x-ms-meta-sharepointUrl": "@{parameters('SharePointUrl')}@{body('Get_file_metadata_2')?['Path']}",
                                                     "x-ms-version": "2019-02-02"
                                                 },
                                                 "method": "PUT",
@@ -1296,6 +1297,7 @@
                                                 "x-ms-date": "@{formatDateTime(utcNow(),'r')}",
                                                 "x-ms-meta-lastmodified": "@body('Get_file_metadata_2')?['LastModified']",
                                                 "x-ms-meta-permittedIds": "[[@{body('Join')}]",
+                                                "x-ms-meta-sharepointUrl": "@{parameters('SharePointUrl')}@{body('Get_file_metadata_2')?['Path']}",
                                                 "x-ms-version": "2019-02-02"
                                             },
                                             "method": "PUT",
