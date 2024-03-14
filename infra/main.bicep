@@ -59,7 +59,6 @@ param cosmosAccountName string = ''
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
-var openAIApiVersion = '2024-02-15-preview'
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
@@ -137,7 +136,6 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_MAX_TOKENS: openAIMaxTokens
       AZURE_OPENAI_STOP_SEQUENCE: openAIStopSequence
       AZURE_OPENAI_SYSTEM_MESSAGE: openAISystemMessage
-      AZURE_OPENAI_PREVIEW_API_VERSION: openAIApiVersion
       AZURE_OPENAI_STREAM: openAIStream
     }
   }
@@ -321,7 +319,6 @@ output AZURE_OPENAI_TOP_P int = openAITopP
 output AZURE_OPENAI_MAX_TOKENS int = openAIMaxTokens
 output AZURE_OPENAI_STOP_SEQUENCE string = openAIStopSequence
 output AZURE_OPENAI_SYSTEM_MESSAGE string = openAISystemMessage
-output AZURE_OPENAI_PREVIEW_API_VERSION string = openAIApiVersion
 output AZURE_OPENAI_STREAM bool = openAIStream
 
 // Used by prepdocs.py:
