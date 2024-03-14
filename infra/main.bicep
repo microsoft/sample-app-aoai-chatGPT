@@ -38,7 +38,6 @@ param openAITopP int = 1
 param openAIMaxTokens int = 1000
 param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
-param openAIApiVersion string = '2024-02-15-preview'
 param openAIStream bool = true
 param embeddingDeploymentName string = 'embedding'
 param embeddingModelName string = 'text-embedding-ada-002'
@@ -60,6 +59,7 @@ param cosmosAccountName string = ''
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+var openAIApiVersion = '2024-02-15-preview'
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
