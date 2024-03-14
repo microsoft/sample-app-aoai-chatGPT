@@ -89,7 +89,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
             if hasattr(message, "context"):
                 response_obj["choices"][0]["messages"].append({
                     "role": "tool",
-                    "content": message.context,
+                    "content": json.dumps(message.context),
                 })
             response_obj["choices"][0]["messages"].append({
                 "role": "assistant",
@@ -115,7 +115,11 @@ def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=N
         delta = chatCompletionChunk.choices[0].delta
         if delta:
             if hasattr(delta, "context"):
-                response_obj["choices"][0]["messages"].append(delta.context)
+                messageObj = {
+                    "role": "tool",
+                    "content": json.dumps(delta.context)
+                }
+                response_obj["choices"][0]["messages"].append(messageObj)
                 return response_obj
             if delta.role == "assistant" and hasattr(delta, "context"):
                 messageObj = {
