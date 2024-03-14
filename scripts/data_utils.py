@@ -67,13 +67,14 @@ class TokenEstimator(object):
 TOKEN_ESTIMATOR = TokenEstimator()
 
 class PdfTextSplitter(TextSplitter):
-    def __init__(self, length_function: Callable[[str], int] =TOKEN_ESTIMATOR.estimate_tokens, separator: str = "\n\n", **kwargs: Any):
+    def __init__(self, table_chunk_size, length_function: Callable[[str], int] =TOKEN_ESTIMATOR.estimate_tokens, separator: str = "\n\n", **kwargs: Any):
         """Create a new TextSplitter for htmls from extracted pdfs."""
         super().__init__(**kwargs)
         self._table_tags = HTML_TABLE_TAGS
         self._separators = separator or ["\n\n", "\n", " ", ""]
         self._length_function = length_function
         self._noise = 50 # tokens to accommodate differences in token calculation, we don't want the chunking-on-the-fly to inadvertently chunk anything due to token calc mismatch
+        self._table_chunk_size = table_chunk_size
 
     def extract_caption(self, text):
         separator = self._separators[-1]
@@ -181,7 +182,7 @@ class PdfTextSplitter(TextSplitter):
         return chunks
         
     def chunk_table(self, table, caption):
-        if self._length_function("\n".join([caption, table])) < self._chunk_size - self._noise:
+        if self._length_function("\n".join([caption, table])) < self._table_chunk_size - self._noise:
             return ["\n".join([caption, table])]
         else:
             headers = ""
@@ -192,7 +193,7 @@ class PdfTextSplitter(TextSplitter):
             current_table = caption + "\n"
             for part in splits:
                 if len(part)>0:
-                    if self._length_function(current_table + self._table_tags["row_open"] + part) < self._chunk_size: # if current table length is within permissible limit, keep adding rows
+                    if self._length_function(current_table + self._table_tags["row_open"] + part) < self._table_chunk_size: # if current table length is within permissible limit, keep adding rows
                         if part not in [self._table_tags["table_open"], self._table_tags["table_close"]]: # need add the separator (row tag) when the part is not a table tag
                             current_table += self._table_tags["row_open"]
                         current_table += part
@@ -663,7 +664,8 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
 def chunk_content_helper(
         content: str, file_format: str, file_name: Optional[str],
         token_overlap: int,
-        num_tokens: int = 256
+        num_tokens: int = 256,
+        num_tokens_table: int = 256
 ) -> Generator[Tuple[str, int, Document], None, None]:
     if num_tokens is None:
         num_tokens = 1000000000
@@ -690,7 +692,7 @@ def chunk_content_helper(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
                 if file_format == "html_pdf": # cracked pdf converted to html
-                    splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
+                    splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, table_chunk_size=num_tokens_table, chunk_overlap=token_overlap)
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
                             separators=SENTENCE_ENDINGS + WORDS_BREAKS,
@@ -706,6 +708,7 @@ def chunk_content(
     url: Optional[str] = None,
     ignore_errors: bool = True,
     num_tokens: int = 256,
+    num_tokens_table: int = 256,
     min_chunk_size: int = 10,
     token_overlap: int = 0,
     extensions_to_process = FILE_FORMAT_DICT.keys(),
@@ -745,6 +748,7 @@ def chunk_content(
             file_name=file_name,
             file_format=file_format,
             num_tokens=num_tokens,
+            num_tokens_table=num_tokens_table,
             token_overlap=token_overlap
         )
         chunks = []
@@ -795,6 +799,7 @@ def chunk_file(
     file_path: str,
     ignore_errors: bool = True,
     num_tokens=256,
+    num_tokens_table=256,
     min_chunk_size=10,
     url = None,
     token_overlap: int = 0,
@@ -843,6 +848,7 @@ def chunk_file(
         file_name=file_name,
         ignore_errors=ignore_errors,
         num_tokens=num_tokens,
+        num_tokens_table=num_tokens_table,
         min_chunk_size=min_chunk_size,
         url=url,
         token_overlap=max(0, token_overlap),
@@ -860,6 +866,7 @@ def process_file(
         directory_path: str,
         ignore_errors: bool = True,
         num_tokens: int = 1024,
+        num_tokens_table: int = 1024,
         min_chunk_size: int = 10,
         url_prefix = None,
         token_overlap: int = 0,
@@ -886,6 +893,7 @@ def process_file(
             file_path,
             ignore_errors=ignore_errors,
             num_tokens=num_tokens,
+            num_tokens_table=num_tokens_table,
             min_chunk_size=min_chunk_size,
             url=url_path,
             token_overlap=token_overlap,
@@ -913,6 +921,7 @@ def chunk_blob_container(
         credential,
         ignore_errors: bool = True,
         num_tokens: int = 1024,
+        num_tokens_table: int = 1024,
         min_chunk_size: int = 10,
         url_prefix = None,
         token_overlap: int = 0,
@@ -933,6 +942,7 @@ def chunk_blob_container(
             local_data_folder,
             ignore_errors=ignore_errors,
             num_tokens=num_tokens,
+            num_tokens_table=num_tokens_table,
             min_chunk_size=min_chunk_size,
             url_prefix=url_prefix,
             token_overlap=token_overlap,
@@ -952,6 +962,7 @@ def chunk_directory(
         directory_path: str,
         ignore_errors: bool = True,
         num_tokens: int = 1024,
+        num_tokens_table: int = 1024,
         min_chunk_size: int = 10,
         url_prefix = None,
         token_overlap: int = 0,
@@ -999,6 +1010,7 @@ def chunk_directory(
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
+                                       num_tokens_table=num_tokens_table,
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
@@ -1015,6 +1027,7 @@ def chunk_directory(
         print(f"Multiprocessing with njobs={njobs}")
         process_file_partial = partial(process_file, directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,
+                                       num_tokens_table=num_tokens_table,
                                        min_chunk_size=min_chunk_size, url_prefix=url_prefix,
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,

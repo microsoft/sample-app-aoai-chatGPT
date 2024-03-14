@@ -387,11 +387,11 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
             add_embeddings = True
 
         if "blob.core" in data_config["path"]:
-            result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+            result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], num_tokens_table=config["table_chunk_size"], token_overlap=config.get("token_overlap",0),
                                 azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
                                 add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
         elif os.path.exists(data_config["path"]):
-            result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
+            result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], num_tokens_table=config["table_chunk_size"], token_overlap=config.get("token_overlap",0),
                                     azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
                                     add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
         else:
