@@ -9,6 +9,10 @@
         "storageAccounts_armblobqueue_name": {
             "defaultValue": "armqueue2",
             "type": "String"
+        },
+        "EnqueueInterval": {
+            "defaultValue": 1,
+            "type": "int"
         }
     },
     "variables": {
@@ -22,7 +26,8 @@
         "connections_azurequeues_name": "azurequeues",
         "connections_azureblob_name": "azureblob",
         "workflows_folder_expansion_logic_app_name": "folder-expansion-logic-app",
-        "workflows_file_processing_logic_app_name": "file-processing-logic-app"
+        "workflows_file_processing_logic_app_name": "file-processing-logic-app",
+        "workflows_sharepoint2blob_timer_app_name": "sharepoint2blob-timer-app"
     },
     "resources": [
         {
@@ -1721,6 +1726,95 @@
                     },
                     "storageAccountName": {
                         "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[variables('workflows_sharepoint2blob_timer_app_name')]",
+            "location": "[variables('location')]",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]": {}
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]"
+            ],
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "EnqueueInterval": {
+                            "defaultValue": 3,
+                            "type": "Int"
+                        },
+                        "storageAccountName": {
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Hour",
+                                "interval": "@parameters('EnqueueInterval')"
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Hour",
+                                "interval": 3
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Put_a_message_on_a_queue_(V2)": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": "/Shared documents",
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azurequeues": {
+                                "connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name, '/providers/Microsoft.Web/connections/',variables('connections_azurequeues_name'))]",
+                                "connectionName": "[variables('connections_azurequeues_name')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "identity": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',variables('location'),'/managedApis/',variables('connections_azurequeues_name'))]"
+                            }
+                        }
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                    },
+                    "EnqueueInterval": {
+                        "value": "[parameters('EnqueueInterval')]"
                     }
                 }
             }
