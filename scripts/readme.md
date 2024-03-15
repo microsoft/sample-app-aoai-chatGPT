@@ -6,7 +6,6 @@ Follow the instructions in this section to prepare your data locally. This is ea
 - Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
 
 ## Configure
-### Config for Azure Cognitive Search Data ingestion 
 - Create a config file like `config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
 
 ```
@@ -27,14 +26,14 @@ Follow the instructions in this section to prepare your data locally. This is ea
 ]
 ```
 
+Note: `data_path` can be a path to files located locally on your machine, or an Azure Blob URL, e.g. of the format `"https://<storage account name>.blob.core.windows.net/<container name>/<path>/"`. If a blob URL is used, the data will first be downloaded from Blob Storage to a temporary directory on your machine before data preparation proceeds.
+
 ## Create Indexes and Ingest Data
 Disclaimer: Make sure there are no duplicate pages in your data. That could impact the quality of the responses you get in a negative way.
 
 - Run the data preparation script, passing in your config file. You can set njobs for parallel parsing of your files.
-    - Create indexes and ingest data to Azure Cognitive Search:
+
      `python data_preparation.py --config config.json --njobs=4`
-    - Create indexes and ingest data to Azure Cosmos Mongo vcore:
-     `python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --njobs=4`
 
 ## Optional: Use URL prefix
 Each document can be associated with a URL that is stored with each document chunk in the Azure Cognitive Search index in the `url` field. If your documents were downloaded from the web, you can specify a URL prefix to use to construct the document URLs when ingesting your data. Your config file should have an additional `url_prefix` parameter like so:
@@ -123,17 +122,6 @@ To add vectors to your index, you will first need an [Azure OpenAI resource](htt
 
       `python data_preparation.py --config config.json --embedding-model-endpoint "<embedding endpoint>"`
 
-### Add vector embeddings for Azure Cosmos Mongo vcore
-We only support vector search for Azure Cosmos Mongo vcore. So add vector embeddings is required.
-As for the detail information, Please see [the docs](https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search)
-
-To add vectors to your index, you will first need an [Azure OpenAI resource](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview) with an [Ada embedding model deployment](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#embeddings-models). The `text-embedding-ada-002` model is supported.
-
-- Get the endpoint for embedding model deployment. The endpoint will generally be of the format `https://<azure openai resource name>.openai.azure.com/openai/deployments/<ada deployment name>/embeddings?api-version=2023-06-01-preview`.
-- Run the data preparation script, passing in your config file and the embedding endpoint and key as extra arguments:
-
-      `python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --embedding-model-endpoint "<embedding endpoint>"`
-
 ## Optional: Crack PDFs to Text
 If your data is in PDF format, you'll first need to convert from PDF to .txt format. You can use your own script for this, or use the provided conversion code here. 
 
@@ -146,14 +134,9 @@ If your data is in PDF format, you'll first need to convert from PDF to .txt for
   Copy one of the keys returned by this command.
 
 ### Create Indexes and Ingest Data from PDF with Form Recognizer
-
-For Azure Cognitive Search, Pass in your Form Recognizer resource name and key when running the data preparation script:
+Pass in your Form Recognizer resource name and key when running the data preparation script:
 
 `python data_preparation.py --config config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
-
-For Azure Cosmos Mongo vcore, Pass in your Form Recognizer resource name and key when running the data preparation script:
-
-`python cosmos_mongo_vcore_data_preparation.py --config cosmos_config.json --njobs=4 --form-rec-resource <form-rec-resource-name> --form-rec-key <form-rec-key>`
 
 This will use the Form Recognizer Read model by default. 
 
