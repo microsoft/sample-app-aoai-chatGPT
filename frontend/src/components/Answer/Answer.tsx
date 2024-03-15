@@ -1,4 +1,6 @@
+import React, { ReactElement } from 'react';
 import { FormEvent, useEffect, useMemo, useState, useContext } from "react";
+
 import { useBoolean } from "@fluentui/react-hooks"
 import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from "@fluentui/react";
 import DOMPurify from 'dompurify';
@@ -15,6 +17,17 @@ import supersub from 'remark-supersub'
 import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
+
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+// Import a syntax highlighting style
+import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+// Other imports remain the same
+
+import copy from 'copy-to-clipboard';
+import { FiCopy } from 'react-icons/fi';
+
+
+
 interface Props {
     answer: AskResponse;
     onCitationClicked: (citedDocument: Citation) => void;
@@ -27,10 +40,10 @@ export const Answer = ({
     const initializeAnswerFeedback = (answer: AskResponse) => {
         if (answer.message_id == undefined) return undefined;
         if (answer.feedback == undefined) return undefined;
-        if (answer.feedback.split(",").length > 1) return Feedback.Negative;
         if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
         return Feedback.Neutral;
     }
+
 
     const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
     const filePathTruncationLimit = 50;
@@ -42,8 +55,7 @@ export const Answer = ({
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext)
-    const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB; 
-    const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer 
+    const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled; 
     
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
@@ -69,14 +81,13 @@ export const Answer = ({
     const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
         let citationFilename = "";
 
-        if (citation.filepath) {
-            const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '');
+        if (citation.filepath && citation.chunk_id) {
             if (truncate && citation.filepath.length > filePathTruncationLimit) {
                 const citationLength = citation.filepath.length;
-                citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`;
+                citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength -20)} - Part ${parseInt(citation.chunk_id) + 1}`;
             }
             else {
-                citationFilename = `${citation.filepath} - Part ${part_i}`;
+                citationFilename = `${citation.filepath} - Part ${parseInt(citation.chunk_id) + 1}`;
             }
         }
         else if (citation.filepath && citation.reindex_id) {
@@ -87,6 +98,92 @@ export const Answer = ({
         }
         return citationFilename;
     }
+
+    type CopiedStatus = {
+        [key: string]: boolean;
+      };
+      const [copiedStatus, setCopiedStatus] = useState<CopiedStatus>({});
+
+      
+
+    interface CodeComponentProps {
+        node: any; // More specific type if possible
+        inline?: boolean;
+        className?: string;
+        children: React.ReactNode;
+        // Add any additional props you expect to use
+    }
+    
+    const codeComponent = ({
+        node,
+        inline,
+        className,
+        children,
+        ...props
+    }: CodeComponentProps): React.ReactElement | null => {
+        const match = /language-(\w+)/.exec(className || '');
+
+        if (inline) {
+            return <code style={{ backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{children}</code>;
+        } else {
+            const match = /language-(\w+)/.exec(className || '');
+            if (match) {
+            const language = match[1];
+            const codeString = String(children).replace(/\n$/, '');
+            const blockId = `block-${codeString.substring(0, 10)}`;
+            const compositeKey = `${answer.message_id}-${blockId}`;
+    
+            const handleCopy = (messageId: string, blockId: string, codeString: string) => {
+                copy(codeString);
+                setCopiedStatus({ ...copiedStatus, [compositeKey]: true });
+                setTimeout(() => {
+                    setCopiedStatus({ ...copiedStatus, [compositeKey]: false });
+                }, 3000);
+            };
+            
+            return (
+                <div style={{ position: 'relative', marginBottom: '1em' }}>
+                    <div style={{
+                        backgroundColor: '#000000', // Header background color
+                        color: 'white', // Header text color
+                        borderTopLeftRadius: '5px', // Radius to match the SyntaxHighlighter
+                        borderTopRightRadius: '5px',
+                        padding: '5px 10px', // Padding inside the header
+                        fontFamily: 'monospace', // Font to match the code block
+                    }}>
+                        {language.toUpperCase()}
+                    </div>
+                    <SyntaxHighlighter language={language} style={dark} {...props} customStyle={{
+                        margin: '0', // Remove margin around the SyntaxHighlighter
+                        borderRadius: '0 0 5px 5px', // Only round the bottom corners
+                        backgroundColor: '#333',
+                        textShadow: 'none' ,
+                        border: '1px solid #333',
+                    }}>
+                        {codeString}
+                    </SyntaxHighlighter>
+                    <button
+                        onClick={() => handleCopy(answer.message_id ?? "", blockId, codeString)}
+                        style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '5px',
+                            zIndex: 10,
+                            background: 'none',
+                            border: 'none',
+                            color: 'white',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {copiedStatus[compositeKey] ? "Code Copied!" : <FiCopy />}
+                    </button>
+                </div>
+            );
+        }
+        return null;
+    };
+};
+    
 
     const onLikeResponseClicked = async () => {
         if (answer.message_id == undefined) return;
@@ -177,6 +274,12 @@ export const Answer = ({
             </>
         );
     }
+    
+    
+      
+    
+
+      
 
     return (
         <>
@@ -188,7 +291,8 @@ export const Answer = ({
                             <ReactMarkdown
                                 linkTarget="_blank"
                                 remarkPlugins={[remarkGfm, supersub]}
-                                children={SANITIZE_ANSWER ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags}) : parsedAnswer.markdownFormatText}
+                                components={{ code: codeComponent }}
+                                children={DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags})}
                                 className={styles.answerText}
                             />
                         </Stack.Item>
