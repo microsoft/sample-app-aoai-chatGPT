@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DefaultButton, Dialog, DialogFooter, DialogType, Text, IconButton, List, PrimaryButton, Separator, Stack, TextField, ITextField } from '@fluentui/react';
+import { DefaultButton, Dialog, DialogFooter, DialogType, Text, IconButton, List, PrimaryButton, Separator, Stack, TextField, ITextField, Spinner, SpinnerSize } from '@fluentui/react';
 
 import { AppStateContext } from '../../state/AppProvider';
 import { GroupedChatHistory } from './ChatHistoryList';
@@ -7,8 +7,8 @@ import { GroupedChatHistory } from './ChatHistoryList';
 import styles from "./ChatHistoryPanel.module.css"
 import { useBoolean } from '@fluentui/react-hooks';
 import { Conversation } from '../../api/models';
-import { historyDelete, historyRename } from '../../api';
-import { useEffect, useRef, useState } from 'react';
+import { historyDelete, historyRename, historyList } from '../../api';
+import { useEffect, useRef, useState, useContext } from 'react';
 
 interface ChatHistoryListItemCellProps {
   item?: Conversation;
@@ -244,8 +244,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
 };
 
 export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps> = ({ groupedChatHistory }) => {
-  const [ , setSelectedItem] = React.useState<Conversation | null>(null);
- 
+    const appStateContext = useContext(AppStateContext);
+    const observerTarget = useRef(null);
+    const [ , setSelectedItem] = React.useState<Conversation | null>(null);
+    const [offset, setOffset] = useState<number>(25);
+    const [observerCounter, setObserverCounter] = useState(0);
+    const [showSpinner, setShowSpinner] = useState(false);
+    const firstRender = useRef(true);
+
   const handleSelectHistory = (item?: Conversation) => {
     if(item){
         setSelectedItem(item)
@@ -258,12 +264,54 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
     );
   };
 
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+        handleFetchHistory();
+        setOffset((offset) => offset += 25);
+    }, [observerCounter]);
+
+    const handleFetchHistory = async () => {
+        const currentChatHistory = appStateContext?.state.chatHistory;
+        setShowSpinner(true);
+
+        await historyList(offset).then((response) => {
+            const concatenatedChatHistory = currentChatHistory && response && currentChatHistory.concat(...response)
+            if (response) {
+                appStateContext?.dispatch({ type: 'FETCH_CHAT_HISTORY', payload: concatenatedChatHistory || response });
+            } else {
+                appStateContext?.dispatch({ type: 'FETCH_CHAT_HISTORY', payload: null });
+            }
+            setShowSpinner(false);
+            return response
+        })
+    }
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting) 
+                    setObserverCounter((observerCounter) => observerCounter += 1);
+            },
+            { threshold: 1 }
+        );
+
+        if (observerTarget.current) observer.observe(observerTarget.current);
+
+        return () => {
+            if (observerTarget.current) observer.unobserve(observerTarget.current);
+        };
+    }, [observerTarget]);
+
   return (
-    <div className={styles.listContainer}>
+    <div className={styles.listContainer} data-is-scrollable>
       {groupedChatHistory.map((group) => (
         group.entries.length > 0 && <Stack horizontalAlign="start" verticalAlign="center" key={group.month} className={styles.chatGroup} aria-label={`chat history group: ${group.month}`}>
           <Stack aria-label={group.month} className={styles.chatMonth}>{formatMonth(group.month)}</Stack>
           <List aria-label={`chat history list`} items={group.entries} onRenderCell={onRenderCell} className={styles.chatList}/>
+          <div ref={observerTarget} />
           <Separator styles={{
             root: {
                 width: '100%',
@@ -275,6 +323,7 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
           }}/>
         </Stack>
       ))}
+      {showSpinner && <div className={styles.spinnerContainer}><Spinner size={SpinnerSize.small} aria-label="loading more chat history" className={styles.spinner}/></div>}
     </div>
   );
 };

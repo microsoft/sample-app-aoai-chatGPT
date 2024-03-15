@@ -53,7 +53,6 @@
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
-    display: flex;
     align-items: flex-end;
     text-align: center;
     letter-spacing: -0.01em;
@@ -62,7 +61,7 @@
 
 .chatIcon {
     height: 62px;
-    width: 62px;
+    width: auto;
 }
 
 .chatMessageStream {
@@ -84,6 +83,7 @@
 }
 
 .chatMessageUserMessage {
+    display: flex;
     padding: 20px;
     background: #EDF5FD;
     border-radius: 8px;
@@ -93,12 +93,11 @@
     font-size: 14px;
     line-height: 22px;
     color: #242424;
-    flex: none;
     order: 0;
     flex-grow: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-    max-width: 800px;
+    max-width: 80%;
 }
 
 .chatMessageGpt {
@@ -109,17 +108,14 @@
 
 .chatMessageError {
     padding: 20px;
-    /* background: #EDF5FD; */
     border-radius: 8px;
     box-shadow: rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px;
-    
     color: #242424;
     flex: none;
     order: 0;
     flex-grow: 0;
-    
     max-width: 800px;
-    /* filter: drop-shadow(rgba(182, 52, 67, 1) 1px 1px 2px) drop-shadow(rgba(182, 52, 67, 1) 0px 0px 1px); */
+    margin-bottom: 12px;
 }
 
 .chatMessageErrorContent {
@@ -159,7 +155,6 @@
     left: 7px;
     top: 13px;
     color: #FFFFFF;
-    border: 1px solid #D1D1D1;
     border-radius: 4px;
     z-index: 1;
 }
@@ -176,7 +171,6 @@
     left: 7px;
     top: 66px;
     color: #FFFFFF;
-    border: 1px solid #D1D1D1;
     border-radius: 4px;
     z-index: 1;
 }
@@ -193,7 +187,6 @@
     left: 7px;
     top: 66px;
     color: #FFFFFF;
-    border: 1px solid #D1D1D1;
     border-radius: 4px;
     z-index: 1;
 }
@@ -290,6 +283,11 @@
     margin-bottom: 12px;
 } 
 
+.citationPanelTitle:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .citationPanelContent {
     font-style: normal;
     font-weight: 400;
@@ -305,4 +303,46 @@
 a {
     padding-left: 5px;
     padding-right: 5px;
+}
+
+.viewSourceButton {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: #115EA3;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px;
+    gap: 4px;
+    border: 1px solid #D1D1D1;
+    border-radius: 4px;
+}
+
+.viewSourceButton:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .chatInput {
+        width: 90%;
+        max-width: 90%;
+    }
+
+    .newChatIcon {
+        left: 0px;
+    }
+
+    .clearChatBroom {
+        left: 0px;
+    }
+
+    .clearChatBroomNoCosmos {
+        left: 0px;
+    }
+
+    .chatEmptyStateTitle {
+        line-height: 36px;
+    }
 }
