@@ -22,7 +22,7 @@
 }
 
 .headerTitle {
-    font-style: normal;
+    font-style: Roboto;
     font-weight: 600;
     font-size: 20px;
     line-height: 28px;
@@ -61,7 +61,7 @@
 }
 
 .shareButtonText {
-    font-style: normal;
+    font-style: Roboto;
     font-weight: 600;
     font-size: 14px;
     line-height: 20px;
@@ -71,7 +71,7 @@
 }
 
 .urlTextBox {
-    font-style: normal;
+    font-style: Roboto;
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
@@ -103,7 +103,7 @@
 }
 
 .copyButtonText {
-    font-style: normal;
+    font-style: Roboto;
     font-weight: 600;
     font-size: 14px;
     line-height: 20px;
