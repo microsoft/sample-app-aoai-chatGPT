@@ -5,6 +5,11 @@
       "taskLabel": "task-sample-app-aoai-chatGPT",
       "appliesTo": "/",
       "type": "launch"
+    },
+    {
+      "taskLabel": "task-sample-app-aoai-chatGPT",
+      "appliesTo": "/",
+      "type": "launch"
     }
   ]
 }
