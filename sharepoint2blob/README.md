@@ -2,15 +2,29 @@
 
 This folder contains the ARM template of a sample Logic App that can sync your SharePoint site documents to your blob storage.
 
+## Prerequisites
+
+- An Azure Cognitive Search resource to store the sharepoint index
+
 ## Quick Start
 
-Click the following button to deploy the sample Logic App to your Azure Subscription.
+1. Click the following button to deploy the ARM template to your Azure Subscription. You will be asked to provide the following inputs:
+
+### Feature Specific Inputs
+- `Share Point Url`: The Url of the input Sharepoint site (e.g., https://microsoft.sharepoint.com/teams/YourSharepointSiteName)
+- `Storage Accounts_armblobqueue_name`: A storage account name to be created and used to store sharepoint documents and their access control information
+- `Enqueue Interval`: An integer to specify (in minutes) how often Sharepoint site should be scanned for documents and/or permission updates
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://ms.portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Ffshakerin%2Fsp%2Fpland%2Fsharepoint2blob%2Fsharepoint2blobarm.json)
 
 
+2. After a successful deployment, you will need to authorize the sharepoint connector to be able to access the sharepoint site.
 
-After deployment, you will need to authenticate to the two deployed connectors so the Logic App can use the connectors access the SharePoint and blob storage.
+- 2.1. Go to the resource group to which the ARM template was deployed.
+- 2.2. Find the API Connection `sharepointonline` and click on it.
+- 2.3. On the left menu, find the `Edit API Connection` under General section and click on it.
+- 2.4. Click on Authorize button and log in.
+- 2.5. Click on save button.
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
@@ -41,4 +55,9 @@ The following properties are kept when copying the files from SharePoint site to
 ## Permissions
 
 The blob metadata `permittedGroupIds` is a comma separated list, each element is the object id of the security group. Note individual user permission and site permission are not kept. The shared links are also not honored.
+
+## Limitations
+- Currently, we only support AAD security groups (principleType = 4) during ingestion. The User (principleType = 1), DistributionList (principleType = 2), and Shared Links are not ingested. As a result, those categories are treated as unauthorized.  
+- The blob metadata length is limited to 8K. As a result, a document cannot have more than roughly 200 security groups assigned to.
+- Sharepoint file names cannot contain non-ascii characters. This is a limitation of Azure blob metadata as the metadata is pushed in http headers only.
 
