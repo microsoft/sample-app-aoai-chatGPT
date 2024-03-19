@@ -34,7 +34,24 @@ once all files are copied from the sharepoint site to the blob container, you ca
 Folder Statistics in Azure storage explorer and OneDrive can be used to compare the number of blobs in container and files in Sharepoint respectively.
 
 
-3. Creating Azure Cogntive Search Index using `2023-10-01-preview` [ingestion API](https://learn.microsoft.com/en-us/rest/api/azureopenai/ingestion-jobs/create?view=rest-azureopenai-2023-10-01-preview&tabs=HTTP).    
+3. Create Azure Cogntive Search Index using `2023-10-01-preview` ingestion API.    
+3.1. Prepare a PUT request headers and body according to [ingestion API](https://learn.microsoft.com/en-us/rest/api/azureopenai/ingestion-jobs/create?view=rest-azureopenai-2023-10-01-preview&tabs=HTTP).
+3.2. Add the `blobMetadataToIndexFieldMapping` property to the request Json body as follows:
+```
+"blobMetadataToIndexFieldMapping": {
+        "permittedIds": {
+            "kind": "Prebuild",
+            "name": "group_ids"
+        },
+        "sharepointUrl": {
+            "kind": "Prebuild",
+            "name": "url"
+        }
+    }
+```
+3.3 Maker sure that the `dataRefreshIntervalInMinutes` property has a positive value (To configure the scheduled indexer execution).
+
+
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
