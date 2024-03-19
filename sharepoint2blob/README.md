@@ -35,8 +35,8 @@ Folder Statistics in Azure storage explorer and OneDrive can be used to compare 
 
 
 3. Create Azure Cogntive Search Index using `2023-10-01-preview` ingestion API.    
-3.1. Prepare a PUT request headers and body according to [ingestion API](https://learn.microsoft.com/en-us/rest/api/azureopenai/ingestion-jobs/create?view=rest-azureopenai-2023-10-01-preview&tabs=HTTP).
-3.2. Add the `blobMetadataToIndexFieldMapping` property to the request Json body as follows:
+- 3.1. Prepare a PUT request headers and body according to [ingestion API](https://learn.microsoft.com/en-us/rest/api/azureopenai/ingestion-jobs/create?view=rest-azureopenai-2023-10-01-preview&tabs=HTTP).
+- 3.2. Add the `blobMetadataToIndexFieldMapping` property to the request Json body as follows:
 ```
 "blobMetadataToIndexFieldMapping": {
         "permittedIds": {
@@ -49,9 +49,15 @@ Folder Statistics in Azure storage explorer and OneDrive can be used to compare 
         }
     }
 ```
-3.3 Maker sure that the `dataRefreshIntervalInMinutes` property has a positive value (To configure the scheduled indexer execution).
+- 3.3 Set the `dataRefreshIntervalInMinutes` property to a positive value (To configure the scheduled indexer execution).
 
+4. Create and Deploy a Web App for inference
 
+- 4.1. Goto [Azure OpenAI Studio](https://oai.azure.com/) -> On Your Data
+- 4.2. Select `Azure AI Search` as data source.
+- 4.3. Choose the Search Index created during the step 3.
+- 4.4. On Data Management, enable **document-level access control**, while choosing your desired Search type (Keyword/Semantic/Embedded)
+- 4.5. Finally, click on `Deploy To` button and deploy this as a web app.  
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
