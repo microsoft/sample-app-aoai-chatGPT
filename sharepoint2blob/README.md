@@ -10,7 +10,8 @@ This folder contains the ARM template of a sample Logic App that can sync your S
 
 1. Click the following button to deploy the ARM template to your Azure Subscription. You will be asked to provide the following inputs:
 
-### Feature Specific Inputs
+#### Feature Specific Inputs
+
 - `Share Point Url`: The Url of the input Sharepoint site (e.g., https://microsoft.sharepoint.com/teams/YourSharepointSiteName)
 - `Storage Accounts_armblobqueue_name`: A storage account name to be created and used to store sharepoint documents and their access control information
 - `Enqueue Interval`: An integer to specify (in minutes) how often Sharepoint site should be scanned for documents and/or permission updates
@@ -25,6 +26,11 @@ This folder contains the ARM template of a sample Logic App that can sync your S
 - 2.3. On the left menu, find the `Edit API Connection` under General section and click on it.
 - 2.4. Click on Authorize button and log in.
 - 2.5. Click on save button.
+
+once all files are copied from the sharepoint site to the blob container, you can proceed to the step 3.
+**Note:** There is no notification mechanism to indicate the end of copying process. It is left to the customer to verify that all files were copied. 
+Folder Statistics in Azure storage explorer and OneDrive can be used to compare the number of blobs in container and files in Sharepoint respectively.
+    
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
