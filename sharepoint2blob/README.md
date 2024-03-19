@@ -34,7 +34,7 @@ once all files are copied from the sharepoint site to the blob container, you ca
 Folder Statistics in Azure storage explorer and OneDrive can be used to compare the number of blobs in container and files in Sharepoint respectively.
 
 
-3. Creating Azure Cogntive Search Index using `2022-10-01-preview` API.    
+3. Creating Azure Cogntive Search Index using `2023-10-01-preview` [ingestion API](https://learn.microsoft.com/en-us/rest/api/azureopenai/ingestion-jobs/create?view=rest-azureopenai-2023-10-01-preview&tabs=HTTP).    
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
