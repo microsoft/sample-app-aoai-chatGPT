@@ -28,9 +28,13 @@ This folder contains the ARM template of a sample Logic App that can sync your S
 - 2.5. Click on save button.
 
 once all files are copied from the sharepoint site to the blob container, you can proceed to the step 3.
+
+
 **Note:** There is no notification mechanism to indicate the end of copying process. It is left to the customer to verify that all files were copied. 
 Folder Statistics in Azure storage explorer and OneDrive can be used to compare the number of blobs in container and files in Sharepoint respectively.
-    
+
+
+3. Creating Azure Cogntive Search Index using `2022-10-01-preview` API.    
 
 Continue read the following sections to learn more details about the deployed Logic App workflow.
 
