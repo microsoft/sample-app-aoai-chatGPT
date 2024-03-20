@@ -813,7 +813,6 @@ async def promptflow_request(request):
                         PROMPTFLOW_REQUEST_FIELD_NAME
                     ],
                     "chat_history": pf_formatted_obj[:-1],
-                    "past_questions": [],
                 },
                 headers=headers,
             )
