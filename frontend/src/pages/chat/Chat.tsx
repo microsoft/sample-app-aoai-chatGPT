@@ -10,7 +10,7 @@ import { isEmpty } from "lodash-es";
 import DOMPurify from 'dompurify';
 
 import styles from "./Chat.module.css";
-import Contoso from "../../assets/Contoso.svg";
+import Contoso from "https://avantiresidential.com/wp-content/themes/avanti-corporate/assets/images/avanti-logo.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
 import {
