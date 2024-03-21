@@ -234,6 +234,7 @@ AZURE_MLINDEX_URL_COLUMN = os.environ.get("AZURE_MLINDEX_URL_COLUMN")
 AZURE_MLINDEX_VECTOR_COLUMNS = os.environ.get("AZURE_MLINDEX_VECTOR_COLUMNS")
 AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
 # Promptflow Integration Settings
+USE_PROMPTFLOW = os.environ.get("USE_PROMPTFLOW", "false").lower() == "true"
 PROMPTFLOW_ENDPOINT = os.environ.get("PROMPTFLOW_ENDPOINT")
 PROMPTFLOW_API_KEY = os.environ.get("PROMPTFLOW_API_KEY")
 PROMPTFLOW_RESPONSE_TIMEOUT = os.environ.get("PROMPTFLOW_RESPONSE_TIMEOUT", 30.0)
@@ -297,7 +298,7 @@ def should_use_data():
         logging.debug("Using Azure ML Index")
         return True
 
-    if PROMPTFLOW_ENDPOINT and PROMPTFLOW_API_KEY:
+    if USE_PROMPTFLOW and PROMPTFLOW_ENDPOINT and PROMPTFLOW_API_KEY:
         DATASOURCE_TYPE = "Promptflow"
         logging.debug("Using Promptflow endpoint")
         return True

@@ -181,6 +181,7 @@ def format_pf_non_streaming_response(
 
 def convert_to_pf_format(input_json, request_field_name, response_field_name):
     output_json = []
+    logging.debug(f"Input json: {input_json}")
     # align the input json to the format expected by promptflow chat flow
     for message in input_json["messages"]:
         if message:
@@ -190,7 +191,7 @@ def convert_to_pf_format(input_json, request_field_name, response_field_name):
                     "outputs": {response_field_name: ""},
                 }
                 output_json.append(new_obj)
-            elif message["role"] == "assistant" and output_json:
+            elif message["role"] == "assistant" and len(output_json) > 0:
                 output_json[-1]["outputs"][response_field_name] = message["content"]
     logging.debug(f"PF formatted response: {output_json}")
     return output_json
