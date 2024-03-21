@@ -298,11 +298,6 @@ def should_use_data():
         logging.debug("Using Azure ML Index")
         return True
 
-    if USE_PROMPTFLOW and PROMPTFLOW_ENDPOINT and PROMPTFLOW_API_KEY:
-        DATASOURCE_TYPE = "Promptflow"
-        logging.debug("Using Promptflow endpoint")
-        return True
-
     return False
 
 
@@ -839,7 +834,7 @@ async def send_chat_request(request):
 
 
 async def complete_chat_request(request_body):
-    if DATASOURCE_TYPE == "Promptflow":
+    if USE_PROMPTFLOW and PROMPTFLOW_ENDPOINT and PROMPTFLOW_API_KEY:
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
