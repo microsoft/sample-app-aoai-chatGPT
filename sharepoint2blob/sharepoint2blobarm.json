@@ -1772,11 +1772,11 @@
                     "triggers": {
                         "Recurrence": {
                             "recurrence": {
-                                "frequency": "Hour",
+                                "frequency": "Minute",
                                 "interval": "@parameters('EnqueueInterval')"
                             },
                             "evaluatedRecurrence": {
-                                "frequency": "Hour",
+                                "frequency": "Minute",
                                 "interval": 3
                             },
                             "type": "Recurrence"
