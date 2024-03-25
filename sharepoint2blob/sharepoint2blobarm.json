@@ -4,15 +4,21 @@
     "parameters": {
         "SharePointUrl": {
             "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
-            "type": "String"
+            "type": "String",
+            "minLength": 30
         },
-        "storageAccounts_armblobqueue_name": {
+        "ingestionStorageAccountName": {
             "defaultValue": "armqueue2",
-            "type": "String"
+            "type": "String",
+            "minLength": 1
         },
         "EnqueueInterval": {
-            "defaultValue": 1,
-            "type": "int"
+            "defaultValue": 60,
+            "type": "int",
+            "minValue": 60,
+            "metadata": {
+                "description": "How often (in minutes) to check for updates to sharepoint site"
+            }
         }
     },
     "variables": {
@@ -39,7 +45,7 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2023-01-01",
-            "name": "[parameters('storageAccounts_armblobqueue_name')]",
+            "name": "[parameters('ingestionStorageAccountName')]",
             "location": "[variables('location')]",
             "sku": {
                 "name": "Standard_RAGRS",
@@ -81,9 +87,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts/blobServices",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "sku": {
                 "name": "Standard_RAGRS",
@@ -107,9 +113,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts/fileServices",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "sku": {
                 "name": "Standard_RAGRS",
@@ -131,9 +137,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "properties": {
                 "cors": {
@@ -144,9 +150,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts/tableServices",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "properties": {
                 "cors": {
@@ -157,10 +163,10 @@
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default/pending-files')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default/pending-files')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccounts_armblobqueue_name'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('ingestionStorageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "properties": {
                 "metadata": {}
@@ -169,10 +175,10 @@
         {
             "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
             "apiVersion": "2023-01-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default/pending-folders')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default/pending-folders')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('storageAccounts_armblobqueue_name'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/queueServices', parameters('ingestionStorageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ],
             "properties": {
                 "metadata": {}
@@ -181,15 +187,15 @@
         {
             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
             "apiVersion": "2019-06-01",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/default/sharepoint')]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/default/sharepoint')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ]
         },
         {
             "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/Microsoft.Authorization/', variables('queueRoleGuidId'))]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/Microsoft.Authorization/', variables('queueRoleGuidId'))]",
             "properties": {
                 "_comment1": "Role definition IDs from: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage",
                 "roleDefinitionId": "[variables('queueContributorRoleId')]",
@@ -198,13 +204,13 @@
                 "principalType": "ServicePrincipal"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ]
         },
         {
             "type": "Microsoft.Storage/storageAccounts/providers/roleAssignments",
             "apiVersion": "2018-09-01-preview",
-            "name": "[concat(parameters('storageAccounts_armblobqueue_name'), '/Microsoft.Authorization/', variables('blobRoleGuidId'))]",
+            "name": "[concat(parameters('ingestionStorageAccountName'), '/Microsoft.Authorization/', variables('blobRoleGuidId'))]",
             "properties": {
                 "_comment1": "Role definition IDs from: https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#storage",
                 "roleDefinitionId": "[variables('storageBlobContributorRoleId')]",
@@ -213,7 +219,7 @@
                 "principalType": "ServicePrincipal"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_armblobqueue_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('ingestionStorageAccountName'))]"
             ]
         },
         {
@@ -248,8 +254,8 @@
                 ]
             },
              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', parameters('storageAccounts_armblobqueue_name'), 'default','pending-folders')]",
-                "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('storageAccounts_armblobqueue_name'), 'Microsoft.Authorization', variables('queueRoleGuidId'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', parameters('ingestionStorageAccountName'), 'default','pending-folders')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('ingestionStorageAccountName'), 'Microsoft.Authorization', variables('queueRoleGuidId'))]"
             ]
         },
         {
@@ -283,8 +289,8 @@
                 ]
             },
              "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('storageAccounts_armblobqueue_name'), 'default','sharepoint')]",
-                "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('storageAccounts_armblobqueue_name'), 'Microsoft.Authorization', variables('blobRoleGuidId'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', parameters('ingestionStorageAccountName'), 'default','sharepoint')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/providers/roleAssignments', parameters('ingestionStorageAccountName'), 'Microsoft.Authorization', variables('blobRoleGuidId'))]"
             ]
         },
         {
@@ -1031,7 +1037,7 @@
                                 "value": "[parameters('SharePointUrl')]"
                     },
                     "storageAccountName": {
-                        "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                        "value": "[parameters('ingestionStorageAccountName')]"
                     }
                 }
             }
@@ -1725,7 +1731,7 @@
                         "value": "[parameters('SharePointUrl')]"
                     },
                     "storageAccountName": {
-                        "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                        "value": "[parameters('ingestionStorageAccountName')]"
                     }
                 }
             }
@@ -1811,7 +1817,7 @@
                         }
                     },
                     "storageAccountName": {
-                        "value": "[parameters('storageAccounts_armblobqueue_name')]"
+                        "value": "[parameters('ingestionStorageAccountName')]"
                     },
                     "EnqueueInterval": {
                         "value": "[parameters('EnqueueInterval')]"
