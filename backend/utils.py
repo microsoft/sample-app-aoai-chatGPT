@@ -103,8 +103,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
 
     return {}
 
-
-def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=None):
+def format_stream_response(chatCompletionChunk, history_metadata, request_id):
     response_obj = {
         "id": chatCompletionChunk.id,
         "model": chatCompletionChunk.model,
@@ -112,6 +111,7 @@ def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=N
         "object": chatCompletionChunk.object,
         "choices": [{"messages": []}],
         "history_metadata": history_metadata,
+        "headers": {"apim-request-id": request_id}
     }
 
     if len(chatCompletionChunk.choices) > 0:

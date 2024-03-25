@@ -849,10 +849,11 @@ async def complete_chat_request(request_body):
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
+    request_id = response.response.headers.get("apim-request-id", None)
 
     async def generate():
         async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata)
+            yield format_stream_response(completionChunk, history_metadata, request_id)
 
     return generate()
 
