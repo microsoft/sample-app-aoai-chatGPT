@@ -9,30 +9,30 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-param appServicePlanName string = ''
-param backendServiceName string = ''
-param resourceGroupName string = ''
+param appServicePlanName string = 'MainstreetCore'
+param backendServiceName string = 'MainstreetCore'
+param resourceGroupName string = 'MainstreetCore'
 
-param searchServiceName string = ''
-param searchServiceResourceGroupName string = ''
-param searchServiceResourceGroupLocation string = location
-param searchServiceSkuName string = ''
-param searchIndexName string = 'gptkbindex'
-param searchUseSemanticSearch bool = false
-param searchSemanticSearchConfig string = 'default'
-param searchTopK int = 5
-param searchEnableInDomain bool = true
-param searchContentColumns string = 'content'
-param searchFilenameColumn string = 'filepath'
-param searchTitleColumn string = 'title'
-param searchUrlColumn string = 'url'
+// param searchServiceName string = ''
+// param searchServiceResourceGroupName string = ''
+// param searchServiceResourceGroupLocation string = location
+// param searchServiceSkuName string = ''
+// param searchIndexName string = 'gptkbindex'
+// param searchUseSemanticSearch bool = false
+// param searchSemanticSearchConfig string = 'default'
+// param searchTopK int = 5
+// param searchEnableInDomain bool = true
+// param searchContentColumns string = 'content'
+// param searchFilenameColumn string = 'filepath'
+// param searchTitleColumn string = 'title'
+// param searchUrlColumn string = 'url'
 
-param openAiResourceName string = ''
-param openAiResourceGroupName string = ''
+param openAiResourceName string = 'MainstreetCore'
+param openAiResourceGroupName string = 'MainstreetCore'
 param openAiResourceGroupLocation string = location
 param openAiSkuName string = ''
-param openAIModel string = 'turbo16k'
-param openAIModelName string = 'gpt-35-turbo-16k'
+param openAIModel string = 'gpt-4-1106-preview'
+param openAIModelName string = 'gpt-4'
 param openAITemperature int = 0
 param openAITopP int = 1
 param openAIMaxTokens int = 1000
@@ -44,10 +44,10 @@ param embeddingDeploymentName string = 'embedding'
 param embeddingModelName string = 'text-embedding-ada-002'
 
 // Used by prepdocs.py: Form recognizer
-param formRecognizerServiceName string = ''
-param formRecognizerResourceGroupName string = ''
-param formRecognizerResourceGroupLocation string = location
-param formRecognizerSkuName string = ''
+// param formRecognizerServiceName string = ''
+// param formRecognizerResourceGroupName string = ''
+// param formRecognizerResourceGroupLocation string = location
+// param formRecognizerSkuName string = ''
 
 // Used for the Azure AD application
 param authClientId string
@@ -55,7 +55,7 @@ param authClientId string
 param authClientSecret string
 
 // Used for Cosmos DB
-param cosmosAccountName string = ''
+param cosmosAccountName string = 'mainstreet-core'
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
@@ -75,9 +75,9 @@ resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' exi
   name: !empty(openAiResourceGroupName) ? openAiResourceGroupName : resourceGroup.name
 }
 
-resource searchServiceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(searchServiceResourceGroupName)) {
-  name: !empty(searchServiceResourceGroupName) ? searchServiceResourceGroupName : resourceGroup.name
-}
+// resource searchServiceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(searchServiceResourceGroupName)) {
+//   name: !empty(searchServiceResourceGroupName) ? searchServiceResourceGroupName : resourceGroup.name
+// }
 
 
 // Create an App Service Plan to group applications under the same payment plan and SKU
@@ -98,7 +98,8 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 
 // The application frontend
 var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
-var authIssuerUri = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
+// var authIssuerUri = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
+var authIssuerUri = ''
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
   scope: resourceGroup
@@ -108,7 +109,7 @@ module backend 'core/host/appservice.bicep' = {
     tags: union(tags, { 'azd-service-name': 'backend' })
     appServicePlanId: appServicePlan.outputs.id
     runtimeName: 'python'
-    runtimeVersion: '3.10'
+    runtimeVersion: '3.11'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
     authClientSecret: authClientSecret
@@ -116,17 +117,17 @@ module backend 'core/host/appservice.bicep' = {
     authIssuerUri: authIssuerUri
     appSettings: {
       // search
-      AZURE_SEARCH_INDEX: searchIndexName
-      AZURE_SEARCH_SERVICE: searchService.outputs.name
-      AZURE_SEARCH_KEY: searchService.outputs.adminKey
-      AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
-      AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
-      AZURE_SEARCH_TOP_K: searchTopK
-      AZURE_SEARCH_ENABLE_IN_DOMAIN: searchEnableInDomain
-      AZURE_SEARCH_CONTENT_COLUMNS: searchContentColumns
-      AZURE_SEARCH_FILENAME_COLUMN: searchFilenameColumn
-      AZURE_SEARCH_TITLE_COLUMN: searchTitleColumn
-      AZURE_SEARCH_URL_COLUMN: searchUrlColumn
+      // AZURE_SEARCH_INDEX: searchIndexName
+      // AZURE_SEARCH_SERVICE: searchService.outputs.name
+      // AZURE_SEARCH_KEY: searchService.outputs.adminKey
+      // AZURE_SEARCH_USE_SEMANTIC_SEARCH: searchUseSemanticSearch
+      // AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG: searchSemanticSearchConfig
+      // AZURE_SEARCH_TOP_K: searchTopK
+      // AZURE_SEARCH_ENABLE_IN_DOMAIN: searchEnableInDomain
+      // AZURE_SEARCH_CONTENT_COLUMNS: searchContentColumns
+      // AZURE_SEARCH_FILENAME_COLUMN: searchFilenameColumn
+      // AZURE_SEARCH_TITLE_COLUMN: searchTitleColumn
+      // AZURE_SEARCH_URL_COLUMN: searchUrlColumn
       // openai
       AZURE_OPENAI_RESOURCE: openAi.outputs.name
       AZURE_OPENAI_MODEL: openAIModel
@@ -160,7 +161,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: openAIModelName
-          version: '0613'
+          version: '1106-Preview'
         }
         capacity: 30
       }
@@ -177,24 +178,24 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
   }
 }
 
-module searchService 'core/search/search-services.bicep' = {
-  name: 'search-service'
-  scope: searchServiceResourceGroup
-  params: {
-    name: !empty(searchServiceName) ? searchServiceName : 'gptkb-${resourceToken}'
-    location: searchServiceResourceGroupLocation
-    tags: tags
-    authOptions: {
-      aadOrApiKey: {
-        aadAuthFailureMode: 'http401WithBearerChallenge'
-      }
-    }
-    sku: {
-      name: !empty(searchServiceSkuName) ? searchServiceSkuName : 'standard'
-    }
-    semanticSearch: 'free'
-  }
-}
+// module searchService 'core/search/search-services.bicep' = {
+//   name: 'search-service'
+//   scope: searchServiceResourceGroup
+//   params: {
+//     name: !empty(searchServiceName) ? searchServiceName : 'gptkb-${resourceToken}'
+//     location: searchServiceResourceGroupLocation
+//     tags: tags
+//     authOptions: {
+//       aadOrApiKey: {
+//         aadAuthFailureMode: 'http401WithBearerChallenge'
+//       }
+//     }
+//     sku: {
+//       name: !empty(searchServiceSkuName) ? searchServiceSkuName : 'standard'
+//     }
+//     semanticSearch: 'free'
+//   }
+// }
 
 // The application database
 module cosmos 'db.bicep' = {
@@ -220,35 +221,35 @@ module openAiRoleUser 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleUser 'core/security/role.bicep' = {
-  scope: searchServiceResourceGroup
-  name: 'search-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
-    principalType: 'User'
-  }
-}
+// module searchRoleUser 'core/security/role.bicep' = {
+//   scope: searchServiceResourceGroup
+//   name: 'search-role-user'
+//   params: {
+//     principalId: principalId
+//     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+//     principalType: 'User'
+//   }
+// }
 
-module searchIndexDataContribRoleUser 'core/security/role.bicep' = {
-  scope: searchServiceResourceGroup
-  name: 'search-index-data-contrib-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
-    principalType: 'User'
-  }
-}
+// module searchIndexDataContribRoleUser 'core/security/role.bicep' = {
+//   scope: searchServiceResourceGroup
+//   name: 'search-index-data-contrib-role-user'
+//   params: {
+//     principalId: principalId
+//     roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+//     principalType: 'User'
+//   }
+// }
 
-module searchServiceContribRoleUser 'core/security/role.bicep' = {
-  scope: searchServiceResourceGroup
-  name: 'search-service-contrib-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
-    principalType: 'User'
-  }
-}
+// module searchServiceContribRoleUser 'core/security/role.bicep' = {
+//   scope: searchServiceResourceGroup
+//   name: 'search-service-contrib-role-user'
+//   params: {
+//     principalId: principalId
+//     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+//     principalType: 'User'
+//   }
+// }
 
 // SYSTEM IDENTITIES
 module openAiRoleBackend 'core/security/role.bicep' = {
@@ -261,31 +262,31 @@ module openAiRoleBackend 'core/security/role.bicep' = {
   }
 }
 
-module searchRoleBackend 'core/security/role.bicep' = {
-  scope: searchServiceResourceGroup
-  name: 'search-role-backend'
-  params: {
-    principalId: backend.outputs.identityPrincipalId
-    roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
-    principalType: 'ServicePrincipal'
-  }
-}
+// module searchRoleBackend 'core/security/role.bicep' = {
+//   scope: searchServiceResourceGroup
+//   name: 'search-role-backend'
+//   params: {
+//     principalId: backend.outputs.identityPrincipalId
+//     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+//     principalType: 'ServicePrincipal'
+//   }
+// }
 
 // For doc prep
-module docPrepResources 'docprep.bicep' = {
-  name: 'docprep-resources${resourceToken}'
-  params: {
-    location: location
-    resourceToken: resourceToken
-    tags: tags
-    principalId: principalId
-    resourceGroupName: resourceGroup.name
-    formRecognizerServiceName: formRecognizerServiceName
-    formRecognizerResourceGroupName: formRecognizerResourceGroupName
-    formRecognizerResourceGroupLocation: formRecognizerResourceGroupLocation
-    formRecognizerSkuName: !empty(formRecognizerSkuName) ? formRecognizerSkuName : 'S0'
-  }
-}
+// module docPrepResources 'docprep.bicep' = {
+//   name: 'docprep-resources${resourceToken}'
+//   params: {
+//     location: location
+//     resourceToken: resourceToken
+//     tags: tags
+//     principalId: principalId
+//     resourceGroupName: resourceGroup.name
+//     formRecognizerServiceName: formRecognizerServiceName
+//     formRecognizerResourceGroupName: formRecognizerResourceGroupName
+//     formRecognizerResourceGroupLocation: formRecognizerResourceGroupLocation
+//     formRecognizerSkuName: !empty(formRecognizerSkuName) ? formRecognizerSkuName : 'S0'
+//   }
+// }
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
@@ -293,19 +294,19 @@ output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output BACKEND_URI string = backend.outputs.uri
 
 // search
-output AZURE_SEARCH_INDEX string = searchIndexName
-output AZURE_SEARCH_SERVICE string = searchService.outputs.name
-output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.name
-output AZURE_SEARCH_SKU_NAME string = searchService.outputs.skuName
-output AZURE_SEARCH_KEY string = searchService.outputs.adminKey
-output AZURE_SEARCH_USE_SEMANTIC_SEARCH bool = searchUseSemanticSearch
-output AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG string = searchSemanticSearchConfig
-output AZURE_SEARCH_TOP_K int = searchTopK
-output AZURE_SEARCH_ENABLE_IN_DOMAIN bool = searchEnableInDomain
-output AZURE_SEARCH_CONTENT_COLUMNS string = searchContentColumns
-output AZURE_SEARCH_FILENAME_COLUMN string = searchFilenameColumn
-output AZURE_SEARCH_TITLE_COLUMN string = searchTitleColumn
-output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
+// output AZURE_SEARCH_INDEX string = searchIndexName
+// output AZURE_SEARCH_SERVICE string = searchService.outputs.name
+// output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.name
+// output AZURE_SEARCH_SKU_NAME string = searchService.outputs.skuName
+// output AZURE_SEARCH_KEY string = searchService.outputs.adminKey
+// output AZURE_SEARCH_USE_SEMANTIC_SEARCH bool = searchUseSemanticSearch
+// output AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG string = searchSemanticSearchConfig
+// output AZURE_SEARCH_TOP_K int = searchTopK
+// output AZURE_SEARCH_ENABLE_IN_DOMAIN bool = searchEnableInDomain
+// output AZURE_SEARCH_CONTENT_COLUMNS string = searchContentColumns
+// output AZURE_SEARCH_FILENAME_COLUMN string = searchFilenameColumn
+// output AZURE_SEARCH_TITLE_COLUMN string = searchTitleColumn
+// output AZURE_SEARCH_URL_COLUMN string = searchUrlColumn
 
 // openai
 output AZURE_OPENAI_RESOURCE string = openAi.outputs.name
@@ -325,9 +326,9 @@ output AZURE_OPENAI_PREVIEW_API_VERSION string = openAIApiVersion
 output AZURE_OPENAI_STREAM bool = openAIStream
 
 // Used by prepdocs.py:
-output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SERVICE
-output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
-output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
+// output AZURE_FORMRECOGNIZER_SERVICE string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SERVICE
+// output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_RESOURCE_GROUP
+// output AZURE_FORMRECOGNIZER_SKU_NAME string = docPrepResources.outputs.AZURE_FORMRECOGNIZER_SKU_NAME
 
 // cosmos
 output AZURE_COSMOSDB_ACCOUNT string = cosmos.outputs.accountName
