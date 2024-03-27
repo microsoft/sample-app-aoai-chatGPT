@@ -141,7 +141,8 @@ def create_or_update_search_index(
         credential=None, 
         language=None,
         vector_config_name=None,
-        admin_key=None):
+        admin_key=None,
+        vector_dim=None):
     
     if credential is None and admin_key is None:
         raise ValueError("credential and admin key cannot be None")
@@ -228,7 +229,7 @@ def create_or_update_search_index(
             "type": "Collection(Edm.Single)",
             "searchable": True,
             "retrievable": True,
-            "dimensions": 1536,
+            "dimensions": vector_dim if vector_dim else 1536,
             "vectorSearchConfiguration": vector_config_name
         })
 
@@ -346,6 +347,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     location = config["location"]
     index_name = config["index_name"]
     language = config.get("language", None)
+    vector_dim = config.get("vector_dim", None)
 
     if language and language not in SUPPORTED_LANGUAGE_CODES:
         raise Exception(f"ERROR: Ingestion does not support {language} documents. "
@@ -367,7 +369,11 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
 
     # create or update search index with compatible schema
     admin_key = os.environ.get("AZURE_SEARCH_ADMIN_KEY", None)
-    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name, config["semantic_config_name"], credential, language, vector_config_name=config.get("vector_config_name", None), admin_key=admin_key):
+    if not create_or_update_search_index(service_name, subscription_id, resource_group, index_name,
+                                         config["semantic_config_name"], credential,
+                                         language, vector_config_name=config.get("vector_config_name",None),
+                                         admin_key=admin_key,
+                                         vector_dim=config.get("vector_dim",None)):
         raise Exception(f"Failed to create or update index {index_name}")
     
     data_configs = []
@@ -389,11 +395,13 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         if "blob.core" in data_config["path"]:
             result = chunk_blob_container(data_config["path"], credential=credential, num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                 azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                vector_dim=vector_dim)
         elif os.path.exists(data_config["path"]):
             result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                     azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                    vector_dim=vector_dim)
         else:
             raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
