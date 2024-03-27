@@ -849,21 +849,23 @@ async def complete_chat_request(request_body):
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
+    request_id = response.response.headers.get("apim-request-id", None)
 
     async def generate():
         async for completionChunk in response:
             yield format_stream_response(completionChunk, history_metadata)
 
-    return generate()
+    return generate(), request_id
 
 
 async def conversation_internal(request_body):
     try:
         if SHOULD_STREAM:
-            result = await stream_chat_request(request_body)
+            result, request_id = await stream_chat_request(request_body)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
+            response.headers["apim-request-id"] = request_id
             return response
         else:
             result = await complete_chat_request(request_body)
