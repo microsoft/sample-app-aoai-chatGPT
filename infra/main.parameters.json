@@ -29,15 +29,6 @@
     "searchServiceSkuName": {
       "value": "${AZURE_SEARCH_SKU_NAME}"
     },
-    "formRecognizerServiceName": {
-      "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
-    },
-    "formRecognizerResourceGroupName": {
-      "value": "${AZURE_FORMRECOGNIZER_RESOURCE_GROUP}"
-    },
-    "formRecognizerSkuName": {
-      "value": "${AZURE_FORMRECOGNIZER_SKU_NAME}"
-    },
     "authClientId": {
       "value": "${AUTH_CLIENT_ID}"
     },

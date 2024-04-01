@@ -1,97 +1,24 @@
-# [Preview] Sample Chat App with AOAI
-
-This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Note: some portions of the app use preview APIs.
-
-## Prerequisites
-- An existing Azure OpenAI resource and model deployment of a chat model (e.g. `gpt-35-turbo-16k`, `gpt-4`)
-- To use Azure OpenAI on your data: one of the following data sources:
-  - Azure AI Search Index
-  - Azure CosmosDB Mongo vCore vector index
-  - Elasticsearch index (preview)
-  - Pinecone index (preview)
-  - AzureML index (preview)
+# Azure AI Chat Application
+This application is based off of the Microsoft sample repo found here: [Original Repo](https://github.com/microsoft/sample-app-aoai-chatGPT)
 
 ## Deploy the app
 
 ### Deploy with Azure Developer CLI
 Please see [README_azd.md](./README_azd.md) for detailed instructions.
 
-### One click Azure deployment
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2Fsample-app-aoai-chatGPT%2Fmain%2Finfrastructure%2Fdeployment.json)
-
-Click on the Deploy to Azure button and configure your settings in the Azure Portal as described in the [Environment variables](#environment-variables) section.
-
-Please see the [section below](#add-an-identity-provider) for important information about adding authentication to your app.
-
 ### Deploy from your local machine
 
 #### Local Setup: Basic Chat Experience
+Local setup requires that the azure resources are already provisioned.
+
 1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
-    
-    These variables are required:
-    - `AZURE_OPENAI_RESOURCE`
-    - `AZURE_OPENAI_MODEL`
-    - `AZURE_OPENAI_KEY`
 
-    These variables are optional:
-    - `AZURE_OPENAI_TEMPERATURE`
-    - `AZURE_OPENAI_TOP_P`
-    - `AZURE_OPENAI_MAX_TOKENS`
-    - `AZURE_OPENAI_STOP_SEQUENCE`
-    - `AZURE_OPENAI_SYSTEM_MESSAGE`
-
-    See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
-
-2. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-
+See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
+2. Start the app with `start.sh`
 3. You can see the local running app at http://127.0.0.1:50505.
 
-#### Local Setup: Chat with your data (Preview)
-[More information about Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/use-your-data)
-
-1. Update the `AZURE_OPENAI_*` environment variables as described above. 
-2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
-
-    These variables are required when adding your data with Azure AI Search:
-    - `AZURE_SEARCH_SERVICE`
-    - `AZURE_SEARCH_INDEX`
-    - `AZURE_SEARCH_KEY`
-
-    These variables are optional:
-    - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`
-    - `AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG`
-    - `AZURE_SEARCH_INDEX_TOP_K`
-    - `AZURE_SEARCH_ENABLE_IN_DOMAIN`
-    - `AZURE_SEARCH_CONTENT_COLUMNS`
-    - `AZURE_SEARCH_FILENAME_COLUMN`
-    - `AZURE_SEARCH_TITLE_COLUMN`
-    - `AZURE_SEARCH_URL_COLUMN`
-    - `AZURE_SEARCH_VECTOR_COLUMNS`
-    - `AZURE_SEARCH_QUERY_TYPE`
-    - `AZURE_SEARCH_PERMITTED_GROUPS_COLUMN`
-    - `AZURE_SEARCH_STRICTNESS`
-    - `AZURE_OPENAI_EMBEDDING_NAME`
-
-3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-4. You can see the local running app at http://127.0.0.1:50505.
-
-#### Local Setup: Enable Chat History
-To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. Then specify these additional environment variables: 
-- `AZURE_COSMOSDB_ACCOUNT`
-- `AZURE_COSMOSDB_DATABASE`
-- `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`
-- `AZURE_COSMOSDB_ACCOUNT_KEY`
-
-As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:50505. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-
-#### Local Setup: Enable Message Feedback
-To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
-
-/.env
-- `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
-
 #### Deploy with the Azure CLI
-**NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
+**NOTE**: If you've made code changes, be sure to **build the app code** with `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
 
 You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. Make sure you have version 2.48.1 or later.
 
@@ -104,27 +31,14 @@ If you've deployed the app previously, first run this command to update the apps
 
 `az webapp config appsettings set -g <resource-group-name> -n <existing-app-name> --settings WEBSITE_WEBDEPLOY_USE_SCM=false`
 
-Check the runtime stack for your app by viewing the app service resource in the Azure Portal. If it shows "Python - 3.10", use `PYTHON:3.10` in the runtime argument below. If it shows "Python - 3.11", use `PYTHON:3.11` in the runtime argument below. 
-
-Check the SKU in the same way. Use the abbreviated SKU name in the argument below, e.g. for "Basic (B1)" the SKU is `B1`. 
-
 Then, use these commands to deploy your local code to the existing app:
 
-1. `az webapp up --runtime <runtime-stack> --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
+1. `az webapp up --runtime PYTHON:3.11 --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
 1. `az webapp config set --startup-file "python3 -m gunicorn app:app" --name <existing-app-name>`
 
 Make sure that the app name and resource group match exactly for the app that was previously deployed.
 
 Deployment will take several minutes. When it completes, you should be able to navigate to your app at {app-name}.azurewebsites.net.
-
-### Add an identity provider
-After deployment, you will need to add an identity provider to provide authentication support in your app. See [this tutorial](https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service) for more information.
-
-If you don't add an identity provider, the chat functionality of your app will be blocked to prevent unauthorized access to your resources and data. 
-
-To remove this restriction, you can add `AUTH_ENABLED=False` to the environment variables. This will disable authentication and allow anyone to access the chat functionality of your app. **This is not recommended for production apps.**
-
-To add further access controls, update the logic in `getUserInfoList` in `frontend/src/pages/chat/Chat.tsx`. 
 
 ### Common Customization Scenarios (e.g. updating the default chat logo and headers)
 
