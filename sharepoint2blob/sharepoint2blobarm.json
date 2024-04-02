@@ -713,25 +713,25 @@
                                                     "or": [
                                                         {
                                                             "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
+                                                                "@tolower(items('For_each_Item_in_the_list')?['FileLeafRef.Suffix'])",
                                                                 "pdf"
                                                             ]
                                                         },
                                                         {
                                                             "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
+                                                                "@tolower(items('For_each_Item_in_the_list')?['FileLeafRef.Suffix'])",
                                                                 "docx"
                                                             ]
                                                         },
                                                         {
                                                             "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
+                                                                "@tolower(items('For_each_Item_in_the_list')?['FileLeafRef.Suffix'])",
                                                                 "pptx"
                                                             ]
                                                         },
                                                         {
                                                             "equals": [
-                                                                "@items('For_each_Item_in_the_list')?['FileLeafRef.Suffix']",
+                                                                "@tolower(items('For_each_Item_in_the_list')?['FileLeafRef.Suffix'])",
                                                                 "txt"
                                                             ]
                                                         }
