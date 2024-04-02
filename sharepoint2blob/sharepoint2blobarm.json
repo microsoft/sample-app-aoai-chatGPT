@@ -5,19 +5,26 @@
         "SharePointUrl": {
             "defaultValue": "https://microsoft.sharepoint.com/teams/TestSharePointWednesday",
             "type": "String",
-            "minLength": 30
+            "minLength": 30,
+            "metadata": {
+                "required": true
+            }
         },
         "ingestionStorageAccountName": {
             "defaultValue": "armqueue2",
             "type": "String",
-            "minLength": 1
+            "minLength": 1,
+            "metadata": {
+                "required": true
+            }
         },
         "EnqueueInterval": {
             "defaultValue": 60,
             "type": "int",
             "minValue": 60,
             "metadata": {
-                "description": "How often (in minutes) to check for updates to sharepoint site"
+                "description": "How often (in minutes) to check for updates to sharepoint site",
+                "required": true
             }
         }
     },
@@ -1749,7 +1756,8 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
-                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]"
+                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]",
+                
             ],
             "properties": {
                 "state": "Enabled",
