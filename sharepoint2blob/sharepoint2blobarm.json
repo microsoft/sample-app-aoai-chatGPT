@@ -1756,8 +1756,7 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userAssignedIdentities_sharepoint2blob_mi_name'))]",
-                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]",
-                
+                "[resourceId('Microsoft.Web/connections', variables('connections_azurequeues_name'))]"                
             ],
             "properties": {
                 "state": "Enabled",
