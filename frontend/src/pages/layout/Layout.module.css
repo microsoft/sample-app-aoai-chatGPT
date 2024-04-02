@@ -56,6 +56,10 @@
     cursor: pointer;
 }
 
+.layoutButtonStack {
+    margin-right: 20px;
+}
+
 .shareButton {
     color: #FFFFFF;
 }
