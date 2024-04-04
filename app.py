@@ -827,7 +827,6 @@ async def send_chat_request(request):
     try:
         azure_openai_client = init_openai_client()
         response = await azure_openai_client.chat.completions.create(**model_args)
-        print("response", response)
 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
@@ -852,9 +851,6 @@ async def complete_chat_request(request_body):
 async def stream_chat_request(request_body):
     response = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
-    # request_id = response.response.headers.get("apim-request-id", None)
-    # print("request_id", request_id)
-
     async def generate():
         async for completionChunk in response:
             yield format_stream_response(completionChunk, history_metadata)
@@ -869,11 +865,10 @@ async def conversation_internal(request_body):
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
-            # print("response", response)
+            
             return response
         else:
             result = await complete_chat_request(request_body)
-            # print("result", result)
             return jsonify(result)
 
     except Exception as ex:
@@ -932,7 +927,7 @@ async def add_conversation():
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
-        # print("messages", messages)
+        
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
