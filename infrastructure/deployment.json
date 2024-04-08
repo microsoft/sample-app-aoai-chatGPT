@@ -188,13 +188,6 @@
                 "description": "Azure OpenAI System Message"
             }
         },
-        "AzureOpenAIApiVersion": {
-            "type": "string",
-            "defaultValue": "2023-12-01-preview",
-            "metadata": {
-                "description": "Azure OpenAI Api Version"
-            }
-        },
         "AzureOpenAIStream": {
             "type": "bool",
             "defaultValue": true,
@@ -482,10 +475,6 @@
                         {
                             "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
                             "value": "[parameters('AzureOpenAISystemMessage')]"
-                        },
-                        {
-                            "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
-                            "value": "[parameters('AzureOpenAIApiVersion')]"
                         },
                         {
                             "name": "AZURE_OPENAI_STREAM",

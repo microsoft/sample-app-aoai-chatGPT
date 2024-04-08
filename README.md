@@ -95,9 +95,10 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 
 You can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) to deploy the app from your local machine. Make sure you have version 2.48.1 or later.
 
-If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following command from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
+If this is your first time deploying the app, you can use [az webapp up](https://learn.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up). Run the following two commands from the root folder of the repo, updating the placeholder values to your desired app name, resource group, location, and subscription. You can also change the SKU if desired.
 
-`az webapp up --runtime PYTHON:3.10 --sku B1 --name <new-app-name> --resource-group <resource-group-name> --location <azure-region> --subscription <subscription-name>`
+1. `az webapp up --runtime PYTHON:3.11 --sku B1 --name <new-app-name> --resource-group <resource-group-name> --location <azure-region> --subscription <subscription-name>`
+1. `az webapp config set --startup-file "python3 -m gunicorn app:app" --name <new-app-name>`
 
 If you've deployed the app previously, first run this command to update the appsettings to allow local code deployment:
 
@@ -107,9 +108,10 @@ Check the runtime stack for your app by viewing the app service resource in the 
 
 Check the SKU in the same way. Use the abbreviated SKU name in the argument below, e.g. for "Basic (B1)" the SKU is `B1`. 
 
-Then, use the `az webapp up` command to deploy your local code to the existing app:
+Then, use these commands to deploy your local code to the existing app:
 
-`az webapp up --runtime <runtime-stack> --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
+1. `az webapp up --runtime <runtime-stack> --sku <sku> --name <existing-app-name> --resource-group <resource-group-name>`
+1. `az webapp config set --startup-file "python3 -m gunicorn app:app" --name <existing-app-name>`
 
 Make sure that the app name and resource group match exactly for the app that was previously deployed.
 
@@ -184,6 +186,8 @@ We recommend keeping these best practices in mind:
 - When you rotate API keys for your AOAI or ACS resource, be sure to update the app settings for each of your deployed apps to use the new key.
 - Pull in changes from `main` frequently to ensure you have the latest bug fixes and improvements, especially when using Azure OpenAI on your data.
 
+**A note on Azure OpenAI API versions**: The application code in this repo will implement the request and response contracts for the most recent preview API version supported for Azure OpenAI.  To keep your application up-to-date as the Azure OpenAI API evolves with time, be sure to merge the latest API version update into your own application code and redeploy using the methods described in this document.
+
 ## Environment variables
 
 Note: settings starting with `AZURE_SEARCH` are only needed when using Azure OpenAI on your data with Azure AI Search. If not connecting to your data, you only need to specify `AZURE_OPENAI` settings.
@@ -215,7 +219,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_MAX_TOKENS|1000|The maximum number of tokens allowed for the generated answer.|
 |AZURE_OPENAI_STOP_SEQUENCE||Up to 4 sequences where the API will stop generating further tokens. Represent these as a string joined with "|", e.g. `"stop1|stop2|stop3"`|
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
-|AZURE_OPENAI_PREVIEW_API_VERSION|2023-06-01-preview|API version when using Azure OpenAI on your data|
+|AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 |UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
@@ -225,6 +229,13 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
 |UI_FAVICON|| Defaults to Contoso favicon. Configure the URL to your favicon to modify.
 |UI_SHOW_SHARE_BUTTON|True|Share button (right-top)
+|SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
+|USE_PROMPTFLOW|False|Use existing Promptflow deployed endpoint. If set to `True` then both `PROMPTFLOW_ENDPOINT` and `PROMPTFLOW_API_KEY` also need to be set.|
+|PROMPTFLOW_ENDPOINT||URL of the deployed Promptflow endpoint e.g. https://pf-deployment-name.region.inference.ml.azure.com/score|
+|PROMPTFLOW_API_KEY||Auth key for deployed Promptflow endpoint. Note: only Key-based authentication is supported.|
+|PROMPTFLOW_RESPONSE_TIMEOUT|120|Timeout value in seconds for the Promptflow endpoint to respond.|
+|PROMPTFLOW_REQUEST_FIELD_NAME|question|Default field name to construct Promptflow request. Note: chat_history is auto constucted based on the interaction, if your API expects other mandatory field you will need to change the request parameters under `promptflow_request` function.|
+|PROMPTFLOW_RESPONSE_FIELD_NAME|answer|Default field name to process the response from Promptflow request.|
 
 ## Contributing
 

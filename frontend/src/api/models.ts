@@ -7,6 +7,7 @@ export type AskResponse = {
 };
 
 export type Citation = {
+    part_index?: number;
     content: string;
     id: string;
     title: string | null;
@@ -114,6 +115,7 @@ export type FrontendSettings = {
     auth_enabled?: string | null;
     feedback_enabled?: string | null;
     ui?: UI;
+    sanitize_answer?: boolean;
 }
 
 export enum Feedback {

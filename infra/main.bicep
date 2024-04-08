@@ -38,7 +38,6 @@ param openAITopP int = 1
 param openAIMaxTokens int = 1000
 param openAIStopSequence string = ''
 param openAISystemMessage string = 'You are an AI assistant that helps people find information.'
-param openAIApiVersion string = '2023-06-01-preview'
 param openAIStream bool = true
 param embeddingDeploymentName string = 'embedding'
 param embeddingModelName string = 'text-embedding-ada-002'
@@ -137,7 +136,6 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_MAX_TOKENS: openAIMaxTokens
       AZURE_OPENAI_STOP_SEQUENCE: openAIStopSequence
       AZURE_OPENAI_SYSTEM_MESSAGE: openAISystemMessage
-      AZURE_OPENAI_PREVIEW_API_VERSION: openAIApiVersion
       AZURE_OPENAI_STREAM: openAIStream
     }
   }
@@ -321,7 +319,6 @@ output AZURE_OPENAI_TOP_P int = openAITopP
 output AZURE_OPENAI_MAX_TOKENS int = openAIMaxTokens
 output AZURE_OPENAI_STOP_SEQUENCE string = openAIStopSequence
 output AZURE_OPENAI_SYSTEM_MESSAGE string = openAISystemMessage
-output AZURE_OPENAI_PREVIEW_API_VERSION string = openAIApiVersion
 output AZURE_OPENAI_STREAM bool = openAIStream
 
 // Used by prepdocs.py:

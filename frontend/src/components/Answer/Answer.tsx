@@ -12,6 +12,8 @@ import { parseAnswer } from "./AnswerParser";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import supersub from 'remark-supersub'
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
@@ -43,11 +45,12 @@ export const Answer = ({
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
     const appStateContext = useContext(AppStateContext)
     const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB; 
+    const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer 
     
     const handleChevronClick = () => {
         setChevronIsExpanded(!chevronIsExpanded);
         toggleIsRefAccordionOpen();
-      };
+    };
 
     useEffect(() => {
         setChevronIsExpanded(isRefAccordionOpen);
@@ -68,13 +71,14 @@ export const Answer = ({
     const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
         let citationFilename = "";
 
-        if (citation.filepath && citation.chunk_id) {
+        if (citation.filepath) {
+            const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '');
             if (truncate && citation.filepath.length > filePathTruncationLimit) {
                 const citationLength = citation.filepath.length;
-                citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength -20)} - Part ${parseInt(citation.chunk_id) + 1}`;
+                citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`;
             }
             else {
-                citationFilename = `${citation.filepath} - Part ${parseInt(citation.chunk_id) + 1}`;
+                citationFilename = `${citation.filepath} - Part ${part_i}`;
             }
         }
         else if (citation.filepath && citation.reindex_id) {
@@ -176,6 +180,21 @@ export const Answer = ({
         );
     }
 
+    const components = {
+        code({node, ...props}: {node: any, [key: string]: any}) {
+            let language;
+            if (props.className) {
+                const match = props.className.match(/language-(\w+)/);
+                language = match ? match[1] : undefined;
+            }
+            const codeString = node.children[0].value ?? '';
+            return (
+                <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
+                    {codeString}
+                </SyntaxHighlighter>
+            );
+        },
+    };
     return (
         <>
             <Stack className={styles.answerContainer} tabIndex={0}>
@@ -186,8 +205,9 @@ export const Answer = ({
                             <ReactMarkdown
                                 linkTarget="_blank"
                                 remarkPlugins={[remarkGfm, supersub]}
-                                children={DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags})}
+                                children={SANITIZE_ANSWER ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, {ALLOWED_TAGS: XSSAllowTags}) : parsedAnswer.markdownFormatText}
                                 className={styles.answerText}
+                                components={components}
                             />
                         </Stack.Item>
                         <Stack.Item className={styles.answerHeader}>
@@ -214,35 +234,35 @@ export const Answer = ({
                     
                 </Stack.Item>
                 <Stack horizontal className={styles.answerFooter}>
-                {!!parsedAnswer.citations.length && (
-                    <Stack.Item
-                        onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleIsRefAccordionOpen() : null}
-                    >
-                        <Stack style={{width: "100%"}} >
-                            <Stack horizontal horizontalAlign='start' verticalAlign='center'>
-                                <Text
-                                    className={styles.accordionTitle}
-                                    onClick={toggleIsRefAccordionOpen}
-                                    aria-label="Open references"
-                                    tabIndex={0}
-                                    role="button"
-                                >
-                                <span>{parsedAnswer.citations.length > 1 ? parsedAnswer.citations.length + " references" : "1 reference"}</span>
-                                </Text>
-                                <FontIcon className={styles.accordionIcon}
-                                onClick={handleChevronClick} iconName={chevronIsExpanded ? 'ChevronDown' : 'ChevronRight'}
-                                />
+                    {!!parsedAnswer.citations.length && (
+                        <Stack.Item
+                            onKeyDown={e => e.key === "Enter" || e.key === " " ? toggleIsRefAccordionOpen() : null}
+                        >
+                            <Stack style={{ width: "100%" }} >
+                                <Stack horizontal horizontalAlign='start' verticalAlign='center'>
+                                    <Text
+                                        className={styles.accordionTitle}
+                                        onClick={toggleIsRefAccordionOpen}
+                                        aria-label="Open references"
+                                        tabIndex={0}
+                                        role="button"
+                                    >
+                                        <span>{parsedAnswer.citations.length > 1 ? parsedAnswer.citations.length + " references" : "1 reference"}</span>
+                                    </Text>
+                                    <FontIcon className={styles.accordionIcon}
+                                        onClick={handleChevronClick} iconName={chevronIsExpanded ? 'ChevronDown' : 'ChevronRight'}
+                                    />
+                                </Stack>
+
                             </Stack>
-                            
-                        </Stack>
+                        </Stack.Item>
+                    )}
+                    <Stack.Item className={styles.answerDisclaimerContainer}>
+                        <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
                     </Stack.Item>
-                )}
-                <Stack.Item className={styles.answerDisclaimerContainer}>
-                    <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
-                </Stack.Item>
                 </Stack>
-                {chevronIsExpanded && 
-                    <div style={{ marginTop: 8, display: "flex", flexFlow: "wrap column", maxHeight: "150px", gap: "4px" }}>
+                {chevronIsExpanded &&
+                    <div className={styles.citationWrapper} >
                         {parsedAnswer.citations.map((citation, idx) => {
                             return (
                                 <span 
