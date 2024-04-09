@@ -554,7 +554,7 @@ const Chat = () => {
                 }
                 const noContentError = appStateContext.state.currentChat.messages.find(m => m.role === ERROR)
                 
-                if (noContentError && !noContentError.content.includes(NO_CONTENT_ERROR)) {
+                if (!noContentError?.content.includes(NO_CONTENT_ERROR)) {
                     saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
                         .then((res) => {
                             if (!res.ok) {
