@@ -98,7 +98,7 @@
     white-space: pre-wrap;
     word-wrap: break-word;
     max-width: 80%;
-    overflow-x: scroll;
+    overflow-x: auto;
 }
 
 .chatMessageGpt {
