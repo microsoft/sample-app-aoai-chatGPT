@@ -820,6 +820,8 @@ async def promptflow_request(request):
 
 
 async def send_chat_request(request):
+    filtered_messages = [message for message in request['messages'] if message['role'] != 'tool']
+    request['messages'] = filtered_messages
     model_args = prepare_model_args(request)
 
     try:
