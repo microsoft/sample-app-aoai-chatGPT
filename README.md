@@ -148,6 +148,7 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 - `UI_CHAT_DESCRIPTION`
 - `UI_FAVICON`
 - `UI_SHOW_SHARE_BUTTON`
+- `UI_SHOW_CHAT_HISTORY_BUTTON`
 
 Feel free to fork this repository and make your own modifications to the UX or backend logic. You can modify the source (`frontend/src`). For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
@@ -254,6 +255,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
 |UI_FAVICON|| Defaults to Contoso favicon. Configure the URL to your favicon to modify.
 |UI_SHOW_SHARE_BUTTON|True|Share button (right-top)
+|UI_SHOW_CHAT_HISTORY_BUTTON|True|Show chat history button (right-top)
 |SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 |USE_PROMPTFLOW|False|Use existing Promptflow deployed endpoint. If set to `True` then both `PROMPTFLOW_ENDPOINT` and `PROMPTFLOW_API_KEY` also need to be set.|
 |PROMPTFLOW_ENDPOINT||URL of the deployed Promptflow endpoint e.g. https://pf-deployment-name.region.inference.ml.azure.com/score|
