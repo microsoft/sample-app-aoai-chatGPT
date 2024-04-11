@@ -824,13 +824,14 @@ async def send_chat_request(request):
 
     try:
         azure_openai_client = init_openai_client()
-        response = await azure_openai_client.chat.completions.create(**model_args)
-
+        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
+        response = raw_response.parse()
+        apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
         raise e
 
-    return response
+    return response, apim_request_id
 
 
 async def complete_chat_request(request_body):
@@ -841,31 +842,29 @@ async def complete_chat_request(request_body):
             response, history_metadata, PROMPTFLOW_RESPONSE_FIELD_NAME
         )
     else:
-        response = await send_chat_request(request_body)
+        response, apim_request_id = await send_chat_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
-        return format_non_streaming_response(response, history_metadata)
+        return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
 async def stream_chat_request(request_body):
-    response = await send_chat_request(request_body)
+    response, apim_request_id = await send_chat_request(request_body)
     history_metadata = request_body.get("history_metadata", {})
-    request_id = response.response.headers.get("apim-request-id", None)
-
+    
     async def generate():
         async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata)
+            yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
-    return generate(), request_id
+    return generate()
 
 
 async def conversation_internal(request_body):
     try:
         if SHOULD_STREAM:
-            result, request_id = await stream_chat_request(request_body)
+            result = await stream_chat_request(request_body)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
-            response.headers["apim-request-id"] = request_id
             return response
         else:
             result = await complete_chat_request(request_body)
