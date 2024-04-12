@@ -10,7 +10,7 @@ import { isEmpty } from "lodash-es";
 import DOMPurify from 'dompurify';
 
 import styles from "./Chat.module.css";
-import Contoso from "../../assets/left.png";
+import Contoso from "../../assets/Left.png";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
 import {
@@ -653,7 +653,7 @@ const Chat = () => {
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
+                                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}ZAPATO</h1>
                                 <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
                             </Stack>
                         ) : (
