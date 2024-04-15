@@ -43,63 +43,63 @@ generated_data_path = r"path/to/qa_input_file.json"
 with open(generated_data_path, 'r') as file:
     data = json.load(file)
 
-evaluation_data_set = []
 
-for qa_pairs_obj in data[:1]:
-    qa_pairs = qa_pairs_obj["qa_pairs"]
-    for qa_pair in qa_pairs:
-        question = qa_pair["question"]
-        messages = [{"role":"user", "content":question}]
+"""
+Process a list of q(and a) pairs outputting to a file as we go.
+"""
+async def process(data: list, file):
+  for qa_pairs_obj in data:
+      qa_pairs = qa_pairs_obj["qa_pairs"]
+      for qa_pair in qa_pairs:
+          question = qa_pair["question"]
+          messages = [{"role":"user", "content":question}]
 
-        print("processing question "+question)
+          print("processing question "+question)
 
-        request = {"messages":messages, "id":"1"}
+          request = {"messages":messages, "id":"1"}
 
-        try:
-          response = asyncio.run(app.complete_chat_request(request))
-        except RuntimeError as e:
-          #for now, swallow benign asyncio exceptions
-          print("ignoring asyncio exception")
+          response = await app.complete_chat_request(request)
 
-        #print(json.dumps(response))
+          #print(json.dumps(response))
 
-        messages = response["choices"][0]["messages"]
+          messages = response["choices"][0]["messages"]
 
-        tool_message = None
-        assistant_message = None
+          tool_message = None
+          assistant_message = None
 
-        for message in messages:
-          if message["role"] == "tool":
-            tool_message = message["content"]
-          elif message["role"] == "assistant":
-            assistant_message = message["content"]
-          else:
-            raise ValueError("unknown message role")
+          for message in messages:
+            if message["role"] == "tool":
+              tool_message = message["content"]
+            elif message["role"] == "assistant":
+              assistant_message = message["content"]
+            else:
+              raise ValueError("unknown message role")
 
-        #construct data for ai studio evaluation
+          #construct data for ai studio evaluation
 
-        user_message = {"role":"user", "content":question}
-        assistant_message = {"role":"assistant", "content":assistant_message}
+          user_message = {"role":"user", "content":question}
+          assistant_message = {"role":"assistant", "content":assistant_message}
 
-        #prepare citations
-        citations = json.loads(tool_message)
-        assistant_message["context"] = citations
+          #prepare citations
+          citations = json.loads(tool_message)
+          assistant_message["context"] = citations
 
-        #create output
-        messages = []
-        messages.append(user_message)
-        messages.append(assistant_message)
+          #create output
+          messages = []
+          messages.append(user_message)
+          messages.append(assistant_message)
 
-        evaluation_data = {"messages":messages}
+          evaluation_data = {"messages":messages}
 
-        evaluation_data_set.append(evaluation_data)
+          #incrementally write out to the jsonl file
+          file.write(json.dumps(evaluation_data)+"\n")
+          file.flush()
 
 
 evaluation_data_file_path = r"path/to/output_file.jsonl"  
 
 with open(evaluation_data_file_path, "w") as file:
-    for row in evaluation_data_set:
-        file.write(json.dumps(row)+"\n")
+  asyncio.run(process(data, file))
 
 
 
