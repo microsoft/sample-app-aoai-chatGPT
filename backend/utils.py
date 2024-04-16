@@ -73,7 +73,7 @@ def generateFilterString(userToken):
     return f"{AZURE_SEARCH_PERMITTED_GROUPS_COLUMN}/any(g:search.in(g, '{group_ids}'))"
 
 
-def format_non_streaming_response(chatCompletion, history_metadata, message_uuid=None):
+def format_non_streaming_response(chatCompletion, history_metadata, apim_request_id):
     response_obj = {
         "id": chatCompletion.id,
         "model": chatCompletion.model,
@@ -81,6 +81,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
         "object": chatCompletion.object,
         "choices": [{"messages": []}],
         "history_metadata": history_metadata,
+        "apim-request-id": apim_request_id,
     }
 
     if len(chatCompletion.choices) > 0:
@@ -103,8 +104,7 @@ def format_non_streaming_response(chatCompletion, history_metadata, message_uuid
 
     return {}
 
-
-def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=None):
+def format_stream_response(chatCompletionChunk, history_metadata, apim_request_id):
     response_obj = {
         "id": chatCompletionChunk.id,
         "model": chatCompletionChunk.model,
@@ -112,6 +112,7 @@ def format_stream_response(chatCompletionChunk, history_metadata, message_uuid=N
         "object": chatCompletionChunk.object,
         "choices": [{"messages": []}],
         "history_metadata": history_metadata,
+        "apim-request-id": apim_request_id,
     }
 
     if len(chatCompletionChunk.choices) > 0:
