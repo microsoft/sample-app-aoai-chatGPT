@@ -1078,14 +1078,10 @@ async def delete_conversation():
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos first
-        deleted_messages = await cosmos_conversation_client.delete_messages(
-            conversation_id, user_id
-        )
+        await cosmos_conversation_client.delete_messages(conversation_id, user_id)
 
         ## Now delete the conversation
-        deleted_conversation = await cosmos_conversation_client.delete_conversation(
-            user_id, conversation_id
-        )
+        await cosmos_conversation_client.delete_conversation(user_id, conversation_id)
 
         await cosmos_conversation_client.cosmosdb_client.close()
 
@@ -1246,12 +1242,12 @@ async def delete_all_conversations():
         # delete each conversation
         for conversation in conversations:
             ## delete the conversation messages from cosmos first
-            deleted_messages = await cosmos_conversation_client.delete_messages(
+            await cosmos_conversation_client.delete_messages(
                 conversation["id"], user_id
             )
 
             ## Now delete the conversation
-            deleted_conversation = await cosmos_conversation_client.delete_conversation(
+            await cosmos_conversation_client.delete_conversation(
                 user_id, conversation["id"]
             )
         await cosmos_conversation_client.cosmosdb_client.close()
@@ -1289,9 +1285,7 @@ async def clear_messages():
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos
-        deleted_messages = await cosmos_conversation_client.delete_messages(
-            conversation_id, user_id
-        )
+        await cosmos_conversation_client.delete_messages(conversation_id, user_id)
 
         return (
             jsonify(
@@ -1367,7 +1361,7 @@ async def generate_title(conversation_messages):
 
         title = json.loads(response.choices[0].message.content)["title"]
         return title
-    except Exception as e:
+    except Exception:
         return messages[-2]["content"]
 
 

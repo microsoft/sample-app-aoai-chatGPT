@@ -31,8 +31,12 @@ pytest = "7.4.0"
 pytest-asyncio = "0.23.2"
 chardet = "5.2.0"
 pre-commit = "^3.7.0"
+ruff = "^0.3.7"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+include = ["app.py", "backend/*.py", "backend/**/*.py"]
