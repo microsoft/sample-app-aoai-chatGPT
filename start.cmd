@@ -3,7 +3,8 @@
 echo.
 echo Restoring backend python packages
 echo.
-call python -m pip install -r requirements.txt
+
+call poetry install
 if "%errorlevel%" neq "0" (
     echo Failed to restore backend python packages
     exit /B %errorlevel%

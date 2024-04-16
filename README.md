@@ -11,6 +11,16 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
   - Pinecone index (preview)
   - AzureML index (preview)
 
+### Developer Prerequisites
+The following tools should be installed prior to running the project locally.
+
+#### Frontend tools
+- nodejs 21+
+
+#### Backend tools
+- Python 3.10+
+- [Poetry](https://python-poetry.org/docs/#installation)
+
 ## Deploy the app
 
 ### Deploy with Azure Developer CLI
