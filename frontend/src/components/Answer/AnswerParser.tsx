@@ -1,13 +1,13 @@
 import { AskResponse, Citation } from "../../api";
-import { cloneDeep } from "lodash-es";
+import { cloneDeep } from "lodash";
 
 
-type ParsedAnswer = {
+export type ParsedAnswer = {
     citations: Citation[];
     markdownFormatText: string;
 };
 
-const enumerateCitations = (citations: Citation[]) => {
+export const enumerateCitations = (citations: Citation[]) => {
     const filepathMap = new Map();
     for (const citation of citations) {
         const { filepath } = citation;
