@@ -1,0 +1,30 @@
+.sidebarContainer{
+    width: 20%;
+    height: 100%;
+    overflow-y: auto;
+    transition: width 0.3s;
+    padding: 20px;
+}
+
+.headerTitleContainer {
+    display: flex;
+    align-items: center;
+    margin-left: 14px;
+    text-decoration: none;
+}
+
+.headerTitle {
+    font-style: Roboto;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 28px;
+    display: flex;
+    align-items: flex-end;
+    color: #004a98;
+}
+
+@media screen and (max-width: 768px) {
+    .sidebarContainer{
+        width: 100%;
+    }
+}

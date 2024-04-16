@@ -74,15 +74,6 @@ const Layout = () => {
                             className={styles.headerIcon}
                             aria-hidden="true"
                         />
-                        <Link to="https://ai-dev.bv.com" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>{ui?.title}</h1>
-                        </Link>
-                         <Link to="https://ai-dev.bv.com" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Training</h1>
-                        </Link>
-                        <Link to="https://ai-dev.bv.com" className={styles.headerTitleContainer}>
-                            <h1 className={styles.headerTitle}>Resources</h1>
-                        </Link>
                     </Stack>
                     {ui?.show_share_button &&
                         <Stack horizontal tokens={{ childrenGap: 4 }}>
