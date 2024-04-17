@@ -22,6 +22,7 @@ export const enumerateCitations = (citations: Citation[]) => {
 }
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
+    console.log('answer :', answer);
     let answerText = answer.answer;
     const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
 
@@ -34,6 +35,7 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
         let citationIndex = link.slice(lengthDocN, link.length - 1);
         let citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation;
         if (!filteredCitations.find((c) => c.id === citationIndex) && citation) {
+          console.log("answerText", answerText)
           answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `);
           citation.id = citationIndex; // original doc index to de-dupe
           citation.reindex_id = citationReindex.toString(); // reindex from 1 for display
