@@ -32,7 +32,8 @@ def ms_graph_authorisation_check(access_token: str, site_id: str, page_id: str):
     success = response.status_code == 200
     if not success:
         logging.warn(f"Failed to get page details: {response.text}")
+        logging.warn(f"Status code: {response.status_code}")
         logging.warn(f"Url: {url}")
         logging.warn(f"Token: {access_token}")
-        
+    
     return success
