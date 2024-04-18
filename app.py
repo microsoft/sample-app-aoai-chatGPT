@@ -31,7 +31,8 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
-bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
+bp_module_name = "routes"
+bp = Blueprint(bp_module_name, __name__, static_folder="static", template_folder="static")
 
 # Current minimum Azure OpenAI version supported
 MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-02-15-preview"
@@ -59,20 +60,17 @@ def create_app():
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
-anonymous_routes = set()
-def allow_anonymous(func):
-    rule = app.url_map._rules_by_endpoint[func.__name__]
-
-    for route in rule:
-        anonymous_routes.add(route.rule)
+anonymous_endpoints = []
+def allow_anonymous(func):   
+    anonymous_endpoints.append(f"{bp_module_name}.{func.__name__}")
 
     return func
 
 @bp.before_request
 def check_authorization():
-    if request.path in anonymous_routes:
+    if request.endpoint in anonymous_endpoints:
         return
-
+    
     access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
 
     if access_token:

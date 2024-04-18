@@ -95,7 +95,7 @@ const Chat = () => {
         await refreshToken();
         await getUserInfoList();
     }
-    
+
     useEffect(() => {
         if (!tokenExpiresOn) return;
 
@@ -124,7 +124,10 @@ const Chat = () => {
         }
         const userInfoList = await getUserInfo();
 
-        if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
+        if (window.location.hostname === "127.0.0.1") {
+            setShowAuthMessage(false);
+        }
+        else if (userInfoList.length === 0) {
             setShowAuthMessage(true);
         }
         else {
