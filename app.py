@@ -5,16 +5,28 @@ import requests
 import openai
 import copy
 from azure.identity import DefaultAzureCredential
-from base64 import b64encode
-from flask import Flask, Response, request, jsonify, send_from_directory
+
+from flask import Flask, Response, request, jsonify, send_from_directory, abort
 from dotenv import load_dotenv
 
-from backend.auth.auth_utils import get_authenticated_user_details
+from backend.auth.auth_utils import get_authenticated_user_details, ms_graph_authorisation_check
 from backend.history.cosmosdbservice import CosmosConversationClient
 
 load_dotenv()
 
 app = Flask(__name__, static_folder="static")
+
+@app.before_request
+def check_authorization():
+    access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
+
+    if access_token:
+        AUTH_SHAREPOINT_SITE_ID = os.environ.get("AUTH_SHAREPOINT_SITE_ID")
+        AUTH_SHAREPOINT_PAGE_ID = os.environ.get("AUTH_SHAREPOINT_PAGE_ID")
+        if AUTH_SHAREPOINT_SITE_ID and AUTH_SHAREPOINT_PAGE_ID and not ms_graph_authorisation_check(
+            access_token, AUTH_SHAREPOINT_SITE_ID, AUTH_SHAREPOINT_PAGE_ID
+        ):
+            abort(401)
 
 # Static Files
 @app.route("/")
