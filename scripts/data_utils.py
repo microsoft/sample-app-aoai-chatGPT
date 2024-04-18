@@ -5,7 +5,7 @@ import json
 import os
 import re
 import requests
-import openai
+from openai import AzureOpenAI
 import re
 import tempfile
 import time
@@ -34,7 +34,9 @@ FILE_FORMAT_DICT = {
         "shtml": "html",
         "htm": "html",
         "py": "python",
-        "pdf": "pdf"
+        "pdf": "pdf",
+        "docx": "docx",
+        "pptx": "pptx"
     }
 
 RETRY_COUNT = 5
@@ -102,10 +104,26 @@ class PdfTextSplitter(TextSplitter):
 
         return caption
     
+    def mask_urls(self, text) -> Tuple[Dict[str, str], str]:
+
+        def find_urls(string):
+            regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^()\s<>]+|\(([^()\s<>]+|(\([^()\s<>]+\)))*\))+(?:\(([^()\s<>]+|(\([^()\s<>]+\)))*\)|[^()\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+            urls = re.findall(regex, string)
+            return [x[0] for x in urls]
+        url_dict = {}
+        masked_text = text
+        urls = set(find_urls(text))
+
+        for i, url in enumerate(urls):
+            masked_text = masked_text.replace(url, f"##URL{i}##")
+            url_dict[f"##URL{i}##"] = url
+        return url_dict, masked_text
+
     def split_text(self, text: str) -> List[str]:
+        url_dict, masked_text = self.mask_urls(text)
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
-        splits = text.split(start_tag)
+        splits = masked_text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
         
@@ -126,7 +144,7 @@ class PdfTextSplitter(TextSplitter):
                 table_caption_prefix = ""
             
 
-        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size, url_dict)]
 
         return final_final_chunks
 
@@ -591,11 +609,17 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
     full_text = "".join([page_text for _, _, page_text in page_map])
     return full_text
 
-def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> Generator[Tuple[str, int], None, None]:
+def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
+    def unmask_urls(text, url_dict={}):
+        if "##URL" in text:
+            for key, value in url_dict.items():
+                text = text.replace(key, value)
+        return text
     # TODO: solve for token overlap
     current_chunk = ""
     total_size = 0
     for chunked_content in chunked_content_list:
+        chunked_content = unmask_urls(chunked_content, url_dict)
         chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
         if total_size > 0:
             new_size = total_size + chunk_size
@@ -621,18 +645,16 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
         base_url = endpoint_parts[0]
         deployment_id = endpoint_parts[1].split("/embeddings")[0]
 
-        openai.api_version = '2023-05-15'
-        openai.api_base = base_url
+        api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
 
         if azure_credential is not None:
-            openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-            openai.api_type = "azure_ad"
+            api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
         else:
-            openai.api_type = 'azure'
-            openai.api_key = key
+            api_key = key
 
-        embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
-        return embeddings['data'][0]["embedding"]
+        client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
+        embeddings = client.embeddings.create(model=deployment_id, input=text)
+        return embeddings.dict()['data'][0]['embedding']
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
@@ -800,7 +822,7 @@ def chunk_file(
             raise UnsupportedFormatError(f"{file_name} is not supported")
 
     cracked_pdf = False
-    if file_format == "pdf":
+    if file_format in ["pdf", "docx", "pptx"]:
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
@@ -1027,7 +1049,8 @@ class SingletonFormRecognizerClient:
             url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
             key = os.getenv("FORM_RECOGNIZER_KEY")
             if url and key:
-                cls.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key))
+                cls.instance = DocumentAnalysisClient(
+                        endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
             else:
                 print("SingletonFormRecognizerClient: Skipping since credentials not provided. Assuming NO form recognizer extensions(like .pdf) in directory")
                 cls.instance = object() # dummy object
@@ -1038,4 +1061,4 @@ class SingletonFormRecognizerClient:
 
     def __setstate__(self, state):
         url, key = state
-        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key))
+        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})

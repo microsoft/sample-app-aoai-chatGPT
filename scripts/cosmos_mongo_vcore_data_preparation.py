@@ -251,7 +251,7 @@ if __name__ == "__main__":
         if index_config.get("index_name") and not args.embedding_model_endpoint:
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
         print("Preparing data for index:", index_config["index_name"])
-
+        os.environ["EMBEDDING_MODEL_KEY"] = args.embedding_model_key
         create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 

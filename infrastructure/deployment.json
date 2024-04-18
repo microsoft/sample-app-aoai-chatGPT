@@ -188,13 +188,6 @@
                 "description": "Azure OpenAI System Message"
             }
         },
-        "AzureOpenAIApiVersion": {
-            "type": "string",
-            "defaultValue": "2023-06-01-preview",
-            "metadata": {
-                "description": "Azure OpenAI Api Version"
-            }
-        },
         "AzureOpenAIStream": {
             "type": "bool",
             "defaultValue": true,
@@ -484,10 +477,6 @@
                             "value": "[parameters('AzureOpenAISystemMessage')]"
                         },
                         {
-                            "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
-                            "value": "[parameters('AzureOpenAIApiVersion')]"
-                        },
-                        {
                             "name": "AZURE_OPENAI_STREAM",
                             "value": "[parameters('AzureOpenAIStream')]"
                         },
@@ -578,7 +567,15 @@
                         {
                             "name": "ELASTICSEARCH_EMBEDDING_MODEL_ID",
                             "value": "[parameters('ElasticsearchEmbeddingModelId')]"
-                        }
+                        },
+                        {
+                            "name": "UWSGI_PROCESSES",
+                            "value": "2"
+                        },
+                        {
+                            "name": "UWSGI_THREADS",
+                            "value": "2"
+                        }                        
                     ],
                     "linuxFxVersion": "[variables('WebAppImageName')]"
                 }
@@ -616,8 +613,11 @@
                     }
                 ],
                 "databaseAccountOfferType": "Standard",
-                "enableAutomaticFailover": false,
-                "enableMultipleWriteLocations": false
+                "capabilities": [
+                    {
+                        "name": "EnableServerless"
+                    }
+                ]
             }
         },
         {
@@ -665,10 +665,6 @@
                             "/userId"
                         ],
                         "kind": "Hash"
-                    },
-                    "conflictResolutionPolicy": {
-                        "mode": "LastWriterWins",
-                        "conflictResolutionPath": "/_ts"
                     }
                 }
             }

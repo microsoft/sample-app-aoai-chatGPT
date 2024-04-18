@@ -1,69 +1,80 @@
-import { cloneDeep } from 'lodash';
-import { AskResponse, Citation } from '../../api';
+import { cloneDeep } from "lodash";
+import { AskResponse, Citation } from "../../api";
 
-type ParsedAnswer = {
-  citations: Citation[];
-  documentLinks: { url: string; title: string; truncatedTitle: string }[];
-  markdownFormatText: string;
+
+export type ParsedAnswer = {
+    citations: Citation[];
+    documentLinks: { url: string; title: string; truncatedTitle: string }[];
+    markdownFormatText: string;
 };
-const createCitationFilepath = (citation: Citation, index: number, filePathTruncationLimit?: number) => {
-  let citationFilename = '';
 
-  const truncate = filePathTruncationLimit !== undefined;
-
-  if (citation.filepath && citation.chunk_id) {
-    if (truncate && citation.filepath.length > filePathTruncationLimit) {
-      const halfFilePathTruncationLimit = Math.floor((filePathTruncationLimit - 3) / 2);
-      const citationLength = citation.filepath.length;
-      citationFilename = `${citation.filepath.substring(0, halfFilePathTruncationLimit)}...${citation.filepath.substring(
-        citationLength - halfFilePathTruncationLimit
-      )}`;
-    } else {
-      citationFilename = citation.filepath;
+export const enumerateCitations = (citations: Citation[]) => {
+    const filepathMap = new Map();
+    for (const citation of citations) {
+        const { filepath } = citation;
+        let part_i = 1
+        if (filepathMap.has(filepath)) {
+            part_i = filepathMap.get(filepath) + 1;
+        }
+        filepathMap.set(filepath, part_i);
+        citation.part_index = part_i;
     }
-  } else if (citation.filepath && citation.reindex_id) {
-    citationFilename = citation.filepath;
-  } else {
-    citationFilename = `Citation ${index}`;
-  }
-  return citationFilename;
-};
+    return citations;
+}
+
+const createCitationFilepath = (citation: Citation, index: number, filePathTruncationLimit?: number) => {
+    let citationFilename = '';
+  
+    const truncate = filePathTruncationLimit !== undefined;
+  
+    if (citation.filepath && citation.chunk_id) {
+      if (truncate && citation.filepath.length > filePathTruncationLimit) {
+        const halfFilePathTruncationLimit = Math.floor((filePathTruncationLimit - 3) / 2);
+        const citationLength = citation.filepath.length;
+        citationFilename = `${citation.filepath.substring(0, halfFilePathTruncationLimit)}...${citation.filepath.substring(
+          citationLength - halfFilePathTruncationLimit
+        )}`;
+      } else {
+        citationFilename = citation.filepath;
+      }
+    } else if (citation.filepath && citation.reindex_id) {
+      citationFilename = citation.filepath;
+    } else {
+      citationFilename = `Citation ${index}`;
+    }
+    return citationFilename;
+  };
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
-  let answerText = answer.answer;
+    let answerText = answer.answer;
+    const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
 
-  const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
+    const lengthDocN = "[doc".length;
 
-  const lengthDocN = '[doc'.length;
+    let filteredCitations = [] as Citation[];
+    let citationReindex = 0;
+    citationLinks?.forEach(link => {
+        // Replacing the links/citations with number
+        let citationIndex = link.slice(lengthDocN, link.length - 1);
+        let citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation;
+        if (!filteredCitations.find((c) => c.id === citationIndex) && citation) {
+          answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `);
+          citation.id = citationIndex; // original doc index to de-dupe
+          citation.reindex_id = citationReindex.toString(); // reindex from 1 for display
+          filteredCitations.push(citation);
+        }
+    })
 
-  let filteredCitations = [] as Citation[];
-  let citationReindex = 0;
-  citationLinks?.forEach((link) => {
-    // Replacing the links/citations with number
-    let citationIndex = link.slice(lengthDocN, link.length - 1);
-    let citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation;
-    if (!filteredCitations.find((c) => c.id === citationIndex) && citation) {
-      answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `);
-      citation.id = citationIndex; // original doc index to de-dupe
-      citation.reindex_id = citationReindex.toString(); // reindex from 1 for display
-      filteredCitations.push(citation);
-    }
-  });
+    filteredCitations = enumerateCitations(filteredCitations);
 
-  const outOfScopeRegex = /Please try another query or topic\.$/;
-  const outOfScopeResponse = import.meta.env.VITE_OUT_OF_SCOPE_MESSAGE;
-  if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
-    answerText = outOfScopeResponse;
-  }
-
-  return {
-    citations: filteredCitations,
-    documentLinks: filteredCitations.map((citation, index) => ({
-      url: citation.url ?? '#',
-      index,
-      title: createCitationFilepath(citation, index),
-      truncatedTitle: createCitationFilepath(citation, index, 100),
-    })),
-    markdownFormatText: answerText,
-  };
+    return {
+        citations: filteredCitations,
+        documentLinks: filteredCitations.map((citation, index) => ({
+            url: citation.url ?? '#',
+            index,
+            title: createCitationFilepath(citation, index),
+            truncatedTitle: createCitationFilepath(citation, index, 100),
+          })),
+        markdownFormatText: answerText
+    };
 }

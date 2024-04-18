@@ -26,6 +26,10 @@
     overflow-x: auto;
 }
 
+.answerHeader {
+    position: relative;
+}
+
 .answerFooter {
     display: flex;
     flex-flow: row nowrap;
@@ -53,6 +57,14 @@
     flex: none;
     order: 1;
     flex-grow: 0;
+}
+
+.citationWrapper {
+    margin-top: 8;
+    display: flex;
+    flex-flow: wrap column;
+    max-height: 150px;
+    gap: 4px;
 }
 
 .citationContainer {
@@ -168,4 +180,22 @@
 sup {
     font-size: 10px;
     line-height: 10px;
+}
+
+@media (max-width: 480px) {
+    .answerFooter {
+        flex-direction: column-reverse;
+    }
+
+    .citationWrapper {
+        max-height: max-content;
+    }
+
+    .citationContainer {
+        margin-left: 0;
+    }
+
+    .answerDisclaimer {
+        margin-bottom: 5px;
+    }
 }

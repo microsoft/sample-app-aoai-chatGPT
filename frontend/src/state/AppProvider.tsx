@@ -1,7 +1,6 @@
 import React, { createContext, useReducer, ReactNode, useEffect } from 'react';
 import { appStateReducer } from './AppReducer';
-import { ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus } from '../api';
-import { Conversation } from '../api';
+import { Conversation, ChatHistoryLoadingState, CosmosDBHealth, historyList, historyEnsure, CosmosDBStatus, frontendSettings, FrontendSettings, Feedback } from '../api';
   
 export interface AppState {
     isChatHistoryOpen: boolean;
@@ -10,6 +9,8 @@ export interface AppState {
     chatHistory: Conversation[] | null;
     filteredChatHistory: Conversation[] | null;
     currentChat: Conversation | null;
+    frontendSettings: FrontendSettings | null;
+    feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative; };
 }
 
 export type Action =
@@ -24,6 +25,9 @@ export type Action =
     | { type: 'DELETE_CHAT_HISTORY'}  // API Call
     | { type: 'DELETE_CURRENT_CHAT_MESSAGES', payload: string }  // API Call
     | { type: 'FETCH_CHAT_HISTORY', payload: Conversation[] | null }  // API Call
+    | { type: 'FETCH_FRONTEND_SETTINGS', payload: FrontendSettings | null }  // API Call
+    | { type: 'SET_FEEDBACK_STATE'; payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral } }
+    | { type: 'GET_FEEDBACK_STATE'; payload: string };
 
 const initialState: AppState = {
     isChatHistoryOpen: false,
@@ -34,7 +38,9 @@ const initialState: AppState = {
     isCosmosDBAvailable: {
         cosmosDB: false,
         status: CosmosDBStatus.NotConfigured,
-    }
+    },
+    frontendSettings: null,
+    feedbackState: {}
 };
 
 export const AppStateContext = createContext<{
@@ -98,6 +104,18 @@ type AppStateProviderProps = {
             })
         }
         getHistoryEnsure();
+    }, []);
+
+    useEffect(() => {
+        const getFrontendSettings = async () => {
+            frontendSettings().then((response) => {
+                dispatch({ type: 'FETCH_FRONTEND_SETTINGS', payload: response as FrontendSettings });
+            })
+            .catch((err) => {
+                console.error("There was an issue fetching your data.");
+            })
+        }
+        getFrontendSettings();
     }, []);
   
     return (
