@@ -1,5 +1,7 @@
 import { cloneDeep } from "lodash";
+import { useContext } from "react";
 import { AskResponse, Citation } from "../../api";
+import { AppStateContext } from "../../state/AppProvider";
 
 
 export type ParsedAnswer = {
@@ -66,6 +68,14 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     })
 
     filteredCitations = enumerateCitations(filteredCitations);
+    
+    const appStateContext = useContext(AppStateContext)
+    const ui = appStateContext?.state.frontendSettings?.ui;
+    const outOfScopeRegex = /Please try another query or topic\.$/;
+    const outOfScopeResponse = ui?.out_of_scope_message;
+    if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
+      answerText = outOfScopeResponse;
+    }
 
     return {
         citations: filteredCitations,

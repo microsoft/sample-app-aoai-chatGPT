@@ -111,6 +111,7 @@ export type UI = {
     show_share_button?: boolean;
     citations_expanded?: boolean;
     citations_as_links?: boolean;
+    out_of_scope_message?: string;
 }
 
 export type FrontendSettings = {
