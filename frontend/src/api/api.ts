@@ -1,5 +1,5 @@
-import { UserInfo, ConversationRequest, Conversation, ChatMessage, CosmosDBHealth, CosmosDBStatus } from "./models";
 import { chatHistorySampleData } from "../constants/chatHistory";
+import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from "./models";
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
     const response = await fetch("/conversation", {
@@ -28,15 +28,8 @@ export async function getUserInfo(): Promise<UserInfo[]> {
 }
 
 
-export async function refreshToken(): Promise<UserInfo[]> {
-    const response = await fetch('/.auth/refresh');
-    if (!response.ok) {
-        console.log("No identity provider found. Access to chat will be blocked.")
-        return [];
-    }
-
-    const payload = await response.json();
-    return payload;
+export async function refreshToken(): Promise<void> {
+    await fetch('/.auth/refresh');
 }
 
 // export const fetchChatHistoryInit = async (): Promise<Conversation[] | null> => {
