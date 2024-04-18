@@ -74,9 +74,10 @@ def check_authorization():
     access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
 
     if access_token:
+        AUTH_SHAREPOINT = os.environ.get("AUTH_SHAREPOINT", "false").lower() == "true"
         AUTH_SHAREPOINT_SITE_ID = os.environ.get("AUTH_SHAREPOINT_SITE_ID")
         AUTH_SHAREPOINT_PAGE_ID = os.environ.get("AUTH_SHAREPOINT_PAGE_ID")
-        if AUTH_SHAREPOINT_SITE_ID and AUTH_SHAREPOINT_PAGE_ID and not ms_graph_authorisation_check(
+        if AUTH_SHAREPOINT and not ms_graph_authorisation_check(
             access_token, AUTH_SHAREPOINT_SITE_ID, AUTH_SHAREPOINT_PAGE_ID
         ):
             abort(401)
