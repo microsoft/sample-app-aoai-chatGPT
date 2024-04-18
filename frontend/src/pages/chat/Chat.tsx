@@ -13,32 +13,32 @@ import styles from "./Chat.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
+import { useBoolean } from '@fluentui/react-hooks';
 import {
-    ChatMessage,
-    ConversationRequest,
-    conversationApi,
-    Citation,
-    ToolMessageContent,
-    ChatResponse,
-    getUserInfo,
-    Conversation,
-    historyGenerate,
-    historyUpdate,
-    historyClear,
-    ChatHistoryLoadingState,
-    CosmosDBStatus,
-    ErrorMessage
-} from "../../api";
-import { Answer } from "../../components/Answer";
-import { QuestionInput } from "../../components/QuestionInput";
-import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
-import { AppStateContext } from "../../state/AppProvider";
-import { useBoolean } from "@fluentui/react-hooks";
+  ChatHistoryLoadingState,
+  ChatMessage,
+  ChatResponse,
+  Citation,
+  Conversation,
+  ConversationRequest,
+  CosmosDBStatus,
+  ErrorMessage,
+  ToolMessageContent,
+  conversationApi,
+  getUserInfo,
+  historyClear,
+  historyGenerate,
+  historyUpdate,
+} from '../../api';
+import { Answer } from '../../components/Answer';
+import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel';
+import { QuestionInput } from '../../components/QuestionInput';
+import { AppStateContext } from '../../state/AppProvider';
 
 const enum messageStatus {
-    NotRunning = "Not Running",
-    Processing = "Processing",
-    Done = "Done"
+  NotRunning = 'Not Running',
+  Processing = 'Processing',
+  Done = 'Done',
 }
 
 const Chat = () => {
@@ -58,19 +58,19 @@ const Chat = () => {
     const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
 
-    const errorDialogContentProps = {
-        type: DialogType.close,
-        title: errorMsg?.title,
-        closeButtonAriaLabel: 'Close',
-        subText: errorMsg?.subtitle,
-    };
+  const errorDialogContentProps = {
+    type: DialogType.close,
+    title: errorMsg?.title,
+    closeButtonAriaLabel: 'Close',
+    subText: errorMsg?.subtitle,
+  };
 
-    const modalProps = {
-        titleAriaId: 'labelId',
-        subtitleAriaId: 'subTextId',
-        isBlocking: true,
-        styles: { main: { maxWidth: 450 } },
-    }
+  const modalProps = {
+    titleAriaId: 'labelId',
+    subtitleAriaId: 'subTextId',
+    isBlocking: true,
+    styles: { main: { maxWidth: 450 } },
+  };
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
     const NO_CONTENT_ERROR = "No content in messages object."
@@ -89,12 +89,12 @@ const Chat = () => {
         }
     }, [appStateContext?.state.isCosmosDBAvailable]);
 
-    const handleErrorDialogClose = () => {
-        toggleErrorDialog()
-        setTimeout(() => {
-            setErrorMsg(null)
-        }, 500);
-    }
+  const handleErrorDialogClose = () => {
+    toggleErrorDialog();
+    setTimeout(() => {
+      setErrorMsg(null);
+    }, 500);
+  };
 
     useEffect(() => {
         setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
@@ -134,31 +134,29 @@ const Chat = () => {
             }
         }
 
-        if (resultMessage.role === TOOL) toolMessage = resultMessage
+    if (resultMessage.role === TOOL) toolMessage = resultMessage;
 
-        if (!conversationId) {
-            isEmpty(toolMessage) ?
-                setMessages([...messages, userMessage, assistantMessage]) :
-                setMessages([...messages, userMessage, toolMessage, assistantMessage]);
-        } else {
-            isEmpty(toolMessage) ?
-                setMessages([...messages, assistantMessage]) :
-                setMessages([...messages, toolMessage, assistantMessage]);
-        }
+    if (!conversationId) {
+      isEmpty(toolMessage)
+        ? setMessages([...messages, userMessage, assistantMessage])
+        : setMessages([...messages, userMessage, toolMessage, assistantMessage]);
+    } else {
+      isEmpty(toolMessage) ? setMessages([...messages, assistantMessage]) : setMessages([...messages, toolMessage, assistantMessage]);
     }
+  };
 
-    const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
-        setIsLoading(true);
-        setShowLoadingMessage(true);
-        const abortController = new AbortController();
-        abortFuncs.current.unshift(abortController);
+  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+    setIsLoading(true);
+    setShowLoadingMessage(true);
+    const abortController = new AbortController();
+    abortFuncs.current.unshift(abortController);
 
-        const userMessage: ChatMessage = {
-            id: uuid(),
-            role: "user",
-            content: question,
-            date: new Date().toISOString(),
-        };
+    const userMessage: ChatMessage = {
+      id: uuid(),
+      role: 'user',
+      content: question,
+      date: new Date().toISOString(),
+    };
 
         let conversation: Conversation | null | undefined;
         if (!conversationId) {
@@ -268,21 +266,21 @@ const Chat = () => {
             setProcessMessages(messageStatus.Done)
         }
 
-        return abortController.abort();
+    return abortController.abort();
+  };
+
+  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+    setIsLoading(true);
+    setShowLoadingMessage(true);
+    const abortController = new AbortController();
+    abortFuncs.current.unshift(abortController);
+
+    const userMessage: ChatMessage = {
+      id: uuid(),
+      role: 'user',
+      content: question,
+      date: new Date().toISOString(),
     };
-
-    const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
-        setIsLoading(true);
-        setShowLoadingMessage(true);
-        const abortController = new AbortController();
-        abortFuncs.current.unshift(abortController);
-
-        const userMessage: ChatMessage = {
-            id: uuid(),
-            role: "user",
-            content: question,
-            date: new Date().toISOString(),
-        };
 
         //api call params set here (generate)
         let request: ConversationRequest;
@@ -517,20 +515,20 @@ const Chat = () => {
         setClearingChat(false)
     };
 
-    const newChat = () => {
-        setProcessMessages(messageStatus.Processing)
-        setMessages([])
-        setIsCitationPanelOpen(false);
-        setActiveCitation(undefined);
-        appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
-        setProcessMessages(messageStatus.Done)
-    };
+  const newChat = () => {
+    setProcessMessages(messageStatus.Processing);
+    setMessages([]);
+    setIsCitationPanelOpen(false);
+    setActiveCitation(undefined);
+    appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
+    setProcessMessages(messageStatus.Done);
+  };
 
-    const stopGenerating = () => {
-        abortFuncs.current.forEach(a => a.abort());
-        setShowLoadingMessage(false);
-        setIsLoading(false);
-    }
+  const stopGenerating = () => {
+    abortFuncs.current.forEach((a) => a.abort());
+    setShowLoadingMessage(false);
+    setIsLoading(false);
+  };
 
     useEffect(() => {
         if (appStateContext?.state.currentChat) {
@@ -598,37 +596,41 @@ const Chat = () => {
         if (AUTH_ENABLED !== undefined) getUserInfoList();
     }, [AUTH_ENABLED]);
 
-    useLayoutEffect(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
-    }, [showLoadingMessage, processMessages]);
+  useLayoutEffect(() => {
+    chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [showLoadingMessage, processMessages]);
 
-    const onShowCitation = (citation: Citation) => {
-        setActiveCitation(citation);
-        setIsCitationPanelOpen(true);
-    };
+  const onShowCitation = (citation: Citation) => {
+    setActiveCitation(citation);
+    setIsCitationPanelOpen(true);
+  };
 
-    const onViewSource = (citation: Citation) => {
-        if (citation.url && !citation.url.includes("blob.core")) {
-            window.open(citation.url, "_blank");
-        }
-    };
+  const onViewSource = (citation: Citation) => {
+    if (citation.url && !citation.url.includes('blob.core')) {
+      window.open(citation.url, '_blank');
+    }
+  };
 
-    const parseCitationFromMessage = (message: ChatMessage) => {
-        if (message?.role && message?.role === "tool") {
-            try {
-                const toolMessage = JSON.parse(message.content) as ToolMessageContent;
-                return toolMessage.citations;
-            }
-            catch {
-                return [];
-            }
-        }
+  const parseCitationFromMessage = (message: ChatMessage) => {
+    if (message?.role && message?.role === 'tool') {
+      try {
+        const toolMessage = JSON.parse(message.content) as ToolMessageContent;
+        return toolMessage.citations;
+      } catch {
         return [];
+      }
     }
+    return [];
+  };
 
-    const disabledButton = () => {
-        return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
-    }
+  const disabledButton = () => {
+    return (
+      isLoading ||
+      (messages && messages.length === 0) ||
+      clearingChat ||
+      appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
+    );
+  };
 
     return (
         <div className={styles.container} role="main">

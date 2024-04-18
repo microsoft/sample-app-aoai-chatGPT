@@ -1,9 +1,10 @@
-import { AskResponse, Citation } from "../../api";
 import { cloneDeep } from "lodash";
+import { AskResponse, Citation } from "../../api";
 
 
 export type ParsedAnswer = {
     citations: Citation[];
+    documentLinks: { url: string; title: string; truncatedTitle: string }[];
     markdownFormatText: string;
 };
 
@@ -20,6 +21,29 @@ export const enumerateCitations = (citations: Citation[]) => {
     }
     return citations;
 }
+
+const createCitationFilepath = (citation: Citation, index: number, filePathTruncationLimit?: number) => {
+    let citationFilename = '';
+  
+    const truncate = filePathTruncationLimit !== undefined;
+  
+    if (citation.filepath && citation.chunk_id) {
+      if (truncate && citation.filepath.length > filePathTruncationLimit) {
+        const halfFilePathTruncationLimit = Math.floor((filePathTruncationLimit - 3) / 2);
+        const citationLength = citation.filepath.length;
+        citationFilename = `${citation.filepath.substring(0, halfFilePathTruncationLimit)}...${citation.filepath.substring(
+          citationLength - halfFilePathTruncationLimit
+        )}`;
+      } else {
+        citationFilename = citation.filepath;
+      }
+    } else if (citation.filepath && citation.reindex_id) {
+      citationFilename = citation.filepath;
+    } else {
+      citationFilename = `Citation ${index}`;
+    }
+    return citationFilename;
+  };
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
     let answerText = answer.answer;
@@ -45,6 +69,12 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
 
     return {
         citations: filteredCitations,
+        documentLinks: filteredCitations.map((citation, index) => ({
+            url: citation.url ?? '#',
+            index,
+            title: createCitationFilepath(citation, index),
+            truncatedTitle: createCitationFilepath(citation, index, 100),
+          })),
         markdownFormatText: answerText
     };
 }

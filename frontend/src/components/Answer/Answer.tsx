@@ -1,7 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState, useContext } from "react";
-import { useBoolean } from "@fluentui/react-hooks"
 import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from "@fluentui/react";
+import { useBoolean } from "@fluentui/react-hooks";
 import DOMPurify from 'dompurify';
+import { FormEvent, useContext, useEffect, useMemo, useState } from "react";
 import { AppStateContext } from '../../state/AppProvider';
 
 import styles from "./Answer.module.css";
@@ -9,12 +9,12 @@ import styles from "./Answer.module.css";
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from "../../api";
 import { parseAnswer } from "./AnswerParser";
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import supersub from 'remark-supersub'
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
-import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { ThumbDislike20Filled, ThumbLike20Filled } from "@fluentui/react-icons";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from "remark-gfm";
+import supersub from 'remark-supersub';
 import { XSSAllowTags } from "../../constants/xssAllowTags";
 
 interface Props {
@@ -33,17 +33,21 @@ export const Answer = ({
         if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
         return Feedback.Neutral;
     }
+    const appStateContext = useContext(AppStateContext)
+    const ui = appStateContext?.state.frontendSettings?.ui;
 
-    const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
+    const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(ui?.citations_expanded ?? false);
+    
     const filePathTruncationLimit = 50;
 
     const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
+
     const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
     const [feedbackState, setFeedbackState] = useState(initializeAnswerFeedback(answer));
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
     const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
     const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
-    const appStateContext = useContext(AppStateContext)
+    
     const FEEDBACK_ENABLED = appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB; 
     const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer 
     
@@ -262,6 +266,27 @@ export const Answer = ({
                     </Stack.Item>
                 </Stack>
                 {chevronIsExpanded &&
+                    (ui?.citations_as_links ? parsedAnswer.documentLinks.length > 0 && (
+                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {parsedAnswer.documentLinks.map((documentLink, idx) => {
+                            return (
+                              <a
+                                title={documentLink.title}
+                                href={documentLink.url}
+                                target="_blank"
+                                tabIndex={0}
+                                role="link"
+                                key={idx}
+                                className={styles.citationContainer}
+                                aria-label={documentLink.title}
+                              >
+                                <div className={styles.citation}>{idx + 1}</div>
+                                {documentLink.truncatedTitle}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      ) :
                     <div className={styles.citationWrapper} >
                         {parsedAnswer.citations.map((citation, idx) => {
                             return (
@@ -279,7 +304,7 @@ export const Answer = ({
                                     {createCitationFilepath(citation, idx, true)}
                                 </span>);
                         })}
-                    </div>
+                    </div>)
                 }
             </Stack>
             <Dialog 

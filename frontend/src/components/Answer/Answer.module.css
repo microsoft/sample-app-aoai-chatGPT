@@ -144,9 +144,9 @@
     color: #616161;
 }
 
-.accordionTitle:hover {
+/* .accordionTitle:hover {
     cursor:pointer;
-}
+} */
 
 .clickableSup {
     box-sizing: border-box;

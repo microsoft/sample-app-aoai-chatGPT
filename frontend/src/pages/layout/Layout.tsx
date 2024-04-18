@@ -18,30 +18,30 @@ const Layout = () => {
     const appStateContext = useContext(AppStateContext)
     const ui = appStateContext?.state.frontendSettings?.ui;
 
-    const handleShareClick = () => {
-        setIsSharePanelOpen(true);
-    };
+  const handleShareClick = () => {
+    setIsSharePanelOpen(true);
+  };
 
-    const handleSharePanelDismiss = () => {
-        setIsSharePanelOpen(false);
-        setCopyClicked(false);
-        setCopyText("Copy URL");
-    };
+  const handleSharePanelDismiss = () => {
+    setIsSharePanelOpen(false);
+    setCopyClicked(false);
+    setCopyText('Copy URL');
+  };
 
-    const handleCopyClick = () => {
-        navigator.clipboard.writeText(window.location.href);
-        setCopyClicked(true);
-    };
+  const handleCopyClick = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopyClicked(true);
+  };
 
-    const handleHistoryClick = () => {
-        appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
-    };
+  const handleHistoryClick = () => {
+    appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' });
+  };
 
-    useEffect(() => {
-        if (copyClicked) {
-            setCopyText("Copied URL");
-        }
-    }, [copyClicked]);
+  useEffect(() => {
+    if (copyClicked) {
+      setCopyText('Copied URL');
+    }
+  }, [copyClicked]);
 
     useEffect(() => { }, [appStateContext?.state.isCosmosDBAvailable.status]);
 

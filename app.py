@@ -13,11 +13,12 @@ from quart import (
     request,
     send_from_directory,
     render_template,
+    abort
 )
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
-from backend.auth.auth_utils import get_authenticated_user_details
+from backend.auth.auth_utils import get_authenticated_user_details, ms_graph_authorisation_check
 from backend.history.cosmosdbservice import CosmosConversationClient
 
 from backend.utils import (
@@ -48,7 +49,9 @@ UI_CHAT_DESCRIPTION = (
 )
 UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
 UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
-
+UI_CITATIONS_EXPANDED = os.environ.get("UI_CITATIONS_EXPANDED", "false").lower() == "true"
+UI_CITATIONS_AS_LINKS = os.environ.get("UI_CITATIONS_AS_LINKS", "false").lower() == "true"
+UI_OUT_OF_SCOPE_MESSAGE = os.environ.get("UI_OUT_OF_SCOPE_MESSAGE")
 
 def create_app():
     app = Quart(__name__)
@@ -56,6 +59,17 @@ def create_app():
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
+@bp.before_request
+def check_authorization():
+    access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
+
+    if access_token:
+        AUTH_SHAREPOINT_SITE_ID = os.environ.get("AUTH_SHAREPOINT_SITE_ID")
+        AUTH_SHAREPOINT_PAGE_ID = os.environ.get("AUTH_SHAREPOINT_PAGE_ID")
+        if AUTH_SHAREPOINT_SITE_ID and AUTH_SHAREPOINT_PAGE_ID and not ms_graph_authorisation_check(
+            access_token, AUTH_SHAREPOINT_SITE_ID, AUTH_SHAREPOINT_PAGE_ID
+        ):
+            abort(401)
 
 @bp.route("/")
 async def index():
@@ -261,6 +275,9 @@ frontend_settings = {
         "chat_title": UI_CHAT_TITLE,
         "chat_description": UI_CHAT_DESCRIPTION,
         "show_share_button": UI_SHOW_SHARE_BUTTON,
+        "citations_expanded": UI_CITATIONS_EXPANDED,
+        "citations_as_links": UI_CITATIONS_AS_LINKS,
+        "out_of_scope_message": UI_OUT_OF_SCOPE_MESSAGE,
     },
     "sanitize_answer": SANITIZE_ANSWER,
 }
@@ -405,7 +422,7 @@ def get_configured_data_source():
             query_type = "semantic"
 
         # Set filter
-        filter = None
+        filter = "(language/any(t: t eq 'EN')) and not (document_type/any(t: t eq 'LBL (Label)'))"
         userToken = None
         if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
             userToken = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
