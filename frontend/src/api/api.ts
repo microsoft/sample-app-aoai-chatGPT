@@ -27,6 +27,18 @@ export async function getUserInfo(): Promise<UserInfo[]> {
     return payload;
 }
 
+
+export async function refreshToken(): Promise<UserInfo[]> {
+    const response = await fetch('/.auth/refresh');
+    if (!response.ok) {
+        console.log("No identity provider found. Access to chat will be blocked.")
+        return [];
+    }
+
+    const payload = await response.json();
+    return payload;
+}
+
 // export const fetchChatHistoryInit = async (): Promise<Conversation[] | null> => {
 export const fetchChatHistoryInit = (): Conversation[] | null => {
     // Make initial API call here

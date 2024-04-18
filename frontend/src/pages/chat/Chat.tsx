@@ -1,34 +1,35 @@
-import { useRef, useState, useEffect, useContext, useLayoutEffect } from "react";
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from "@fluentui/react";
-import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from "@fluentui/react-icons";
+import { CommandBarButton, Dialog, DialogType, IconButton, Stack } from "@fluentui/react";
+import { ErrorCircleRegular, ShieldLockRegular, SquareRegular } from "@fluentui/react-icons";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import ReactMarkdown from "react-markdown";
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from "rehype-raw";
-import uuid from 'react-uuid';
-import { isEmpty } from "lodash";
 import DOMPurify from 'dompurify';
+import { isEmpty } from "lodash";
+import ReactMarkdown from "react-markdown";
+import uuid from 'react-uuid';
+import rehypeRaw from "rehype-raw";
+import remarkGfm from 'remark-gfm';
 
-import styles from "./Chat.module.css";
 import Contoso from "../../assets/Contoso.svg";
 import { XSSAllowTags } from "../../constants/xssAllowTags";
+import styles from "./Chat.module.css";
 
 import { useBoolean } from '@fluentui/react-hooks';
 import {
-  ChatHistoryLoadingState,
-  ChatMessage,
-  ChatResponse,
-  Citation,
-  Conversation,
-  ConversationRequest,
-  CosmosDBStatus,
-  ErrorMessage,
-  ToolMessageContent,
-  conversationApi,
-  getUserInfo,
-  historyClear,
-  historyGenerate,
-  historyUpdate,
+    ChatHistoryLoadingState,
+    ChatMessage,
+    ChatResponse,
+    Citation,
+    Conversation,
+    ConversationRequest,
+    CosmosDBStatus,
+    ErrorMessage,
+    ToolMessageContent,
+    conversationApi,
+    getUserInfo,
+    historyClear,
+    historyGenerate,
+    historyUpdate,
+    refreshToken
 } from '../../api';
 import { Answer } from '../../components/Answer';
 import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel';
@@ -57,6 +58,7 @@ const Chat = () => {
     const [clearingChat, setClearingChat] = useState<boolean>(false);
     const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+    const [tokenExpiresOn, setTokenExpiresOn] = useState<Date | null>(null);
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -89,6 +91,21 @@ const Chat = () => {
         }
     }, [appStateContext?.state.isCosmosDBAvailable]);
 
+    const refreshTokenAndGetUserInfo = async () => {
+        await refreshToken();
+        await getUserInfoList();
+    }
+    
+    useEffect(() => {
+        if (!tokenExpiresOn) return;
+
+        const timeUntilExpiry = tokenExpiresOn.getTime() - Date.now();
+        const refreshTime = Math.max(0, timeUntilExpiry - 5 * 60 * 1000);
+        const timer = setTimeout(refreshTokenAndGetUserInfo, refreshTime);
+
+        return () => clearTimeout(timer);
+    }, [tokenExpiresOn]);
+
   const handleErrorDialogClose = () => {
     toggleErrorDialog();
     setTimeout(() => {
@@ -106,10 +123,12 @@ const Chat = () => {
             return;
         }
         const userInfoList = await getUserInfo();
+
         if (userInfoList.length === 0 && window.location.hostname !== "127.0.0.1") {
             setShowAuthMessage(true);
         }
         else {
+            setTokenExpiresOn(new Date(userInfoList[0].expires_on));
             setShowAuthMessage(false);
         }
     }
