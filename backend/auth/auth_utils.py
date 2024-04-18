@@ -1,3 +1,4 @@
+import logging
 import requests
 
 
@@ -28,4 +29,8 @@ def ms_graph_authorisation_check(access_token: str, site_id: str, page_id: str):
     url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/pages/{page_id}"
     headers = {"Authorization": "Bearer " + access_token, "Accept": "application/json"}
     response = requests.get(url, headers=headers)
-    return response.status_code == 200
+    success = response.status_code == 200
+    if not success:
+        logging.warn(f"Failed to get page details: {response.text}")
+        
+    return success
