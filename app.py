@@ -59,8 +59,20 @@ def create_app():
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
+anonymous_routes = set()
+def allow_anonymous(func):
+    rule = app.url_map._rules_by_endpoint[func.__name__]
+
+    for route in rule:
+        anonymous_routes.add(route.rule)
+
+    return func
+
 @bp.before_request
 def check_authorization():
+    if request.path in anonymous_routes:
+        return
+
     access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
 
     if access_token:
@@ -72,16 +84,19 @@ def check_authorization():
             abort(401)
 
 @bp.route("/")
+@allow_anonymous
 async def index():
     return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
 
 
 @bp.route("/favicon.ico")
+@allow_anonymous
 async def favicon():
     return await bp.send_static_file("favicon.ico")
 
 
 @bp.route("/assets/<path:path>")
+@allow_anonymous
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
