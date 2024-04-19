@@ -7,4 +7,5 @@ const config: Config.InitialOptions = {
   },
   setupFilesAfterEnv: ['<rootDir>/polyfills.js'],
 };
+
 export default config;
