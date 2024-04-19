@@ -15,11 +15,19 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
 The following tools should be installed prior to running the project locally.
 
 #### Frontend tools
-- nodejs 21+
+- Node.js 21+
 
 #### Backend tools
 - Python 3.10+
 - [Poetry](https://python-poetry.org/docs/#installation)
+
+## Development workflow
+
+This project uses [Poetry](https://python-poetry.org/) to manage project dependencies.  It is recommended to follow these steps for managing your local Python development environment.
+
+1. Run `poetry install` to bootstrap your local development environment with this project and its dependencies.  This command will create a virtual environment containing all of the project dependencies under the `.venv` directory.
+2. Use the `poetry add`, `poetry update` and `poetry remove` commands to modify packages in the environment.  See the [Poetry CLI](https://python-poetry.org/docs/cli) docs for more information about arguments to those commands. 
+3. When you are ready to deploy your app or submit a PR, generate a requirements.txt file for the app using the command `poetry export --dev --without-hashes --format=requirements.txt --output=requirements-dev.txt`.
 
 ## Deploy the app
 
