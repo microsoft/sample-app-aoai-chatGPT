@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import exceptions
   
@@ -50,8 +50,8 @@ class CosmosConversationClient():
         conversation = {
             'id': str(uuid.uuid4()),  
             'type': 'conversation',
-            'createdAt': datetime.now(datetime.UTC).isoformat(),  
-            'updatedAt': datetime.now(datetime.UTC).isoformat(),  
+            'createdAt': datetime.now(timezone.utc).isoformat(),  
+            'updatedAt': datetime.now(timezone.utc).isoformat(),  
             'userId': user_id,
             'title': title
         }
@@ -133,8 +133,8 @@ class CosmosConversationClient():
             'id': uuid,
             'type': 'message',
             'userId' : user_id,
-            'createdAt': datetime.now(datetime.UTC).isoformat(),
-            'updatedAt': datetime.now(datetime.UTC).isoformat(),
+            'createdAt': datetime.now(timezone.utc).isoformat(),
+            'updatedAt': datetime.now(timezone.utc).isoformat(),
             'conversationId' : conversation_id,
             'role': input_message['role'],
             'content': input_message['content']
