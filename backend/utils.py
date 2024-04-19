@@ -142,7 +142,7 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
 
 
 def format_pf_non_streaming_response(
-    chatCompletion, history_metadata, response_field_name, message_uuid=None
+    chatCompletion, history_metadata, response_field_name, citations_field_name, message_uuid=None
 ):
     if chatCompletion is None:
         logging.error(
@@ -168,7 +168,10 @@ def format_pf_non_streaming_response(
                         {
                             "role": "assistant",
                             "content": chatCompletion[response_field_name],
-                        }
+                        },
+                        {
+                            "role": "tool",
+                            "content": chatCompletion[citations_field_name]
                     ]
                 }
             ],
