@@ -172,6 +172,7 @@ def format_pf_non_streaming_response(
                         {
                             "role": "tool",
                             "content": chatCompletion[citations_field_name]
+                        }
                     ]
                 }
             ],
