@@ -236,6 +236,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |PROMPTFLOW_RESPONSE_TIMEOUT|120|Timeout value in seconds for the Promptflow endpoint to respond.|
 |PROMPTFLOW_REQUEST_FIELD_NAME|question|Default field name to construct Promptflow request. Note: chat_history is auto constucted based on the interaction, if your API expects other mandatory field you will need to change the request parameters under `promptflow_request` function.|
 |PROMPTFLOW_RESPONSE_FIELD_NAME|answer|Default field name to process the response from Promptflow request.|
+|PROMPTFLOW_CITATIONS_FIELD_NAME|documents|Default field name to process the citations output from Promptflow request.|
 
 ## Contributing
 
