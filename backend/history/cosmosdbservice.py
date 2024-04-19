@@ -50,8 +50,8 @@ class CosmosConversationClient():
         conversation = {
             'id': str(uuid.uuid4()),  
             'type': 'conversation',
-            'createdAt': datetime.utcnow().isoformat(),  
-            'updatedAt': datetime.utcnow().isoformat(),  
+            'createdAt': datetime.now(datetime.UTC).isoformat(),  
+            'updatedAt': datetime.now(datetime.UTC).isoformat(),  
             'userId': user_id,
             'title': title
         }
@@ -133,8 +133,8 @@ class CosmosConversationClient():
             'id': uuid,
             'type': 'message',
             'userId' : user_id,
-            'createdAt': datetime.utcnow().isoformat(),
-            'updatedAt': datetime.utcnow().isoformat(),
+            'createdAt': datetime.now(datetime.UTC).isoformat(),
+            'updatedAt': datetime.now(datetime.UTC).isoformat(),
             'conversationId' : conversation_id,
             'role': input_message['role'],
             'content': input_message['content']
