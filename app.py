@@ -243,6 +243,9 @@ PROMPTFLOW_REQUEST_FIELD_NAME = os.environ.get("PROMPTFLOW_REQUEST_FIELD_NAME", 
 PROMPTFLOW_RESPONSE_FIELD_NAME = os.environ.get(
     "PROMPTFLOW_RESPONSE_FIELD_NAME", "reply"
 )
+PROMPTFLOW_CITATIONS_FIELD_NAME = os.environ.get(
+    "PROMPTFLOW_CITATIONS_FIELD_NAME", "documents"
+)
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -846,7 +849,7 @@ async def complete_chat_request(request_body):
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
-            response, history_metadata, PROMPTFLOW_RESPONSE_FIELD_NAME
+            response, history_metadata, PROMPTFLOW_RESPONSE_FIELD_NAME, PROMPTFLOW_CITATIONS_FIELD_NAME
         )
     else:
         response, apim_request_id = await send_chat_request(request_body)
