@@ -285,7 +285,8 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
         credential=AzureKeyCredential(admin_key),
     )
     # Upload the documents in batches of upload_batch_size
-    for i in tqdm(range(0, len(to_upload_dicts), upload_batch_size), desc="Indexing Chunks..."):
+    # for i in tqdm(range(0, len(to_upload_dicts), upload_batch_size), desc="Indexing Chunks..."):
+    for i in range(0, len(to_upload_dicts), upload_batch_size):
         batch = to_upload_dicts[i: i + upload_batch_size]
         results = search_client.upload_documents(documents=batch)
         num_failures = 0
@@ -371,6 +372,8 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         raise Exception(f"Failed to create or update index {index_name}")
     
     data_configs = []
+    print(config["data_path"])
+    print(os.listdir(config["data_path"]))
     if "data_path" in config:
         data_configs.append({
             "path": config["data_path"],

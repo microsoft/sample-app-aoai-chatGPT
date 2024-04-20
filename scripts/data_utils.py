@@ -39,7 +39,7 @@ FILE_FORMAT_DICT = {
         "pptx": "pptx"
     }
 
-RETRY_COUNT = 5
+RETRY_COUNT = 1 #5
 
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
@@ -637,6 +637,10 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
+    print(f'endpoint is {endpoint}')
+    print(f'key is {key}')
+    # print('print azure_credential_get_token before ', azure_credential.get_token("https://cognitiveservices.azure.com/.default").token)
+
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
@@ -651,9 +655,11 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
         else:
             api_key = key
-
+        # print(api_key)
+        print(f"Using endpoint={base_url} with deployment_id={deployment_id} and api_key=")
         client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
         embeddings = client.embeddings.create(model=deployment_id, input=text)
+        print(f"Got embeddings..")
         return embeddings.dict()['data'][0]['embedding']
 
     except Exception as e:
@@ -690,12 +696,16 @@ def chunk_content_helper(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
                 if file_format == "html_pdf": # cracked pdf converted to html
+                    print("In the section for html_pdf")
                     splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
+                    print("initialized PdfTextSplitter")
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
                             separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                             chunk_size=num_tokens, chunk_overlap=token_overlap)
+            print("About to split text..")
             chunked_content_list = splitter.split_text(doc.content)
+            print("Split text done..")
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
@@ -747,16 +757,20 @@ def chunk_content(
             num_tokens=num_tokens,
             token_overlap=token_overlap
         )
+        print("Back from chunking..")
         chunks = []
         skipped_chunks = 0
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    for _ in range(RETRY_COUNT):
+                    for i in range(RETRY_COUNT):
                         try:
+                            print("About to get embedding..")
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
-                        except:
+                        except Exception as e:
+                            print(f"Error getting embedding for chunk with error={e}, 
+                                  retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
                             time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
@@ -825,8 +839,10 @@ def chunk_file(
     if file_format in ["pdf", "docx", "pptx"]:
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
+        print("About to extract pdf content..")
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
+        print("Extracted pdf content..")
     else:
         try:
             with open(file_path, "r", encoding="utf8") as f:
@@ -881,6 +897,8 @@ def process_file(
         if url_prefix:
             url_path = url_prefix + rel_file_path
             url_path = convert_escaped_to_posix(url_path)
+
+        print(f"About to enter chunk_file function..")
 
         result = chunk_file(
             file_path,
