@@ -756,8 +756,10 @@ def chunk_content(
                         try:
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
-                        except:
-                            time.sleep(30)
+                        except Exception as e:  
+                            print(f"Error encountered while getting embedding for chunk: {e}. Retrying...   
+                                (Attempt {i + 1} of {RETRY_COUNT}, {RETRY_COUNT - (i + 1)} retries remaining)")  
+                            time.sleep(30)  
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
                     
