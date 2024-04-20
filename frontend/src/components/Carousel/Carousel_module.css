@@ -1,0 +1,108 @@
+.mySwiper {
+    width: 996px;
+    padding: 0 20px 0 30px;
+}
+
+.chatGridStateTitle {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    line-height: 15px;
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.chatGridStateSubtitle {
+    margin: 0px;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    letter-spacing: -0.01em;
+    color: #616161;
+}
+
+.chatGridModel {
+    padding: 10px 15px;
+    cursor: pointer;
+    height: 100%;
+}
+
+.gradient-border-pseudo {
+    position: relative;
+    padding: 10px 20px;
+    background: #fff;
+    margin: 2px;
+    border-radius: 15px;
+}
+
+.gradient-border-pseudo::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -2px;
+    border-radius: inherit;
+    background-image: linear-gradient(45deg, #8DDDD8, #0F6CBD);
+}
+
+
+:root {
+    --swiper-navigation-size: 15px;
+    --swiper-theme-color: black;
+}
+
+.swiper-slide {
+    margin-right: 20px !important;
+    padding: 5px 0;
+}
+
+.swiper-button-next {
+    right: 5px;
+    background: white;
+    height: 25px;
+    width: 25px;
+    padding: 14px;
+    border: 1px solid black;
+    border-radius: 25px;
+}
+
+.swiper-button-prev {
+    left: 14px;
+    background: white;
+    height: 25px;
+    width: 25px;
+    padding: 14px;
+    border: 1px solid black;
+    border-radius: 25px;
+}
+
+.swiper-button-next.swiper-button-disabled,
+.swiper-button-prev.swiper-button-disabled {
+    opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .mySwiper {
+        width: 305px;
+        padding: 0 20px 0 27px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .mySwiper {
+        width: 625px;
+        padding: 0 20px 0 27px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+    .mySwiper {
+        width: 900px;
+        padding: 0 20px 0 27px;
+    }
+}

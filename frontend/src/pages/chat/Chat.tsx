@@ -34,6 +34,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+import Carousel from "../../components/Carousel/Carousel";
 
 const enum messageStatus {
     NotRunning = "Not Running",
@@ -43,7 +44,10 @@ const enum messageStatus {
 
 const Chat = () => {
     const appStateContext = useContext(AppStateContext)
+    console.log("🚀 ~ Chat ~ appStateContext:", appStateContext)
     const ui = appStateContext?.state.frontendSettings?.ui;
+    const grid_model = appStateContext?.state.frontendSettings?.grid_model;
+    console.log("🚀 ~ Chat ~ grid_model:", grid_model)
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -76,9 +80,9 @@ const Chat = () => {
     const NO_CONTENT_ERROR = "No content in messages object."
 
     useEffect(() => {
-        if (appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working  
+        if (appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working
             && appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
-            && appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail 
+            && appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail
             && hideErrorDialog) {
             let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
             setErrorMsg({
@@ -146,6 +150,18 @@ const Chat = () => {
                 setMessages([...messages, toolMessage, assistantMessage]);
         }
     }
+
+    const gridName: string[] | undefined = grid_model?.precanned_prompt_name?.split('|');
+    const gridDescription: string[] | undefined = grid_model?.precanned_prompt_description?.split('|');
+    const combinedName: [string, string | undefined][] | undefined = gridName?.[0]?.length ? gridName?.map((prompt, index) => [prompt?.slice(0, 26), gridDescription?.[index]?.slice(0, 100)]) : undefined;
+    const gridPrompts: string[] | undefined = grid_model?.precanned_prompts?.split('|');
+    const PromptsFormate: [string, string][] | undefined = gridPrompts?.map((item) => [item?.slice(0, 26), item?.slice(0, 100)]);
+    const PromptsDatas: [string, string | undefined][] | undefined = PromptsFormate?.[0]?.[0]?.length ? (combinedName?.length ? combinedName : undefined) : PromptsFormate?.[0]?.[0]?.length ? PromptsFormate : undefined;
+
+    const handelOnPromptGet = (name: string) => {
+        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) 
+    }
+
 
     const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
         setIsLoading(true);
@@ -386,7 +402,7 @@ const Chat = () => {
                             } else {
                                 console.log("Incomplete message. Continuing...")
                             }
-                         }
+                        }
                     });
                 }
 
@@ -460,7 +476,7 @@ const Chat = () => {
                             role: ERROR,
                             content: errorMessage,
                             date: new Date().toISOString()
-                        } 
+                        }
                         setMessages([...messages, userMessage, errorChatMsg])
                         setIsLoading(false);
                         setShowLoadingMessage(false);
@@ -553,7 +569,7 @@ const Chat = () => {
                     return
                 }
                 const noContentError = appStateContext.state.currentChat.messages.find(m => m.role === ERROR)
-                
+
                 if (!noContentError?.content.includes(NO_CONTENT_ERROR)) {
                     saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
                         .then((res) => {
@@ -637,7 +653,7 @@ const Chat = () => {
                     <ShieldLockRegular className={styles.chatIcon} style={{ color: 'darkorange', height: "200px", width: "200px" }} />
                     <h1 className={styles.chatEmptyStateTitle}>Authentication Not Configured</h1>
                     <h2 className={styles.chatEmptyStateSubtitle}>
-                        This app does not have authentication configured. Please add an identity provider by finding your app in the <a href="https://portal.azure.com/" target="_blank">Azure Portal</a> 
+                        This app does not have authentication configured. Please add an identity provider by finding your app in the <a href="https://portal.azure.com/" target="_blank">Azure Portal</a>
                         and following <a href="https://learn.microsoft.com/en-us/azure/app-service/scenario-secure-app-authentication-app-service#3-configure-authentication-and-authorization" target="_blank">these instructions</a>.
                     </h2>
                     <h2 className={styles.chatEmptyStateSubtitle} style={{ fontSize: "20px" }}><strong>Authentication configuration takes a few minutes to apply. </strong></h2>
@@ -648,13 +664,18 @@ const Chat = () => {
                     <div className={styles.chatContainer}>
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
-                                <img
-                                    src={ui?.chat_logo ? ui.chat_logo : Contoso}
-                                    className={styles.chatIcon}
-                                    aria-hidden="true"
-                                />
-                                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                                <Stack className={styles.chatEmptyState}>
+                                    <img
+                                        src={ui?.chat_logo ? ui.chat_logo : Contoso}
+                                        className={styles.chatIcon}
+                                        aria-hidden="true"
+                                    />
+                                    <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
+                                    <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                                    <Stack className={styles.chatGridState}>
+                                        <Carousel data={PromptsDatas} handelOnPromptGet={handelOnPromptGet} />
+                                    </Stack>
+                                </Stack>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">
@@ -774,7 +795,7 @@ const Chat = () => {
                             </Stack>
                             <QuestionInput
                                 clearOnSend
-                                placeholder="Tell me what you want to do..."
+                                placeholder={grid_model?.chat_empty_text_hint ? grid_model?.chat_empty_text_hint : "Tell me what you want to do..."}
                                 disabled={isLoading}
                                 onSend={(question, id) => {
                                     appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
@@ -795,7 +816,7 @@ const Chat = () => {
                                 <ReactMarkdown
                                     linkTarget="_blank"
                                     className={styles.citationPanelContent}
-                                    children={DOMPurify.sanitize(activeCitation.content, {ALLOWED_TAGS: XSSAllowTags})}
+                                    children={DOMPurify.sanitize(activeCitation.content, { ALLOWED_TAGS: XSSAllowTags })}
                                     remarkPlugins={[remarkGfm]}
                                     rehypePlugins={[rehypeRaw]}
                                 />

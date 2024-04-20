@@ -111,11 +111,18 @@ export type UI = {
     show_share_button?: boolean
 }
 
+export type GridModel = {
+    chat_empty_text_hint?: string | null;
+    precanned_prompts?: string | null;
+    precanned_prompt_name?: string | null;
+    precanned_prompt_description?: string | null;
+}
 export type FrontendSettings = {
     auth_enabled?: string | null;
     feedback_enabled?: string | null;
     ui?: UI;
     sanitize_answer?: boolean;
+    grid_model?: GridModel;
 }
 
 export enum Feedback {
