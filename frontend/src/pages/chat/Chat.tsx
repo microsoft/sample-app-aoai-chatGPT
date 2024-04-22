@@ -44,10 +44,8 @@ const enum messageStatus {
 
 const Chat = () => {
     const appStateContext = useContext(AppStateContext)
-    console.log("🚀 ~ Chat ~ appStateContext:", appStateContext)
     const ui = appStateContext?.state.frontendSettings?.ui;
     const grid_model = appStateContext?.state.frontendSettings?.grid_model;
-    console.log("🚀 ~ Chat ~ grid_model:", grid_model)
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -156,10 +154,10 @@ const Chat = () => {
     const combinedName: [string, string | undefined][] | undefined = gridName?.[0]?.length ? gridName?.map((prompt, index) => [prompt?.slice(0, 26), gridDescription?.[index]?.slice(0, 100)]) : undefined;
     const gridPrompts: string[] | undefined = grid_model?.precanned_prompts?.split('|');
     const PromptsFormate: [string, string][] | undefined = gridPrompts?.map((item) => [item?.slice(0, 26), item?.slice(0, 100)]);
-    const PromptsDatas: [string, string | undefined][] | undefined = PromptsFormate?.[0]?.[0]?.length ? (combinedName?.length ? combinedName : undefined) : PromptsFormate?.[0]?.[0]?.length ? PromptsFormate : undefined;
+    const PromptsDatas: [string, string | undefined][] | undefined = PromptsFormate?.[0]?.[0]?.length ? (combinedName?.length ? combinedName : PromptsFormate?.[0]?.[0]?.length ? PromptsFormate : undefined) : undefined;
 
     const handelOnPromptGet = (name: string) => {
-        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) 
+        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined)
     }
 
 
@@ -672,55 +670,63 @@ const Chat = () => {
                                     />
                                     <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                                     <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
-                                    <Stack className={styles.chatGridState}>
+                                    <Stack className={`${styles.chatGridState} ${styles.chatGridStateTop}`}>
                                         <Carousel data={PromptsDatas} handelOnPromptGet={handelOnPromptGet} />
                                     </Stack>
                                 </Stack>
                             </Stack>
                         ) : (
-                            <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">
-                                {messages.map((answer, index) => (
-                                    <>
-                                        {answer.role === "user" ? (
-                                            <div className={styles.chatMessageUser} tabIndex={0}>
-                                                <div className={styles.chatMessageUserMessage}>{answer.content}</div>
-                                            </div>
-                                        ) : (
-                                            answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                            <>
+                                <Stack className={styles.chatGridState}>
+                                    {showLoadingMessage ?
+                                        <Carousel data={PromptsDatas} /> :
+                                        <Carousel data={PromptsDatas} handelOnPromptGet={handelOnPromptGet} />
+                                    }
+                                </Stack>
+                                <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px" }} role="log">
+                                    {messages.map((answer, index) => (
+                                        <>
+                                            {answer.role === "user" ? (
+                                                <div className={styles.chatMessageUser} tabIndex={0}>
+                                                    <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                                                </div>
+                                            ) : (
+                                                answer.role === "assistant" ? <div className={styles.chatMessageGpt}>
+                                                    <Answer
+                                                        answer={{
+                                                            answer: answer.content,
+                                                            citations: parseCitationFromMessage(messages[index - 1]),
+                                                            message_id: answer.id,
+                                                            feedback: answer.feedback
+                                                        }}
+                                                        onCitationClicked={c => onShowCitation(c)}
+                                                    />
+                                                </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
+                                                    <Stack horizontal className={styles.chatMessageErrorContent}>
+                                                        <ErrorCircleRegular className={styles.errorIcon} style={{ color: "rgba(182, 52, 67, 1)" }} />
+                                                        <span>Error</span>
+                                                    </Stack>
+                                                    <span className={styles.chatMessageErrorContent}>{answer.content}</span>
+                                                </div> : null
+                                            )}
+                                        </>
+                                    ))}
+                                    {showLoadingMessage && (
+                                        <>
+                                            <div className={styles.chatMessageGpt}>
                                                 <Answer
                                                     answer={{
-                                                        answer: answer.content,
-                                                        citations: parseCitationFromMessage(messages[index - 1]),
-                                                        message_id: answer.id,
-                                                        feedback: answer.feedback
+                                                        answer: "Generating answer...",
+                                                        citations: []
                                                     }}
-                                                    onCitationClicked={c => onShowCitation(c)}
+                                                    onCitationClicked={() => null}
                                                 />
-                                            </div> : answer.role === ERROR ? <div className={styles.chatMessageError}>
-                                                <Stack horizontal className={styles.chatMessageErrorContent}>
-                                                    <ErrorCircleRegular className={styles.errorIcon} style={{ color: "rgba(182, 52, 67, 1)" }} />
-                                                    <span>Error</span>
-                                                </Stack>
-                                                <span className={styles.chatMessageErrorContent}>{answer.content}</span>
-                                            </div> : null
-                                        )}
-                                    </>
-                                ))}
-                                {showLoadingMessage && (
-                                    <>
-                                        <div className={styles.chatMessageGpt}>
-                                            <Answer
-                                                answer={{
-                                                    answer: "Generating answer...",
-                                                    citations: []
-                                                }}
-                                                onCitationClicked={() => null}
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                                <div ref={chatMessageStreamEnd} />
-                            </div>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div ref={chatMessageStreamEnd} />
+                                </div>
+                            </>
                         )}
 
                         <Stack horizontal className={styles.chatInput}>

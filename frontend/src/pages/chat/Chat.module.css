@@ -38,9 +38,14 @@
 .chatGridState {
     display: flex;
     justify-content: center;
-    margin-left: 56px;
+    margin-left: 0px;
     max-width: 996px;
+    margin-top: 5px;
+}
+
+.chatGridStateTop {
     margin-top: 30px;
+    margin-left: 56px;
 }
 
 .chatEmptyStateTitle {
