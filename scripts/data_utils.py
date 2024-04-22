@@ -752,14 +752,13 @@ def chunk_content(
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    for _ in range(RETRY_COUNT):
+                    for i in range(RETRY_COUNT):
                         try:
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
-                        except Exception as e:  
-                            print(f"Error encountered while getting embedding for chunk: {e}. Retrying...   
-                                (Attempt {i + 1} of {RETRY_COUNT}, {RETRY_COUNT - (i + 1)} retries remaining)")  
-                            time.sleep(30)  
+                        except Exception as e:
+                            print(f"Error getting embedding for chunk with error={e}, retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
+                            time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
                     
