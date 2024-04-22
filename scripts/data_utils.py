@@ -25,7 +25,7 @@ from bs4 import BeautifulSoup
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from tqdm import tqdm
 from typing import Any
-
+import urllib
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -632,35 +632,68 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
+def get_payload_and_headers_cohere(text, aad_token) -> Tuple[Dict, Dict]:
+    oai_headers = {"Content-Type": "application/json", "Authorization": f"Bearer {aad_token}"}
+    cohere_body = {"text": [text], "input_type": "search_document"}
+    return cohere_body, oai_headers
+
+def allowSelfSignedHttps(Ture):
+    # Disable SSL certificate verification
+    from urllib3 import disable_warnings
+    from urllib3.exceptions import InsecureRequestWarning
+    disable_warnings(InsecureRequestWarning)
 
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
-    print(f'endpoint is {endpoint}')
-    print(f'key is {key}')
+    # print(f'endpoint is {endpoint}')
+    # print(f'key is {key}')
     # print('print azure_credential_get_token before ', azure_credential.get_token("https://cognitiveservices.azure.com/.default").token)
+
+    FLAG_USE_AOAI = False
+    FLAG_USE_COHERE = 1 - FLAG_USE_AOAI
 
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
     try:
-        endpoint_parts = endpoint.split("/openai/deployments/")
-        base_url = endpoint_parts[0]
-        deployment_id = endpoint_parts[1].split("/embeddings")[0]
+        if FLAG_USE_AOAI:
+            endpoint_parts = endpoint.split("/openai/deployments/")
+            base_url = endpoint_parts[0]
+            deployment_id = endpoint_parts[1].split("/embeddings")[0]
+            api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
 
-        api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
+            # if azure_credential is not None:
+            #     api_key = os.environ.get("EMBEDDING_MODEL_KEY") #azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            # else:
+            #     api_key = key
 
-        if azure_credential is not None:
-            api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        else:
-            api_key = key
-        # print(api_key)
-        print(f"Using endpoint={base_url} with deployment_id={deployment_id} and api_key=")
-        client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
-        embeddings = client.embeddings.create(model=deployment_id, input=text)
-        print(f"Got embeddings..")
-        return embeddings.dict()['data'][0]['embedding']
+            api_key = os.environ.get("EMBEDDING_MODEL_KEY")
+            # print(f"endpoint={endpoint}, using base_url={base_url} with deployment_id={deployment_id} and api_key={api_key}END")
+            
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
+            embeddings = client.embeddings.create(model=deployment_id, input=text)
+            # print(f"Got embeddings..")
+            return embeddings.dict()['data'][0]['embedding']
+        
+        if FLAG_USE_COHERE:
+            data, headers = get_payload_and_headers_cohere(text, key)
+            allowSelfSignedHttps(True)
+
+            body = str.encode(json.dumps(data))
+            req = urllib.request.Request(endpoint, body, headers)
+
+            response = urllib.request.urlopen(req)
+            result = response.read()
+
+            result_content = json.loads(result.decode('utf-8'))
+            print(result_content["embeddings"][0])
+            
+            return result_content["embeddings"][0]   
+
+
+
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
@@ -765,12 +798,11 @@ def chunk_content(
                 if add_embeddings:
                     for i in range(RETRY_COUNT):
                         try:
-                            print("About to get embedding..")
+                            # print("About to get embedding..")
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
                         except Exception as e:
-                            print(f"Error getting embedding for chunk with error={e}, 
-                                  retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
+                            print(f"Error getting embedding for chunk with error={e}, retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
                             time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
