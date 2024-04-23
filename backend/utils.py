@@ -157,26 +157,28 @@ def format_pf_non_streaming_response(
 
     logging.debug(f"chatCompletion: {chatCompletion}")
     try:
-        response_obj = {
+        messages = []
+        if response_field_name in chatCompletion:
+            messages.append({
+                "role": "assistant",
+                "content": chatCompletion[response_field_name] 
+            })
+        if citations_field_name in chatCompletion:
+            messages.append({ 
+                "role": "tool",
+                "content": chatCompletion[citations_field_name]
+            })
+         response_obj = {
             "id": chatCompletion["id"],
             "model": "",
             "created": "",
             "object": "",
             "choices": [
                 {
-                    "messages": [
-                        {
-                            "role": "assistant",
-                            "content": chatCompletion[response_field_name],
-                        },
-                        {
-                            "role": "tool",
-                            "content": chatCompletion[citations_field_name]
-                        }
-                    ]
+                    "messages": messages,
+                    "history_metadata": history_metadata,
                 }
-            ],
-            "history_metadata": history_metadata,
+            ]
         }
         return response_obj
     except Exception as e:
