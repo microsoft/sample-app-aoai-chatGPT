@@ -724,22 +724,34 @@ def prepare_model_args(request_body):
     request_messages = request_body.get("messages", [])
     messages = []
     if not SHOULD_USE_DATA:
-        messages = [{"role": "system", "content": AZURE_OPENAI_SYSTEM_MESSAGE}]
+        
+        messages = [{"role": "system", "content": [{
+            "type": "text",
+            "text": AZURE_OPENAI_SYSTEM_MESSAGE
+        }]}]
 
     for message in request_messages:
         if message:
-            messages.append({"role": message["role"], "content": message["content"]})
+            if message.get("image", ""):
+                messages.append({"role": message["role"], "content": [
+                    {"type": "image_url", "image_url": {"url": message["image"]}},
+                    {"type": "text", "text": message["content"]}
+                ]})
+            else:
+                messages.append({"role": message["role"], "content": [{
+                "type": "text",
+                "text": message["content"]}]})
 
     model_args = {
         "messages": messages,
         "temperature": float(AZURE_OPENAI_TEMPERATURE),
         "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
         "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": (
-            parse_multi_columns(AZURE_OPENAI_STOP_SEQUENCE)
-            if AZURE_OPENAI_STOP_SEQUENCE
-            else None
-        ),
+        # "stop": (
+        #     parse_multi_columns(AZURE_OPENAI_STOP_SEQUENCE)
+        #     if AZURE_OPENAI_STOP_SEQUENCE
+        #     else None
+        # ),
         "stream": SHOULD_STREAM,
         "model": AZURE_OPENAI_MODEL,
     }
