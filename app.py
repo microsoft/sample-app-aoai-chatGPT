@@ -244,10 +244,10 @@ PROMPTFLOW_RESPONSE_FIELD_NAME = os.environ.get(
     "PROMPTFLOW_RESPONSE_FIELD_NAME", "reply"
 )
 #GridData Get
-PRECANNED_PROMPTS = os.environ.get("PRECANNED_PROMPTS")
-PRECANNED_PROMPT_NAME = os.environ.get("PRECANNED_PROMPT_NAME")
-PRECANNED_PROMPT_DESCRIPTION = os.environ.get("PRECANNED_PROMPT_DESCRIPTION")
-CHAT_EMPTY_TEXT_HINT = os.environ.get("CHAT_EMPTY_TEXT_HINT")
+UI_PRECANNED_PROMPTS = os.environ.get("UI_PRECANNED_PROMPTS")
+UI_PRECANNED_PROMPT_NAMES = os.environ.get("UI_PRECANNED_PROMPT_NAMES")
+UI_PRECANNED_PROMPT_DESCRIPTIONS = os.environ.get("UI_PRECANNED_PROMPT_DESCRIPTIONS")
+UI_CHAT_EMPTY_TEXT_HINT = os.environ.get("UI_CHAT_EMPTY_TEXT_HINT")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -269,10 +269,10 @@ frontend_settings = {
     },
     "sanitize_answer": SANITIZE_ANSWER,
 "grid_model" : {
-    "chat_empty_text_hint": CHAT_EMPTY_TEXT_HINT,
-    "precanned_prompts": PRECANNED_PROMPTS,
-    "precanned_prompt_name": PRECANNED_PROMPT_NAME,
-    "precanned_prompt_description": PRECANNED_PROMPT_DESCRIPTION,
+    "chat_empty_text_hint": UI_CHAT_EMPTY_TEXT_HINT,
+    "precanned_prompts": UI_PRECANNED_PROMPTS,
+    "precanned_prompt_names": UI_PRECANNED_PROMPT_NAMES,
+    "precanned_prompt_descriptions": UI_PRECANNED_PROMPT_DESCRIPTIONS,
 }
 }
 

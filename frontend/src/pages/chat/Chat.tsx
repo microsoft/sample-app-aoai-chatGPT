@@ -149,15 +149,17 @@ const Chat = () => {
         }
     }
 
-    const gridName: string[] | undefined = grid_model?.precanned_prompt_name?.split('|');
-    const gridDescription: string[] | undefined = grid_model?.precanned_prompt_description?.split('|');
+    const gridName: string[] | undefined = grid_model?.precanned_prompt_names?.split('|');
+    const gridDescription: string[] | undefined = grid_model?.precanned_prompt_descriptions?.split('|');
     const combinedName: [string, string | undefined][] | undefined = gridName?.[0]?.length ? gridName?.map((prompt, index) => [prompt?.slice(0, 26), gridDescription?.[index]?.slice(0, 100)]) : undefined;
     const gridPrompts: string[] | undefined = grid_model?.precanned_prompts?.split('|');
     const PromptsFormate: [string, string][] | undefined = gridPrompts?.map((item) => [item?.slice(0, 26), item?.slice(0, 100)]);
     const PromptsDatas: [string, string | undefined][] | undefined = PromptsFormate?.[0]?.[0]?.length ? (combinedName?.length ? combinedName : PromptsFormate?.[0]?.[0]?.length ? PromptsFormate : undefined) : undefined;
 
-    const handelOnPromptGet = (name: string) => {
-        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined)
+    const handelOnPromptGet = (index: number) => {
+        const name = gridPrompts && gridPrompts?.filter((item: string, i: number) => i === index)?.[0]
+
+        appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? name && makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : name && makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined)
     }
 
 

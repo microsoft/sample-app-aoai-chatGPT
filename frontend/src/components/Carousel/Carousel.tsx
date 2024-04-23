@@ -11,7 +11,7 @@ import './Carousel_module.css';
 // import required modules
 import { Navigation, Pagination, Mousewheel, Keyboard } from 'swiper';
 
-const Carousel = ({ data, handelOnPromptGet }: { data?: [string, string | undefined][] | undefined, handelOnPromptGet?: (name: string) => void }) => {
+const Carousel = ({ data, handelOnPromptGet }: { data?: [string, string | undefined][] | undefined, handelOnPromptGet?: (index: number) => void | undefined }) => {
 
     return (
         <>
@@ -46,7 +46,7 @@ const Carousel = ({ data, handelOnPromptGet }: { data?: [string, string | undefi
                 {data?.map((item, index) => {
                     return (
                         <SwiperSlide key={index}>
-                            <div className='chatGridModel gradient-border-pseudo' onClick={() => handelOnPromptGet && handelOnPromptGet(item?.[0])}>
+                            <div className='chatGridModel gradient-border-pseudo' onClick={() => handelOnPromptGet && handelOnPromptGet(index)}>
                                 <h1 className='chatGridStateTitle'>{item?.[0]}</h1>
                                 <h2 className='chatGridStateSubtitle'>{item?.[1]}</h2>
                             </div>

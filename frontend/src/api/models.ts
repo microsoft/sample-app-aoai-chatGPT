@@ -114,8 +114,8 @@ export type UI = {
 export type GridModel = {
     chat_empty_text_hint?: string | null;
     precanned_prompts?: string | null;
-    precanned_prompt_name?: string | null;
-    precanned_prompt_description?: string | null;
+    precanned_prompt_names?: string | null;
+    precanned_prompt_descriptions?: string | null;
 }
 export type FrontendSettings = {
     auth_enabled?: string | null;
