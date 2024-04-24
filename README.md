@@ -136,7 +136,15 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 - `UI_CHAT_LOGO`
 - `UI_CHAT_DESCRIPTION`
 - `UI_FAVICON`
+- `UI_CHAT_EMPTY_TEXT_HINT`
 - `UI_SHOW_SHARE_BUTTON`
+- `UI_PRECANNED_PROMPTS`
+- `UI_PRECANNED_PROMPT_NAMES`
+- `UI_PRECANNED_PROMPT_DESCRIPTIONS`
+
+For Precanned prompt variables values/prompts/names/descriptions are seperated by the '|' for example UI_PRECANNED_PROMPTS= Act as a Code Assistant for all software development tasks | Act as a lawyer who specializes in risk assessment. 
+The use of UI Precanned Prompt variable will cause a 3 column by 1 row grid of configured prompts to be displayed and when clicked be sent for entry as a user input. Depending on your system prompt they may override your system prompt or extend it. 
+The use of Precanned Prompt Names and Descriptions allow you to control what is displayed in the text box grid for available precanned prompts otherwise the first 26 characters of the UI_PRECANNED_PROMPTS variable is used for name and the first 100 characters is used for the descriptions of the prompts displayed in the grid.
 
 Feel free to fork this repository and make your own modifications to the UX or backend logic. You can modify the source (`frontend/src`). For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
