@@ -211,6 +211,7 @@ const Chat = () => {
       id: uuid(),
       role: "user",
       content: question,
+      contentType: "text",
       date: new Date().toISOString(),
       image: uploadedImage,
     };
@@ -858,8 +859,18 @@ const Chat = () => {
                     {answer.role === "user" ? (
                       <div className={styles.chatMessageUser} tabIndex={0}>
                         <div className={styles.chatMessageUserMessage}>
-                       <Image src={answer.image} className={styles.questionInputAttachedImage}/>
-                       {answer.content}
+                          {!answer.image && answer.content}
+                          {answer.image && (
+                            <div
+                              className={styles.chatBothImageText}
+                              dangerouslySetInnerHTML={{
+                                __html:  `
+        <p>${answer.content}</p>
+        <img src="${answer.image}" />
+      `,
+                              }}
+                            />
+                          )}
                         </div>
                       </div>
                     ) : answer.role === "assistant" ? (
@@ -1044,6 +1055,11 @@ const Chat = () => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id);
+                  setuploadedImage(undefined);
+                }}
+                onTextboxClear={() => {
+                  console.log("clear");
+                  setuploadedImage(undefined);
                 }}
                 conversationId={
                   appStateContext?.state.currentChat?.id

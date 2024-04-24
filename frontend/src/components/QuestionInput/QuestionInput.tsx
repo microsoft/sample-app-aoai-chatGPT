@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { Stack, TextField, Image } from "@fluentui/react";
+import {
+  Stack,
+  TextField,
+  Image,
+  CommandBarButton,
+  TooltipHost,
+  ITooltipHostStyles,
+} from "@fluentui/react";
 import { SendRegular } from "@fluentui/react-icons";
 import Send from "../../assets/Send.svg";
 import styles from "./QuestionInput.module.css";
 
 interface Props {
   onSend: (question: string, id?: string) => void;
+  onTextboxClear: () => void;
   disabled: boolean;
   placeholder?: string;
   clearOnSend?: boolean;
@@ -20,11 +28,12 @@ export const QuestionInput = ({
   clearOnSend,
   conversationId,
   imageSrc,
+  onTextboxClear,
 }: Props) => {
   const [question, setQuestion] = useState<string>("");
 
   const sendQuestion = () => {
-    if (disabled || !question.trim()) {
+    if ((disabled || !question.trim()) && !imageSrc) {
       return;
     }
 
@@ -59,9 +68,18 @@ export const QuestionInput = ({
 
   const sendQuestionDisabled = disabled || !question.trim();
 
+  const disabledButton = () => sendQuestionDisabled && !imageSrc;
+
+  const inlineBlockStyle: Partial<ITooltipHostStyles> = {
+    root: { display: "inline-block" },
+  };
+
   return (
     <Stack horizontal className={styles.questionInputContainer}>
-      <Image src={imageSrc} className={styles.questionInputAttachedImage} />
+      {imageSrc && (
+        <Image src={imageSrc} className={styles.questionInputAttachedImage} />
+      )}
+
       <TextField
         className={styles.questionInputTextArea}
         placeholder={placeholder}
@@ -72,6 +90,30 @@ export const QuestionInput = ({
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
       />
+      <CommandBarButton
+        role="button"
+        styles={{
+          icon: {
+            color: "#2d87c3",
+            fontSize: "22px",
+          },
+          iconDisabled: {
+            color: "#BDBDBD !important",
+          },
+          rootDisabled: {
+            background: "transparent",
+          },
+        }}
+        onClick={() => {
+          setQuestion("");
+          onTextboxClear();
+        }}
+        className={styles.questionInputClearButtonContainer}
+        iconProps={{ iconName: "Delete" }}
+        disabled={disabledButton()}
+        aria-label="clear chat button"
+      />
+
       <div
         className={styles.questionInputSendButtonContainer}
         role="button"
@@ -82,12 +124,13 @@ export const QuestionInput = ({
           e.key === "Enter" || e.key === " " ? sendQuestion() : null
         }
       >
-        {sendQuestionDisabled ? (
+        {sendQuestionDisabled && !imageSrc ? (
           <SendRegular className={styles.questionInputSendButtonDisabled} />
         ) : (
           <img src={Send} className={styles.questionInputSendButton} />
         )}
       </div>
+
       <div className={styles.questionInputBottomBorder} />
     </Stack>
   );

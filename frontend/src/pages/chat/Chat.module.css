@@ -2,7 +2,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px
+    gap: 20px;
 }
 
 .chatRoot {
@@ -20,7 +20,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #FFFFFF 57.29%, #EEF6FE 100%);
+    background: radial-gradient(
+      108.78% 108.78% at 50.02% 19.78%,
+      #ffffff 57.29%,
+      #eef6fe 100%
+    );
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     overflow-y: auto;
@@ -76,6 +80,27 @@
     margin-top: 24px;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #b6b9c4;
+    border-radius: 10px;
+    transition: all 0.5s ease;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #6f7aa1;
+}
+
 .chatMessageUser {
     display: flex;
     justify-content: flex-end;
@@ -85,7 +110,7 @@
 .chatMessageUserMessage {
     display: flex;
     padding: 20px;
-    background: #EDF5FD;
+    background: #edf5fd;
     border-radius: 8px;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
     font-style: normal;
@@ -154,7 +179,7 @@
     height: 40px;
     left: 7px;
     top: 13px;
-    color: #FFFFFF;
+    color: #ffffff;
     border-radius: 4px;
     z-index: 1;
 }
@@ -170,7 +195,7 @@
     height: 40px;
     left: 7px;
     top: 66px;
-    color: #FFFFFF;
+    color: #ffffff;
     border-radius: 4px;
     z-index: 1;
 }
@@ -186,7 +211,7 @@
     height: 40px;
     left: 7px;
     top: 66px;
-    color: #FFFFFF;
+    color: #ffffff;
     border-radius: 4px;
     z-index: 1;
 }
@@ -202,9 +227,9 @@
     position: absolute;
     width: 161px;
     height: 32px;
-    left: calc(50% - 161px/2 + 25.8px);
+    left: calc(50% - 161px / 2 + 25.8px);
     bottom: 116px;
-    border: 1px solid #D1D1D1;
+    border: 1px solid #d1d1d1;
     border-radius: 16px;
 }
 
@@ -235,7 +260,7 @@
     align-items: flex-start;
     padding: 16px 16px;
     gap: 8px;
-    background: #FFFFFF;
+    background: #ffffff;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     flex: auto;
@@ -269,8 +294,8 @@
 }
 
 .citationPanelDismiss:hover {
-    background-color: #D1D1D1;
-    cursor: pointer;
+  background-color: #d1d1d1;
+  cursor: pointer;
 }
 
 .citationPanelTitle {
@@ -281,7 +306,7 @@
     color: #323130;
     margin-top: 12px;
     margin-bottom: 12px;
-} 
+}
 
 .citationPanelTitle:hover {
     text-decoration: underline;
@@ -298,7 +323,7 @@
     order: 1;
     align-self: stretch;
     flex-grow: 0;
-} 
+}
 
 a {
     padding-left: 5px;
@@ -310,18 +335,33 @@ a {
     font-weight: 600;
     font-size: 12px;
     line-height: 16px;
-    color: #115EA3;
+    color: #115ea3;
     flex-direction: row;
     align-items: center;
     padding: 4px 6px;
     gap: 4px;
-    border: 1px solid #D1D1D1;
+    border: 1px solid #d1d1d1;
     border-radius: 4px;
 }
 
 .viewSourceButton:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.chatIploadedImage img,
+.chatBothImageText img {
+    max-height: 250px;
+    max-width: 100%;
+}
+
+.chatBothImageText {
+    display: flex;
+    flex-direction: column;
+}
+
+.chatBothImageText p {
+    margin-top: 0;
 }
 
 @media (max-width: 480px) {
