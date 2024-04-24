@@ -15,7 +15,7 @@
       "args": [
           "run",
           "--no-reload",
-          "-p 5050"
+          "-p 50505"
       ],
       "console": "integratedTerminal",
       "justMyCode": false,
