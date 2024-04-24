@@ -249,6 +249,9 @@ const Chat = () => {
                 else if (typeof result.error === "string") {
                     errorMessage = result.error;
                 }
+
+                errorMessage = parseErrorMessage(errorMessage);
+
                 let errorChatMsg: ChatMessage = {
                     id: uuid(),
                     role: ERROR,
@@ -312,7 +315,7 @@ const Chat = () => {
             const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
             if (!response?.ok) {
                 const responseJson = await response.json();
-                var errorResponseMessage = responseJson.error === undefined ? "Please try again. If the problem persists, please contact the site administrator." : responseJson.error;
+                var errorResponseMessage = responseJson.error === undefined ? "Please try again. If the problem persists, please contact the site administrator." : parseErrorMessage(responseJson.error);
                 let errorChatMsg: ChatMessage = {
                     id: uuid(),
                     role: ERROR,
@@ -435,6 +438,9 @@ const Chat = () => {
                 else if (typeof result.error === "string") {
                     errorMessage = result.error;
                 }
+
+                errorMessage = parseErrorMessage(errorMessage);
+
                 let errorChatMsg: ChatMessage = {
                     id: uuid(),
                     role: ERROR,
@@ -515,6 +521,27 @@ const Chat = () => {
             }
         }
         setClearingChat(false)
+    };
+
+    const parseErrorMessage = (errorMessage: string) => {
+        let errorCodeMessage = errorMessage.substring(0, errorMessage.indexOf("-") + 1);
+        const innerErrorCue = "{\\'error\\': {\\'message\\': ";
+        if (errorMessage.includes(innerErrorCue))
+        {
+            try {
+                let innerErrorString = errorMessage.substring(errorMessage.indexOf(innerErrorCue));
+                if (innerErrorString.endsWith("'}}")) {
+                    innerErrorString = innerErrorString.substring(0, innerErrorString.length - 3);
+                }
+                innerErrorString = innerErrorString.replaceAll("\\'", "'")
+                let newErrorMessage = errorCodeMessage + " " + innerErrorString;
+                errorMessage = newErrorMessage;
+
+            } catch (e) {
+                console.error("Error parsing inner error message: ", e);
+            }
+        }
+        return errorMessage;
     };
 
     const newChat = () => {
