@@ -1,1 +1,1 @@
-export * from "./QuestionInput";
+export * from './QuestionInput'
