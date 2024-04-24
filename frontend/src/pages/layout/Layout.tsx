@@ -45,7 +45,7 @@ const Layout = () => {
     }
   }, [copyClicked])
 
-  useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status])
+  useEffect(() => { }, [appStateContext?.state.isCosmosDBAvailable.status])
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,8 +110,7 @@ const Layout = () => {
         dialogContentProps={{
           title: 'Share the web app',
           showCloseButton: true
-        }}
-      >
+        }}>
         <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
           <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
           <div
@@ -120,8 +119,7 @@ const Layout = () => {
             tabIndex={0}
             aria-label="Copy"
             onClick={handleCopyClick}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}
-          >
+            onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
             <CopyRegular className={styles.copyButton} />
             <span className={styles.copyButtonText}>{copyText}</span>
           </div>
