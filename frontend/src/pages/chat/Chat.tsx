@@ -311,11 +311,12 @@ const Chat = () => {
             setMessages(request.messages)
         }
         let result = {} as ChatResponse;
+        var errorResponseMessage = "Please try again. If the problem persists, please contact the site administrator.";
         try {
             const response = conversationId ? await historyGenerate(request, abortController.signal, conversationId) : await historyGenerate(request, abortController.signal);
             if (!response?.ok) {
                 const responseJson = await response.json();
-                var errorResponseMessage = responseJson.error === undefined ? "Please try again. If the problem persists, please contact the site administrator." : parseErrorMessage(responseJson.error);
+                errorResponseMessage = responseJson.error === undefined ? errorResponseMessage : parseErrorMessage(responseJson.error);
                 let errorChatMsg: ChatMessage = {
                     id: uuid(),
                     role: ERROR,
