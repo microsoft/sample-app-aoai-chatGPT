@@ -33,7 +33,7 @@ from backend.utils import (
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 # Current minimum Azure OpenAI version supported
-MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-02-15-preview"
+MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-03-01-preview"
 
 load_dotenv()
 
@@ -84,6 +84,10 @@ DATASOURCE_TYPE = os.environ.get("DATASOURCE_TYPE", "AzureCognitiveSearch")
 SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
 SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
 SEARCH_ENABLE_IN_DOMAIN = os.environ.get("SEARCH_ENABLE_IN_DOMAIN", "true")
+SEARCH_MAX_SEARCH_QUERIES = os.environ.get("SEARCH_MAX_SEARCH_QUERIES")
+SEARCH_ALLOW_PARTIAL_RESULT = os.environ.get("SEARCH_ALLOW_PARTIAL_RESULT", "false").lower() == True
+SEARCH_INCLUDE_CONTEXTS = os.environ.get("SEARCH_INCLUDE_CONTEXTS", "citations,intent")
+SEARCH_VECTORIZATION_DIMENSIONS = os.environ.get("SEARCH_VECTORIZATION_DIMENSIONS")
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
@@ -393,7 +397,15 @@ def init_cosmosdb_client():
 
 def get_configured_data_source():
     data_source = {}
+    data_source_common_parameters = {}
+    
+    if SEARCH_MAX_SEARCH_QUERIES:
+        data_source_common_parameters["max_search_queries"] = SEARCH_MAX_SEARCH_QUERIES
+    
+    if SEARCH_ALLOW_PARTIAL_RESULT:
+        data_source_common_parameters
     query_type = "simple"
+    
     if DATASOURCE_TYPE == "AzureCognitiveSearch":
         # Set query type
         if AZURE_SEARCH_QUERY_TYPE:
