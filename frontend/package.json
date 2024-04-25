@@ -12,8 +12,7 @@
     "lint:fix": "npx eslint --fix",
     "prettier": "npx prettier src --check",
     "prettier:fix": "npx prettier src --write",
-    "format": "npm run prettier:fix && npm run lint:fix",
-    "prepare": "husky install"
+    "format": "npm run prettier:fix && npm run lint:fix"
   },
   "dependencies": {
     "@fluentui/react": "^8.105.3",
@@ -67,11 +66,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5",
     "vite": "^4.1.5"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run format",
-      "pre-push": "npm run test"
-    }
   }
 }
