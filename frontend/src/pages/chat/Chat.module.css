@@ -35,12 +35,22 @@
     align-items: center;
 }
 
+.chatTopGridState {
+    display: flex;
+    justify-content: center;
+    margin-left: 0px;
+    max-width: 996px;
+    margin-top: 10px;
+}
+
 .chatGridState {
     display: flex;
     justify-content: center;
     margin-left: 0px;
     max-width: 996px;
     margin-top: 5px;
+    height: 100%;
+    max-height: 201px;
 }
 
 .chatGridStateTop {

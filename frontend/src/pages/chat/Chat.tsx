@@ -156,7 +156,23 @@ const Chat = () => {
     const PromptsFormate: [string, string][] | undefined = gridPrompts?.map((item) => [item?.slice(0, 26), item?.slice(0, 100)]);
     const PromptsDatas: [string, string | undefined][] | undefined = PromptsFormate?.[0]?.[0]?.length ? (combinedName?.length ? combinedName : PromptsFormate?.[0]?.[0]?.length ? PromptsFormate : undefined) : undefined;
 
+    const PromptsChatDatas: [string, string][][] | undefined = PromptsDatas?.reduce((acc: [string, string][][] | undefined, curr: [string, string | undefined], index: number): [string, string][][] | undefined => {
+        if (acc === undefined) return undefined;
+        if (index % 2 === 0) {
+            acc.push([curr as [string, string]]);
+        } else {
+            if (acc[acc.length - 1] === undefined) return undefined;
+            acc[acc.length - 1].push(curr as [string, string]);
+        }
+        return acc;
+    }, []);
+
+    const PromptsBottomChatDatas = PromptsDatas && PromptsDatas?.length < 4 ? PromptsDatas : PromptsChatDatas
+    console.log("🚀 ~ Chat ~ PromptsBottomChatDatas:", PromptsBottomChatDatas, PromptsDatas?.length)
+
+
     const handelOnPromptGet = (index: number) => {
+        console.log("🚀 ~ handelOnPromptGet ~ index:", index)
         const name = gridPrompts && gridPrompts?.filter((item: string, i: number) => i === index)?.[0]
 
         appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? name && makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : name && makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined)
@@ -672,14 +688,14 @@ const Chat = () => {
                                     />
                                     <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                                     <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
-                                    <Stack className={`${styles.chatGridState} ${styles.chatGridStateTop}`}>
-                                        <Carousel data={PromptsDatas} handelOnPromptGet={handelOnPromptGet} />
+                                    <Stack className={`${PromptsDatas && PromptsDatas?.length < 4 ? styles.chatTopGridState : styles.chatGridState} ${styles.chatGridStateTop}`}>
+                                        <Carousel data={PromptsBottomChatDatas} handelOnPromptGet={handelOnPromptGet} />
                                     </Stack>
                                 </Stack>
                             </Stack>
                         ) : (
                             <>
-                                <Stack className={styles.chatGridState}>
+                                <Stack className={styles.chatTopGridState}>
                                     {showLoadingMessage ?
                                         <Carousel data={PromptsDatas} /> :
                                         <Carousel data={PromptsDatas} handelOnPromptGet={handelOnPromptGet} />

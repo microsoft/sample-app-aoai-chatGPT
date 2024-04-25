@@ -1,6 +1,12 @@
 .mySwiper {
     width: 996px;
     padding: 0 20px 0 30px;
+    height: 100%;
+}
+
+.mySwiper1 {
+    width: 996px;
+    padding: 0 20px 0 30px;
 }
 
 .chatGridStateTitle {
@@ -27,6 +33,15 @@
     padding: 10px 15px;
     cursor: pointer;
     height: 100%;
+}
+
+.chatGridBottomSpace {
+    margin-bottom: 16px !important;
+}
+
+.chatGridTopSpace {
+    margin-top: 10px !important;
+    max-height: 84px;
 }
 
 .gradient-border-pseudo {
