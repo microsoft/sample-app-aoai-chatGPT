@@ -1,4 +1,6 @@
 import pytest
+
+import app  # Adding this as a basic test that the module is well-formed
 from backend.utils import format_as_ndjson, parse_multi_columns
 
 
