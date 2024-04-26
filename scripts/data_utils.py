@@ -1,31 +1,35 @@
-"""Data utilities for index preparation."""
 import ast
 import html
 import json
 import os
 import re
-import requests
-from openai import AzureOpenAI
-import re
+import ssl
+import subprocess
 import tempfile
 import time
+import urllib.request
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import markdown
+import requests
 import tiktoken
-from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from openai import AzureOpenAI
 from tqdm import tqdm
-from typing import Any
-import urllib
+
+# Configure environment variables  
+load_dotenv() # take environment variables from .env.
+
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -39,7 +43,7 @@ FILE_FORMAT_DICT = {
         "pptx": "pptx"
     }
 
-RETRY_COUNT = 1 #5
+RETRY_COUNT = 5
 
 SENTENCE_ENDINGS = [".", "!", "?"]
 WORDS_BREAKS = list(reversed([",", ";", ":", " ", "(", ")", "[", "]", "{", "}", "\t", "\n"]))
@@ -637,39 +641,54 @@ def get_payload_and_headers_cohere(text, aad_token) -> Tuple[Dict, Dict]:
     cohere_body = {"text": [text], "input_type": "search_document"}
     return cohere_body, oai_headers
 
-def allowSelfSignedHttps(Ture):
-    # Disable SSL certificate verification
-    from urllib3 import disable_warnings
-    from urllib3.exceptions import InsecureRequestWarning
-    disable_warnings(InsecureRequestWarning)
+def allowSelfSignedHttps(allowed):
+    #by pass the server certificate verification on client side
+    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
+        ssl._create_default_https_context = ssl._create_unverified_context
+
+def get_payload_and_headers_cohere(
+    text, aad_token) -> Tuple[Dict, Dict]:
+    oai_headers =  {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {aad_token}",
+    }
+
+    cohere_body = { "texts": [text], "input_type": "search_document" }
+    return cohere_body, oai_headers
+
+def allowSelfSignedHttps(allowed):
+    # bypass the server certificate verification on client side
+    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
+        ssl._create_default_https_context = ssl._create_unverified_context
 
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
-    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
+    # key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
     # print(f'endpoint is {endpoint}')
     # print(f'key is {key}')
     # print('print azure_credential_get_token before ', azure_credential.get_token("https://cognitiveservices.azure.com/.default").token)
 
-    FLAG_USE_AOAI = False
-    FLAG_USE_COHERE = 1 - FLAG_USE_AOAI
+    FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
+    # print(f'FLAG_EMBEDDING_MODEL = {FLAG_EMBEDDING_MODEL}')
 
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
     try:
-        if FLAG_USE_AOAI:
+        # if azure_credential is not None:
+        #     api_key = os.environ.get("EMBEDDING_MODEL_KEY") #azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+        # else:
+        #     api_key = key
+
+        if FLAG_EMBEDDING_MODEL == "AOAI":
+            # print(f"Using Azure OpenAI for embeddings..")
             endpoint_parts = endpoint.split("/openai/deployments/")
             base_url = endpoint_parts[0]
             deployment_id = endpoint_parts[1].split("/embeddings")[0]
             api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
 
-            # if azure_credential is not None:
-            #     api_key = os.environ.get("EMBEDDING_MODEL_KEY") #azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-            # else:
-            #     api_key = key
-
-            api_key = os.environ.get("EMBEDDING_MODEL_KEY")
+            api_key = os.getenv("AZURE_OPENAI_API_KEY")
             # print(f"endpoint={endpoint}, using base_url={base_url} with deployment_id={deployment_id} and api_key={api_key}END")
             
             client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
@@ -677,23 +696,26 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             # print(f"Got embeddings..")
             return embeddings.dict()['data'][0]['embedding']
         
-        if FLAG_USE_COHERE:
+        if FLAG_EMBEDDING_MODEL == "COHERE":
+            # print(f"Using Cohere for embeddings..")
+            if FLAG_COHERE == "MULTILINGUAL":
+                key = os.getenv("COHERE_MULTILINGUAL_API_KEY")
+            elif FLAG_COHERE == "ENGLISH":
+                key = os.getenv("COHERE_ENGLISH_API_KEY")
             data, headers = get_payload_and_headers_cohere(text, key)
+            # print( data, headers )
             allowSelfSignedHttps(True)
 
             body = str.encode(json.dumps(data))
             req = urllib.request.Request(endpoint, body, headers)
-
             response = urllib.request.urlopen(req)
             result = response.read()
-
             result_content = json.loads(result.decode('utf-8'))
-            print(result_content["embeddings"][0])
+            
+            # print(f'result_content is {result_content["embeddings"][0]}')
             
             return result_content["embeddings"][0]   
-
-
-
+        
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
@@ -729,16 +751,16 @@ def chunk_content_helper(
                     chunk_size=num_tokens, chunk_overlap=token_overlap)
             else:
                 if file_format == "html_pdf": # cracked pdf converted to html
-                    print("In the section for html_pdf")
+                    # print("In the section for html_pdf")
                     splitter = PdfTextSplitter(separator=SENTENCE_ENDINGS + WORDS_BREAKS, chunk_size=num_tokens, chunk_overlap=token_overlap)
-                    print("initialized PdfTextSplitter")
+                    # print("initialized PdfTextSplitter")
                 else:
                     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
                             separators=SENTENCE_ENDINGS + WORDS_BREAKS,
                             chunk_size=num_tokens, chunk_overlap=token_overlap)
-            print("About to split text..")
+            # print("About to split text..")
             chunked_content_list = splitter.split_text(doc.content)
-            print("Split text done..")
+            # print("Split text done..")
             for chunked_content in chunked_content_list:
                 chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
                 yield chunked_content, chunk_size, doc
@@ -790,7 +812,7 @@ def chunk_content(
             num_tokens=num_tokens,
             token_overlap=token_overlap
         )
-        print("Back from chunking..")
+        # print("Back from chunking..")
         chunks = []
         skipped_chunks = 0
         for chunk, chunk_size, doc in chunked_context:
@@ -871,10 +893,10 @@ def chunk_file(
     if file_format in ["pdf", "docx", "pptx"]:
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
-        print("About to extract pdf content..")
+        # print("About to extract pdf content..")
         content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
-        print("Extracted pdf content..")
+        # print("Extracted pdf content..")
     else:
         try:
             with open(file_path, "r", encoding="utf8") as f:
@@ -930,7 +952,7 @@ def process_file(
             url_path = url_prefix + rel_file_path
             url_path = convert_escaped_to_posix(url_path)
 
-        print(f"About to enter chunk_file function..")
+        # print(f"About to enter chunk_file function..")
 
         result = chunk_file(
             file_path,

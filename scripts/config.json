@@ -1,14 +1,15 @@
 [
     {
-        "data_path": "C:/Users/sophiechen/OneDrive - Microsoft/Documents/oyd/data/gptassertdata/index_data/Premera",
-        "location": "East US",
+        "data_path": "c:\\Users\\sophiechen\\OneDrive - Microsoft\\Documents\\oyd\\data\\gptassertdata\\index_data\\product-info\\product-info",
+        "location": "West US 2",
         "subscription_id": "10e1de13-9717-4242-acf5-3e241940d326",
         "resource_group": "wed-aiq",
-        "search_service_name": "wed-aiq-acs-eus",
-        "index_name": "test_premera_embed_cohere_multilingual_512_index",
+        "search_service_name": "wed-aiq-acs-wu2",
+        "index_name": "product_info_embed_cohere_search_512_index",
         "chunk_size": 512,
         "token_overlap": 0,
         "semantic_config_name": "default",
         "vector_config_name": "default"
     }
 ]
+
