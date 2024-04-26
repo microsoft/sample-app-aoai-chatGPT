@@ -8,18 +8,14 @@
       "module": "quart",
       "cwd": "${workspaceFolder}",
       "env": {
-          "QUART_APP": "app:app",
-          "QUART_ENV": "development",
-          "QUART_DEBUG": "0"
+        "QUART_APP": "app:app",
+        "QUART_ENV": "development",
+        "QUART_DEBUG": "0"
       },
-      "args": [
-          "run",
-          "--no-reload",
-          "-p 50505"
-      ],
+      "args": ["run", "--no-reload", "-p 5050"],
       "console": "integratedTerminal",
       "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env",
-  }
+      "envFile": "${workspaceFolder}/.env"
+    }
   ]
 }

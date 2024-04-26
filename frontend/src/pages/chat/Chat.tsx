@@ -11,7 +11,7 @@ import {
   Dialog,
   DialogType,
   Stack,
-  Image,
+  TextField,
 } from "@fluentui/react";
 import {
   SquareRegular,
@@ -78,6 +78,13 @@ const Chat = () => {
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>();
   const [uploadedImage, setuploadedImage] = useState<string>();
+  const [systemMessage, setSystemMessage] = useState(
+    "You are an AI assistant that helps people find information."
+  );
+
+  const onChangeSystemMessage = (event: any) => {
+    setSystemMessage(event.target.value);
+  };
 
   const hiddenFileInput = useRef<any>(null);
 
@@ -216,16 +223,17 @@ const Chat = () => {
       image: uploadedImage,
     };
 
-    if(uploadedImage !== "") {
-        setuploadedImage("");
+    if (uploadedImage !== "") {
+      setuploadedImage("");
     }
 
     let conversation: Conversation | null | undefined;
+
     if (!conversationId) {
       conversation = {
         id: conversationId ?? uuid(),
         title: question,
-        messages: [userMessage],
+        messages: [{ ...userMessage, isFirstMessage: true }],
         date: new Date().toISOString(),
       };
     } else {
@@ -864,7 +872,7 @@ const Chat = () => {
                             <div
                               className={styles.chatBothImageText}
                               dangerouslySetInnerHTML={{
-                                __html:  `
+                                __html: `
         <p>${answer.content}</p>
         <img src="${answer.image}" />
       `,
@@ -948,6 +956,16 @@ const Chat = () => {
                   </span>
                 </Stack>
               )}
+              <Stack className={styles.chatSystemMessageContainer}>
+                <TextField
+                  label="System Message"
+                  multiline
+                  rows={4}
+                  value={systemMessage}
+                  resizable={false}
+                  onChange={onChangeSystemMessage}
+                />
+              </Stack>
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !==
                   CosmosDBStatus.NotConfigured && (
@@ -1055,10 +1073,13 @@ const Chat = () => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id);
+                  hiddenFileInput.current.files = null;
+                  hiddenFileInput.current.value = null;
                   setuploadedImage(undefined);
                 }}
                 onTextboxClear={() => {
-                  console.log("clear");
+                  hiddenFileInput.current.files = null;
+                  hiddenFileInput.current.value = null;
                   setuploadedImage(undefined);
                 }}
                 conversationId={

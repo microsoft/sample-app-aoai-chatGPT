@@ -70,6 +70,24 @@
   width: 100px;
 }
 
+.questionInputClearButtonContainer {
+  position: absolute;
+  right: 18px;
+  top: 25px;
+  background: transparent;
+}
+.questionInputClearButtonContainer:hover,
+.questionInputClearButtonContainer:active {
+  background: transparent;
+}
+.questionInputClearButtonContainer .ms-Icon {
+  font-size: 22px;
+  color: rgb(32, 31, 30);
+}
+.questionInputClearButtonContainer.is-disabled {
+  opacity: 0.3;
+}
+
 @media (max-width: 480px) {
   .questionInputContainer {
     left: 16.5%;
