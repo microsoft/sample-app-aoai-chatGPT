@@ -5,7 +5,7 @@ const config: Config.InitialOptions = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
-  setupFilesAfterEnv: ['<rootDir>/polyfills.ts']
+  setupFilesAfterEnv: ['<rootDir>/polyfills.js']
 }
 
 export default config
