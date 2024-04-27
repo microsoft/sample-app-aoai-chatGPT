@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const replaceAllInserter = require('string.prototype.replaceall')
+// const replaceAllInserter = require('string.prototype.replaceall')
+import replaceAllInserter from 'string.prototype.replaceall'
 
 replaceAllInserter.shim()
