@@ -430,7 +430,7 @@ def get_configured_data_source():
         # Set authentication
         authentication = {}
         if AZURE_SEARCH_KEY:
-            authentication = {"type": "api_key", "api_key": AZURE_SEARCH_KEY}
+            authentication = {"type": "api_key", "key": AZURE_SEARCH_KEY}
         else:
             # If key is not provided, assume AOAI resource identity has been granted access to the search service
             authentication = {"type": "system_assigned_managed_identity"}
@@ -751,22 +751,7 @@ def prepare_model_args(request_body):
         ),
         "stream": SHOULD_STREAM,
         "model": AZURE_OPENAI_MODEL,
-        # "data_sources": [
-        #     {
-        #         "type": "azure_search", 
-        #         "parameters": {
-        #             "authentication": {
-        #                 "type": "api_key",
-        #                 "key": SEARCH_API_KEY
-        #             },
-        #             "endpoint": f"https://{SEARCH_SERVICE_NAME}.search.windows.net",
-        #             "index_name": INDEX_NAME,
-        #             "role_information": "Reference manual for the Longer 3D printers and Citizen watches."
-        #         }
-        #     }            
-        # ],
     }
-
     if SHOULD_USE_DATA:
         model_args["extra_body"] = {"data_sources": [get_configured_data_source()]}
 
