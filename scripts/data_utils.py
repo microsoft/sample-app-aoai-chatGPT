@@ -636,11 +636,6 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
-def allowSelfSignedHttps(allowed):
-    #by pass the server certificate verification on client side
-    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
-        ssl._create_default_https_context = ssl._create_unverified_context
-
 def get_payload_and_headers_cohere(
     text, aad_token) -> Tuple[Dict, Dict]:
     oai_headers =  {
