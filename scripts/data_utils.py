@@ -655,32 +655,6 @@ def allowSelfSignedHttps(allowed):
     # bypass the server certificate verification on client side
     if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
         ssl._create_default_https_context = ssl._create_unverified_context
-
-def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
-    endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
-    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
-    
-    if azure_credential is None and (endpoint is None or key is None):
-        raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
-
-    try:
-        endpoint_parts = endpoint.split("/openai/deployments/")
-        base_url = endpoint_parts[0]
-        deployment_id = endpoint_parts[1].split("/embeddings")[0]
-
-        api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
-
-        if azure_credential is not None:
-            api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        else:
-            api_key = key
-
-        client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
-        embeddings = client.embeddings.create(model=deployment_id, input=text)
-        return embeddings.dict()['data'][0]['embedding']
-
-    except Exception as e:
-        raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
     
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
@@ -702,7 +676,7 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             else:
                 api_key = embedding_model_key if embedding_model_key else os.getenv("AZURE_OPENAI_API_KEY")
             
-            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
             embeddings = client.embeddings.create(model=deployment_id, input=text)
             
             return embeddings.dict()['data'][0]['embedding']
