@@ -50,11 +50,11 @@ const Carousel = ({ data, handelOnPromptGet }: { data?: [string, string | undefi
                             <SwiperSlide key={index}>
                                 {item?.[0] && <div className='chatGridTopSpace chatGridBottomSpace chatGridModel gradient-border-pseudo' onClick={() => handelOnPromptGet && handelOnPromptGet((index * 1) + index)}>
                                     <h1 className='chatGridStateTitle'>{item?.[0]?.[0]}</h1>
-                                    <h2 className='chatGridStateSubtitle'>{item?.[0]?.[1]?.slice(0, 60)}</h2>
+                                    <h2 className='chatGridStateSubtitle'>{item?.[0]?.[1]?.slice(0, 100)}</h2>
                                 </div>}
                                 {item?.[1] && <div className='chatGridTopSpace chatGridModel gradient-border-pseudo' onClick={() => handelOnPromptGet && handelOnPromptGet(((index + 1) * 1) + index)}>
                                     <h1 className='chatGridStateTitle'>{item?.[1]?.[0]}</h1>
-                                    <h2 className='chatGridStateSubtitle'>{item?.[1]?.[1]?.slice(0, 60)}</h2>
+                                    <h2 className='chatGridStateSubtitle'>{item?.[1]?.[1]?.slice(0, 100)}</h2>
                                 </div>}
                             </SwiperSlide>
                         )

@@ -30,7 +30,7 @@
 }
 
 .chatGridModel {
-    padding: 10px 15px;
+    padding: 10px 10px;
     cursor: pointer;
     height: 100%;
 }
@@ -41,12 +41,12 @@
 
 .chatGridTopSpace {
     margin-top: 10px !important;
-    max-height: 84px;
+    max-height: 96px;
 }
 
 .gradient-border-pseudo {
     position: relative;
-    padding: 10px 20px;
+    padding: 7px 20px;
     background: #fff;
     margin: 2px;
     border-radius: 15px;
