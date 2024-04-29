@@ -1,3 +1,4 @@
+import os
 import logging
 from abc import ABC, abstractmethod
 from pydantic import (
@@ -15,7 +16,28 @@ from backend.utils import parse_multi_columns, generateFilterString
 
 MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-03-01-preview"
 
+# Debug settings
+# DEBUG = os.environ.get("DEBUG", "false")
+# if DEBUG.lower() == "true":
+#     logging.basicConfig(level=logging.DEBUG)
 
+
+class _UiSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="UI_",
+        env_file=".env",
+        extra="ignore"
+    )
+
+    title: str = "Contoso"
+    logo: Optional[str] = None
+    chat_logo: Optional[str] = None
+    chat_title: str = "Start chatting"
+    chat_description: str = "This chatbot is configured to answer your questions"
+    favicon: str = "/favicon.ico"
+    show_share_button: bool = True
+    
+    
 class _ChatHistorySettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_COSMOSDB_",
@@ -29,7 +51,22 @@ class _ChatHistorySettings(BaseSettings):
     conversations_container: str
     enable_feedback: bool = False
     
-  
+
+class _PromptflowSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="PROMPTFLOW_",
+        env_file=".env",
+        extra="ignore"
+    )
+
+    endpoint: str
+    api_key: str
+    response_timeout: float = 30.0
+    request_field_name: str = "query"
+    response_field_name: str = "reply"
+    citations_field_name: str = "documents"
+
+
 class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_OPENAI_",
@@ -44,6 +81,7 @@ class _AzureOpenAISettings(BaseSettings):
     temperature: float = 0
     top_p: float = 0
     max_tokens: int = 1000
+    stream: bool = True
     stop_sequence: Optional[List[str]] = None
     system_message: str = "You are an AI assistant that helps people find information."
     preview_api_version: str = MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
@@ -59,6 +97,25 @@ class _AzureOpenAISettings(BaseSettings):
         
         return None
     
+    def extract_embedding_dependency(self) -> Optional[dict]:
+        if self.embedding_name:
+            return {
+                "type": "deployment_name",
+                "deployment_name": self.embedding_name
+            }
+        
+        elif self.embedding_endpoint and self.embedding_key:
+            return {
+                "type": "endpoint",
+                "endpoint": self.embedding_endpoint,
+                "authentication": {
+                    "type": "api_key",
+                    "api_key": self.embedding_key
+                }
+            }
+        else:   
+            return None
+    
 
 class _SearchCommonSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -67,7 +124,10 @@ class _SearchCommonSettings(BaseSettings):
         extra="ignore"
     )
     
-    datasource_type: str = Field(validation_alias="DATASOURCE_TYPE")
+    datasource_type: str = Field(
+        validation_alias="DATASOURCE_TYPE",
+        exclude=True
+    )
     top_k: int = 5
     strictness: int = 3
     enable_in_domain: bool = True
@@ -92,7 +152,7 @@ class DatasourcePayloadConstructor(ABC):
     @abstractmethod
     def construct_payload_configuration(
         self,
-        search_common_settings: _SearchCommonSettings,
+        settings: '_AppSettings',
         **kwargs
     ):
         pass
@@ -105,16 +165,16 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         extra="ignore",
         use_enum_values=True
     )
-    service: str
-    index: str
-    key: Optional[str] = None
-    use_semantic_search: bool = False
-    semantic_search_config: str = "default"
-    content_columns: Optional[List[str]] = None
-    vector_columns: Optional[List[str]] = None
-    title_column: Optional[str] = None
-    url_column: Optional[str] = None
-    filename_column: Optional[str] = None
+    service: str = Field(serialization_alias="endpoint")
+    index: str = Field(serialization_alias="index_name")
+    key: Optional[str] = Field(default=None, exclude=True)
+    use_semantic_search: bool = Field(default=False, exclude=True)
+    semantic_search_config: str = ""
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
     query_type: Literal[
         'simple',
         'vector',
@@ -122,7 +182,13 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         'vector_simple_hybrid',
         'vector_semantic_hybrid'
     ] = "simple"
-    permitted_groups_column: Optional[str] = None
+    permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
+    embedding_dependency: Optional[dict] = None
+    fields_mapping: Optional[dict] = None
+    filter: Optional[str] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -132,13 +198,27 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         
         return None
     
-    def construct_authentication(self):
+    @model_validator(mode="after")
+    def set_authentication(self) -> Self:
         if self.key:
-            return {"type": "api_key", "api_key": self.key}
+            self.authentication = {"type": "api_key", "api_key": self.key}
         else:
-            return {"type": "system_assigned_managed_identity"}
+            self.authentication = {"type": "system_assigned_managed_identity"}
+            
+        return self
     
-    def construct_filter_string(self, request: Request) -> str:
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_fields,
+            "title_field": self.title_field,
+            "url_field": self.url_field,
+            "filepath_field": self.filepath_field,
+            "vector_fields": self.vector_fields
+        }
+        return self
+
+    def _set_filter_string(self, request: Request) -> str:
         if self.permitted_groups_column:
             user_token = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
             logging.debug(f"USER TOKEN is {'present' if user_token else 'not present'}")
@@ -147,37 +227,27 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
                     "Document-level access control is enabled, but user access token could not be fetched."
                 )
 
-            filter = generateFilterString(user_token)
-            logging.debug(f"FILTER: {filter}")
-            return filter
+            filter_string = generateFilterString(user_token)
+            logging.debug(f"FILTER: {filter_string}")
+            return filter_string
+        
+        return None
             
     def construct_payload_configuration(
         self,
-        search_common_settings: _SearchCommonSettings,
+        settings: '_AppSettings',
         request: Request = None,
         **kwargs
     ):
+        self.filter = self._set_filter_string(request)
+        self.embedding_dependency = \
+            settings.azure_openai.extract_embedding_dependency()
+        parameters = self.model_dump()
+        parameters.update(settings.search.model_dump())
+        
         return {
             "type": "azure_search",
-            "parameters": {
-                "endpoint": f"https://{self.service}.search.windows.net",
-                "authentication": self.construct_authentication(),
-                "index_name": self.index,
-                "fields_mapping": {
-                    "content_fields": self.content_columns,
-                    "title_field": self.title_column,
-                    "url_field": self.url_column,
-                    "filepath_field": self.filename_column,
-                    "vector_fields": self.vector_columns
-                },
-                "in_scope": search_common_settings.enable_in_domain,
-                "top_n_documents": search_common_settings.top_k,
-                "query_type": self.query_type,
-                "semantic_configuration": self.semantic_search_config,
-                "role_information": search_common_settings.role_information,
-                "filter": self.construct_filter_string(request),
-                "strictness": search_common_settings.strictness
-            }
+            "parameters": parameters
         }
 
 
@@ -191,14 +261,20 @@ class _AzureCosmosDbMongoVcoreSettings(
         extra="ignore"
     )
     query_type: Literal['vector'] = "vector"
-    connection_string: str
-    database: str
-    container: str
-    content_columns: Optional[List[str]] = None
-    vector_columns: Optional[List[str]] = None
-    title_column: Optional[str] = None
-    url_column: Optional[str] = None
-    filename_column: Optional[str] = None
+    connection_string: str = Field(exclude=True)
+    index: str = Field(serialization_alias="index_name")
+    database: str = Field(serialization_alias="database_name")
+    container: str = Field(serialization_alias="container_name")
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
+    embedding_dependency: Optional[dict] = None
+    fields_mapping: Optional[dict] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -208,37 +284,37 @@ class _AzureCosmosDbMongoVcoreSettings(
         
         return None
     
-    def construct_authentication(self):
-        return {
+    @model_validator(mode="after")
+    def construct_authentication(self) -> Self:
+        self.authentication = {
             "type": "connection_string",
             "connection_string": self.connection_string
         }
-            
+        return self
+    
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_fields,
+            "title_field": self.title_field,
+            "url_field": self.url_field,
+            "filepath_field": self.filepath_field,
+            "vector_fields": self.vector_fields
+        }
+        return self
+    
     def construct_payload_configuration(
         self,
-        search_common_settings: _SearchCommonSettings,
+        settings: '_AppSettings',
         **kwargs
     ):
+        self.embedding_dependency = \
+            settings.azure_openai.extract_embedding_dependency()
+        parameters = self.model_dump()
+        parameters.update(settings.search.model_dump())
         return {
             "type": "azure_cosmos_db",
-            "parameters": {
-                "authentication": self.construct_authentication(),
-                "index_name": self.index,
-                "database_name": self.database,
-                "container_name": self.container,
-                "fields_mapping": {
-                    "content_fields": self.content_columns,
-                    "title_field": self.title_column,
-                    "url_field": self.url_column,
-                    "filepath_field": self.filename_column,
-                    "vector_fields": self.vector_columns
-                },
-                "in_scope": search_common_settings.enable_in_domain,
-                "top_n_documents": search_common_settings.top_k,
-                "query_type": self.query_type,
-                "role_information": search_common_settings.role_information,
-                "strictness": search_common_settings.strictness
-            }
+            "parameters": parameters
         }
 
 
@@ -249,14 +325,20 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         extra="ignore"
     )
     endpoint: str
-    encoded_api_key: str
-    index: str
+    encoded_api_key: str = Field(exclude=True)
+    index: str = Field(serialization_alias="index_name")
     query_type: Literal['simple', 'vector'] = "simple"
-    content_columns: Optional[List[str]] = None
-    vector_columns: Optional[List[str]] = None
-    title_column: Optional[str] = None
-    url_column: Optional[str] = None
-    filename_column: Optional[str] = None
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
+    embedding_model_id: Optional[str] = Field(default=None, exclude=True)
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
+    embedding_dependency: Optional[dict] = None
+    fields_mapping: Optional[dict] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -266,36 +348,41 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         
         return None
     
-    def construct_authentication(self):
-        return {
+    @model_validator(mode="after")
+    def set_authentication(self) -> Self:
+        self.authentication = {
             "type": "encoded_api_key",
             "encoded_api_key": self.key
         }
-            
+        
+        return self
+    
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_fields,
+            "title_field": self.title_field,
+            "url_field": self.url_field,
+            "filepath_field": self.filepath_field,
+            "vector_fields": self.vector_fields
+        }
+        return self
+    
     def construct_payload_configuration(
         self,
-        search_common_settings: _SearchCommonSettings,
+        settings: '_AppSettings',
         **kwargs
     ):
+        self.embedding_dependency = \
+            settings.azure_openai.extract_embedding_dependency() or \
+            {"type": "model_id", "model_id": self.embedding_model_id}
+            
+        parameters = self.model_dump()
+        parameters.update(settings.search.model_dump())
+                
         return {
-            "type": "azure_search",
-            "parameters": {
-                "endpoint": self.endpoint,
-                "authentication": self.construct_authentication(),
-                "index_name": self.index,
-                "fields_mapping": {
-                    "content_fields": self.content_columns,
-                    "title_field": self.title_column,
-                    "url_field": self.url_column,
-                    "filepath_field": self.filename_column,
-                    "vector_fields": self.vector_columns
-                },
-                "in_scope": search_common_settings.enable_in_domain,
-                "top_n_documents": search_common_settings.top_k,
-                "query_type": self.query_type,
-                "role_information": search_common_settings.role_information,
-                "strictness": search_common_settings.strictness
-            }
+            "type": "elasticsearch",
+            "parameters": parameters
         }
 
 
@@ -306,13 +393,19 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
         extra="ignore"
     )
     environment: str
-    api_key: str
+    api_key: str = Field(exclude=True)
     index_name: str
-    content_columns: Optional[List[str]] = None
-    vector_columns: Optional[List[str]] = None
-    title_column: Optional[str] = None
-    url_column: Optional[str] = None
-    filename_column: Optional[str] = None
+    query_type: Literal["vector"] = "vector"
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
+    embedding_dependency: Optional[dict] = None
+    fields_mapping: Optional[dict] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -322,36 +415,39 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
         
         return None
     
-    def construct_authentication(self):
-        return {
+    @model_validator(mode="after")
+    def set_authentication(self) -> Self:
+        self.authentication = {
             "type": "api_key",
             "api_key": self.api_key
         }
-            
+        
+        return self
+    
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_fields,
+            "title_field": self.title_field,
+            "url_field": self.url_field,
+            "filepath_field": self.filepath_field,
+            "vector_fields": self.vector_fields
+        }
+        return self
+    
     def construct_payload_configuration(
         self,
-        search_common_settings: _SearchCommonSettings,
+        settings: '_AppSettings',
         **kwargs
     ):
+        self.embedding_dependency = \
+            settings.azure_openai.extract_embedding_dependency()
+        parameters = self.model_dump()
+        parameters.update(settings.search.model_dump())
+        
         return {
-            "type": "azure_search",
-            "parameters": {
-                "environment": self.environment,
-                "authentication": self.construct_authentication(),
-                "index_name": self.index,
-                "fields_mapping": {
-                    "content_fields": self.content_columns,
-                    "title_field": self.title_column,
-                    "url_field": self.url_column,
-                    "filepath_field": self.filename_column,
-                    "vector_fields": self.vector_columns
-                },
-                "in_scope": search_common_settings.enable_in_domain,
-                "top_n_documents": search_common_settings.top_k,
-                "query_type": "vector",
-                "role_information": search_common_settings.role_information,
-                "strictness": search_common_settings.strictness
-            }
+            "type": "pinecone",
+            "parameters": parameters
         }
 
 
@@ -364,12 +460,14 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
     name: str
     version: str
     project_resource_id: str = Field(validation_alias="AZURE_ML_PROJECT_RESOURCE_ID")
-    content_columns: Optional[List[str]] = None
-    vector_columns: Optional[List[str]] = None
-    title_column: Optional[str] = None
-    url_column: Optional[str] = None
-    filename_column: Optional[str] = None
-    # TODO: figure out auth, query_type, filter
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
+    
+    # Constructed fields
+    fields_mapping = Optional[dict] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -379,75 +477,97 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
         
         return None
     
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_fields,
+            "title_field": self.title_field,
+            "url_field": self.url_field,
+            "filepath_field": self.filepath_field,
+            "vector_fields": self.vector_fields
+        }
+        return self
     
-class _UiSettings(BaseSettings):
+    def construct_payload_configuration(
+        self,
+        settings: '_AppSettings',
+        **kwargs
+    ):
+        parameters = self.model_dump()
+        parameters.update(settings.search.model_dump())
+        
+        return {
+            "type": "azure_ml_index",
+            "parameters": parameters
+        }
+
+
+class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="UI_",
         env_file=".env",
         extra="ignore"
     )
-
-    title: str = "Contoso"
-    logo: Optional[str] = None
-    chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
-    chat_description: str = "This chatbot is configured to answer your questions"
-    favicon: str = "/favicon.ico"
-    show_share_button: bool = True
-
+    
+    datasource_type: str
+    auth_enabled: bool = False
+    sanitize_answer: bool = False
+    use_promptflow: bool = False
+    
 
 class _AppSettings(BaseModel):
+    base_settings: _BaseSettings = _BaseSettings()
     azure_openai: _AzureOpenAISettings = _AzureOpenAISettings()
     search: _SearchCommonSettings = _SearchCommonSettings()
     ui: Optional[_UiSettings] = _UiSettings()
+    
+    # Constructed properties
     chat_history: Optional[_ChatHistorySettings] = None
-    should_stream: bool = False
-    auth_enabled: bool = False
-    sanitize_answer: bool = False
-    datasource_settings: Optional[DatasourcePayloadConstructor] = None
-    # TODO: add promptflow settings
-   
+    datasource: Optional[DatasourcePayloadConstructor] = None
+    promptflow: Optional[_PromptflowSettings] = None
+
     @model_validator(mode="after")
-    def check_should_stream(self) -> Self:
-        pass
-   
-    @model_validator(mode="after")
-    def check_auth_enabled(self) -> Self:
-        pass
-   
-    @model_validator(mode="after")
-    def check_sanitize_answer(self) -> Self:
-        pass
+    def set_promptflow_settings(self) -> Self:
+        try:
+            self.promptflow = _PromptflowSettings()
+            
+        except ValidationError:
+            self.promptflow = None
     
     @model_validator(mode="after")
-    def get_chat_history_settings(self) -> Self:
+    def set_chat_history_settings(self) -> Self:
         try:
             self.chat_history = _ChatHistorySettings()
         
         except ValidationError:
-            pass
+            self.chat_history = None
         
         return self
     
     @model_validator(mode="after")
-    def get_datasource_settings(self) -> Self:
+    def set_datasource_settings(self) -> Self:
         if self.search.datasource_type == "AzureCognitiveSearch":
-            self.datasource_settings = _AzureSearchSettings()
+            self.datasource = _AzureSearchSettings()
+            logging.debug("Using Azure Cognitive Search")
            
         elif self.search.datasource_type == "AzureCosmosDB":
-            self.datasource_settings = _AzureCosmosDbMongoVcoreSettings()
+            self.datasource = _AzureCosmosDbMongoVcoreSettings()
+            logging.debug("Using Azure CosmosDB Mongo vcore")
            
         elif self.search.datasource_type == "Elasticsearch":
-            self.datasource_settings = _ElasticsearchSettings()
+            self.datasource = _ElasticsearchSettings()
+            logging.debug("Using Elasticsearch")
            
         elif self.search.datasource_type == "Pinecone":
-            self.datasource_settings = _PineconeSettings()
+            self.datasource = _PineconeSettings()
+            logging.debug("Using Pinecone")
         
         elif self.search.datasource_type == "AzureMLIndex":
-            self.datasource_settings = _AzureMLIndexSettings()
+            self.datasource = _AzureMLIndexSettings()
+            logging.debug("Using Azure ML Index")
             
         else:
-            self.datasource_settings = None
+            self.datasource = None
+            logging.warn("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
             
         return self
 
