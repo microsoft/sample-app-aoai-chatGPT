@@ -636,10 +636,10 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
-def get_payload_and_headers_cohere(text, aad_token) -> Tuple[Dict, Dict]:
-    oai_headers = {"Content-Type": "application/json", "Authorization": f"Bearer {aad_token}"}
-    cohere_body = {"text": [text], "input_type": "search_document"}
-    return cohere_body, oai_headers
+# def get_payload_and_headers_cohere(text, aad_token) -> Tuple[Dict, Dict]:
+#     oai_headers = {"Content-Type": "application/json", "Authorization": f"Bearer {aad_token}"}
+#     cohere_body = {"text": [text], "input_type": "search_document"}
+#     return cohere_body, oai_headers
 
 def allowSelfSignedHttps(allowed):
     #by pass the server certificate verification on client side
