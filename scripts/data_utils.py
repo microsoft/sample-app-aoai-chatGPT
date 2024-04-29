@@ -670,6 +670,7 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
     # print('print azure_credential_get_token before ', azure_credential.get_token("https://cognitiveservices.azure.com/.default").token)
 
     FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
+    FLAG_COHERE = os.getenv("FLAG_COHERE", "ENGLISH")
     # print(f'FLAG_EMBEDDING_MODEL = {FLAG_EMBEDDING_MODEL}')
 
     if azure_credential is None and (endpoint is None or key is None):
