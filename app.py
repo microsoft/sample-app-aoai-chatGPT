@@ -381,6 +381,7 @@ async def init_openai_client(use_data=SHOULD_USE_DATA):
 
 
 async def init_cosmosdb_client():
+    cosmos_conversation_client = None
     if CHAT_HISTORY_ENABLED:
         try:
             cosmos_endpoint = (
