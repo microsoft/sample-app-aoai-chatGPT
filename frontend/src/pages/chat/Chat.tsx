@@ -524,24 +524,59 @@ const Chat = () => {
     setClearingChat(false)
   };
 
+  const tryGetRaiPrettyError = (errorMessage: string) => {
+    try {
+      // Using a regex to extract the JSON part that contains "innererror"
+      const match = errorMessage.match(/'innererror': ({.*})\}\}/)
+      if (match) {
+        // Replacing single quotes with double quotes and converting Python-like booleans to JSON booleans
+        const fixedJson = match[1]
+          .replace(/'/g, '"')
+          .replace(/\bTrue\b/g, 'true')
+          .replace(/\bFalse\b/g, 'false')
+        const innerErrorJson = JSON.parse(fixedJson)
+        let reason = ''
+        // Check if jailbreak content filter is the reason of the error
+        const jailbreak = innerErrorJson.content_filter_result.jailbreak
+        if (jailbreak.filtered === true) {
+          reason = 'Jailbreak'
+        }
+
+        // Returning the prettified error message
+        if (reason !== '') {
+          return (
+            'The prompt was filtered due to triggering Azure OpenAI’s content filtering system.\n' +
+            'Reason: This prompt contains content flagged as ' +
+            reason +
+            '\n\n' +
+            'Please modify your prompt and retry. Learn more: https://go.microsoft.com/fwlink/?linkid=2198766'
+          )
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse the error:', e)
+    }
+    return errorMessage
+  };
+
   const parseErrorMessage = (errorMessage: string) => {
-    let errorCodeMessage = errorMessage.substring(0, errorMessage.indexOf("-") + 1);
-    const innerErrorCue = "{\\'error\\': {\\'message\\': ";
+    let errorCodeMessage = errorMessage.substring(0, errorMessage.indexOf('-') + 1)
+    const innerErrorCue = "{\\'error\\': {\\'message\\': "
     if (errorMessage.includes(innerErrorCue)) {
       try {
-        let innerErrorString = errorMessage.substring(errorMessage.indexOf(innerErrorCue));
+        let innerErrorString = errorMessage.substring(errorMessage.indexOf(innerErrorCue))
         if (innerErrorString.endsWith("'}}")) {
-          innerErrorString = innerErrorString.substring(0, innerErrorString.length - 3);
+          innerErrorString = innerErrorString.substring(0, innerErrorString.length - 3)
         }
         innerErrorString = innerErrorString.replaceAll("\\'", "'")
-        let newErrorMessage = errorCodeMessage + " " + innerErrorString;
-        errorMessage = newErrorMessage;
-
+        let newErrorMessage = errorCodeMessage + ' ' + innerErrorString
+        errorMessage = newErrorMessage
       } catch (e) {
-        console.error("Error parsing inner error message: ", e);
+        console.error('Error parsing inner error message: ', e)
       }
     }
-    return errorMessage;
+
+    return tryGetRaiPrettyError(errorMessage)
   };
 
   const newChat = () => {
