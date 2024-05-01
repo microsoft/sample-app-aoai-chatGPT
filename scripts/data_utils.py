@@ -645,11 +645,6 @@ def get_payload_and_headers_cohere(
 
     cohere_body = { "texts": [text], "input_type": "search_document" }
     return cohere_body, oai_headers
-
-def allowSelfSignedHttps(allowed):
-    # bypass the server certificate verification on client side
-    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
-        ssl._create_default_https_context = ssl._create_unverified_context
     
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
@@ -682,8 +677,6 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             elif FLAG_COHERE == "ENGLISH":
                 key = embedding_model_key if embedding_model_key else os.getenv("COHERE_ENGLISH_API_KEY")
             data, headers = get_payload_and_headers_cohere(text, key)
-
-            allowSelfSignedHttps(True)
 
             body = str.encode(json.dumps(data))
             req = urllib.request.Request(endpoint, body, headers)
