@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 from pydantic import (
     BaseModel,
     Field,
-    model_validator,
     field_validator,
+    model_validator,
+    PrivateAttr,
     ValidationError
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -14,6 +15,15 @@ from typing_extensions import Self
 from quart import Request
 from backend.utils import parse_multi_columns, generateFilterString
 
+DOTENV_PATH = os.environ.get(
+    "DOTENV_PATH",
+    os.path.join(
+        os.path.dirname(
+            os.path.dirname(__file__)
+        ),
+        ".env"
+    )
+)
 MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-03-01-preview"
 
 # Debug settings
@@ -25,7 +35,7 @@ MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-03-01-preview"
 class _UiSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="UI_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
 
@@ -36,26 +46,26 @@ class _UiSettings(BaseSettings):
     chat_description: str = "This chatbot is configured to answer your questions"
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
-    
-    
+
+
 class _ChatHistorySettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_COSMOSDB_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
-    
+
     database: str
     account: str
     account_key: str
     conversations_container: str
     enable_feedback: bool = False
-    
+
 
 class _PromptflowSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="PROMPTFLOW_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
 
@@ -70,7 +80,7 @@ class _PromptflowSettings(BaseSettings):
 class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_OPENAI_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra='ignore'
     )
     
@@ -92,7 +102,7 @@ class _AzureOpenAISettings(BaseSettings):
     @field_validator('stop_sequence', mode='before')
     @classmethod
     def split_contexts(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
@@ -120,13 +130,8 @@ class _AzureOpenAISettings(BaseSettings):
 class _SearchCommonSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="SEARCH_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
-    )
-    
-    datasource_type: str = Field(
-        validation_alias="DATASOURCE_TYPE",
-        exclude=True
     )
     top_k: int = 5
     strictness: int = 3
@@ -142,17 +147,23 @@ class _SearchCommonSettings(BaseSettings):
     @field_validator('include_contexts', mode='before')
     @classmethod
     def split_contexts(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
 
 
-class DatasourcePayloadConstructor(ABC):
+class DatasourcePayloadConstructor(BaseModel, ABC):
+    _settings: '_AppSettings' = PrivateAttr()
+    
+    def __init__(self, settings: '_AppSettings', **data):
+        super().__init__(**data)
+        self._settings = settings
+    
     @abstractmethod
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
+        *args,
         **kwargs
     ):
         pass
@@ -161,11 +172,11 @@ class DatasourcePayloadConstructor(ABC):
 class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_SEARCH_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore",
         use_enum_values=True
     )
-    service: str = Field(serialization_alias="endpoint")
+    service: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
     key: Optional[str] = Field(default=None, exclude=True)
     use_semantic_search: bool = Field(default=False, exclude=True)
@@ -185,6 +196,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
     
     # Constructed fields
+    endpoint: Optional[str] = None
     authentication: Optional[dict] = None
     embedding_dependency: Optional[dict] = None
     fields_mapping: Optional[dict] = None
@@ -193,10 +205,15 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
+    
+    @model_validator(mode="after")
+    def set_endpoint(self) -> Self:
+        self.endpoint = f"https://{self.service}.search.windows.net"
+        return self
     
     @model_validator(mode="after")
     def set_authentication(self) -> Self:
@@ -210,11 +227,11 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
-            "content_fields": self.content_fields,
-            "title_field": self.title_field,
-            "url_field": self.url_field,
-            "filepath_field": self.filepath_field,
-            "vector_fields": self.vector_fields
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
         }
         return self
 
@@ -235,15 +252,17 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
-        request: Request = None,
+        *args,
         **kwargs
     ):
-        self.filter = self._set_filter_string(request)
+        request = kwargs.pop('request', None)
+        if request and self.permitted_groups_column:
+            self.filter = self._set_filter_string(request)
+            
         self.embedding_dependency = \
-            settings.azure_openai.extract_embedding_dependency()
-        parameters = self.model_dump()
-        parameters.update(settings.search.model_dump())
+            self._settings.azure_openai.extract_embedding_dependency()
+        parameters = self.model_dump(exclude_none=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True))
         
         return {
             "type": "azure_search",
@@ -257,7 +276,7 @@ class _AzureCosmosDbMongoVcoreSettings(
 ):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_COSMOSDB_MONGO_VCORE_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
     query_type: Literal['vector'] = "vector"
@@ -279,7 +298,7 @@ class _AzureCosmosDbMongoVcoreSettings(
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
@@ -295,23 +314,23 @@ class _AzureCosmosDbMongoVcoreSettings(
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
-            "content_fields": self.content_fields,
-            "title_field": self.title_field,
-            "url_field": self.url_field,
-            "filepath_field": self.filepath_field,
-            "vector_fields": self.vector_fields
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
         }
         return self
     
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
+        *args,
         **kwargs
     ):
         self.embedding_dependency = \
-            settings.azure_openai.extract_embedding_dependency()
+            self._settings.azure_openai.extract_embedding_dependency()
         parameters = self.model_dump()
-        parameters.update(settings.search.model_dump())
+        parameters.update(self._settings.search.model_dump())
         return {
             "type": "azure_cosmos_db",
             "parameters": parameters
@@ -321,7 +340,7 @@ class _AzureCosmosDbMongoVcoreSettings(
 class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="ELASTICSEARCH_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
     endpoint: str
@@ -343,7 +362,7 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
@@ -352,7 +371,7 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
     def set_authentication(self) -> Self:
         self.authentication = {
             "type": "encoded_api_key",
-            "encoded_api_key": self.key
+            "encoded_api_key": self.encoded_api_key
         }
         
         return self
@@ -360,25 +379,25 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
-            "content_fields": self.content_fields,
-            "title_field": self.title_field,
-            "url_field": self.url_field,
-            "filepath_field": self.filepath_field,
-            "vector_fields": self.vector_fields
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
         }
         return self
     
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
+        *args,
         **kwargs
     ):
         self.embedding_dependency = \
-            settings.azure_openai.extract_embedding_dependency() or \
+            self._settings.azure_openai.extract_embedding_dependency() or \
             {"type": "model_id", "model_id": self.embedding_model_id}
             
         parameters = self.model_dump()
-        parameters.update(settings.search.model_dump())
+        parameters.update(self._settings.search.model_dump())
                 
         return {
             "type": "elasticsearch",
@@ -389,7 +408,7 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
 class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="PINECONE_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
     environment: str
@@ -410,7 +429,7 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
@@ -427,23 +446,23 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
-            "content_fields": self.content_fields,
-            "title_field": self.title_field,
-            "url_field": self.url_field,
-            "filepath_field": self.filepath_field,
-            "vector_fields": self.vector_fields
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
         }
         return self
     
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
+        *args,
         **kwargs
     ):
         self.embedding_dependency = \
-            settings.azure_openai.extract_embedding_dependency()
+            self._settings.azure_openai.extract_embedding_dependency()
         parameters = self.model_dump()
-        parameters.update(settings.search.model_dump())
+        parameters.update(self._settings.search.model_dump())
         
         return {
             "type": "pinecone",
@@ -454,7 +473,7 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
 class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_MLINDEX_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore"
     )
     name: str
@@ -467,12 +486,12 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
     filename_column: Optional[str] = Field(default=None, exclude=True)
     
     # Constructed fields
-    fields_mapping = Optional[dict] = None
+    fields_mapping: Optional[dict] = None
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
-        if comma_separated_string:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
         return None
@@ -480,21 +499,21 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
-            "content_fields": self.content_fields,
-            "title_field": self.title_field,
-            "url_field": self.url_field,
-            "filepath_field": self.filepath_field,
-            "vector_fields": self.vector_fields
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
         }
         return self
     
     def construct_payload_configuration(
         self,
-        settings: '_AppSettings',
+        *args,
         **kwargs
     ):
         parameters = self.model_dump()
-        parameters.update(settings.search.model_dump())
+        parameters.update(self._settings.search.model_dump())
         
         return {
             "type": "azure_ml_index",
@@ -504,15 +523,15 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
 
 class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore"
+        env_file=DOTENV_PATH,
+        extra="ignore",
+        arbitrary_types_allowed=True
     )
-    
-    datasource_type: str
+    datasource_type: Optional[str] = None
     auth_enabled: bool = False
     sanitize_answer: bool = False
     use_promptflow: bool = False
-    
+
 
 class _AppSettings(BaseModel):
     base_settings: _BaseSettings = _BaseSettings()
@@ -532,6 +551,8 @@ class _AppSettings(BaseModel):
             
         except ValidationError:
             self.promptflow = None
+            
+        return self
     
     @model_validator(mode="after")
     def set_chat_history_settings(self) -> Self:
@@ -545,29 +566,29 @@ class _AppSettings(BaseModel):
     
     @model_validator(mode="after")
     def set_datasource_settings(self) -> Self:
-        if self.search.datasource_type == "AzureCognitiveSearch":
-            self.datasource = _AzureSearchSettings()
+        if self.base_settings.datasource_type == "AzureCognitiveSearch":
+            self.datasource = _AzureSearchSettings(settings=self)
             logging.debug("Using Azure Cognitive Search")
            
-        elif self.search.datasource_type == "AzureCosmosDB":
-            self.datasource = _AzureCosmosDbMongoVcoreSettings()
+        elif self.base_settings.datasource_type == "AzureCosmosDB":
+            self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self)
             logging.debug("Using Azure CosmosDB Mongo vcore")
            
-        elif self.search.datasource_type == "Elasticsearch":
-            self.datasource = _ElasticsearchSettings()
+        elif self.base_settings.datasource_type == "Elasticsearch":
+            self.datasource = _ElasticsearchSettings(settings=self)
             logging.debug("Using Elasticsearch")
            
-        elif self.search.datasource_type == "Pinecone":
-            self.datasource = _PineconeSettings()
+        elif self.base_settings.datasource_type == "Pinecone":
+            self.datasource = _PineconeSettings(settings=self)
             logging.debug("Using Pinecone")
         
-        elif self.search.datasource_type == "AzureMLIndex":
-            self.datasource = _AzureMLIndexSettings()
+        elif self.base_settings.datasource_type == "AzureMLIndex":
+            self.datasource = _AzureMLIndexSettings(settings=self)
             logging.debug("Using Azure ML Index")
             
         else:
             self.datasource = None
-            logging.warn("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
+            logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
             
         return self
 

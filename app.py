@@ -28,8 +28,6 @@ from backend.settings import (
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
-    generateFilterString,
-    parse_multi_columns,
     format_non_streaming_response,
     convert_to_pf_format,
     format_pf_non_streaming_response,
@@ -211,11 +209,10 @@ def prepare_model_args(request_body):
         "model": app_settings.azure_openai.model,
     }
 
-    if app_settings.datasource_settings:
+    if app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
                 app_settings.datasource.construct_payload_configuration(
-                    settings=app_settings,
                     request=request
                 )
             ]
