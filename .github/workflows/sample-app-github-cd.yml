@@ -61,7 +61,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
-
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
@@ -69,8 +68,4 @@ jobs:
           app-name: 'web-str-projectsap'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_08268BE33BD74233AF4C2B0D46128982 }}
-<<<<<<< HEAD
           
-=======
-          
->>>>>>> a2291c26b7f29f67f9b74071fa2994f975dc1fcf
