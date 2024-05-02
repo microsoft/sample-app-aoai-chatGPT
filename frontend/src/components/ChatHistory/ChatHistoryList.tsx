@@ -6,7 +6,7 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import { ChatHistoryListItemGroups } from './ChatHistoryListItem'
 
-interface ChatHistoryListProps { }
+interface ChatHistoryListProps {}
 
 export interface GroupedChatHistory {
   month: string
@@ -63,7 +63,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = () => {
   const appStateContext = useContext(AppStateContext)
   const chatHistory = appStateContext?.state.chatHistory
 
-  React.useEffect(() => { }, [appStateContext?.state.chatHistory])
+  React.useEffect(() => {}, [appStateContext?.state.chatHistory])
 
   let groupedChatHistory
   if (chatHistory && chatHistory.length > 0) {
