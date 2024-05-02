@@ -1,8 +1,12 @@
 import os
+import json
 import logging
 from abc import ABC, abstractmethod
 from pydantic import (
     BaseModel,
+    confloat,
+    conint,
+    conlist,
     Field,
     field_validator,
     model_validator,
@@ -78,6 +82,17 @@ class _PromptflowSettings(BaseSettings):
     citations_field_name: str = "documents"
 
 
+class _AzureOpenAIFunction(BaseModel):
+    name: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
+    parameters: Optional[dict] = None
+
+
+class _AzureOpenAITool(BaseModel):
+    type: Literal['function'] = 'function'
+    function: _AzureOpenAIFunction
+    
+
 class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_OPENAI_",
@@ -94,12 +109,31 @@ class _AzureOpenAISettings(BaseSettings):
     max_tokens: int = 1000
     stream: bool = True
     stop_sequence: Optional[List[str]] = None
+    seed: Optional[int] = None
+    choices_count: Optional[conint(ge=1, le=128)] = Field(default=1, serialization_alias="n")
+    user: Optional[str] = None
+    tools: Optional[conlist(_AzureOpenAITool, min_length=1)] = None
+    tool_choice: Optional[str] = None
+    logit_bias: Optional[dict] = None
+    presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
+    frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
     system_message: str = "You are an AI assistant that helps people find information."
     preview_api_version: str = MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
     embedding_endpoint: Optional[str] = None
     embedding_key: Optional[str] = None
     embedding_name: Optional[str] = None
     
+    @field_validator('tools', mode='before')
+    @classmethod
+    def deserialize_tools(cls, tools_json_str: str) -> List[_AzureOpenAITool]:
+        tools_dict = json.loads(tools_json_str)
+        return _AzureOpenAITool(**tools_dict)
+    
+    @field_validator('logit_bias', mode='before')
+    @classmethod
+    def deserialize_logit_bias(cls, logit_bias_json_str: str) -> dict:
+        return json.loads(logit_bias_json_str)
+        
     @field_validator('stop_sequence', mode='before')
     @classmethod
     def split_contexts(cls, comma_separated_string: str) -> List[str]:
