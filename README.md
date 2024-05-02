@@ -252,6 +252,22 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+When contributing to this repository, please help keep the codebase clean and maintainable by running 
+the formatter and linter with `npm run format` this will run `npx eslint --fix` and `npx prettier --write` 
+on the frontebnd codebase. 
+
+If you are using VSCode, you can add the following settings to your `settings.json` to format and lint on save:
+
+```json
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "prettier.requireConfig": true,
+}
+```
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
