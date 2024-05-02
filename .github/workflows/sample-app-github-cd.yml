@@ -60,12 +60,9 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-<<<<<<< HEAD
       
-=======
 
       - name: 'Deploy to Azure Web App'
->>>>>>> a2291c26b7f29f67f9b74071fa2994f975dc1fcf
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
