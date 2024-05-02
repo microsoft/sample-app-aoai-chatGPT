@@ -10,7 +10,8 @@
       "env": {
           "QUART_APP": "app:app",
           "QUART_ENV": "development",
-          "QUART_DEBUG": "0"
+          "QUART_DEBUG": "0",
+          "DOTENV_PATH": "/tmp/test_dotenv_AzureCognitiveSearch-with_chat_history-streaming-with_aoai_embeddings-no_es_embeddings_-81xbzita"
       },
       "args": [
           "run",
@@ -18,8 +19,7 @@
           "-p 50505"
       ],
       "console": "integratedTerminal",
-      "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": false
   }
   ]
 }

@@ -7,7 +7,8 @@ from pydantic import (
     field_validator,
     model_validator,
     PrivateAttr,
-    ValidationError
+    ValidationError,
+    ValidationInfo
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Literal, Optional
@@ -24,7 +25,7 @@ DOTENV_PATH = os.environ.get(
         ".env"
     )
 )
-MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-03-01-preview"
+MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-05-01-preview"
 
 # Debug settings
 # DEBUG = os.environ.get("DEBUG", "false")
@@ -84,10 +85,10 @@ class _AzureOpenAISettings(BaseSettings):
         extra='ignore'
     )
     
-    resource: str
     model: str
-    endpoint: str
     key: str
+    resource: Optional[str] = None
+    endpoint: Optional[str] = None
     temperature: float = 0
     top_p: float = 0
     max_tokens: int = 1000
@@ -107,6 +108,17 @@ class _AzureOpenAISettings(BaseSettings):
         
         return None
     
+    @model_validator(mode="after")
+    def ensure_endpoint(self) -> Self:
+        if self.endpoint:
+            return Self
+        
+        elif self.resource:
+            self.endpoint = f"https://{self.resource}.openai.azure.com"
+            return Self
+        
+        raise ValidationError("AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required")
+        
     def extract_embedding_dependency(self) -> Optional[dict]:
         if self.embedding_name:
             return {
@@ -133,9 +145,9 @@ class _SearchCommonSettings(BaseSettings):
         env_file=DOTENV_PATH,
         extra="ignore"
     )
-    top_k: int = 5
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
     strictness: int = 3
-    enable_in_domain: bool = True
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     max_search_queries: Optional[int] = None
     allow_partial_result: bool = False
     include_contexts: Optional[List[str]] = ["citations", "intent"]
@@ -146,11 +158,11 @@ class _SearchCommonSettings(BaseSettings):
 
     @field_validator('include_contexts', mode='before')
     @classmethod
-    def split_contexts(cls, comma_separated_string: str) -> List[str]:
+    def split_contexts(cls, comma_separated_string: str, info: ValidationInfo) -> List[str]:
         if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
         
-        return None
+        return cls.model_fields[info.field_name].get_default()
 
 
 class DatasourcePayloadConstructor(BaseModel, ABC):
@@ -173,14 +185,13 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_SEARCH_",
         env_file=DOTENV_PATH,
-        extra="ignore",
-        use_enum_values=True
+        extra="ignore"
     )
     service: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
     key: Optional[str] = Field(default=None, exclude=True)
     use_semantic_search: bool = Field(default=False, exclude=True)
-    semantic_search_config: str = ""
+    semantic_search_config: str = Field(default="", serialization_alias="semantic_configuration")
     content_columns: Optional[List[str]] = Field(default=None, exclude=True)
     vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
     title_column: Optional[str] = Field(default=None, exclude=True)
@@ -218,7 +229,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_authentication(self) -> Self:
         if self.key:
-            self.authentication = {"type": "api_key", "api_key": self.key}
+            self.authentication = {"type": "api_key", "key": self.key}
         else:
             self.authentication = {"type": "system_assigned_managed_identity"}
             
@@ -261,8 +272,8 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             
         self.embedding_dependency = \
             self._settings.azure_openai.extract_embedding_dependency()
-        parameters = self.model_dump(exclude_none=True)
-        parameters.update(self._settings.search.model_dump(exclude_none=True))
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
         
         return {
             "type": "azure_search",
@@ -329,8 +340,8 @@ class _AzureCosmosDbMongoVcoreSettings(
     ):
         self.embedding_dependency = \
             self._settings.azure_openai.extract_embedding_dependency()
-        parameters = self.model_dump()
-        parameters.update(self._settings.search.model_dump())
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
         return {
             "type": "azure_cosmos_db",
             "parameters": parameters
@@ -393,11 +404,11 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         **kwargs
     ):
         self.embedding_dependency = \
-            self._settings.azure_openai.extract_embedding_dependency() or \
-            {"type": "model_id", "model_id": self.embedding_model_id}
+            {"type": "model_id", "model_id": self.embedding_model_id} if self.embedding_model_id else \
+            self._settings.azure_openai.extract_embedding_dependency() 
             
-        parameters = self.model_dump()
-        parameters.update(self._settings.search.model_dump())
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
                 
         return {
             "type": "elasticsearch",
@@ -461,8 +472,8 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
     ):
         self.embedding_dependency = \
             self._settings.azure_openai.extract_embedding_dependency()
-        parameters = self.model_dump()
-        parameters.update(self._settings.search.model_dump())
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
         
         return {
             "type": "pinecone",
@@ -512,8 +523,8 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
         *args,
         **kwargs
     ):
-        parameters = self.model_dump()
-        parameters.update(self._settings.search.model_dump())
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
         
         return {
             "type": "azure_ml_index",
@@ -567,23 +578,23 @@ class _AppSettings(BaseModel):
     @model_validator(mode="after")
     def set_datasource_settings(self) -> Self:
         if self.base_settings.datasource_type == "AzureCognitiveSearch":
-            self.datasource = _AzureSearchSettings(settings=self)
+            self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Azure Cognitive Search")
            
         elif self.base_settings.datasource_type == "AzureCosmosDB":
-            self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self)
+            self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Azure CosmosDB Mongo vcore")
            
         elif self.base_settings.datasource_type == "Elasticsearch":
-            self.datasource = _ElasticsearchSettings(settings=self)
+            self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Elasticsearch")
            
         elif self.base_settings.datasource_type == "Pinecone":
-            self.datasource = _PineconeSettings(settings=self)
+            self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Pinecone")
         
         elif self.base_settings.datasource_type == "AzureMLIndex":
-            self.datasource = _AzureMLIndexSettings(settings=self)
+            self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Azure ML Index")
             
         else:
