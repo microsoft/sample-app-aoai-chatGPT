@@ -45,7 +45,7 @@ const Layout = () => {
     }
   }, [copyClicked])
 
-  useEffect(() => { }, [appStateContext?.state.isCosmosDBAvailable.status])
+  useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status])
 
   useEffect(() => {
     const handleResize = () => {
