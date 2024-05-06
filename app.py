@@ -267,7 +267,8 @@ frontend_settings = {
     },
     "sanitize_answer": SANITIZE_ANSWER,
 }
-
+# Enable Microsoft Defender for Cloud Integration
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "false").lower() == "true"
 
 def should_use_data():
     global DATASOURCE_TYPE
@@ -733,17 +734,19 @@ async def prepare_model_args(request_body, request_headers):
         if message:
             messages.append({"role": message["role"], "content": message["content"]})
 
-    authenticated_user_details = get_authenticated_user_details(request_headers)
-    tenantId = get_tenantid(authenticated_user_details.get("client_principal_b64"))
-    conversation_id = request_body.get("conversation_id", None)
-
-    user_args = {
-        "EndUserId": authenticated_user_details.get('user_principal_id'),
-        "EndUserIdType": 'Entra',
-        "EndUserTenantId": tenantId,
-        "ConversationId": conversation_id,
-        "SourceIp": request_headers.get('X-Forwarded-For', request_headers.get('Remote-Addr', '')),
-    }
+    user_json = None
+    if (MS_DEFENDER_ENABLED):
+        authenticated_user_details = get_authenticated_user_details(request_headers)
+        tenantId = get_tenantid(authenticated_user_details.get("client_principal_b64"))
+        conversation_id = request_body.get("conversation_id", None)        
+        user_args = {
+            "EndUserId": authenticated_user_details.get('user_principal_id'),
+            "EndUserIdType": 'Entra',
+            "EndUserTenantId": tenantId,
+            "ConversationId": conversation_id,
+            "SourceIp": request_headers.get('X-Forwarded-For', request_headers.get('Remote-Addr', '')),
+        }
+        user_json = json.dumps(user_args)
 
     model_args = {
         "messages": messages,
@@ -757,7 +760,7 @@ async def prepare_model_args(request_body, request_headers):
         ),
         "stream": SHOULD_STREAM,
         "model": AZURE_OPENAI_MODEL,
-        "user": json.dumps(user_args),
+        "user": user_json,
     }
 
     if SHOULD_USE_DATA:
