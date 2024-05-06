@@ -10,8 +10,7 @@
       "env": {
           "QUART_APP": "app:app",
           "QUART_ENV": "development",
-          "QUART_DEBUG": "0",
-          "DOTENV_PATH": "/tmp/test_dotenv_AzureCognitiveSearch-with_chat_history-streaming-with_aoai_embeddings-no_es_embeddings_-81xbzita"
+          "QUART_DEBUG": "0"
       },
       "args": [
           "run",
@@ -20,6 +19,12 @@
       ],
       "console": "integratedTerminal",
       "justMyCode": false
-  }
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Frontend: Launch Chrome debugger",
+      "url": "http://127.0.0.1:50505"
+    }
   ]
 }
