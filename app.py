@@ -741,8 +741,6 @@ async def prepare_model_args(request_body, request_headers):
         "EndUserId": authenticated_user_details.get('user_principal_id'),
         "EndUserIdType": 'Entra',
         "EndUserTenantId": tenantId,
-        "ApplicationId": 'sample-app-aoai-chatGPT',
-        "ApplicationName": 'sample-app-aoai-chatGPT',
         "ConversationId": conversation_id,
         "SourceIp": request_headers.get('X-Forwarded-For', request_headers.get('Remote-Addr', '')),
     }
