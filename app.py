@@ -724,7 +724,7 @@ def get_configured_data_source():
     return data_source
 
 
-async def prepare_model_args(request_body, request_headers):
+def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
     if not SHOULD_USE_DATA:
@@ -846,7 +846,7 @@ async def send_chat_request(request_body, request_headers):
             filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
-    model_args = await prepare_model_args(request_body, request_headers)
+    model_args = prepare_model_args(request_body, request_headers)
 
     try:
         azure_openai_client = init_openai_client()
