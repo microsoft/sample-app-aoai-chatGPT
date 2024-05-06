@@ -36,7 +36,8 @@ class _UiSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="UI_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
 
     title: str = "Contoso"
@@ -52,7 +53,8 @@ class _ChatHistorySettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_COSMOSDB_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
 
     database: str
@@ -66,7 +68,8 @@ class _PromptflowSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="PROMPTFLOW_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
 
     endpoint: str
@@ -92,7 +95,8 @@ class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_OPENAI_",
         env_file=DOTENV_PATH,
-        extra='ignore'
+        extra='ignore',
+        env_ignore_empty=True
     )
     
     model: str
@@ -187,7 +191,8 @@ class _SearchCommonSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="SEARCH_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     top_k: int = Field(default=5, serialization_alias="top_n_documents")
     strictness: int = 3
@@ -229,7 +234,8 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_SEARCH_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     _type: Literal["azure_search"] = PrivateAttr(default="azure_search")
     
@@ -334,7 +340,8 @@ class _AzureCosmosDbMongoVcoreSettings(
     model_config = SettingsConfigDict(
         env_prefix="AZURE_COSMOSDB_MONGO_VCORE_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     _type: Literal["azure_cosmosdb"] = PrivateAttr(default="azure_cosmosdb")
     
@@ -400,7 +407,8 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="ELASTICSEARCH_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     _type: Literal["elasticsearch"] = PrivateAttr(default="elasticsearch")
     
@@ -470,7 +478,8 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="PINECONE_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     _type: Literal["pinecone"] = PrivateAttr(default="pinecone")
     environment: str
@@ -536,7 +545,8 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_MLINDEX_",
         env_file=DOTENV_PATH,
-        extra="ignore"
+        extra="ignore",
+        env_ignore_empty=True
     )
     _type: Literal["azure_ml_index"] = PrivateAttr(default="azure_ml_index")
     
@@ -624,7 +634,8 @@ class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
         extra="ignore",
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed=True,
+        env_ignore_empty=True
     )
     datasource_type: Optional[str] = None
     auth_enabled: bool = False
