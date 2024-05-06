@@ -126,21 +126,28 @@ class _AzureOpenAISettings(BaseSettings):
     @field_validator('tools', mode='before')
     @classmethod
     def deserialize_tools(cls, tools_json_str: str) -> List[_AzureOpenAITool]:
-        try:
-            tools_dict = json.loads(tools_json_str)
-            return _AzureOpenAITool(**tools_dict)
-        except json.JSONDecodeError:
-            logging.warning("No valid tool definition found in the environment.  If you believe this to be in error, please check that the value of AZURE_OPENAI_TOOLS is a valid JSON string.")
-        
-        except ValidationError as e:
-            logging.warning(f"An error occurred while deserializing the tool definition - {str(e)}")
+        if isinstance(tools_json_str, str):
+            try:
+                tools_dict = json.loads(tools_json_str)
+                return _AzureOpenAITool(**tools_dict)
+            except json.JSONDecodeError:
+                logging.warning("No valid tool definition found in the environment.  If you believe this to be in error, please check that the value of AZURE_OPENAI_TOOLS is a valid JSON string.")
+            
+            except ValidationError as e:
+                logging.warning(f"An error occurred while deserializing the tool definition - {str(e)}")
             
         return None
     
     @field_validator('logit_bias', mode='before')
     @classmethod
     def deserialize_logit_bias(cls, logit_bias_json_str: str) -> dict:
-        return json.loads(logit_bias_json_str)
+        if isinstance(logit_bias_json_str, str):
+            try:
+                return json.loads(logit_bias_json_str)
+            except json.JSONDecodeError as e:
+                logging.warning(f"An error occurred while deserializing the logit bias string -- {str(e)}")
+                
+        return None
         
     @field_validator('stop_sequence', mode='before')
     @classmethod
