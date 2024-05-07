@@ -4,28 +4,32 @@ import html
 import json
 import os
 import re
-import requests
-from openai import AzureOpenAI
-import re
+import ssl
+import subprocess
 import tempfile
 import time
+import urllib.request
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import markdown
+import requests
 import tiktoken
-from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from openai import AzureOpenAI
 from tqdm import tqdm
-from typing import Any
 
+# Configure environment variables  
+load_dotenv() # take environment variables from .env.
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -632,7 +636,59 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
+def get_payload_and_headers_cohere(
+    text, aad_token) -> Tuple[Dict, Dict]:
+    oai_headers =  {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {aad_token}",
+    }
 
+    cohere_body = { "texts": [text], "input_type": "search_document" }
+    return cohere_body, oai_headers
+    
+def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
+    endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
+    
+    FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
+    FLAG_COHERE = os.getenv("FLAG_COHERE", "ENGLISH")
+
+    if azure_credential is None and (endpoint is None or key is None):
+        raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
+
+    try:
+        if FLAG_EMBEDDING_MODEL == "AOAI":
+            endpoint_parts = endpoint.split("/openai/deployments/")
+            base_url = endpoint_parts[0]
+            deployment_id = endpoint_parts[1].split("/embeddings")[0]
+            api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
+            if azure_credential is not None:
+                api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            else:
+                api_key = embedding_model_key if embedding_model_key else os.getenv("AZURE_OPENAI_API_KEY")
+            
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
+            embeddings = client.embeddings.create(model=deployment_id, input=text)
+            
+            return embeddings.dict()['data'][0]['embedding']
+        
+        if FLAG_EMBEDDING_MODEL == "COHERE":
+            if FLAG_COHERE == "MULTILINGUAL":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_MULTILINGUAL_API_KEY")
+            elif FLAG_COHERE == "ENGLISH":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_ENGLISH_API_KEY")
+            data, headers = get_payload_and_headers_cohere(text, key)
+
+            body = str.encode(json.dumps(data))
+            req = urllib.request.Request(endpoint, body, headers)
+            response = urllib.request.urlopen(req)
+            result = response.read()
+            result_content = json.loads(result.decode('utf-8'))
+                        
+            return result_content["embeddings"][0]   
+        
+
+    except Exception as e:
+        raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
     key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
