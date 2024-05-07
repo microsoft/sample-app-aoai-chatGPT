@@ -1,6 +1,7 @@
 export type AskResponse = {
   answer: string
   citations: Citation[]
+  plotly_data: AzureSqlServerCodeExecResult | null
   error?: string
   message_id?: string
   feedback?: Feedback
@@ -21,6 +22,23 @@ export type Citation = {
 export type ToolMessageContent = {
   citations: Citation[]
   intent: string
+}
+
+export type AzureSqlServerCodeExecResult = {
+  data: object[]
+  layout: object
+}
+
+export type AzureSqlServerExecResult = {
+  intent: string
+  search_query: string | null
+  search_result: string | null
+  code_generated: string | null
+  code_exec_result: AzureSqlServerCodeExecResult | null
+}
+
+export type AzureSqlServerExecResults = {
+  all_exec_results: AzureSqlServerExecResult[]
 }
 
 export type ChatMessage = {

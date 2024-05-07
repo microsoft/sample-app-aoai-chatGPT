@@ -8,7 +8,7 @@ import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
-
+import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 import { AppStateContext } from '../../state/AppProvider'
@@ -258,6 +258,11 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                 className={styles.answerText}
                 components={components}
               />
+            </Stack.Item>
+            <Stack.Item grow>
+              {parsedAnswer.plotly_data !== null && (
+                <Plot data={parsedAnswer.plotly_data["data"]} layout={parsedAnswer.plotly_data["layout"]} />
+              )}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (

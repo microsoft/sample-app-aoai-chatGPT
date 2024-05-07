@@ -19,6 +19,7 @@ import {
   conversationApi,
   Citation,
   ToolMessageContent,
+  AzureSqlServerExecResults,
   ChatResponse,
   getUserInfo,
   Conversation,
@@ -688,6 +689,21 @@ const Chat = () => {
     return [];
   }
 
+  const parsePlotFromMessage = (message: ChatMessage) => {
+    if (message?.role && message?.role === "tool") {
+      try {
+        // const execResults: AzureSqlServerExecResults = JSON.parse(message.content) as AzureSqlServerExecResults;
+        // return execResults.all_exec_results[-1].code_exec_result;
+        const execResults = JSON.parse(message.content);
+        return return execResults.all_exec_results[-1].code_exec_result;
+      }
+      catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
   const disabledButton = () => {
     return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
   }
@@ -732,6 +748,7 @@ const Chat = () => {
                           answer={{
                             answer: answer.content,
                             citations: parseCitationFromMessage(messages[index - 1]),
+                            plotly_data: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
                             feedback: answer.feedback
                           }}
@@ -753,7 +770,8 @@ const Chat = () => {
                       <Answer
                         answer={{
                           answer: "Generating answer...",
-                          citations: []
+                          citations: [],
+                          plotly_data: null
                         }}
                         onCitationClicked={() => null}
                       />

@@ -603,10 +603,13 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
     )
     _type: Literal["azure_sql_server"] = PrivateAttr(default="azure_sql_server")
     
-    connection_string: str
+    connection_string: str = Field(exclude=True)
     table_schema: str
     schema_max_row: Optional[int] = None
     top_n_results: Optional[int] = None
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
     
     @model_validator(mode="after")
     def construct_authentication(self) -> Self:
@@ -622,7 +625,7 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
         **kwargs
     ):
         parameters = self.model_dump(exclude_none=True, by_alias=True)
-        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
+        #parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
         
         return {
             "type": self._type,
@@ -696,7 +699,7 @@ class _AppSettings(BaseModel):
             self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using Azure ML Index")
         
-        elif self.base_settings.datasource_type == "SqlServer":
+        elif self.base_settings.datasource_type == "AzureSqlServer":
             self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
             logging.debug("Using SQL Server")
             
