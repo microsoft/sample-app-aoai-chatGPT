@@ -19,3 +19,32 @@ html {
 #root {
   height: 100%;
 }
+
+.field-122, .field-122::placeholder {
+  color: #C8D3D9;
+  font-size: 12px;
+  padding: 0;
+  font-family: Gotham;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 350;
+  line-height: 23px;
+}
+.ms-TextField-fieldGroup {
+    background: #1D1D1B;
+    min-height: 30px;
+    textarea {
+  color: #C8D3D9;
+}
+}
+.root-114 .ms-Button-icon {
+    color: #fff;
+    &:hover{
+    color: #0093A7;}
+}
+
+.root-176 {
+background:  #0093A7;}
+
+.icon-117 {color: unset !important;}
+
