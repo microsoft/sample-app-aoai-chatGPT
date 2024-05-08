@@ -269,7 +269,7 @@ frontend_settings = {
     "sanitize_answer": SANITIZE_ANSWER,
 }
 # Enable Microsoft Defender for Cloud Integration
-MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "false").lower() == "true"
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 def should_use_data():
     global DATASOURCE_TYPE
