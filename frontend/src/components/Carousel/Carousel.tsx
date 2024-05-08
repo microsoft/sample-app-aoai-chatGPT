@@ -44,7 +44,6 @@ const Carousel = ({ data, handelOnPromptGet }: { data?: [string, string | undefi
                 }}
             >
                 {data?.map((item, index) => {
-                    console.log("🚀 ~ {data?.map ~ item:", typeof item?.[0], item?.[0], typeof item, item)
                     if (typeof item?.[0] === 'object') {
                         return (
                             <SwiperSlide key={index}>

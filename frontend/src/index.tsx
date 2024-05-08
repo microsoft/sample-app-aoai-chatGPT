@@ -9,26 +9,29 @@ import Layout from "./pages/layout/Layout";
 import NoPage from "./pages/NoPage";
 import Chat from "./pages/chat/Chat";
 import { AppStateProvider } from "./state/AppProvider";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 initializeIcons();
 
 export default function App() {
-    return (
-        <AppStateProvider>
-            <HashRouter>
-                <Routes>
-                    <Route path="/" element={<Layout />}>
-                        <Route index element={<Chat />} />
-                        <Route path="*" element={<NoPage />} />
-                    </Route>
-                </Routes>
-            </HashRouter>
-        </AppStateProvider>
-    );
+  return (
+    <AppStateProvider>
+      <ToastContainer />
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Chat />} />
+            <Route path="*" element={<NoPage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </AppStateProvider>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );

@@ -116,6 +116,7 @@ export type GridModel = {
     precanned_prompts?: string | null;
     precanned_prompt_names?: string | null;
     precanned_prompt_descriptions?: string | null;
+    file_size_limit?: number | null;
 }
 export type FrontendSettings = {
     auth_enabled?: string | null;

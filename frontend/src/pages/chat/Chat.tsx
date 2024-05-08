@@ -168,11 +168,9 @@ const Chat = () => {
     }, []);
 
     const PromptsBottomChatDatas = PromptsDatas && PromptsDatas?.length < 4 ? PromptsDatas : PromptsChatDatas
-    console.log("🚀 ~ Chat ~ PromptsBottomChatDatas:", PromptsBottomChatDatas, PromptsDatas?.length)
 
 
     const handelOnPromptGet = (index: number) => {
-        console.log("🚀 ~ handelOnPromptGet ~ index:", index)
         const name = gridPrompts && gridPrompts?.filter((item: string, i: number) => i === index)?.[0]
 
         appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? name && makeApiRequestWithCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined) : name && makeApiRequestWithoutCosmosDB(name, appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined)
@@ -820,6 +818,7 @@ const Chat = () => {
                             <QuestionInput
                                 clearOnSend
                                 placeholder={grid_model?.chat_empty_text_hint ? grid_model?.chat_empty_text_hint : "Tell me what you want to do..."}
+                                size={grid_model?.file_size_limit}
                                 disabled={isLoading}
                                 onSend={(question, id) => {
                                     appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)

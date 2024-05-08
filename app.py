@@ -30,6 +30,10 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+from docx import Document
+from PyPDF2 import PdfReader
+import aiofiles
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 # Current minimum Azure OpenAI version supported
@@ -248,6 +252,7 @@ UI_PRECANNED_PROMPTS = os.environ.get("UI_PRECANNED_PROMPTS")
 UI_PRECANNED_PROMPT_NAMES = os.environ.get("UI_PRECANNED_PROMPT_NAMES")
 UI_PRECANNED_PROMPT_DESCRIPTIONS = os.environ.get("UI_PRECANNED_PROMPT_DESCRIPTIONS")
 UI_CHAT_EMPTY_TEXT_HINT = os.environ.get("UI_CHAT_EMPTY_TEXT_HINT")
+UI_INPUT_FILE_SIZE_LIMIT = os.environ.get("UI_INPUT_FILE_SIZE_LIMIT")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -273,6 +278,7 @@ frontend_settings = {
     "precanned_prompts": UI_PRECANNED_PROMPTS,
     "precanned_prompt_names": UI_PRECANNED_PROMPT_NAMES,
     "precanned_prompt_descriptions": UI_PRECANNED_PROMPT_DESCRIPTIONS,
+    "file_size_limit": UI_INPUT_FILE_SIZE_LIMIT,
 }
 }
 
@@ -894,7 +900,7 @@ async def conversation_internal(request_body):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
-
+        
 
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
@@ -1381,6 +1387,103 @@ async def generate_title(conversation_messages):
         return title
     except Exception as e:
         return messages[-2]["content"]
+
+@bp.route("/chat/file", methods=["POST"])
+async def readFile():
+    try:
+        # Check if a file was submitted
+        files = await request.files
+        if 'file' not in files:
+            return jsonify({'error': 'No file provided'}), 400
+
+        file = files['file']
+
+        # Check if the file has an allowed extension (e.g., .docx, .pdf, or .txt)
+        allowed_extensions = ['.docx', '.pdf', '.txt']
+        if file.filename == '' or not any(file.filename.endswith(ext) for ext in allowed_extensions):
+            return jsonify({'error': 'Invalid file type. Please upload a .docx, .pdf, or .txt file'}), 400
+        
+        temp_dir = "static/uploads/"
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+        
+        file_path = os.path.join(temp_dir, file.filename)
+        
+        # Save the uploaded file to the specified upload folder asynchronously
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(file.read())
+        
+        # Read the content of the file based on its type
+        if file.filename.endswith('.docx'):
+            text = read_docx(file_path)
+        elif file.filename.endswith('.pdf'):
+            text = read_pdf(file_path)
+        elif file.filename.endswith('.txt'):
+            text = read_txt(file_path)
+        else:
+            return jsonify({'error': 'Unsupported file type'}), 400
+
+        # Check if the file exists before attempting to delete it after parsing
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        return jsonify({"content": text}), 200
+
+    except Exception as e:
+        logging.exception("Exception in /parse/file")
+        return jsonify({"error": str(e)}), 500
+
+
+def read_docx(file_path):
+    try:
+        # Load the Word document
+        doc = Document(file_path)
+
+        # Initialize an empty string to store the text
+        text_content = ""
+
+        # Iterate over paragraphs in the document
+        for paragraph in doc.paragraphs:
+            text_content += paragraph.text + "\n"
+
+        return text_content
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return None
+
+def read_pdf(file_path):
+    try:
+        # Create a PdfReader object
+        reader = PdfReader(file_path)
+
+        # Initialize an empty string to store the text content
+        text_content = ""
+
+        # Iterate over each page of the PDF
+        for page in reader.pages:
+            # Extract text from the page and append to the content
+            text_content += page.extract_text()
+
+        return text_content
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return None
+
+
+def read_txt(file_path):
+    try:
+        # Open the text file and read its content
+        with open(file_path, 'r') as txt_file:
+            text_content = txt_file.read()
+
+        return text_content
+
+    except Exception as e:
+        print(f"Error occurred while reading text file: {e}")
+        return None
+    
 
 
 app = create_app()
