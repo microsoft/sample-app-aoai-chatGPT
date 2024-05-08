@@ -1,3 +1,5 @@
+import Plotly from 'react-plotly.js'
+
 export type AskResponse = {
   answer: string
   citations: Citation[]
@@ -25,8 +27,8 @@ export type ToolMessageContent = {
 }
 
 export type AzureSqlServerCodeExecResult = {
-  data: object[]
-  layout: object
+  data: Plotly.Data[]
+  layout: Partial<Plotly.Layout>
 }
 
 export type AzureSqlServerExecResult = {

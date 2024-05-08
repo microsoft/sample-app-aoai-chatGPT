@@ -261,7 +261,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
             </Stack.Item>
             <Stack.Item grow>
               {parsedAnswer.plotly_data !== null && (
-                <Plot data={parsedAnswer.plotly_data["data"]} layout={parsedAnswer.plotly_data["layout"]} />
+                <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
               )}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
