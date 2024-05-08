@@ -36,7 +36,7 @@ export type AzureSqlServerExecResult = {
   search_query: string | null
   search_result: string | null
   code_generated: string | null
-  code_exec_result: AzureSqlServerCodeExecResult | null
+  code_exec_result?: AzureSqlServerCodeExecResult | undefined
 }
 
 export type AzureSqlServerExecResults = {

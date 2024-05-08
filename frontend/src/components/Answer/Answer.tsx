@@ -259,11 +259,6 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                 components={components}
               />
             </Stack.Item>
-            <Stack.Item grow>
-              {parsedAnswer.plotly_data !== null && (
-                <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
-              )}
-            </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">
@@ -295,6 +290,13 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
             </Stack.Item>
           </Stack>
         </Stack.Item>
+        {parsedAnswer.plotly_data !== null && (
+          <Stack className={styles.answerContainer}>
+            <Stack.Item grow>
+              <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
+            </Stack.Item>
+          </Stack>
+        )}
         <Stack horizontal className={styles.answerFooter}>
           {!!parsedAnswer.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>

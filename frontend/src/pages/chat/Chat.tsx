@@ -692,15 +692,19 @@ const Chat = () => {
 
   const parsePlotFromMessage = (message: ChatMessage) => {
     if (message?.role && message?.role === "tool") {
-      // try {
-      //   const execResults: AzureSqlServerExecResults = JSON.parse(message.content) as AzureSqlServerExecResults;
-      //   return execResults.all_exec_results[-1].code_exec_result;
-      // }
-      // catch {
-      //   return null;
-      // }
-      const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
-      return execResults.all_exec_results[-1].code_exec_result;
+      try {
+        const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
+        const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
+        if (codeExecResult === undefined) {
+          return null;
+        }
+        return codeExecResult;
+      }
+      catch {
+        return null;
+      }
+      // const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
+      // return execResults.all_exec_results.at(-1)?.code_exec_result;
     }
     return null;
   }
