@@ -162,7 +162,7 @@
   position: absolute;
   width: 26px;
   height: 26px;
-  left: 20px;
+  left: 10px;
   top: 0px;
   color: #ffffff;
   z-index: 1;
@@ -180,7 +180,7 @@
   position: absolute;
   width: 26px;
   height: 26px;
-  left: 20px;
+  left: 10px;
   top: 26px;
   color: #ffffff;
   z-index: 1;
@@ -196,7 +196,7 @@
   position: absolute;
   width: 26px;
   height: 26px;
-  left: 20px;
+  left: 10px;
   top: 38px;
   color: #ffffff;
   z-index: 1;
@@ -374,7 +374,7 @@ a {
   }
   &:nth-child(5) {
     width: 233px;
-    top: 433px;
+    top: 55%;
     background: #005a77;
   }
    &:nth-child(6) {
@@ -384,17 +384,31 @@ a {
   }
 }
 
-@media (min-width: 480px) and (max-width: 1024px) {
+@media (min-width: 480px) {
    .newChatIcon {
-    left: 0px;
+    left: -10px;
   }
 
   .clearChatBroom {
-    left: 0px;
+    left: -10px;
   }
 
   .clearChatBroomNoCosmos {
-    left: 0px;
+    left: -10px;
+  } 
+  }
+
+@media (min-width: 1024px) {
+   .newChatIcon {
+    left: 20px;
+  }
+
+  .clearChatBroom {
+    left: 20px;
+  }
+
+  .clearChatBroomNoCosmos {
+    left: 20px;
   } 
   }
 
@@ -457,7 +471,7 @@ left: 27px;
 }
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .newChatIcon {
     left: 12px;
   }
@@ -465,4 +479,4 @@ left: 27px;
   .clearChatBroom {
     left: 12px;
   }
-}
+} */
