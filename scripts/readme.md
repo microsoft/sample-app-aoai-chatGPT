@@ -6,6 +6,7 @@ Follow the instructions in this section to prepare your data locally. This is ea
 - Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
 
 ## Configure
+- Create a .env file similar to the .env.example file. Fill in the values for the environment variables.
 - Create a config file like `config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
 
 ```
