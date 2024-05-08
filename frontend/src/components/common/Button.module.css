@@ -8,19 +8,20 @@
 
 .shareButtonRoot:hover {
 background: #EEF4F6;
-color: #0093A7;
 }
 
 .shareButtonRoot span {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #ffffff;
 }
 
-.shareButtonRoot i,
-.shareButtonRoot:hover i {
-  color: #ffffff !important;
+.shareButtonRoot i, .shareButtonRoot span{
+  color: #fff;
+}
+
+.shareButtonRoot:hover i,  .shareButtonRoot:hover span{
+color: #0093A7;
 }
 
 .historyButtonRoot {
