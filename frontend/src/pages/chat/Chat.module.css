@@ -165,7 +165,6 @@
   left: 20px;
   top: 0px;
   color: #ffffff;
-  /* border-radius: 4px; */
   z-index: 1;
   min-width: unset;
 }
@@ -184,13 +183,11 @@
   left: 20px;
   top: 26px;
   color: #ffffff;
-  /* border-radius: 4px; */
   z-index: 1;
 }
 
 .newChatIcon {
   background-color: #0093a7;
-
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
@@ -202,7 +199,6 @@
   left: 20px;
   top: 38px;
   color: #ffffff;
-  /* border-radius: 4px; */
   z-index: 1;
   min-width: unset;
   &:hover {
@@ -408,18 +404,6 @@ a {
     width: 90%;
     max-width: 90%;
   }
-
-  /* .newChatIcon {
-    left: 0px;
-  }
-
-  .clearChatBroom {
-    left: 0px;
-  }
-
-  .clearChatBroomNoCosmos {
-    left: 0px;
-  } */
 
   .chatEmptyStateTitle {
     line-height: 36px;
