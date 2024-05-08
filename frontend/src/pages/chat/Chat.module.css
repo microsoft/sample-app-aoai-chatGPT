@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  background-color: #1d1d1b;
 }
 
 .chatRoot {
@@ -20,10 +21,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+  background-color: #1d1d1b;
   border-radius: 8px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
@@ -38,31 +36,35 @@
 }
 
 .chatEmptyStateTitle {
+  font-family: Gotham;
+  font-size: 50px;
   font-style: normal;
   font-weight: 700;
-  font-size: 36px;
+  line-height: 60px;
   display: flex;
   align-items: flex-end;
   text-align: center;
-  line-height: 24px;
-  margin-top: 36px;
+  margin-top: 0;
   margin-bottom: 0px;
+  color: #fbba00;
 }
 
 .chatEmptyStateSubtitle {
-  margin-top: 20px;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
+  margin-top: 0;
   line-height: 150%;
   align-items: flex-end;
-  text-align: center;
   letter-spacing: -0.01em;
-  color: #616161;
+  color: #eef4f6;
+  text-align: center;
+  font-family: Gotham;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 325;
+  text-wrap: balance;
 }
 
 .chatIcon {
-  height: 62px;
+  height: 72px;
   width: auto;
 }
 
@@ -86,17 +88,19 @@
 
 .chatMessageUserMessage {
   display: flex;
-  padding: 20px;
-  background: #edf5fd;
-  border-radius: 8px;
+  padding: 10px 15px;
+  border: 1px solid #eef4f6;
+  /* background: #edf5fd; */
+  /* border-radius: 8px; */
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
+  min-height: 43px;
   line-height: 22px;
-  color: #242424;
+  color: #c8d3d9;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -111,12 +115,9 @@
 }
 
 .chatMessageError {
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow:
-    rgba(182, 52, 67, 1) 1px 1px 2px,
-    rgba(182, 52, 67, 1) 0px 0px 1px;
-  color: #242424;
+  padding: 10px 15px;
+  border: 1px solid #FBBA00;
+  color: white;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -125,7 +126,7 @@
 }
 
 .chatMessageErrorContent {
-  font-family: 'Segoe UI';
+  font-family: 'Gotham';
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
@@ -145,56 +146,69 @@
   padding-right: 24px;
   width: calc(100% - 100px);
   max-width: 1028px;
-  margin-bottom: 50px;
+  /* margin-bottom: 50px; */
   margin-top: 8px;
+    color: #C8D3D9;
+
 }
 
 .clearChatBroom {
+  background-color: #0093a7;
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   position: absolute;
-  width: 40px;
-  height: 40px;
-  left: 7px;
-  top: 13px;
+  width: 26px;
+  height: 26px;
+  left: 20px;
+  top: 0px;
   color: #ffffff;
-  border-radius: 4px;
+  /* border-radius: 4px; */
   z-index: 1;
+  min-width: unset;
 }
 
 .clearChatBroomNoCosmos {
+  background-color: #0093a7;
+
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   position: absolute;
-  width: 40px;
-  height: 40px;
-  left: 7px;
-  top: 66px;
+  width: 26px;
+  height: 26px;
+  left: 20px;
+  top: 26px;
   color: #ffffff;
-  border-radius: 4px;
+  /* border-radius: 4px; */
   z-index: 1;
 }
 
 .newChatIcon {
+  background-color: #0093a7;
+
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   position: absolute;
-  width: 40px;
-  height: 40px;
-  left: 7px;
-  top: 66px;
+  width: 26px;
+  height: 26px;
+  left: 20px;
+  top: 38px;
   color: #ffffff;
-  border-radius: 4px;
+  /* border-radius: 4px; */
   z-index: 1;
+  min-width: unset;
+  &:hover {
+    color: #0093a7 !important;
+    background-color: #ffffff;
+  }
 }
 
 .stopGeneratingContainer {
@@ -332,13 +346,50 @@ a {
   cursor: pointer;
 }
 
-@media (max-width: 480px) {
-  .chatInput {
-    width: 90%;
-    max-width: 90%;
-  }
+.headerRectangle {
+  height: 10px;
+  position: absolute;
+  background: #0093a7;
 
-  .newChatIcon {
+  &:nth-child(odd) {
+    left: 0;
+  }
+  &:nth-child(even) {
+    right: 0;
+  }
+  &:nth-child(1) {
+    left: 8%;
+    width: 361px;
+    top: 61px;
+  }
+  &:nth-child(2) {
+    width: 263px;
+    top: 127px;
+  }
+  &:nth-child(3) {
+    width: 155px;
+    top: 196px;
+  }
+  &:nth-child(4) {
+    width: 155px;
+    right: 15%;
+    top: 159px;
+    background: #005a77;
+  }
+  &:nth-child(5) {
+    width: 233px;
+    top: 433px;
+    background: #005a77;
+  }
+   &:nth-child(6) {
+    width: 155px;
+    top: 363px;
+    background: #0093A7;;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 1024px) {
+   .newChatIcon {
     left: 0px;
   }
 
@@ -348,13 +399,86 @@ a {
 
   .clearChatBroomNoCosmos {
     left: 0px;
+  } 
   }
+
+
+@media (max-width: 480px) {
+  .chatInput {
+    width: 90%;
+    max-width: 90%;
+  }
+
+  /* .newChatIcon {
+    left: 0px;
+  }
+
+  .clearChatBroom {
+    left: 0px;
+  }
+
+  .clearChatBroomNoCosmos {
+    left: 0px;
+  } */
 
   .chatEmptyStateTitle {
     line-height: 36px;
+    color: #fbba00;
+    text-align: center;
+    font-family: Gotham;
+    font-size: 30px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 60px;
   }
 
   .citationPanel {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 540px) {
+.headerRectangle {
+ &:nth-child(odd) {
+    left: 0;
+  }
+  &:nth-child(even) {
+    right: 0;
+  }
+&:nth-child(1) {
+left: 27px;
+    width: 116px;
+    top: 26px;
+  }
+  &:nth-child(2) {
+    width: 96px;
+    top: 48px;
+  }
+  &:nth-child(3) {
+    width: 40px;
+    top: 103px;
+  }
+  &:nth-child(4) {
+    width: 41px;
+    top: 93px;
+    right: 0;
+    background: #005a77;
+  }
+  &:nth-child(5) {
+    display: none;
+  }
+   &:nth-child(6) {
+    display: none;
+  }
+}
+}
+
+@media (max-width: 768px) {
+  .newChatIcon {
+    left: 12px;
+  }
+
+  .clearChatBroom {
+    left: 12px;
   }
 }
