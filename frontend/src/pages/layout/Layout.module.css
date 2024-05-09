@@ -5,7 +5,8 @@
 }
 
 .header {
-  background-color: #1D1D1B;
+  background-color: #1d1d1b;
+  padding-top: 15px;
 }
 
 .headerContainer {
@@ -26,7 +27,7 @@
   font-weight: 600;
   font-size: 20px;
   line-height: 28px;
-  display: flex;
+  display: none;
   align-items: flex-end;
   color: #242424;
 }
@@ -41,7 +42,7 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
-  margin-right: 20px;
+  margin-right: 15px;
 }
 
 .shareButton {
@@ -50,8 +51,8 @@
 
 .shareButtonText {
   font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 12px;
   line-height: 20px;
   display: flex;
   align-items: center;
@@ -63,31 +64,29 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #707070;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
+  background: #eef4f6;
+  color: #1d1d1b;
 }
 
 .copyButtonContainer {
+  background: #005a77;
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 5px 12px;
-  gap: 4px;
-  background: #ffffff;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-  cursor: pointer;
-  background: #d1d1d1;
+  padding: 5px 6px;
+  gap: 8px;
+  width: 130px;
+  height: 32px;
 }
 
 .copyButton {
-  color: #424242;
+  color: #eef4f6;
+}
+.copyButtonContainer svg {
+  width: 15px;
+  height: 15px;
 }
 
 .copyButtonText {
@@ -97,7 +96,17 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #242424;
+  color: #eef4f6;
+}
+
+.copyButtonContainer:hover {
+  cursor: pointer;
+  background: #eef4f6;
+}
+
+.copyButtonContainer:hover .copyButton,
+.copyButtonContainer:hover .copyButtonText {
+  color: #0093a7;
 }
 
 @media (max-width: 480px) {

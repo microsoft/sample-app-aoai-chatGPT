@@ -1,5 +1,6 @@
 * {
   box-sizing: border-box;
+  letter-spacing: 1px;
 }
 
 html,
@@ -20,31 +21,37 @@ html {
   height: 100%;
 }
 
-.field-122, .field-122::placeholder {
-  color: #C8D3D9;
-  font-size: 12px;
-  padding: 0;
-  font-family: Gotham;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 350;
-  line-height: 23px;
-}
-.ms-TextField-fieldGroup {
-    background: #1D1D1B;
-    min-height: 30px;
-    textarea {
-  color: #C8D3D9;
-}
-}
-.root-114 .ms-Button-icon {
-    color: #fff;
-    &:hover{
-    color: #0093A7;}
+/* Share button dialogue box */
+.ms-Dialog-main{
+    background-color: #0093a7;
 }
 
-.root-176 {
-background:  #0093A7;}
+.ms-Dialog-title {
+  font-size: 14px;
+  color: #eef4f6;
+}
+.ms-Dialog-header .topButton-152{
+  padding: 9px 9px 0px 0px;
 
-.icon-117 {color: unset !important;}
+}
 
+.ms-Dialog-header button {
+    color: #eef4f6 !important;
+    padding: 0;
+ 
+}
+   .ms-Dialog-header button:hover{
+        color: #eef4f6;
+    }
+
+.inner-154 {
+  padding: 0px 15px 24px;
+}
+
+.ms-Dialog-button--close:hover {
+  background: none;
+}
+
+.ms-TextField-fieldGroup{
+border: none;
+}
