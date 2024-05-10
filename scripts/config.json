@@ -1,14 +1,14 @@
-[
-    {
-        "data_path": "<path to data>",
-        "location": "<azure region, e.g. 'westus2'>",
-        "subscription_id": "<subscription id>",
-        "resource_group": "<resource group name>",
-        "search_service_name": "<search service name to use or create>",
-        "index_name": "<index name to use or create>",
-        "chunk_size": 1024,
-        "token_overlap": 128,
-        "semantic_config_name": "default",
-        "language": "<Language to support for example use 'en' for English. Checked supported languages here under lucene - https://learn.microsoft.com/en-us/azure/search/index-add-language-analyzers"
-    }
-]
+[ 
+    { 
+        "data_path": "C:/Users/sophiechen/OneDrive - Microsoft/Documents/oyd/data/gptassertdata/index_data/merge_contact", 
+        "location": "East US", 
+        "subscription_id": "10e1de13-9717-4242-acf5-3e241940d326", 
+        "resource_group": "wed-aiq", 
+        "search_service_name": "wed-aiq-acs-eus", 
+        "index_name": "testSophie_embed_mistral_1024_index", 
+        "chunk_size": 1024, 
+        "token_overlap": 0, 
+        "semantic_config_name": "default", 
+        "vector_config_name": "default" 
+    } 
+] 

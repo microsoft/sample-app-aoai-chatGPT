@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
 from openai import AzureOpenAI
 from tqdm import tqdm
+from mistralai.client import MistralClient
 
 # Configure environment variables  
 load_dotenv() # take environment variables from .env.
@@ -671,7 +672,7 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             
             return embeddings.dict()['data'][0]['embedding']
         
-        if FLAG_EMBEDDING_MODEL == "COHERE":
+        elif FLAG_EMBEDDING_MODEL == "COHERE":
             if FLAG_COHERE == "MULTILINGUAL":
                 key = embedding_model_key if embedding_model_key else os.getenv("COHERE_MULTILINGUAL_API_KEY")
             elif FLAG_COHERE == "ENGLISH":
@@ -686,6 +687,15 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
                         
             return result_content["embeddings"][0]   
         
+        elif FLAG_EMBEDDING_MODEL == "MISTRAL":
+            key = embedding_model_key if embedding_model_key else os.getenv("MISTRAL_API_KEY")
+            client = MistralClient(api_key=key)
+            embeddings_response = client.embeddings(
+                model="mistral-embed",
+                input=text,
+            )
+
+            return embeddings_response.data[0].embedding
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
