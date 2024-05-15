@@ -17,7 +17,8 @@ from quart import (
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
-from backend.auth.auth_utils import get_authenticated_user_details, get_tenantid
+from backend.auth.auth_utils import get_authenticated_user_details
+from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 
 from backend.utils import (
@@ -268,7 +269,7 @@ frontend_settings = {
     "sanitize_answer": SANITIZE_ANSWER,
 }
 # Enable Microsoft Defender for Cloud Integration
-MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "false").lower() == "true"
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 def should_use_data():
     global DATASOURCE_TYPE
@@ -737,16 +738,7 @@ def prepare_model_args(request_body, request_headers):
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        tenantId = get_tenantid(authenticated_user_details.get("client_principal_b64"))
-        conversation_id = request_body.get("conversation_id", None)        
-        user_args = {
-            "EndUserId": authenticated_user_details.get('user_principal_id'),
-            "EndUserIdType": 'Entra',
-            "EndUserTenantId": tenantId,
-            "ConversationId": conversation_id,
-            "SourceIp": request_headers.get('X-Forwarded-For', request_headers.get('Remote-Addr', '')),
-        }
-        user_json = json.dumps(user_args)
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers)
 
     model_args = {
         "messages": messages,
