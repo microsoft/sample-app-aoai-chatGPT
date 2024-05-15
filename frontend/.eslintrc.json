@@ -12,11 +12,9 @@
   ],
   "plugins": ["@typescript-eslint", "import", "simple-import-sort", "prettier"],
   "env": {
-    "browser": true,
-    "jest": true
+    "browser": true
   },
   "rules": {
-    // "prettier/prettier": "error",
     "prettier/prettier": [
       "error",
       {},
