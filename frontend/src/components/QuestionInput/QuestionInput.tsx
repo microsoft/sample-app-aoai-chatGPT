@@ -15,6 +15,7 @@ interface Props {
   clearOnSend?: boolean;
   conversationId?: string;
   size?: number | null;
+  ImageToTextStatus?: string | null;
 }
 
 export const QuestionInput = ({
@@ -24,7 +25,15 @@ export const QuestionInput = ({
   clearOnSend,
   conversationId,
   size = 0,
+  ImageToTextStatus,
 }: Props) => {
+  console.log(
+    "🚀 ~ ImageToTextStatus:",
+    typeof Boolean(ImageToTextStatus?.toLowerCase() === "true"),
+    Boolean(ImageToTextStatus?.toLowerCase() === "true"),
+    ImageToTextStatus?.toLowerCase(),
+    ImageToTextStatus
+  );
   const [question, setQuestion] = useState<string>("");
   const [fileName, setFileName] = useState<any>(null);
   const [fileText, setFileText] = useState<string>("");
@@ -87,7 +96,21 @@ export const QuestionInput = ({
     }
 
     // Check file type
-    const allowedFileTypes = [".docx", ".pdf", ".txt"];
+    const allowedFileTypes = Boolean(
+      ImageToTextStatus?.toLowerCase() === "true"
+    )
+      ? [
+          ".docx",
+          ".pdf",
+          ".txt",
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".gif",
+          ".bmp",
+          ".tiff",
+        ]
+      : [".docx", ".pdf", ".txt"];
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
     if (!allowedFileTypes.includes(`.${fileExtension}`)) {
       toast.error(
@@ -151,7 +174,11 @@ export const QuestionInput = ({
             <input
               id="fileInput"
               type="file"
-              accept=".docx,.pdf,.txt"
+              accept={
+                Boolean(ImageToTextStatus?.toLowerCase() === "true")
+                  ? ".docx,.pdf,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff"
+                  : ".docx,.pdf,.txt"
+              }
               className={styles.fileInput}
               onChange={(e: any) => {
                 handleFileChange(e);
@@ -165,8 +192,11 @@ export const QuestionInput = ({
       <div className={styles.question_style}>
         {fileName && (
           <div className={styles.text_prompt}>
-            <img src={File} className={styles.file_Icon}/>{fileName}
-            <span className={styles.close} onClick={handelOnRemove}>x</span>
+            <img src={File} className={styles.file_Icon} />
+            {fileName}
+            <span className={styles.close} onClick={handelOnRemove}>
+              x
+            </span>
           </div>
         )}
         <TextField

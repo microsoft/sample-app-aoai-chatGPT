@@ -30,9 +30,18 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+
 from docx import Document
+import PyPDF2
 from PyPDF2 import PdfReader
 import aiofiles
+from pdf2image import convert_from_path
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -253,6 +262,7 @@ UI_PRECANNED_PROMPT_NAMES = os.environ.get("UI_PRECANNED_PROMPT_NAMES")
 UI_PRECANNED_PROMPT_DESCRIPTIONS = os.environ.get("UI_PRECANNED_PROMPT_DESCRIPTIONS")
 UI_CHAT_EMPTY_TEXT_HINT = os.environ.get("UI_CHAT_EMPTY_TEXT_HINT")
 UI_INPUT_FILE_SIZE_LIMIT = os.environ.get("UI_INPUT_FILE_SIZE_LIMIT")
+IMAGE_TO_TEXT_ENABLED = os.environ.get("IMAGE_TO_TEXT_ENABLED")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -278,7 +288,8 @@ frontend_settings = {
     "precanned_prompts": UI_PRECANNED_PROMPTS,
     "precanned_prompt_names": UI_PRECANNED_PROMPT_NAMES,
     "precanned_prompt_descriptions": UI_PRECANNED_PROMPT_DESCRIPTIONS,
-    "file_size_limit": UI_INPUT_FILE_SIZE_LIMIT,
+    "file_size_limit": UI_INPUT_FILE_SIZE_LIMIT,   
+    "image_to_text_enabled": IMAGE_TO_TEXT_ENABLED,
 }
 }
 
@@ -900,7 +911,6 @@ async def conversation_internal(request_body):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
-        
 
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
@@ -1399,14 +1409,15 @@ async def readFile():
         file = files['file']
 
         # Check if the file has an allowed extension (e.g., .docx, .pdf, or .txt)
-        allowed_extensions = ['.docx', '.pdf', '.txt']
+        allowed_extensions = ['.docx', '.pdf', '.txt','.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
         if file.filename == '' or not any(file.filename.endswith(ext) for ext in allowed_extensions):
             return jsonify({'error': 'Invalid file type. Please upload a .docx, .pdf, or .txt file'}), 400
         
         temp_dir = "static/uploads/"
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
-        
+        else:
+            print(f"Directory '{temp_dir}' already exists.")
         file_path = os.path.join(temp_dir, file.filename)
         
         # Save the uploaded file to the specified upload folder asynchronously
@@ -1418,6 +1429,8 @@ async def readFile():
             text = read_docx(file_path)
         elif file.filename.endswith('.pdf'):
             text = read_pdf(file_path)
+        elif file.filename.endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff')):
+            text = read_image(file_path)
         elif file.filename.endswith('.txt'):
             text = read_txt(file_path)
         else:
@@ -1426,6 +1439,9 @@ async def readFile():
         # Check if the file exists before attempting to delete it after parsing
         if os.path.exists(file_path):
             os.remove(file_path)
+            print(f"File '{file_path}' deleted successfully")
+        else:
+            print(f"File '{file_path}' does not exist")
 
         return jsonify({"content": text}), 200
 
@@ -1452,24 +1468,69 @@ def read_docx(file_path):
         print(f"Error occurred: {e}")
         return None
 
+def read_image(file_path):
+    # Read the image using OpenCV
+    image = cv2.imread(file_path)
+
+    # Check if image is loaded properly
+    if image is None:
+        print(f"Error loading image {file_path}")
+        return None
+
+    # Resize the image
+    img2 = cv2.resize(image, None, fx=1, fy=1)
+    
+    # Convert to grayscale
+    gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+    # Extract text from the processed image using Tesseract
+    text = pytesseract.image_to_string(gray, config='--psm 6')
+    return text
+
+def process_image(image):
+    # Convert the image to an OpenCV format (numpy array)
+    image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+    # Resize the image
+    img2 = cv2.resize(image, None, fx=0.5, fy=0.5)
+    
+    # Display the resized image
+    fig = plt.figure(figsize=[10, 10])
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    # plt.imshow(gray, cmap='gray')
+    # plt.show()
+
+    return gray
+
 def read_pdf(file_path):
     try:
-        # Create a PdfReader object
-        reader = PdfReader(file_path)
-
-        # Initialize an empty string to store the text content
-        text_content = ""
-
-        # Iterate over each page of the PDF
-        for page in reader.pages:
-            # Extract text from the page and append to the content
-            text_content += page.extract_text()
-
-        return text_content
-
+        # Convert PDF to a list of images
+        images = convert_from_path(file_path)
     except Exception as e:
-        print(f"Error occurred: {e}")
-        return None
+        print(f"Error occurred while converting PDF to images: {e}")
+        raise
+
+    # Initialize an empty string to store the extracted text
+    extracted_text = ""
+
+    # Loop through the images and extract text from each
+    for i, image in enumerate(images):
+        try:
+            # Process the image with OpenCV
+            processed_image = process_image(image)
+            
+            # Extract text from the processed image using Tesseract
+            text = pytesseract.image_to_string(processed_image, config='--psm 6')
+            extracted_text += text + "\n"
+        except Exception as e:
+            print(f"Error occurred while extracting text from image {i}: {e}")
+            return None
+
+    # Print the extracted text
+    print(extracted_text)
+    return extracted_text
 
 
 def read_txt(file_path):

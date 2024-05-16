@@ -12,3 +12,7 @@ gunicorn==20.1.0
 python-docx
 PyPDF2
 aiofiles
+pytesseract
+pdf2image
+opencv-python-headless
+matplotlib

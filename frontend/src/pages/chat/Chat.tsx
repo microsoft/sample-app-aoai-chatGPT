@@ -819,6 +819,7 @@ const Chat = () => {
                                 clearOnSend
                                 placeholder={grid_model?.chat_empty_text_hint ? grid_model?.chat_empty_text_hint : "Tell me what you want to do..."}
                                 size={grid_model?.file_size_limit}
+                                ImageToTextStatus={grid_model?.image_to_text_enabled}
                                 disabled={isLoading}
                                 onSend={(question, id) => {
                                     appStateContext?.state.isCosmosDBAvailable?.cosmosDB ? makeApiRequestWithCosmosDB(question, id) : makeApiRequestWithoutCosmosDB(question, id)
