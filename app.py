@@ -37,7 +37,6 @@ from PyPDF2 import PdfReader
 import aiofiles
 from pdf2image import convert_from_path
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
