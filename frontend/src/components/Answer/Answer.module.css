@@ -11,6 +11,18 @@
   border-radius: 5.419px;
 }
 
+.questionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5.42px;
+  margin: 0px;
+}
+
+.questionContainer p {
+  margin: 0px;
+}
+
 .answerText {
   font-style: normal;
   font-weight: 400;

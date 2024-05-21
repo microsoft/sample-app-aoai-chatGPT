@@ -116,6 +116,8 @@ export type FrontendSettings = {
   feedback_enabled?: string | null
   ui?: UI
   sanitize_answer?: boolean
+  polling_interval?: number
+  upload_max_filesize?: number
 }
 
 export enum Feedback {

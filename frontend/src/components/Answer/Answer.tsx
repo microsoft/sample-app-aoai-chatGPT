@@ -19,10 +19,11 @@ import styles from './Answer.module.css'
 
 interface Props {
   answer: AskResponse
+  role?: string
   onCitationClicked: (citedDocument: Citation) => void
 }
 
-export const Answer = ({ answer, onCitationClicked }: Props) => {
+export const Answer = ({ answer, role = 'assistant', onCitationClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -243,7 +244,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
   }
   return (
     <>
-      <Stack className={styles.answerContainer} tabIndex={0}>
+      <Stack className={role == "user" ? styles.questionContainer : styles.answerContainer} tabIndex={0}>
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Spinner } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
@@ -38,6 +38,8 @@ import { useBoolean } from '@fluentui/react-hooks'
 const enum messageStatus {
   NotRunning = 'Not Running',
   Processing = 'Processing',
+  Uploading = 'Uploading Document...',
+  Analyzing = 'Analyzing Document...',
   Done = 'Done'
 }
 
@@ -57,6 +59,8 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+  const [showAnalyzingMessage, setIsAnalyzing] = useState<boolean>(false)
+  const [showUploadingMessage, setIsUploading] = useState<boolean>(false)
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -522,7 +526,6 @@ const Chat = () => {
     }
     setClearingChat(false)
   }
-
   const tryGetRaiPrettyError = (errorMessage: string) => {
     try {
       // Using a regex to extract the JSON part that contains "innererror"
@@ -576,6 +579,57 @@ const Chat = () => {
     }
 
     return tryGetRaiPrettyError(errorMessage)
+  }
+
+  const onDocumentUploading = (isUploading: boolean) => {
+    setIsUploading(isUploading)
+  }
+  const onDocumentIndexing = (isIndexing: boolean) => {
+    setIsAnalyzing(isIndexing)
+  }
+
+  const handleConversationIdUpdate = (conversationId: string, filename: string) => {
+    // Update the application state/context to switch to the new conversation
+    appStateContext?.dispatch({
+      type: 'SET_ACTIVE_CONVERSATION_ID',
+      payload: conversationId
+    })
+
+    setProcessMessages(messageStatus.Processing)
+    setIsCitationPanelOpen(false)
+    setActiveCitation(undefined)
+
+    var today = new Date().toISOString()
+
+    let resultConversation = appStateContext?.state?.chatHistory?.find(conv => conv.id === conversationId)
+
+    let uploadMessages = [
+      { id: uuid().toString(), role: 'user', content: filename, date: today },
+      {
+        id: uuid().toString(),
+        role: 'assistant',
+        content: 'Your document was successfully uploaded. Please ask a question to begin analysis.',
+        date: today
+      }
+    ]
+
+    if (resultConversation) {
+      uploadMessages.forEach(msg => {
+        resultConversation?.messages.push(msg)
+      })
+      appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: resultConversation })
+    } else {
+      appStateContext?.dispatch({
+        type: 'UPDATE_CURRENT_CHAT',
+        payload: {
+          id: conversationId,
+          title: 'New Document Chat',
+          messages: uploadMessages,
+          date: today
+        }
+      })
+    }
+    setProcessMessages(messageStatus.Done)
   }
 
   const newChat = () => {
@@ -765,6 +819,21 @@ const Chat = () => {
                     ) : null}
                   </>
                 ))}
+                {(showAnalyzingMessage || showUploadingMessage) && (
+                  <div className={styles.chatMessageUser}>
+                    <div className={styles.chatMessageUserMessage}>
+                      <Spinner />
+                      <Answer
+                        role="user"
+                        answer={{
+                          answer: showAnalyzingMessage ? messageStatus.Analyzing : messageStatus.Uploading,
+                          citations: []
+                        }}
+                        onCitationClicked={() => null}
+                      />
+                    </div>
+                  </div>
+                )}
                 {showLoadingMessage && (
                   <>
                     <div className={styles.chatMessageGpt}>
@@ -872,6 +941,9 @@ const Chat = () => {
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id)
                 }}
+                onConversationIdUpdate={handleConversationIdUpdate}
+                onDocumentIndexing={onDocumentIndexing}
+                onDocumentUploading={onDocumentUploading}
                 conversationId={
                   appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
                 }

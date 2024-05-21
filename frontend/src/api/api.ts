@@ -352,3 +352,89 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
     })
   return response
 }
+
+export const uploadDocument = async (
+  options: ConversationRequest,
+  abortSignal: AbortSignal,
+  convId?: string
+): Promise<Response> => {
+  let body
+  if (convId) {
+    body = JSON.stringify({
+      conversation_id: convId,
+      messages: options.messages
+    })
+  } else {
+    body = JSON.stringify({
+      messages: options.messages
+    })
+  }
+  const response = await fetch('/document/upload', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: body,
+    signal: abortSignal
+  })
+    .then(res => {
+      return res
+    })
+    .catch(err => {
+      console.error('There was an issue uploading your document.')
+      return new Response()
+    })
+  return response
+}
+
+export const indexDocument = async (uniqueName: string): Promise<string> => {
+  let body
+  body = JSON.stringify({
+    indexName: uniqueName
+  })
+
+  const response: string = await fetch('/document/index', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: body
+  })
+    .then(res => {
+      return res.json()
+    })
+    .then(data => {
+      return data.indexer_name
+    })
+    .catch(err => {
+      console.error('There was an issue indexing your document.')
+      return new Response()
+    })
+  return response
+}
+
+export const indexStatus = async (uniqueName: string): Promise<string> => {
+  let body
+  body = JSON.stringify({
+    indexName: uniqueName
+  })
+
+  const response: string = await fetch('/indexer/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: body
+  })
+    .then(res => {
+      return res.json()
+    })
+    .then(data => {
+      return data.status
+    })
+    .catch(err => {
+      console.error('There was an issue retrieving the indexer status.')
+      return new Response()
+    })
+  return response
+}

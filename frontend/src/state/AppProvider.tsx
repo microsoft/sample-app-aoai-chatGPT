@@ -1,5 +1,4 @@
-import React, { createContext, ReactNode, useEffect, 
-  useReducer } from 'react'
+import React, { createContext, ReactNode, useEffect, useReducer } from 'react'
 
 import {
   ChatHistoryLoadingState,
@@ -44,6 +43,7 @@ export type Action =
       payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral }
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
+  | { type: 'SET_ACTIVE_CONVERSATION_ID'; payload: string }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,

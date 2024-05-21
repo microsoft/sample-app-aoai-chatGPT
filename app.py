@@ -3,9 +3,17 @@ import json
 import os
 import logging
 import uuid
+import time
+import asyncio
 from dotenv import load_dotenv
 import httpx
+from azure.storage.blob import BlobServiceClient
+from azure.core.credentials import AzureKeyCredential
+from azure.search.documents import SearchClient
+from azure.search.documents.indexes.aio import SearchIndexerClient
+
 from quart import (
+    abort,
     Blueprint,
     Quart,
     jsonify,
@@ -25,11 +33,12 @@ from backend.utils import (
     format_as_ndjson,
     format_stream_response,
     generateFilterString,
-    parse_multi_columns,
+    generateFilterStringForConversation, parse_multi_columns,
     format_non_streaming_response,
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+from azure.search.documents.indexes.models import SearchIndexerDataContainer, SearchIndexerDataSourceConnection, SearchIndexer
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -50,11 +59,14 @@ UI_CHAT_DESCRIPTION = (
 UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
 UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
 
+DOCUPLOAD_MAX_SIZE_MB = os.environ.get("DOCUPLOAD_MAX_SIZE_MB")
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    if DOCUPLOAD_MAX_SIZE_MB:
+        app.config['MAX_CONTENT_LENGTH'] = int(DOCUPLOAD_MAX_SIZE_MB) * 1024 * 1024
     return app
 
 
@@ -247,6 +259,22 @@ PROMPTFLOW_RESPONSE_FIELD_NAME = os.environ.get(
 PROMPTFLOW_CITATIONS_FIELD_NAME = os.environ.get(
     "PROMPTFLOW_CITATIONS_FIELD_NAME", "documents"
 )
+
+# AZURE BLOB STORAGE
+DOCUPLOAD_AZURE_BLOB_STORAGE_KEY = os.environ.get("DOCUPLOAD_AZURE_BLOB_STORAGE_KEY")
+DOCUPLOAD_AZURE_BLOB_STORAGE_ACCOUNT_NAME = os.environ.get("DOCUPLOAD_AZURE_BLOB_STORAGE_ACCOUNT_NAME")
+DOCUPLOAD_AZURE_BLOB_CONTAINER = os.environ.get("DOCUPLOAD_AZURE_BLOB_CONTAINER")
+DOCUPLOAD_AZURE_BLOB_FOLDER = os.environ.get("DOCUPLOAD_AZURE_BLOB_FOLDER")
+DOCUPLOAD_AZURE_SEARCH_INDEXER = os.environ.get("DOCUPLOAD_AZURE_SEARCH_INDEXER")
+DOCUPLOAD_DELETE_BLOB_ON_CONVERSATION_DELETE = os.environ.get("DOCUPLOAD_DELETE_BLOB_ON_CONVERSATION_DELETE")
+DOCUPLOAD_DELETE_INDEX_DOCUMENT_ON_CONVERSATION_DELETE = os.environ.get("DOCUPLOAD_DELETE_INDEX_DOCUMENT_ON_CONVERSATION_DELETE")
+DOCUPLOAD_INDEX_DOCUMENT_KEY = os.environ.get("DOCUPLOAD_INDEX_DOCUMENT_KEY")
+DOCUPLOAD_INDEX_POLLING_INTERVAL = os.environ.get("DOCUPLOAD_INDEX_POLLING_INTERVAL")
+
+DOCUPLOAD_BLOB_CONNECTION_STRING = f"DefaultEndpointsProtocol=https;AccountName={DOCUPLOAD_AZURE_BLOB_STORAGE_ACCOUNT_NAME};AccountKey={DOCUPLOAD_AZURE_BLOB_STORAGE_KEY};EndpointSuffix=core.windows.net"
+
+AZURE_SEARCH_ENDPOINT = f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/"
+
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -255,6 +283,15 @@ CHAT_HISTORY_ENABLED = (
     and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
 )
 SANITIZE_ANSWER = os.environ.get("SANITIZE_ANSWER", "false").lower() == "true"
+
+def docupload_enabled():
+    if AZURE_SEARCH_SERVICE and CHAT_HISTORY_ENABLED and DOCUPLOAD_AZURE_BLOB_STORAGE_KEY and DOCUPLOAD_AZURE_BLOB_STORAGE_ACCOUNT_NAME and DOCUPLOAD_AZURE_SEARCH_INDEXER:
+        logging.debug("Doc Upload Feature Enabled")
+        return True
+
+DOCUPLOAD_ENABLED = docupload_enabled()
+
+
 frontend_settings = {
     "auth_enabled": AUTH_ENABLED,
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
@@ -265,8 +302,11 @@ frontend_settings = {
         "chat_title": UI_CHAT_TITLE,
         "chat_description": UI_CHAT_DESCRIPTION,
         "show_share_button": UI_SHOW_SHARE_BUTTON,
+        "show_upload_button": DOCUPLOAD_ENABLED,
     },
     "sanitize_answer": SANITIZE_ANSWER,
+    "polling_interval": DOCUPLOAD_INDEX_POLLING_INTERVAL,
+    "upload_max_filesize": DOCUPLOAD_MAX_SIZE_MB,
 }
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
@@ -396,9 +436,11 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def get_configured_data_source():
+def get_configured_data_source(conversation_id):
     data_source = {}
     query_type = "simple"
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
     if DATASOURCE_TYPE == "AzureCognitiveSearch":
         # Set query type
         if AZURE_SEARCH_QUERY_TYPE:
@@ -423,6 +465,10 @@ def get_configured_data_source():
             filter = generateFilterString(userToken)
             logging.debug(f"FILTER: {filter}")
 
+        
+        # Filter data by conversation
+        filter = generateFilterStringForConversation(filter, user_id, conversation_id)
+
         # Set authentication
         authentication = {}
         if AZURE_SEARCH_KEY:
@@ -434,7 +480,7 @@ def get_configured_data_source():
         data_source = {
             "type": "azure_search",
             "parameters": {
-                "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+                "endpoint": AZURE_SEARCH_ENDPOINT,
                 "authentication": authentication,
                 "index_name": AZURE_SEARCH_INDEX,
                 "fields_mapping": {
@@ -727,6 +773,10 @@ def get_configured_data_source():
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
+    conversation_id = request_body.get('conversation_id', None)
+    if conversation_id is None:
+        conversation_id = request_body['history_metadata']['conversation_id']
+
     messages = []
     if not SHOULD_USE_DATA:
         messages = [{"role": "system", "content": AZURE_OPENAI_SYSTEM_MESSAGE}]
@@ -756,7 +806,7 @@ def prepare_model_args(request_body, request_headers):
     }
 
     if SHOULD_USE_DATA:
-        model_args["extra_body"] = {"data_sources": [get_configured_data_source()]}
+        model_args["extra_body"] = {"data_sources": [get_configured_data_source(conversation_id)]}
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -830,6 +880,41 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
+async def docupload_delete_by_tag(tagName, tagValue):
+    if DOCUPLOAD_DELETE_BLOB_ON_CONVERSATION_DELETE:
+        # Azure storage connection string
+        connect_str = DOCUPLOAD_BLOB_CONNECTION_STRING
+        # Create the BlobServiceClient object which will be used to create a container client
+        blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+
+        # Remove blobs
+        container_client = blob_service_client.get_container_client(DOCUPLOAD_AZURE_BLOB_CONTAINER)
+        query = f"\"{tagName}\" = '{tagValue}'"
+            # List blobs in the container
+
+        blob_pages = container_client.find_blobs_by_tags(query)
+        # Print the names of the blobs that were found
+        for blob in blob_pages:
+            container_client.delete_blob(blob)
+            logging.debug(f"Conversation deleting - deleting {blob.name} tagged {tagName} = {tagValue}")
+
+    
+    if DOCUPLOAD_DELETE_INDEX_DOCUMENT_ON_CONVERSATION_DELETE:
+        # remove from inxdex
+        credential = AzureKeyCredential(AZURE_SEARCH_KEY)
+        search_client = SearchClient(endpoint=AZURE_SEARCH_ENDPOINT, index_name=AZURE_SEARCH_INDEX, credential=credential)
+
+        query = f"@{tagName} eq '{tagValue}'"
+        results = search_client.search(search_text=query)
+
+        # Delete documents based on their key
+        count = 0
+        for result in results:
+            index_key = result[DOCUPLOAD_INDEX_DOCUMENT_KEY]
+            search_client.delete_documents(documents=[{DOCUPLOAD_INDEX_DOCUMENT_KEY: index_key}] )
+            count = count + 1
+        logging.debug(f"Deleted {count} index document {DOCUPLOAD_INDEX_DOCUMENT_KEY} from {AZURE_SEARCH_INDEX} tagged with {query}")
+
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
     messages = request_body.get("messages", [])
@@ -894,6 +979,8 @@ async def conversation_internal(request_body, request_headers):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
+        
+
 
 
 @bp.route("/conversation", methods=["POST"])
@@ -912,6 +999,149 @@ def get_frontend_settings():
     except Exception as e:
         logging.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
+    
+@bp.route("/document/index", methods=["POST"])
+async def index_document():
+    # Upload the created file
+    try:
+        data = await request.get_json()
+        uniqueName = data['indexName']
+        credential = AzureKeyCredential(AZURE_SEARCH_KEY)
+        # Rest of the code...
+
+        indexer_client = SearchIndexerClient(AZURE_SEARCH_ENDPOINT, credential)
+        
+        indexer = await indexer_client.get_indexer(DOCUPLOAD_AZURE_SEARCH_INDEXER)
+
+        # Create a new indexer with a GUID added to the name
+        new_indexer_name = indexer.name + '-' + uniqueName
+        new_indexer = copy.deepcopy(indexer)
+        new_indexer.name = new_indexer_name
+        new_indexer.parameters.configuration.indexed_file_name_extensions = f".{uniqueName}"
+
+        # create indexer clone - newly created indexers will automatically run
+        await indexer_client.create_indexer(new_indexer)
+
+        return jsonify({"indexer_name": new_indexer_name}), 200
+    except Exception as e:
+        abort(500, description=str(e))
+
+
+@bp.route("/indexer/status", methods=["POST"])
+async def get_indexer_status():
+    try:
+        try:
+            request_json = await request.get_json()
+            indexer_name = request_json.get('indexName')
+        except Exception as e:
+            logging.exception("Exception in /indexer/status request json")
+            return jsonify({"error": str(e)}), 500
+            
+        credential = AzureKeyCredential(AZURE_SEARCH_KEY)
+        indexer_client = SearchIndexerClient(AZURE_SEARCH_ENDPOINT, credential)
+        indexer_status = await indexer_client.get_indexer_status(indexer_name)
+        status = "notStarted"
+        # Parse and add variables for each piece of information that the status check returns
+        if (indexer_status.last_result is not None): 
+            status = str(indexer_status.last_result.status)
+        
+        if (status == "success" or status == "transientFailure"):
+            await indexer_client.delete_indexer(indexer_name)
+
+        return jsonify({"status": status}), 200
+    except Exception as e:
+        logging.exception("Exception in /indexer/status")
+        return jsonify({"error": str(e)}), 500  
+    
+def get_stream_size(stream):
+    original_position = stream.tell()
+    stream.seek(0, 2)  # Seek to the end of the stream
+    size = stream.tell()
+    stream.seek(original_position, 0)  # Return to the original position
+    logging.info(size)
+    return size
+
+@bp.route("/document/upload", methods=["POST"])
+async def upload_document():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user['user_principal_id']
+    files = await request.files
+    
+    file = files.get('file')
+    filename = ''
+    if file:
+        filename = file.filename
+
+    uniqueId = str(uuid.uuid4())
+    conversation_id = ""
+    file_size = get_stream_size(file)
+    
+    try :
+        conversation_id = (await request.form)['conversationId']
+    except Exception as e:
+        try:
+            # make sure cosmos is configured
+            cosmos_conversation_client = init_cosmosdb_client()
+            if not cosmos_conversation_client:
+                raise Exception("CosmosDB is not configured or not working")
+
+            # check for the conversation_id, if the conversation is not set, we will create a new one
+            history_metadata = {}
+            title = await generate_title([{'role': 'user', 'content': filename}])
+            conversation_dict = await cosmos_conversation_client.create_conversation(user_id=user_id, title=title)
+            conversation_id = conversation_dict['id']
+            history_metadata['title'] = title
+            history_metadata['date'] = conversation_dict['createdAt']
+                
+            ## Format the incoming message object in the "chat/completions" messages format
+            ## then write it to the conversation history in cosmos
+            messages = [{'role': 'user', 'content': filename}]
+            createdMessageValue = await cosmos_conversation_client.create_message(
+                    uuid=str(uuid.uuid4()),
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    input_message=messages[0]
+                )
+            if createdMessageValue == "Conversation not found":
+                raise Exception("Conversation not found for the given conversation ID: " + conversation_id + ".")
+            
+            await cosmos_conversation_client.cosmosdb_client.close()
+        
+        except Exception as e:
+            logging.exception("Exception in /document/upload")
+            return jsonify({"error": str(e)}), 500
+            
+
+    # Azure storage connection string
+    connect_str = DOCUPLOAD_BLOB_CONNECTION_STRING
+    # Create the BlobServiceClient object which will be used to create a container client
+    blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+
+    if 'file' not in await request.files:
+        abort(400, description='No file part')
+    file = (await request.files)['file']
+    if file.filename == '':
+        abort(400, description='No selected file')
+
+    # Create a blob client using the local file name as the name for the blob
+        
+    blob_name = f"{user_id}/{conversation_id}/{file.filename}.{uniqueId}"
+    if DOCUPLOAD_AZURE_BLOB_FOLDER:
+        blob_name = f"{DOCUPLOAD_AZURE_BLOB_FOLDER}/{blob_name}"
+    blob_client = blob_service_client.get_blob_client(DOCUPLOAD_AZURE_BLOB_CONTAINER, blob_name)
+
+    # Define metadata
+    metadata = {'user_id': user_id, 'conversation_id': conversation_id}
+    tags = {'user_id': user_id, 'conversation_id': conversation_id}
+
+    # Upload the created file
+    try:
+        blob_client.upload_blob(file.read(), metadata=metadata, tags=tags)
+        return jsonify({"conversation_id": conversation_id, "index_id": uniqueId, "document_name": filename}), 200
+    except Exception as e:
+        logging.exception("Exception in /document/upload")
+        return jsonify({"error": str(e)}), 500
+
 
 
 ## Conversation History API ##
@@ -1079,10 +1309,13 @@ async def delete_conversation():
     ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
+    
     try:
         if not conversation_id:
             return jsonify({"error": "conversation_id is required"}), 400
+
+        if DOCUPLOAD_ENABLED:
+            await docupload_delete_by_tag("conversation_id", f"{conversation_id}")
 
         ## make sure cosmos is configured
         cosmos_conversation_client = init_cosmosdb_client()
@@ -1266,6 +1499,10 @@ async def delete_all_conversations():
             deleted_conversation = await cosmos_conversation_client.delete_conversation(
                 user_id, conversation["id"]
             )
+
+            if DOCUPLOAD_ENABLED:
+                await docupload_delete_by_tag("conversaton_id", conversation['id'])
+
         await cosmos_conversation_client.cosmosdb_client.close()
         return (
             jsonify(

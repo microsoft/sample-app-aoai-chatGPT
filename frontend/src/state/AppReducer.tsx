@@ -60,6 +60,11 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
         ...state,
         currentChat: updatedCurrentChat
       }
+    case 'SET_ACTIVE_CONVERSATION_ID':
+      return {
+        ...state,
+        currentChat: state.chatHistory?.find(chat => chat.id === action.payload) ?? null
+      }
     case 'FETCH_CHAT_HISTORY':
       return { ...state, chatHistory: action.payload }
     case 'SET_COSMOSDB_STATUS':
