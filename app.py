@@ -37,10 +37,10 @@ from PyPDF2 import PdfReader
 import aiofiles
 from pdf2image import convert_from_path
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import fitz
 
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -1428,7 +1428,7 @@ async def readFile():
         if file.filename.endswith('.docx'):
             text = read_docx(file_path)
         elif file.filename.endswith('.pdf'):
-            text = read_pdf(file_path)
+            text = is_pdf_searchable(file_path)
         elif file.filename.endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff')):
             text = read_image(file_path)
         elif file.filename.endswith('.txt'):
@@ -1449,6 +1449,18 @@ async def readFile():
         logging.exception("Exception in /parse/file")
         return jsonify({"error": str(e)}), 500
 
+
+def is_pdf_searchable(pdf_path):
+    # Open the PDF file
+    document = fitz.open(pdf_path)
+    
+    for page_num in range(len(document)):
+        page = document.load_page(page_num)
+        text = page.get_text()
+        if text.strip():
+            return pdf_to_text(pdf_path)  # If any page contains text, the document is searchable
+    
+    return read_pdf(pdf_path)  
 
 def read_docx(file_path):
     try:
@@ -1487,6 +1499,19 @@ def read_image(file_path):
     text = pytesseract.image_to_string(gray, config='--psm 6')
     return text
 
+def pdf_to_text(pdf_path):
+    # Open the PDF file
+    document = fitz.open(pdf_path)
+    text = ""
+
+    # Iterate through each page
+    for page_num in range(len(document)):
+        page = document.load_page(page_num)
+        text += page.get_text()
+
+    return text
+
+
 def process_image(image):
     # Convert the image to an OpenCV format (numpy array)
     image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -1503,6 +1528,7 @@ def process_image(image):
     # plt.show()
 
     return gray
+
 
 def read_pdf(file_path):
     try:

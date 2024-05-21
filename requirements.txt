@@ -16,3 +16,4 @@ pytesseract
 pdf2image
 opencv-python-headless
 matplotlib
+pymupdf
