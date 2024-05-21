@@ -238,6 +238,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     service: str = Field(exclude=True)
+    endpoint_suffix: str = Field(default="search.windows.net", exclude=True)
     index: str = Field(serialization_alias="index_name")
     key: Optional[str] = Field(default=None, exclude=True)
     use_semantic_search: bool = Field(default=False, exclude=True)
@@ -273,7 +274,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     
     @model_validator(mode="after")
     def set_endpoint(self) -> Self:
-        self.endpoint = f"https://{self.service}.search.windows.net"
+        self.endpoint = f"https://{self.service}.{self.endpoint_suffix}"
         return self
     
     @model_validator(mode="after")
