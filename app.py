@@ -395,7 +395,7 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def get_configured_data_source():
+def get_configured_data_source(case_id):
     data_source = {}
     query_type = "simple"
     if DATASOURCE_TYPE == "AzureCognitiveSearch":
@@ -421,6 +421,14 @@ def get_configured_data_source():
 
             filter = generateFilterString(userToken)
             logging.debug(f"FILTER: {filter}")
+
+
+        if filter and case_id:
+            filter = filter + " && search.ismatch('/"+ case_id +"/','sfUrl')"
+        elif case_id:
+            filter = "search.ismatch('/"+ case_id +"/','sfUrl')"
+
+        logging.debug(f"FILTER AAAAA: {filter}")
 
         # Set authentication
         authentication = {}
@@ -726,6 +734,7 @@ def get_configured_data_source():
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
+    case_id = request_body.get("CaseID", None)
     messages = []
     if not SHOULD_USE_DATA:
         messages = [{"role": "system", "content": AZURE_OPENAI_SYSTEM_MESSAGE}]
@@ -764,7 +773,7 @@ def prepare_model_args(request_body, request_headers):
     }
 
     if SHOULD_USE_DATA:
-        model_args["extra_body"] = {"data_sources": [get_configured_data_source()]}
+        model_args["extra_body"] = {"data_sources": [get_configured_data_source(case_id)]}
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
