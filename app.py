@@ -428,8 +428,6 @@ def get_configured_data_source(case_id):
         elif case_id:
             filter = "search.ismatch('/"+ case_id +"/','sfUrl')"
 
-        logging.debug(f"FILTER AAAAA: {filter}")
-
         # Set authentication
         authentication = {}
         if AZURE_SEARCH_KEY:
