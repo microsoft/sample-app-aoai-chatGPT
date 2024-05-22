@@ -20,6 +20,7 @@ from azure.identity.aio import (
     get_bearer_token_provider
 )
 from backend.auth.auth_utils import get_authenticated_user_details
+from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
@@ -87,6 +88,10 @@ frontend_settings = {
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
 }
+
+
+# Enable Microsoft Defender for Cloud Integration
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 
 # Initialize Azure OpenAI Client
@@ -179,7 +184,7 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def prepare_model_args(request_body):
+def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
     if not app_settings.datasource:
@@ -199,6 +204,11 @@ def prepare_model_args(request_body):
                 }
             )
 
+    user_json = None
+    if (MS_DEFENDER_ENABLED):
+        authenticated_user_details = get_authenticated_user_details(request_headers)
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers)
+
     model_args = {
         "messages": messages,
         "temperature": app_settings.azure_openai.temperature,
@@ -207,6 +217,7 @@ def prepare_model_args(request_body):
         "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model,
+        "user": user_json
     }
 
     if app_settings.datasource:
@@ -290,15 +301,15 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request):
+async def send_chat_request(request_body, request_headers):
     filtered_messages = []
-    messages = request.get("messages", [])
+    messages = request_body.get("messages", [])
     for message in messages:
         if message.get("role") != 'tool':
             filtered_messages.append(message)
             
-    request['messages'] = filtered_messages
-    model_args = prepare_model_args(request)
+    request_body['messages'] = filtered_messages
+    model_args = prepare_model_args(request_body, request_headers)
 
     try:
         azure_openai_client = init_openai_client()
@@ -312,7 +323,7 @@ async def send_chat_request(request):
     return response, apim_request_id
 
 
-async def complete_chat_request(request_body):
+async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
@@ -323,13 +334,13 @@ async def complete_chat_request(request_body):
             app_settings.promptflow.citations_field_name
         )
     else:
-        response, apim_request_id = await send_chat_request(request_body)
+        response, apim_request_id = await send_chat_request(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-async def stream_chat_request(request_body):
-    response, apim_request_id = await send_chat_request(request_body)
+async def stream_chat_request(request_body, request_headers):
+    response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
     
     async def generate():
@@ -339,16 +350,16 @@ async def stream_chat_request(request_body):
     return generate()
 
 
-async def conversation_internal(request_body):
+async def conversation_internal(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream:
-            result = await stream_chat_request(request_body)
+            result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
             return response
         else:
-            result = await complete_chat_request(request_body)
+            result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
 
     except Exception as ex:
@@ -365,7 +376,7 @@ async def conversation():
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
 
-    return await conversation_internal(request_json)
+    return await conversation_internal(request_json, request.headers)
 
 
 @bp.route("/frontend_settings", methods=["GET"])
@@ -429,7 +440,7 @@ async def add_conversation():
         request_body = await request.get_json()
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
-        return await conversation_internal(request_body)
+        return await conversation_internal(request_body, request.headers)
 
     except Exception as e:
         logging.exception("Exception in /history/generate")

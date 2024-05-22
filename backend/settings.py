@@ -238,8 +238,8 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["azure_search"] = PrivateAttr(default="azure_search")
-    
     service: str = Field(exclude=True)
+    endpoint_suffix: str = Field(default="search.windows.net", exclude=True)
     index: str = Field(serialization_alias="index_name")
     key: Optional[str] = Field(default=None, exclude=True)
     use_semantic_search: bool = Field(default=False, exclude=True)
@@ -275,7 +275,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     
     @model_validator(mode="after")
     def set_endpoint(self) -> Self:
-        self.endpoint = f"https://{self.service}.search.windows.net"
+        self.endpoint = f"https://{self.service}.{self.endpoint_suffix}"
         return self
     
     @model_validator(mode="after")
@@ -344,7 +344,6 @@ class _AzureCosmosDbMongoVcoreSettings(
         env_ignore_empty=True
     )
     _type: Literal["azure_cosmosdb"] = PrivateAttr(default="azure_cosmosdb")
-    
     query_type: Literal['vector'] = "vector"
     connection_string: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -411,7 +410,6 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["elasticsearch"] = PrivateAttr(default="elasticsearch")
-    
     endpoint: str
     encoded_api_key: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -549,7 +547,6 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["azure_ml_index"] = PrivateAttr(default="azure_ml_index")
-    
     name: str
     version: str
     project_resource_id: str = Field(validation_alias="AZURE_ML_PROJECT_RESOURCE_ID")
