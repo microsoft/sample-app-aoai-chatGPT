@@ -18,8 +18,13 @@
           "-p 50505"
       ],
       "console": "integratedTerminal",
-      "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env",
-  }
+      "justMyCode": false
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Frontend: Launch Chrome debugger",
+      "url": "http://127.0.0.1:50505"
+    }
   ]
 }
