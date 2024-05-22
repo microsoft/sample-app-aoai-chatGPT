@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && node --max_old_space_size=8192 ./node_modules/vite/bin/vite.js build",
-    "watch": "tsc && vite build --watch",
+    "watch": "tsc && node --max_old_space_size=8192 ./node_modules/vite/bin/vite.js --watch",
     "test": "jest",
     "lint": "npx eslint src",
     "lint:fix": "npx eslint --fix",
