@@ -46,5 +46,5 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Test with pytest
       run: |
-        set "PYTHONPATH=%cd%"
+        $env:PYTHONPATH=$pwd
         pytest -v --show-capture=stdout -k "not integration"
