@@ -24,11 +24,13 @@ def script_command():
 
 
 def test_startup_script(script_command):
+    stdout = None
     try:
         p = Popen([script_command], cwd=script_base_path)
         stdout, _ = p.communicate(timeout=script_timeout)
         
     except TimeoutExpired:
+        assert isinstance(stdout, str)
         assert "127.0.0.1:50505" in stdout
         p.terminate()
 
