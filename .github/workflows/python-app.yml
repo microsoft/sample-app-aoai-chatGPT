@@ -31,5 +31,4 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Test with pytest
       run: |
-        export PYTHONPATH=$(pwd)
-        pytest -v --show-capture=stdout -k "not integration"
+        PYTHONPATH=. pytest -v --show-capture=stdout -k "not integration"
