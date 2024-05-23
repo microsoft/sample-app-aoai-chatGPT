@@ -14,6 +14,7 @@ from pydantic import (
     ValidationError,
     ValidationInfo
 )
+from pydantic.alias_generators import to_snake
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Literal, Optional
 from typing_extensions import Self
@@ -254,7 +255,9 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         'vector',
         'semantic',
         'vector_simple_hybrid',
-        'vector_semantic_hybrid'
+        'vectorSimpleHybrid',
+        'vector_semantic_hybrid',
+        'vectorSemanticHybrid'
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
     
@@ -297,6 +300,10 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             "vector_fields": self.vector_columns
         }
         return self
+    
+    @model_validator(mode="after")
+    def set_query_type(self) -> Self:
+        self.query_type = to_snake(self.query_type)
 
     def _set_filter_string(self, request: Request) -> str:
         if self.permitted_groups_column:
