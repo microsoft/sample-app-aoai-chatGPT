@@ -13,36 +13,24 @@ FORM_RECOGNIZER_KEY = os.getenv("FORM_RECOGNIZER_KEY")
 with open("./config.json", "r") as f:
     config = json.loads(f.read())
 
+# this is an example, 
+# it address how to handle subfolders 
+# it also provide option wether to use form recognizer
 run_config_by_data_path_3_small_512_512 = {
     "aks": "aks_embed_003_small_512_512_index",
     "azure-docs": {
         "index": "azure_embed_003_small_512_512_index",
         "subfolder": "azure-docs",
     },
-    "Mercedes": "mercedes_embed_003_small_512_512_index",
-    "merge_contact": {
-        "index": "merge_contact_embed_003_small_512_512_index",
-        "form-rec-use-layout": False,
-    },
-    "nyc": "nyc_embed_003_small_512_512_index",
-    "Premera": "premera_embed_003_small_512_512_index",
-    "product-info": {
-        "index": "product_info_embed_003_small_512_512_index",
-        "subfolder": "product-info",
-    },
     "test_loranorm": {
         "index": "test_loranorm_embed_003_small_512_512_index",
         "form-rec-use-layout": False,
     },
-    "tprompt": {
-        "index": "tprompt_embed_003_small_512_512_index",
-        "subfolder": "source",
-    },
-    "yw": "yw_embed_003_small_512_512_index",
     
 }
 
 for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
+    # folder is where data is saved
     folder = os.path.join("../../data/gptassertdata/index_data", key)
     
     if isinstance(cfg, str):
@@ -69,7 +57,7 @@ for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
         "--config",
         f"config.{key}.json",
         "--embedding-model-endpoint",
-        '"https://wed-aiq-aoai-eus.openai.azure.com/openai/deployments/text-embedding-3-small/embeddings?api-version=2024-02-15-preview"',
+        '"EMBEDDING_MODEL_ENDPOINT',
         "--form-rec-resource",
         "test-tprompt",
         "--form-rec-key",
