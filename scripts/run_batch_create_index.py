@@ -31,7 +31,7 @@ run_config_by_data_path_3_small_512_512 = {
 
 for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
     # folder is where data is saved
-    folder = os.path.join("../../data/gptassertdata/index_data", key)
+    folder = os.path.join("/index_data", key)
     
     if isinstance(cfg, str):
         index = cfg
@@ -57,7 +57,7 @@ for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
         "--config",
         f"config.{key}.json",
         "--embedding-model-endpoint",
-        '"EMBEDDING_MODEL_ENDPOINT',
+        '"EMBEDDING_MODEL_ENDPOINT"',
         "--form-rec-resource",
         "test-tprompt",
         "--form-rec-key",
