@@ -23,9 +23,15 @@ def app_settings(dotenv_path):
     yield getattr(settings_module, "app_settings")
 
 
-def test_dotenv_no_datasource(app_settings):    
+def test_dotenv_no_datasource_1(app_settings):    
     # Validate model object
     assert app_settings.base_settings.datasource_type is None
+    assert app_settings.datasource is None
+    assert app_settings.azure_openai is not None
+    
+    
+def test_dotenv_no_datasource_2(app_settings):    
+    # Validate model object
     assert app_settings.datasource is None
     assert app_settings.azure_openai is not None
 
