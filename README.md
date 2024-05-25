@@ -46,13 +46,14 @@ Please see the [section below](#add-an-identity-provider) for important informat
 
 3. You can see the local running app at http://127.0.0.1:50505.
 
-#### Local Setup: Chat with your data (Preview)
+#### Local Setup: Chat with your data using Azure Cognitive Search
 [More information about Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/use-your-data)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above. 
 2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
 
     These variables are required when adding your data with Azure AI Search:
+    - `DATASOURCE_TYPE` (should be set to `AzureCognitiveSearch`)
     - `AZURE_SEARCH_SERVICE`
     - `AZURE_SEARCH_INDEX`
     - `AZURE_SEARCH_KEY`
