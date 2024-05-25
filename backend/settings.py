@@ -239,6 +239,9 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["azure_search"] = PrivateAttr(default="azure_search")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     service: str = Field(exclude=True)
     endpoint_suffix: str = Field(default="search.windows.net", exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -417,6 +420,9 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["elasticsearch"] = PrivateAttr(default="elasticsearch")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     endpoint: str
     encoded_api_key: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
