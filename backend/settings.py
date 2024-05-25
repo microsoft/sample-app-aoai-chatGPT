@@ -683,35 +683,39 @@ class _AppSettings(BaseModel):
     
     @model_validator(mode="after")
     def set_datasource_settings(self) -> Self:
-        if self.base_settings.datasource_type == "AzureCognitiveSearch":
-            self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure Cognitive Search")
-           
-        elif self.base_settings.datasource_type == "AzureCosmosDB":
-            self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure CosmosDB Mongo vcore")
-           
-        elif self.base_settings.datasource_type == "Elasticsearch":
-            self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Elasticsearch")
-           
-        elif self.base_settings.datasource_type == "Pinecone":
-            self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Pinecone")
-        
-        elif self.base_settings.datasource_type == "AzureMLIndex":
-            self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure ML Index")
-        
-        elif self.base_settings.datasource_type == "AzureSqlServer":
-            self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using SQL Server")
+        try:
+            if self.base_settings.datasource_type == "AzureCognitiveSearch":
+                self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure Cognitive Search")
             
-        else:
-            self.datasource = None
+            elif self.base_settings.datasource_type == "AzureCosmosDB":
+                self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure CosmosDB Mongo vcore")
+            
+            elif self.base_settings.datasource_type == "Elasticsearch":
+                self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Elasticsearch")
+            
+            elif self.base_settings.datasource_type == "Pinecone":
+                self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Pinecone")
+            
+            elif self.base_settings.datasource_type == "AzureMLIndex":
+                self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure ML Index")
+            
+            elif self.base_settings.datasource_type == "AzureSqlServer":
+                self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using SQL Server")
+                
+            else:
+                self.datasource = None
+                logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
+                
+            return self
+
+        except ValidationError:
             logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
-            
-        return self
 
 
 app_settings = _AppSettings()
