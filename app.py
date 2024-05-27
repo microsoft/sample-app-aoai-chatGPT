@@ -29,15 +29,6 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-
-from flask import Flask, request, Response
-
-app = Flask(__name__)
-
-@app.after_request
-def set_x_frame_options(response):
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    return response
     
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
