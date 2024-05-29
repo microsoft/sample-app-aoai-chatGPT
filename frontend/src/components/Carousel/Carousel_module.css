@@ -27,6 +27,8 @@
     line-height: 150%;
     letter-spacing: -0.01em;
     color: #616161;
+    height: 63px;
+    overflow-y: hidden;
 }
 
 .chatGridModel {

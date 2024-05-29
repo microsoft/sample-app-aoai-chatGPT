@@ -41,6 +41,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import fitz
+import webvtt
+import csv
 
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -263,6 +265,7 @@ UI_PRECANNED_PROMPT_DESCRIPTIONS = os.environ.get("UI_PRECANNED_PROMPT_DESCRIPTI
 UI_CHAT_EMPTY_TEXT_HINT = os.environ.get("UI_CHAT_EMPTY_TEXT_HINT")
 UI_INPUT_FILE_SIZE_LIMIT = os.environ.get("UI_INPUT_FILE_SIZE_LIMIT")
 IMAGE_TO_TEXT_ENABLED = os.environ.get("IMAGE_TO_TEXT_ENABLED")
+MAX_NUM_FILES_INPUT_ALLOWED = os.environ.get("MAX_NUM_FILES_INPUT_ALLOWED")
 # Frontend Settings via Environment Variables
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 CHAT_HISTORY_ENABLED = (
@@ -290,6 +293,7 @@ frontend_settings = {
     "precanned_prompt_descriptions": UI_PRECANNED_PROMPT_DESCRIPTIONS,
     "file_size_limit": UI_INPUT_FILE_SIZE_LIMIT,   
     "image_to_text_enabled": IMAGE_TO_TEXT_ENABLED,
+    "image_uploade_limit": MAX_NUM_FILES_INPUT_ALLOWED,
 }
 }
 
@@ -1409,7 +1413,7 @@ async def readFile():
         file = files['file']
 
         # Check if the file has an allowed extension (e.g., .docx, .pdf, or .txt)
-        allowed_extensions = ['.docx', '.pdf', '.txt','.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff']
+        allowed_extensions = ['.docx', '.pdf', '.txt','.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff',".vtt",".csv"]
         if file.filename == '' or not any(file.filename.endswith(ext) for ext in allowed_extensions):
             return jsonify({'error': 'Invalid file type. Please upload a .docx, .pdf, or .txt file'}), 400
         
@@ -1433,6 +1437,11 @@ async def readFile():
             text = read_image(file_path)
         elif file.filename.endswith('.txt'):
             text = read_txt(file_path)
+        elif file.filename.endswith('.vtt'):
+            text = read_vtt_file(file_path)
+        elif file.filename.endswith('.csv'):
+            text = read_csv_file(file_path)
+            print("+++++++++++++++++++++",text)
         else:
             return jsonify({'error': 'Unsupported file type'}), 400
 
@@ -1448,7 +1457,21 @@ async def readFile():
     except Exception as e:
         logging.exception("Exception in /parse/file")
         return jsonify({"error": str(e)}), 500
+    
+def read_vtt_file(file_path):
+    vtt_text = ''
+    for caption in webvtt.read(file_path):
+        # vtt_text += f"{caption.start} --> {caption.end}\n{caption.text}\n\n"
+        vtt_text += f"{caption.text}"
+    return vtt_text
 
+def read_csv_file(file_path):
+    data = []
+    with open(file_path, 'r') as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            data.append(f"{row}\n")
+    return data
 
 def is_pdf_searchable(pdf_path):
     # Open the PDF file

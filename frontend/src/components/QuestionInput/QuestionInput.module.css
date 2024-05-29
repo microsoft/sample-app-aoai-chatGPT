@@ -60,21 +60,26 @@
 }
 
 .question_style {
-  width: 90%;
+  width: 92%;
 }
+.image_flex{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .text_prompt {
   background-color: #8dddd8;
-  padding: 5px 10px;
+  padding: 5px 7px;
   width: fit-content;
   border-radius: 10px;
   opacity: 0.5;
   color: #0f6cbd;
-  margin-left: 20px;
   margin-top: 5px;
   margin-bottom: -10px;
   font-weight: 500;
   display: flex;
-  gap: 10px;
+  gap: 6px;
 }
 .close {
   color: black;
@@ -88,6 +93,48 @@
   padding-left: 15px;
 }
 
+.circleProgressContainer {
+  position: relative;
+  width: 42px; /* Adjust the width and height as needed */
+  height: 34px;
+  margin-top: -6px;
+}
+
+.circleProgress {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.circleProgress svg {
+  width: 100%;
+  height: 100%;
+}
+
+.circleProgress circle {
+  fill: none;
+  stroke-width: 4; /* Adjust the stroke width as needed */
+}
+
+.circleProgress .circleBackground {
+  stroke: #f0f0f0; /* Background color */
+}
+
+.circleProgress .circleProgressIndicator {
+  stroke: #0078d4; /* Progress color */
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s;
+}
+
+.circlePercentage {
+  position: absolute;
+  top: 47%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px; /* Adjust font size as needed */
+  font-weight: bold;
+  fill: #000; /* Text color */
+}
 .fileInput_lable {
   cursor: pointer;
 }

@@ -118,6 +118,7 @@ export type GridModel = {
     precanned_prompt_descriptions?: string | null;
     file_size_limit?: number | null;
     image_to_text_enabled?: string | null;
+    image_uploade_limit?: number | null;
 }
 export type FrontendSettings = {
     auth_enabled?: string | null;
