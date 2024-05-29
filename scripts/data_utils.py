@@ -651,6 +651,7 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
     
     FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
     FLAG_COHERE = os.getenv("FLAG_COHERE", "ENGLISH")
+    FLAG_AOAI = os.getenv("FLAG_AOAI", "V3")
 
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
@@ -666,8 +667,13 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
             else:
                 api_key = embedding_model_key if embedding_model_key else os.getenv("AZURE_OPENAI_API_KEY")
             
-            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
-            embeddings = client.embeddings.create(model=deployment_id, input=text)
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
+            if FLAG_AOAI == "V2":
+                embeddings = client.embeddings.create(model=deployment_id, input=text)
+            elif FLAG_AOAI == "V3":   
+                embeddings = client.embeddings.create(model=deployment_id, 
+                                                      input=text, 
+                                                      dimensions=int(os.getenv("VECTOR_DIMENSION", 1536)))
             
             return embeddings.dict()['data'][0]['embedding']
         

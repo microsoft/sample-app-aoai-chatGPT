@@ -1,0 +1,79 @@
+DATASOURCE_TYPE={{ datasourceType }}
+AZURE_OPENAI_ENDPOINT={{ azureOpenaiEndpoint }}
+AZURE_OPENAI_MODEL={{ azureOpenaiModel }}
+AZURE_OPENAI_KEY={{ azureOpenaiKey }}
+AZURE_OPENAI_TEMPERATURE=0
+AZURE_OPENAI_TOP_P=1.0
+AZURE_OPENAI_MAX_TOKENS=1000
+AZURE_OPENAI_STOP_SEQUENCE=
+AZURE_OPENAI_SYSTEM_MESSAGE=You are an AI assistant that helps people find information.
+AZURE_OPENAI_PREVIEW_API_VERSION=2024-05-01-preview
+AZURE_OPENAI_STREAM={{ azureOpenaiStream }}
+{% if useAoaiEmbeddings and azureOpenaiEmbeddingName %}
+AZURE_OPENAI_EMBEDDING_NAME={{ azureOpenaiEmbeddingName }}
+{% endif %}
+{% if useAoaiEmbeddings %}
+AZURE_OPENAI_EMBEDDING_ENDPOINT={{ azureOpenaiEndpoint }}/openai/deployments/ada/embeddings??api-version=2023-03-15-preview
+AZURE_OPENAI_EMBEDDING_KEY={{ azureOpenaiKey }}
+{% endif %}
+{% if enableChatHistory %}
+AZURE_COSMOSDB_ACCOUNT={{ azureCosmosdbAccount }}
+AZURE_COSMOSDB_DATABASE={{ azureCosmosdbDatabase }}
+AZURE_COSMOSDB_CONVERSATIONS_CONTAINER={{ azureCosmosdbConversationsContainer }}
+AZURE_COSMOSDB_ACCOUNT_KEY={{ azureCosmosdbAccountKey }}
+AZURE_COSMOSDB_ENABLE_FEEDBACK={{ azureCosmosdbEnableFeedback }}
+{% endif %}
+{% if datasourceType == "AzureCognitiveSearch" %}
+AZURE_SEARCH_SERVICE={{ azureSearchService }}
+AZURE_SEARCH_INDEX={{ azureSearchIndex }}
+AZURE_SEARCH_KEY={{ azureSearchKey }}
+AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG=
+AZURE_SEARCH_CONTENT_COLUMNS=content
+AZURE_SEARCH_FILENAME_COLUMN=
+AZURE_SEARCH_TITLE_COLUMN=
+AZURE_SEARCH_URL_COLUMN=
+AZURE_SEARCH_VECTOR_COLUMNS=contentVector
+AZURE_SEARCH_QUERY_TYPE={{ azureSearchQueryType }}
+AZURE_SEARCH_PERMITTED_GROUPS_COLUMN={{ azureSearchPermittedGroupsColumn }}
+{% elif datasourceType == "Elasticsearch" %}
+ELASTICSEARCH_ENDPOINT={{ elasticsearchEndpoint }}
+ELASTICSEARCH_ENCODED_API_KEY={{ elasticsearchEncodedApiKey }}
+ELASTICSEARCH_INDEX={{ elasticsearchIndex }}
+ELASTICSEARCH_QUERY_TYPE={{ elasticsearchQueryType }}
+ELASTICSEARCH_CONTENT_COLUMNS=text
+ELASTICSEARCH_FILENAME_COLUMN=
+ELASTICSEARCH_TITLE_COLUMN=
+ELASTICSEARCH_URL_COLUMN=
+ELASTICSEARCH_VECTOR_COLUMNS=text_embedding.predicted_value
+{% if useElasticsearchEmbeddings and elasticsearchEmbeddingModelId %}
+ELASTICSEARCH_EMBEDDING_MODEL_ID={{ elasticsearchEmbeddingModelId }}
+{% endif %}
+{% elif datasourceType == "AzureCosmosDb" %}
+AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING={{ azureCosmosdbMongoVcoreConnectionString }}
+AZURE_COSMOSDB_MONGO_VCORE_DATABASE={{ azureCosmosdbMongoVcoreDatabase }}
+AZURE_COSMOSDB_MONGO_VCORE_CONTAINER={{ azureCosmosdbMongoVcoreContainer }}
+AZURE_COSMOSDB_MONGO_VCORE_INDEX={{ azureCosmosdbMongoVcoreIndex }}
+AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS={{ azureCosmosdbMongoVcoreContentColumns }}
+AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN=
+AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN=
+AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN=
+AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS={{ azureCosmosdbMongoVcoreVectorColumns }}
+{% elif datasourceType == "Pinecone" %}
+PINECONE_ENVIRONMENT={{ pineconeEnvironment }}
+PINECONE_API_KEY={{ pineconeApiKey }}
+PINECONE_INDEX_NAME={{ pineconeIndexName }}
+PINECONE_CONTENT_COLUMNS={{ pineconeContentColumns }}
+PINECONE_FILENAME_COLUMN=
+PINECONE_TITLE_COLUMN=
+PINECONE_URL_COLUMN=
+PINECONE_VECTOR_COLUMNS={{ pineconeVectorColumns }}
+{% elif datasourceType == "AzureMLIndex" %}
+AZURE_MLINDEX_NAME={{ azureMlIndexName }}
+AZURE_MLINDEX_VERSION={{ azureMlIndexVersion }}
+AZURE_ML_PROJECT_RESOURCE_ID={{ azureMlProjectResourceId }}
+AZURE_MLINDEX_CONTENT_COLUMNS={{ azureMlIndexContentColumns }}
+AZURE_MLINDEX_FILENAME_COLUMN=
+AZURE_MLINDEX_TITLE_COLUMN= 
+AZURE_MLINDEX_URL_COLUMN= 
+AZURE_MLINDEX_VECTOR_COLUMNS={{ azureMlIndexVectorColumns }}
+{% endif %}

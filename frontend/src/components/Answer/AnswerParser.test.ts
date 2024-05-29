@@ -42,7 +42,8 @@ const sampleCitations: Citation[] = [
 
 const sampleAnswer: AskResponse = {
   answer: 'This is an example answer with citations [doc1] and [doc2].',
-  citations: cloneDeep(sampleCitations)
+  citations: cloneDeep(sampleCitations),
+  plotly_data: null
 }
 
 describe('enumerateCitations', () => {
