@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && build",
+    "build": "tsc && vite build",
     "watch": "tsc && vite build --watch",
     "test": "jest",
     "lint": "npx eslint src",
