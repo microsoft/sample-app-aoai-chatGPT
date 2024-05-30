@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && node --max_old_space_size=8192 ./node_modules/vite/bin/vite.js build",
     "watch": "tsc && vite build --watch",
     "test": "jest",
     "lint": "npx eslint src",
