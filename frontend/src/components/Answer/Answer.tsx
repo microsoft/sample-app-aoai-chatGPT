@@ -73,14 +73,14 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
       const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '')
       if (truncate && citation.filepath.length > filePathTruncationLimit) {
         const citationLength = citation.filepath.length
-        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`
+        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Del ${part_i}`
       } else {
-        citationFilename = `${citation.filepath} - Part ${part_i}`
+        citationFilename = `${citation.filepath} - Del ${part_i}`
       }
     } else if (citation.filepath && citation.reindex_id) {
-      citationFilename = `${citation.filepath} - Part ${citation.reindex_id}`
+      citationFilename = `${citation.filepath} - Del ${citation.reindex_id}`
     } else {
-      citationFilename = `Citation ${index}`
+      citationFilename = `Sitering ${index}`
     }
     return citationFilename
   }
@@ -183,7 +183,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
             onChange={updateFeedbackList}></Checkbox>
         </Stack>
         <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: '#115EA3', cursor: 'pointer' }}>
-          Report inappropriate content
+          Rapporter upassende innhold
         </div>
       </>
     )
@@ -305,13 +305,14 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                   <Text
                     className={styles.accordionTitle}
                     onClick={toggleIsRefAccordionOpen}
-                    aria-label="Open references"
+                    aria-label="Åpne referanser"
+                    // aria-label="Open references" 
                     tabIndex={0}
                     role="button">
                     <span>
                       {parsedAnswer.citations.length > 1
-                        ? parsedAnswer.citations.length + ' references'
-                        : '1 reference'}
+                        ? parsedAnswer.citations.length + ' referanser'
+                        : '1 referanse'}
                     </span>
                   </Text>
                   <FontIcon
@@ -324,7 +325,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
             </Stack.Item>
           )}
           <Stack.Item className={styles.answerDisclaimerContainer}>
-            <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+            <span className={styles.answerDisclaimer}>AI-generert innhold kan være unøyaktig; sjekk fakta</span>
           </Stack.Item>
         </Stack>
         {chevronIsExpanded && (
@@ -375,11 +376,11 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
           showCloseButton: true
         }}>
         <Stack tokens={{ childrenGap: 4 }}>
-          <div>Your feedback will improve this experience.</div>
+          <div>Din tilbakemelding vil forbedre brukeropplevelsen i fremtiden.</div>
 
           {!showReportInappropriateFeedback ? <UnhelpfulFeedbackContent /> : <ReportInappropriateFeedbackContent />}
 
-          <div>By pressing submit, your feedback will be visible to the application owner.</div>
+          <div>Ved å trykke på send, vil din tilbakemelding bli synlig for applikasjonseieren.</div>
 
           <DefaultButton disabled={negativeFeedbackList.length < 1} onClick={onSubmitNegativeFeedback}>
             Submit

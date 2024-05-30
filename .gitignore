@@ -7,6 +7,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 
-#ignore unwanted files
+#ignore unwanted files and folders from the original repo 
+
 data/
 notebooks/ 
