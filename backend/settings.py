@@ -41,13 +41,13 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Contoso"
+    title: str = "HR-assistent"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
-    chat_description: str = "This chatbot is configured to answer your questions"
-    favicon: str = "/favicon.ico"
-    show_share_button: bool = True
+    chat_title: str = "Start samtale"
+    chat_description: str = "Denne assistenten er utviklet for å hjelpe deg med å finne svar på dine HR og lønnsrelaterte spørsmål"
+    favicon: str = "leroy.ico"
+    show_share_button: bool = False
 
 
 class _ChatHistorySettings(BaseSettings):

@@ -10,7 +10,7 @@ import { isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
 
 import styles from './Chat.module.css'
-import Contoso from '../../assets/Contoso.svg'
+import Leroy from '../../assets/Leroy.svg'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 
 import {
@@ -84,9 +84,9 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail &&
       hideErrorDialog
     ) {
-      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
+      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Vennligst kontakt IT.`
       setErrorMsg({
-        title: 'Chat history is not enabled',
+        title: 'Chathistorikk er ikke aktiviert',
         subtitle: subtitle
       })
       toggleErrorDialog()
@@ -243,7 +243,7 @@ const Chat = () => {
     } catch (e) {
       if (!abortController.signal.aborted) {
         let errorMessage =
-          'An error occurred. Please try again. If the problem persists, please contact the site administrator.'
+          'En feil oppstod. Vennligst prøv igjen. Hvis problemet vedvarer, vennligst kontakt IT.'
         if (result.error?.message) {
           errorMessage = result.error.message
         } else if (typeof result.error === 'string') {
@@ -311,7 +311,7 @@ const Chat = () => {
       setMessages(request.messages)
     }
     let result = {} as ChatResponse
-    var errorResponseMessage = 'Please try again. If the problem persists, please contact the site administrator.'
+    var errorResponseMessage = 'En feil oppstod. Vennligst prøv igjen. Hvis problemet vedvarer, vennligst kontakt IT.'
     try {
       const response = conversationId
         ? await historyGenerate(request, abortController.signal, conversationId)
@@ -507,8 +507,8 @@ const Chat = () => {
       let response = await historyClear(appStateContext?.state.currentChat.id)
       if (!response.ok) {
         setErrorMsg({
-          title: 'Error clearing current chat',
-          subtitle: 'Please try again. If the problem persists, please contact the site administrator.'
+          title: 'Feil ved sletting av nåværende chat',
+          subtitle: 'En feil oppstod. Vennligst prøv igjen. Hvis problemet vedvarer, vennligst kontakt IT.'
         })
         toggleErrorDialog()
       } else {
@@ -546,11 +546,10 @@ const Chat = () => {
         // Returning the prettified error message
         if (reason !== '') {
           return (
-            'The prompt was filtered due to triggering Azure OpenAI’s content filtering system.\n' +
-            'Reason: This prompt contains content flagged as ' +
+            'Denne forespørselen inneholder innhold som er flagget som ' +
             reason +
             '\n\n' +
-            'Please modify your prompt and retry. Learn more: https://go.microsoft.com/fwlink/?linkid=2198766'
+            'Vennligst endre forespørselen din og prøv igjen. Lær mer:: https://go.microsoft.com/fwlink/?linkid=2198766'
           )
         }
       }
@@ -751,7 +750,7 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
+                <img src={ui?.chat_logo ? ui.chat_logo : Leroy} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
@@ -792,7 +791,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: "Genererer svar...",
                           citations: [],
                           plotly_data: null
                         }}
@@ -888,7 +887,7 @@ const Chat = () => {
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Skriv et nytt spørsmål..."
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
