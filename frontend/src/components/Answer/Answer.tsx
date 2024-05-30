@@ -324,6 +324,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
               </Stack>
             </Stack.Item>
           )}
+          <Stack.Item className={styles.answerDisclaimerContainer}>
+            <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+          </Stack.Item>
           {!!answer.exec_results?.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
               <Stack style={{ width: '100%' }}>

@@ -212,17 +212,12 @@ const Chat = () => {
           if (done) break
 
           var text = new TextDecoder('utf-8').decode(value)
-          console.log('text :', text);
           const objects = text.split('\n')
           objects.forEach(obj => {
             try {
               if (obj !== '' && obj !== '{}') {
-                // console.log('obj :', obj);
-
                 runningText += obj
-                console.log('runningText :', runningText);
                 result = JSON.parse(runningText)
-                console.log('result :', result);
                 if (result.choices?.length > 0) {
                   result.choices[0].messages.forEach(msg => {
                     msg.id = result.id
@@ -237,8 +232,6 @@ const Chat = () => {
                 } else if (result.error) {
                   throw Error(result.error)
                 }
-                // if (result.all_exec_results?.length > 0) {
-                // }
                 runningText = ''
               }
             } catch (e) {
