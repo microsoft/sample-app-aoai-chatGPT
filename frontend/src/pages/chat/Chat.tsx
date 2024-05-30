@@ -829,13 +829,19 @@ const Chat = () => {
                       icon: {
                         color: '#FFFFFF'
                       },
+                      iconHovered: {
+                        color: '#FFFFFF'
+                      },
                       iconDisabled: {
                         color: '#BDBDBD !important'
                       },
                       root: {
                         color: '#FFFFFF',
-                        background:
-                          'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                        backgroundColor: '#62417C',
+                      },
+                      rootHovered: {
+                        color: '#FFFFFF',
+                        background: '#875BA9'
                       },
                       rootDisabled: {
                         background: '#F0F0F0'
@@ -854,13 +860,19 @@ const Chat = () => {
                     icon: {
                       color: '#FFFFFF'
                     },
+                    iconHovered: {
+                      color: '#FFFFFF'
+                    },
                     iconDisabled: {
                       color: '#BDBDBD !important'
                     },
                     root: {
                       color: '#FFFFFF',
-                      background:
-                        'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                      backgroundColor: '#62417C'
+                    },
+                    rootHovered: {
+                      color: '#FFFFFF',
+                      background: '#875BA9'
                     },
                     rootDisabled: {
                       background: '#F0F0F0'
