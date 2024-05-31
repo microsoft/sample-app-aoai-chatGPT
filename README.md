@@ -109,7 +109,7 @@ Data sources are the sources that the model will use to understand the data and 
     @model_validator(mode="after")
     def set_datasource_settings(self) -> Self:
         try:
-            if self.base_settings.datasource_type == "AzureCosmosDBMongoVCore":
+            if self.base_settings.datasource_type == "AzureCosmosDB":
                 self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
                 logging.debug("Using Azure CosmosDB Mongo vcore")
             # other conditions omitted for brevity
