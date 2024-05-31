@@ -91,6 +91,14 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 /.env
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
 
+#### Local Setup: Enable SQL Server
+To enable SQL Server, you will need to set up SQL Server resources. Then specify these additional environment variables:
+- `DATASOURCE_TYPE`
+- `AZURE_SQL_SERVER_CONNECTION_STRING`
+- `AZURE_SQL_SERVER_TABLE_SCHEMA`
+
+NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
+
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
 
