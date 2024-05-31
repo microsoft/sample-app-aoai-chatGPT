@@ -20,9 +20,10 @@ import styles from './Answer.module.css'
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
+  onExectResultClicked: () => void
 }
 
-export const Answer = ({ answer, onCitationClicked }: Props) => {
+export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -227,7 +228,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
   }
 
   const components = {
-    code({ node, ...props }: { node: any; [key: string]: any }) {
+    code({ node, ...props }: { node: any;[key: string]: any }) {
       let language
       if (props.className) {
         const match = props.className.match(/language-(\w+)/)
@@ -268,7 +269,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     onClick={() => onLikeResponseClicked()}
                     style={
                       feedbackState === Feedback.Positive ||
-                      appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
+                        appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
                         ? { color: 'darkgreen', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -279,8 +280,8 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     onClick={() => onDislikeResponseClicked()}
                     style={
                       feedbackState !== Feedback.Positive &&
-                      feedbackState !== Feedback.Neutral &&
-                      feedbackState !== undefined
+                        feedbackState !== Feedback.Neutral &&
+                        feedbackState !== undefined
                         ? { color: 'darkred', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -326,6 +327,29 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
           <Stack.Item className={styles.answerDisclaimerContainer}>
             <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
           </Stack.Item>
+          {!!answer.exec_results?.length && (
+            <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
+              <Stack style={{ width: '100%' }}>
+                <Stack horizontal horizontalAlign="start" verticalAlign="center">
+                  <Text
+                    className={styles.accordionTitle}
+                    onClick={() => onExectResultClicked()}
+                    aria-label="Open exec results"
+                    tabIndex={0}
+                    role="button">
+                    <span>
+                      Show Exec Results
+                    </span>
+                  </Text>
+                  <FontIcon
+                    className={styles.accordionIcon}
+                    onClick={handleChevronClick}
+                    iconName={'ChevronRight'}
+                  />
+                </Stack>
+              </Stack>
+            </Stack.Item>
+          )}
         </Stack>
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>
