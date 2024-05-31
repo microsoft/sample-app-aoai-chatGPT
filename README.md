@@ -116,7 +116,6 @@ Data sources are the sources that the model will use to understand the data and 
         ```
 
 #### Data Source: Elasticsearch
-[More information about Elasticsearch](https://www.elastic.co/guide/index.html)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above.
 
@@ -148,10 +147,8 @@ Data sources are the sources that the model will use to understand the data and 
         ```
 
 #### Data Source: Pinecone
-[More information about Pinecone](https://docs.pinecone.io/docs/overview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above.
-2. To connect to your data, you need to specify a Pinecone index to use. You can [create this index yourself](https://docs.pinecone.io/docs/getting-started) or use the [Pinecone Console](https://app.pinecone.io/) to create the index for you.
 
     These variables are required when adding your data with Pinecone:
     - `DATASOURCE_TYPE` (should be set to `Pinecone`)
@@ -181,7 +178,6 @@ Data sources are the sources that the model will use to understand the data and 
 #### Data Source: Azure Machine Learning MLIndex
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above.
-2. To connect to your data, you need to specify an Azure MLIndex to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-azuremlindex) or use the [Azure Machine Learning Studio](https://ml.azure.com/) to create the index for you.
 
     These variables are required when adding your data with Azure MLIndex:
     - `DATASOURCE_TYPE` (should be set to `AzureMLIndex`)
