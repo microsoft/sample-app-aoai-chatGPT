@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import logging
+import re
 import uuid
 from dotenv import load_dotenv
 import httpx
@@ -41,7 +42,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import fitz
-import webvtt
 import csv
 
 
@@ -1458,16 +1458,28 @@ async def readFile():
         logging.exception("Exception in /parse/file")
         return jsonify({"error": str(e)}), 500
     
+
 def read_vtt_file(file_path):
-    vtt_text = ''
-    for caption in webvtt.read(file_path):
-        # vtt_text += f"{caption.start} --> {caption.end}\n{caption.text}\n\n"
-        vtt_text += f"{caption.text}"
-    return vtt_text
+    with open(file_path, 'r') as file:
+        vtt_content = file.read()
+
+    # Regular expression patterns to match speaker tags and dialogue
+    pattern = re.compile(r'<v\s*(.*?)>(.*?)</v>', re.DOTALL)
+
+    # Extract speaker tags and dialogue
+    dialogue = pattern.findall(vtt_content)
+
+    # Convert dialogue to dictionary with speakers as keys and their dialogue as values
+    dialogue_dict = ''
+    for speaker, line in dialogue:
+        speaker = speaker.strip()
+        line = line.strip()
+        dialogue_dict += f"{speaker} : {line}\n"
+    return dialogue_dict
 
 def read_csv_file(file_path):
     data = []
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8-sig') as file:
         csv_reader = csv.reader(file)
         for row in csv_reader:
             data.append(f"{row}\n")

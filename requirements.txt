@@ -17,5 +17,3 @@ pdf2image
 opencv-python-headless
 matplotlib
 pymupdf
-webvtt-py
-pysubs2

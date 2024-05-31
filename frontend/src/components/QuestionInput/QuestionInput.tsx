@@ -30,24 +30,30 @@ export const QuestionInput = ({
   conversationId,
   size = 0,
   ImageToTextStatus,
-  image_uploade_limit = 3
+  image_uploade_limit = 3,
 }: Props) => {
   const file_limit = parseInt(image_uploade_limit?.toString() ?? "3");
 
   const [question, setQuestion] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<ProgressState>({});
-  const [fileText, setFileText] = useState<string[]>([]);
+  const [fileText, setFileText] = useState<object[]>([]);
+  const mapData = fileText?.map((item) => {
+    return Object.entries(item);
+  });
+  const fileData = mapData?.map((item) => {
+    return item?.[0]?.[1];
+  })
 
   const sendQuestion = () => {
     if (
       disabled ||
-      (fileText.length === 0 ? !question.trim() : !fileText.join("\n\n").trim())
+      (fileData.length === 0 ? !question.trim() : !fileData.join("\n\n").trim())
     ) {
       return;
     }
 
-    const fileTexts = fileText.join("\n\n");
+    const fileTexts = fileData.join("\n\n");
     const combinedText = question ? `${fileTexts}\n\n${question}` : fileTexts;
 
     if (conversationId) {
@@ -83,17 +89,16 @@ export const QuestionInput = ({
 
   const sendQuestionDisabled =
     disabled ||
-    (fileText.length === 0 ? !question.trim() : !fileText.join("\n\n").trim());
+    (fileData.length === 0 ? !question.trim() : !fileData.join("\n\n").trim());
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
-
     if (files.length + newFiles.length > file_limit) {
       toast.error(`You can only upload up to ${file_limit} files`);
       return;
     }
 
-    for (const file of newFiles) {
+    newFiles?.map(async (file) => {
       const fileName = file.name;
       setFiles((prevFiles) => [...prevFiles, file]);
 
@@ -112,7 +117,7 @@ export const QuestionInput = ({
             ".bmp",
             ".tiff",
             ".vtt",
-            ".csv"
+            ".csv",
           ]
         : [".docx", ".pdf", ".txt"];
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
@@ -121,7 +126,6 @@ export const QuestionInput = ({
           "Unsupported file type. Please upload a .docx, .pdf, or .txt file"
         );
         setFiles((prevFiles) => prevFiles.filter((f) => f.name !== file.name));
-        continue;
       }
 
       // Check file size
@@ -134,7 +138,6 @@ export const QuestionInput = ({
           setFiles((prevFiles) =>
             prevFiles.filter((f) => f.name !== file.name)
           );
-          continue;
         }
       }
 
@@ -146,7 +149,7 @@ export const QuestionInput = ({
       } catch (error: any) {
         toast.error(`Error uploading ${file.name}: ${error.message}`);
       }
-    }
+    });
   };
 
   const uploadFileWithProgress = (file: File, formData: FormData) => {
@@ -159,7 +162,7 @@ export const QuestionInput = ({
           const percentComplete = (event.loaded / event.total) * 100;
           setProgress((prevProgress) => ({
             ...prevProgress,
-            [file.name]: percentComplete
+            [file.name]: percentComplete,
           }));
         }
       };
@@ -173,7 +176,8 @@ export const QuestionInput = ({
               prevFiles.filter((f) => f.name !== file.name)
             );
           } else {
-            setFileText((prevTexts) => [...prevTexts, data.content]);
+            let datas = { [file.name]: data.content };
+            setFileText((prevTexts) => [...prevTexts, datas]);
           }
           resolve();
         } else {
@@ -192,7 +196,9 @@ export const QuestionInput = ({
   const handleRemoveFile = (fileName: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
     setFileText((prevTexts) =>
-      prevTexts.filter((_, index) => files[index].name !== fileName)
+      prevTexts.filter((_, index) => {
+        return mapData?.[index]?.[0]?.[0] !== fileName;
+      })
     );
     setProgress((prevProgress) => {
       const { [fileName]: _, ...rest } = prevProgress;
