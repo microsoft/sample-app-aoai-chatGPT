@@ -29,6 +29,7 @@ import {
   ChatHistoryLoadingState,
   CosmosDBStatus,
   ErrorMessage,
+  ExecResults,
   AzureSqlServerCodeExecResult
 } from "../../api";
 import { Answer } from "../../components/Answer";
@@ -52,9 +53,11 @@ const Chat = () => {
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false)
   const [activeCitation, setActiveCitation] = useState<Citation>()
   const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false)
+  const [isIntentsPanelOpen, setIsIntentsPanelOpen] = useState<boolean>(false)
   const abortFuncs = useRef([] as AbortController[])
   const [showAuthMessage, setShowAuthMessage] = useState<boolean | undefined>()
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [execResults, setExecResults] = useState<ExecResults[]>([])
   const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning)
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
@@ -122,6 +125,11 @@ const Chat = () => {
   let assistantContent = ''
 
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
+    if (resultMessage.content.includes('all_exec_results')) {
+      const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
+      setExecResults(parsedExecResults.all_exec_results)
+    }
+
     if (resultMessage.role === ASSISTANT) {
       assistantContent += resultMessage.content
       assistantMessage = resultMessage
@@ -519,6 +527,7 @@ const Chat = () => {
         appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat })
         setActiveCitation(undefined)
         setIsCitationPanelOpen(false)
+        setIsIntentsPanelOpen(false)
         setMessages([])
       }
     }
@@ -584,6 +593,7 @@ const Chat = () => {
     setProcessMessages(messageStatus.Processing)
     setMessages([])
     setIsCitationPanelOpen(false)
+    setIsIntentsPanelOpen(false)
     setActiveCitation(undefined)
     appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null })
     setProcessMessages(messageStatus.Done)
@@ -669,6 +679,10 @@ const Chat = () => {
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
     setIsCitationPanelOpen(true)
+  }
+
+  const onShowExecResult = () => {
+    setIsIntentsPanelOpen(true)
   }
 
   const onViewSource = (citation: Citation) => {
@@ -771,9 +785,11 @@ const Chat = () => {
                             citations: parseCitationFromMessage(messages[index - 1]),
                             plotly_data: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
-                            feedback: answer.feedback
+                            feedback: answer.feedback,
+                            exec_results: execResults
                           }}
                           onCitationClicked={c => onShowCitation(c)}
+                          onExectResultClicked={() => onShowExecResult()}
                         />
                       </div>
                     ) : answer.role === ERROR ? (
@@ -797,6 +813,7 @@ const Chat = () => {
                           plotly_data: null
                         }}
                         onCitationClicked={() => null}
+                        onExectResultClicked={() => null}
                       />
                     </div>
                   </>
@@ -939,6 +956,36 @@ const Chat = () => {
                   rehypePlugins={[rehypeRaw]}
                 />
               </div>
+            </Stack.Item>
+          )}
+          {messages && messages.length > 0 && isIntentsPanelOpen && (
+            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Exec Results Panel">
+              <Stack
+                aria-label="Intents Panel Header Container"
+                horizontal
+                className={styles.citationPanelHeaderContainer}
+                horizontalAlign="space-between"
+                verticalAlign="center">
+                <span aria-label="Intents" className={styles.citationPanelHeader}>
+                  Exec Results
+                </span>
+                <IconButton
+                  iconProps={{ iconName: 'Cancel' }}
+                  aria-label="Close intents panel"
+                  onClick={() => setIsIntentsPanelOpen(false)}
+                />
+              </Stack>
+              <Stack horizontalAlign="space-between">
+                {execResults.map((execResult) => {
+                  return (
+                    <Stack className={styles.exectResultList} verticalAlign="space-between">
+                      <p><span>Intent:</span> {execResult.intent}</p>
+                      {execResult.search_query && <p><span>Search Query:</span> {execResult.search_query}</p>}
+                      {execResult.search_result && <p><span>Search Result:</span> {execResult.search_result}</p>}
+                    </Stack>
+                  )
+                })}
+              </Stack>
             </Stack.Item>
           )}
           {appStateContext?.state.isChatHistoryOpen &&
