@@ -23,8 +23,6 @@ Click on the Deploy to Azure button and configure your settings in the Azure Por
 
 Please see the [section below](#add-an-identity-provider) for important information about adding authentication to your app.
 
-### Deploy from your local machine
-
 #### Local Setup: Basic Chat Experience
 1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
     
@@ -46,7 +44,17 @@ Please see the [section below](#add-an-identity-provider) for important informat
 
 3. You can see the local running app at http://127.0.0.1:50505.
 
-#### Local Setup: Chat with your data using Azure Cognitive Search
+#### Local Setup: Enable Message Feedback
+To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
+
+/.env
+- `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
+
+### Data Sources
+
+Data sources are the sources that the model will use to understand the data and provide context for the LLM (Large Language Model). By connecting to these data sources, you enable the model to access and utilize relevant information, enhancing its responses and accuracy.
+
+#### Data Source: Azure Cognitive Search
 [More information about Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/use-your-data)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above. 
@@ -73,8 +81,140 @@ Please see the [section below](#add-an-identity-provider) for important informat
     - `AZURE_SEARCH_STRICTNESS`
     - `AZURE_OPENAI_EMBEDDING_NAME`
 
-3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-4. You can see the local running app at http://127.0.0.1:50505.
+    ```python
+    @model_validator(mode="after")
+    def set_datasource_settings(self) -> Self:
+        try:
+            if self.base_settings.datasource_type == "AzureCognitiveSearch":
+                self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure Cognitive Search")
+        ```
+
+#### Data Source: Azure CosmosDB Mongo VCore
+[More information about Azure CosmosDB](https://learn.microsoft.com/en-us/azure/cosmos-db/)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described above.
+2. To connect to your data, you need to specify an Azure CosmosDB Mongo VCore container to use. You can [create this container yourself](https://learn.microsoft.com/en-us/azure/cosmos-db/create-cosmosdb-resources-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the container for you.
+
+    These variables are required when adding your data with Azure CosmosDB Mongo VCore:
+    - `DATASOURCE_TYPE` (should be set to `AzureCosmosDBMongoVCore`)
+    - `AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING`
+    - `AZURE_COSMOSDB_MONGO_VCORE_DATABASE`
+    - `AZURE_COSMOSDB_MONGO_VCORE_CONTAINER`
+    - `AZURE_COSMOSDB_MONGO_VCORE_INDEX`
+
+    **Note:** For now, the AOAI On Your Data service only supports vector search for CosmosDB. For more details, check this link: [Azure CosmosDB for NoSQL Vector Search announcement](https://aka.ms/CosmosDBDiskANNBlog/)
+
+    ```python
+    @model_validator(mode="after")
+    def set_datasource_settings(self) -> Self:
+        try:
+            if self.base_settings.datasource_type == "AzureCosmosDBMongoVCore":
+                self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure CosmosDB Mongo vcore")
+            # other conditions omitted for brevity
+        ```
+
+#### Data Source: Elasticsearch
+[More information about Elasticsearch](https://www.elastic.co/guide/index.html)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described above.
+
+    These variables are required when adding your data with Elasticsearch:
+    - `DATASOURCE_TYPE` (should be set to `Elasticsearch`)
+    - `ELASTICSEARCH_ENDPOINT`
+    - `ELASTICSEARCH_ENCODED_API_KEY`
+    - `ELASTICSEARCH_INDEX`
+
+    These variables are optional:
+    - `ELASTICSEARCH_QUERY_TYPE`
+    - `ELASTICSEARCH_TOP_K`
+    - `ELASTICSEARCH_ENABLE_IN_DOMAIN`
+    - `ELASTICSEARCH_CONTENT_COLUMNS`
+    - `ELASTICSEARCH_FILENAME_COLUMN`
+    - `ELASTICSEARCH_TITLE_COLUMN`
+    - `ELASTICSEARCH_URL_COLUMN`
+    - `ELASTICSEARCH_VECTOR_COLUMNS`
+    - `ELASTICSEARCH_STRICTNESS`
+    - `ELASTICSEARCH_EMBEDDING_MODEL_ID`
+
+    ```python
+    @model_validator(mode="after")
+    def set_datasource_settings(self) -> Self:
+        try:
+            if self.base_settings.datasource_type == "Elasticsearch":
+                self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Elasticsearch")
+        ```
+
+#### Data Source: Pinecone
+[More information about Pinecone](https://docs.pinecone.io/docs/overview)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described above.
+2. To connect to your data, you need to specify a Pinecone index to use. You can [create this index yourself](https://docs.pinecone.io/docs/getting-started) or use the [Pinecone Console](https://app.pinecone.io/) to create the index for you.
+
+    These variables are required when adding your data with Pinecone:
+    - `DATASOURCE_TYPE` (should be set to `Pinecone`)
+    - `PINECONE_ENVIRONMENT`
+    - `PINECONE_API_KEY`
+    - `PINECONE_INDEX_NAME`
+
+    These variables are optional:
+    - `PINECONE_TOP_K`
+    - `PINECONE_STRICTNESS`
+    - `PINECONE_ENABLE_IN_DOMAIN`
+    - `PINECONE_CONTENT_COLUMNS`
+    - `PINECONE_FILENAME_COLUMN`
+    - `PINECONE_TITLE_COLUMN`
+    - `PINECONE_URL_COLUMN`
+    - `PINECONE_VECTOR_COLUMNS`
+
+    ```python
+    @model_validator(mode="after")
+    def set_datasource_settings(self) -> Self:
+        try:
+            if self.base_settings.datasource_type == "Pinecone":
+                self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Pinecone")
+        ```
+
+#### Data Source: Azure Machine Learning MLIndex
+
+1. Update the `AZURE_OPENAI_*` environment variables as described above.
+2. To connect to your data, you need to specify an Azure MLIndex to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-azuremlindex) or use the [Azure Machine Learning Studio](https://ml.azure.com/) to create the index for you.
+
+    These variables are required when adding your data with Azure MLIndex:
+    - `DATASOURCE_TYPE` (should be set to `AzureMLIndex`)
+    - `AZURE_MLINDEX_NAME`
+    - `AZURE_MLINDEX_VERSION`
+    - `AZURE_ML_PROJECT_RESOURCE_ID`
+
+    These variables are optional:
+    - `AZURE_MLINDEX_TOP_K`
+    - `AZURE_MLINDEX_STRICTNESS`
+    - `AZURE_MLINDEX_ENABLE_IN_DOMAIN`
+    - `AZURE_MLINDEX_CONTENT_COLUMNS`
+    - `AZURE_MLINDEX_FILENAME_COLUMN`
+    - `AZURE_MLINDEX_TITLE_COLUMN`
+    - `AZURE_MLINDEX_URL_COLUMN`
+    - `AZURE_MLINDEX_VECTOR_COLUMNS`
+    - `AZURE_MLINDEX_QUERY_TYPE`
+
+    ```python
+    @model_validator(mode="after")
+    def set_datasource_settings(self) -> Self:
+        try:
+            if self.base_settings.datasource_type == "AzureMLIndex":
+                self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure ML Index")
+        ```
+
+
+### Deploy from your local machine
+
+1. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
+2. You can see the local running app at http://127.0.0.1:50505.
+
 
 #### Local Setup: Enable Chat History
 To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. Then specify these additional environment variables: 
@@ -84,12 +224,6 @@ To enable chat history, you will need to set up CosmosDB resources. The ARM temp
 - `AZURE_COSMOSDB_ACCOUNT_KEY`
 
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:50505. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-
-#### Local Setup: Enable Message Feedback
-To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
-
-/.env
-- `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
 
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
