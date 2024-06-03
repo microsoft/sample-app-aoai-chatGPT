@@ -334,11 +334,11 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   <Text
                     className={styles.accordionTitle}
                     onClick={() => onExectResultClicked()}
-                    aria-label="Open exec results"
+                    aria-label="Open Intents"
                     tabIndex={0}
                     role="button">
                     <span>
-                      Show Exec Results
+                      Show Intents
                     </span>
                   </Text>
                   <FontIcon
