@@ -33,7 +33,7 @@ run_config_by_data_path_3_small_512_512 = {
 # change path and embedding models
 Path("logs").mkdir(exist_ok=True)
 for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
-    folder = os.path.join("../../data/gptassertdata/index_data", key)
+    folder = os.path.join("/index_data", key)
     
     if isinstance(cfg, str):
         index = cfg
