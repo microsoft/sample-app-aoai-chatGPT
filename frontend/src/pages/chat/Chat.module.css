@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
+  background: radial-gradient(120.78% 120.78% at 50.02% 9.78%, #444656 0.29%,#476584 100%);
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
@@ -45,7 +45,7 @@
   align-items: flex-end;
   text-align: center;
   line-height: 24px;
-  margin-top: 36px;
+  margin-top: 10px;
   margin-bottom: 0px;
 }
 
@@ -58,12 +58,12 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #616161;
+  color: #3bcbff;
 }
 
 .chatIcon {
-  height: 62px;
-  width: auto;
+  height: 150px;
+  width: 460px;
 }
 
 .chatMessageStream {
@@ -76,18 +76,20 @@
   display: flex;
   flex-direction: column;
   margin-top: 24px;
+  color:#ffffff;
 }
 
 .chatMessageUser {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 12px;
+  color:#ffffff;
 }
 
 .chatMessageUserMessage {
   display: flex;
   padding: 20px;
-  background: #edf5fd;
+  background: #32333f;
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -96,7 +98,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #242424;
+  color: #3ffffff;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -105,9 +107,12 @@
 }
 
 .chatMessageGpt {
+  color: #3bcbff;
+  background: #32333f;
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
+
 }
 
 .chatMessageError {
@@ -116,7 +121,7 @@
   box-shadow:
     rgba(182, 52, 67, 1) 1px 1px 2px,
     rgba(182, 52, 67, 1) 0px 0px 1px;
-  color: #242424;
+  color: #FF6347;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -160,7 +165,8 @@
   height: 40px;
   left: 7px;
   top: 13px;
-  color: #ffffff;
+  background: #444656;
+  color: #FFFFFF;
   border-radius: 4px;
   z-index: 1;
 }
@@ -176,7 +182,8 @@
   height: 40px;
   left: 7px;
   top: 66px;
-  color: #ffffff;
+  background: #444656;
+  color: #FFFFFF;
   border-radius: 4px;
   z-index: 1;
 }
@@ -241,7 +248,7 @@
   align-items: flex-start;
   padding: 16px 16px;
   gap: 8px;
-  background: #ffffff;
+  background: #444656;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
