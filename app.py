@@ -33,6 +33,7 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+from backend.prompt_type import PromptType
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -855,6 +856,158 @@ async def generate_title(conversation_messages):
         return title
     except Exception as e:
         return messages[-2]["content"]
+
+################################################################################
+## Boat Functions
+
+async def promptflow_request_v2(request, endpoint):
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
+        }
+        # Adding timeout for scenarios where response takes longer to come back
+        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
+        async with httpx.AsyncClient(
+            timeout=float(app_settings.promptflow.response_timeout)
+        ) as client:
+            pf_formatted_obj = convert_to_pf_format(
+                request,
+                app_settings.promptflow.request_field_name,
+                app_settings.promptflow.response_field_name
+            )
+            # NOTE: This only support question and chat_history parameters
+            # If you need to add more parameters, you need to modify the request body
+            response = await client.post(
+                endpoint,
+                json={
+                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
+                    "chat_history": pf_formatted_obj[:-1],
+                },
+                headers=headers,
+            )
+        resp = response.json()
+        resp["id"] = request["messages"][-1]["id"]
+        return resp
+    except Exception as e:
+        logging.error(f"An error occurred while making promptflow_request_v2: {e}")
+
+
+def get_promptflow_endpoint(prompt_type: PromptType):
+    if prompt_type == PromptType.MAIN_PROMPT:
+        return app_settings.promptflow.endpoint_main_prompt
+    elif prompt_type == PromptType.SUMMARY_PROMPT:
+        return app_settings.promptflow.endpoint_summary_prompt
+    elif prompt_type == PromptType.WALKAROUNT_PROMPT:
+        return app_settings.promptflow.endpoint_walkaround_prompt
+    else:
+        return app_settings.promptflow.endpoint
+
+
+async def complete_chat_request_v2(request_body, request_headers, prompt_type: PromptType):
+    if app_settings.base_settings.use_promptflow:
+        endpoint = get_promptflow_endpoint(prompt_type)
+        response = await promptflow_request_v2(request_body, endpoint)
+        history_metadata = request_body.get("history_metadata", {})
+        return format_pf_non_streaming_response(
+            response,
+            history_metadata,
+            app_settings.promptflow.response_field_name,
+            app_settings.promptflow.citations_field_name
+        )
+    else:
+        response, apim_request_id = await send_chat_request(request_body, request_headers)
+        history_metadata = request_body.get("history_metadata", {})
+        return format_non_streaming_response(response, history_metadata, apim_request_id)
+
+
+
+async def conversation_internal_v2(request_body, request_headers, prompt_type: PromptType):
+    try:
+        if app_settings.azure_openai.stream:
+            result = await stream_chat_request(request_body, request_headers)
+            response = await make_response(format_as_ndjson(result))
+            response.timeout = None
+            response.mimetype = "application/json-lines"
+            return response
+        else:
+            result = await complete_chat_request_v2(request_body, request_headers, prompt_type)
+            return jsonify(result)
+
+    except Exception as ex:
+        logging.exception(ex)
+        if hasattr(ex, "status_code"):
+            return jsonify({"error": str(ex)}), ex.status_code
+        else:
+            return jsonify({"error": str(ex)}), 500
+
+
+## Conversation History API V2 ##
+@bp.route("/v2/history/generate", methods=["POST"])
+async def add_conversation_v2():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user["user_principal_id"]
+
+    ## check request for conversation_id
+    request_json = await request.get_json()
+    conversation_id = request_json.get("conversation_id", None)
+
+    try:
+        # make sure cosmos is configured
+        cosmos_conversation_client = init_cosmosdb_client()
+        if not cosmos_conversation_client:
+            raise Exception("CosmosDB is not configured or not working")
+
+        # check for the conversation_id, if the conversation is not set, we will create a new one
+        history_metadata = {}
+        if not conversation_id:
+            title = await generate_title(request_json["messages"])
+            conversation_dict = await cosmos_conversation_client.create_conversation(
+                user_id=user_id, title=title
+            )
+            conversation_id = conversation_dict["id"]
+            history_metadata["title"] = title
+            history_metadata["date"] = conversation_dict["createdAt"]
+
+        ## Format the incoming message object in the "chat/completions" messages format
+        ## then write it to the conversation history in cosmos
+        messages = request_json["messages"]
+        if len(messages) > 0 and messages[-1]["role"] == "user":
+            createdMessageValue = await cosmos_conversation_client.create_message(
+                uuid=str(uuid.uuid4()),
+                conversation_id=conversation_id,
+                user_id=user_id,
+                input_message=messages[-1],
+            )
+            if createdMessageValue == "Conversation not found":
+                raise Exception(
+                    "Conversation not found for the given conversation ID: "
+                    + conversation_id
+                    + "."
+                )
+        else:
+            raise Exception("No user message found")
+
+        await cosmos_conversation_client.cosmosdb_client.close()
+
+        # Submit request to Chat Completions for response
+        request_body = await request.get_json()
+        history_metadata["conversation_id"] = conversation_id
+        request_body["history_metadata"] = history_metadata
+        return await conversation_internal_v2(request_body, request.headers, PromptType.MAIN_PROMPT)
+
+    except Exception as e:
+        logging.exception("Exception in /v2/history/generate")
+        return jsonify({"error": str(e)}), 500
+
+@bp.route("/v2/conversation", methods=["POST"])
+async def conversation_v2():
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    request_json = await request.get_json()
+
+    return await conversation_internal_v2(request_json, request.headers, PromptType.MAIN_PROMPT)
+
 
 
 app = create_app()

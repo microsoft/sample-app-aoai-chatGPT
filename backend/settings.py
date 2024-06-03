@@ -74,6 +74,9 @@ class _PromptflowSettings(BaseSettings):
     )
 
     endpoint: str
+    endpoint_main_prompt: str
+    endpoint_summary_prompt: str
+    endpoint_walkaround_prompt: str
     api_key: str
     response_timeout: float = 30.0
     request_field_name: str = "query"
