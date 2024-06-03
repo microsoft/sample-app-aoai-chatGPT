@@ -796,6 +796,9 @@ async def clear_messages():
 
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
+    # log app_settings object with some text
+    logging.debug("app_settings object: %s", app_settings)
+    
     if not app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
