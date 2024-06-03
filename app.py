@@ -1595,17 +1595,17 @@ def read_pdf(file_path):
 
 
 def read_txt(file_path):
-    try:
-        # Open the text file and read its content
-        with open(file_path, 'r') as txt_file:
-            text_content = txt_file.read()
+    encodings = ['utf-8', 'utf-16', 'latin-1']
+    for encoding in encodings:
+        try:
+            with open(file_path, 'r', encoding=encoding) as txt_file:
+                text_content = txt_file.read()
+                return text_content
+        except Exception as e:
+            print(f"Error occurred while reading text file with encoding {encoding}: {e}")
 
-        return text_content
-
-    except Exception as e:
-        print(f"Error occurred while reading text file: {e}")
-        return None
+    print("Failed to read the text file with all attempted encodings.")
+    return None
     
-
 
 app = create_app()
