@@ -681,6 +681,7 @@ def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None,
                 key = embedding_model_key if embedding_model_key else os.getenv("COHERE_MULTILINGUAL_API_KEY")
             elif FLAG_COHERE == "ENGLISH":
                 key = embedding_model_key if embedding_model_key else os.getenv("COHERE_ENGLISH_API_KEY")
+            
             data, headers = get_payload_and_headers_cohere(text, key)
 
             body = str.encode(json.dumps(data))
