@@ -33,8 +33,6 @@ run_config_by_data_path_3_small_512_512 = {
 # change path and embedding models
 Path("logs").mkdir(exist_ok=True)
 for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
-    if key != 'aks':
-        continue
     folder = os.path.join("../../data/gptassertdata/index_data", key)
     
     if isinstance(cfg, str):
@@ -61,7 +59,7 @@ for key, cfg in tqdm.tqdm(run_config_by_data_path_3_small_512_512.items()):
         "--config",
         f"config.{key}.json",
         "--embedding-model-endpoint",
-        '"https://wed-aiq-aoai-eus.openai.azure.com/openai/deployments/text-embedding-3-large/embeddings?api-version=2023-05-15"',
+        '"EMBEDDING_MODEL_ENDPOINT"',
         "--form-rec-resource",
         "test-tprompt",
         "--form-rec-key",
