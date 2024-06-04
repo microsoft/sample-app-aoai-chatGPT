@@ -357,26 +357,16 @@
                         }
                     },
                     "triggers": {
-                        "When_there_are_messages_in_a_queue_(V2)": {
+                        "Recurrence": {
                             "recurrence": {
                                 "frequency": "Second",
-                                "interval": 1
+                                "interval": 10
                             },
                             "evaluatedRecurrence": {
                                 "frequency": "Second",
-                                "interval": 1
+                                "interval": 10
                             },
-                            "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
-                            "type": "ApiConnection",
-                            "inputs": {
-                                "host": {
-                                    "connection": {
-                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
-                                    }
-                                },
-                                "method": "get",
-                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/message_trigger"
-                            }
+                            "type": "Recurrence"
                         }
                     },
                     "actions": {
@@ -523,9 +513,36 @@
                             },
                             "type": "If"
                         },
+                        "Condition_5": {
+                            "actions": {
+                                "Terminate": {
+                                    "runAfter": {},
+                                    "type": "Terminate",
+                                    "inputs": {
+                                        "runStatus": "Cancelled"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Get_messages_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@empty(body('Get_messages_(V2)')?['QueueMessagesList']?['QueueMessage'])",
+                                            true
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
                         "Delete_message_(V2)": {
                             "runAfter": {
-                                "Condition_3": [
+                                "Condition_5": [
                                     "Succeeded"
                                 ]
                             },
@@ -537,9 +554,9 @@
                                     }
                                 },
                                 "method": "delete",
-                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages/@{encodeURIComponent(triggerBody()?['MessageId'])}",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages/@{encodeURIComponent(body('Get_messages_(V2)')?['QueueMessagesList']?['QueueMessage'][0]['MessageID'])}",
                                 "queries": {
-                                    "popreceipt": "@triggerBody()?['PopReceipt']"
+                                    "popreceipt": "@{body('Get_messages_(V2)')?['QueueMessagesList']?['QueueMessage'][0]['PopReceipt']}"
                                 }
                             }
                         },
@@ -761,6 +778,22 @@
                             },
                             "type": "Foreach"
                         },
+                        "Get_messages_(V2)": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/queues/@{encodeURIComponent('pending-folders')}/messages",
+                                "queries": {
+                                    "numofmessages": "1"
+                                }
+                            }
+                        },
                         "Groups_JSON": {
                             "runAfter": {
                                 "Send_an_HTTP_request_to_SharePoint_2": [
@@ -884,7 +917,7 @@
                                     }
                                 },
                                 "method": "get",
-                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/foldersV2/@{encodeURIComponent(encodeURIComponent(replace(toLower(triggerBody()?['MessageText']),'/shared documents', '/sharepoint')))}",
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(parameters('storageAccountName')))}/foldersV2/@{encodeURIComponent(encodeURIComponent(replace(toLower(body('Get_messages_(V2)')?['QueueMessagesList']?['QueueMessage'][0]['MessageText']),'/shared documents', '/sharepoint')))}",
                                 "queries": {
                                     "nextPageMarker": "",
                                     "useFlatListing": false
@@ -947,9 +980,9 @@
                             "type": "ApiConnection",
                             "inputs": {
                                 "body": {
-                                    "body": "{\n\"parameters\":{\n\"RenderOptions\":1480455,\"AllowMultipleValueFilterForTaxonomyFields\":true,\"AddRequiredFields\":true,\"RequireFolderColoringFields\":true}}",
+                                    "body": "{\n\"parameters\":{\n\"OverrideViewXml\": \"<View><RowLimit>500</RowLimit></View>\",\n\"RenderOptions\":1480455,\"AllowMultipleValueFilterForTaxonomyFields\":true,\"AddRequiredFields\":true,\"RequireFolderColoringFields\":true}}",
                                     "method": "POST",
-                                    "uri": "@{concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27',encodeUriComponent(variables('SharePointEntryPoint')),encodeUriComponent('/Shared Documents'),'%27&RootFolder=',encodeUriComponent(variables('SharePointEntryPoint')), encodeUriComponent(triggerBody()?['MessageText']))}"
+                                    "uri": "@{concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27',encodeUriComponent(variables('SharePointEntryPoint')),encodeUriComponent('/Shared Documents'),'%27&$top=100&RootFolder=',encodeUriComponent(variables('SharePointEntryPoint')), encodeUriComponent(body('Get_messages_(V2)')?['QueueMessagesList']?['QueueMessage'][0]['MessageText']))}"
                                 },
                                 "host": {
                                     "connection": {
@@ -962,6 +995,10 @@
                         },
                         "Send_an_HTTP_request_to_SharePoint_2": {
                             "runAfter": {},
+                            "Delete_message_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
                             "type": "ApiConnection",
                             "inputs": {
                                 "body": {
