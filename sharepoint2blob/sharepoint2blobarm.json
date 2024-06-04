@@ -994,8 +994,8 @@
                             }
                         },
                         "Send_an_HTTP_request_to_SharePoint_2": {
-                            "runAfter": {},
-                            "Delete_message_(V2)": [
+                            "runAfter": {
+                                "Delete_message_(V2)": [
                                     "Succeeded"
                                 ]
                             },
