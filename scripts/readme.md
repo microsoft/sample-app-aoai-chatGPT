@@ -36,6 +36,9 @@ Disclaimer: Make sure there are no duplicate pages in your data. That could impa
 
      `python data_preparation.py --config config.json --njobs=4`
 
+### Batch creation of index
+Refer to the script run_batch_create_index.py to create multiple indexes in batch using one script.
+
 ## Optional: Use URL prefix
 Each document can be associated with a URL that is stored with each document chunk in the Azure Cognitive Search index in the `url` field. If your documents were downloaded from the web, you can specify a URL prefix to use to construct the document URLs when ingesting your data. Your config file should have an additional `url_prefix` parameter like so:
 

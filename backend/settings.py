@@ -14,6 +14,7 @@ from pydantic import (
     ValidationError,
     ValidationInfo
 )
+from pydantic.alias_generators import to_snake
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Literal, Optional
 from typing_extensions import Self
@@ -194,9 +195,6 @@ class _SearchCommonSettings(BaseSettings):
         extra="ignore",
         env_ignore_empty=True
     )
-    top_k: int = Field(default=5, serialization_alias="top_n_documents")
-    strictness: int = 3
-    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     max_search_queries: Optional[int] = None
     allow_partial_result: bool = False
     include_contexts: Optional[List[str]] = ["citations", "intent"]
@@ -238,6 +236,9 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["azure_search"] = PrivateAttr(default="azure_search")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     service: str = Field(exclude=True)
     endpoint_suffix: str = Field(default="search.windows.net", exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -254,7 +255,9 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         'vector',
         'semantic',
         'vector_simple_hybrid',
-        'vector_semantic_hybrid'
+        'vectorSimpleHybrid',
+        'vector_semantic_hybrid',
+        'vectorSemanticHybrid'
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
     
@@ -263,7 +266,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     authentication: Optional[dict] = None
     embedding_dependency: Optional[dict] = None
     fields_mapping: Optional[dict] = None
-    filter: Optional[str] = None
+    filter: Optional[str] = Field(default=None, exclude=True)
     
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
@@ -297,6 +300,10 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             "vector_fields": self.vector_columns
         }
         return self
+    
+    @model_validator(mode="after")
+    def set_query_type(self) -> Self:
+        self.query_type = to_snake(self.query_type)
 
     def _set_filter_string(self, request: Request) -> str:
         if self.permitted_groups_column:
@@ -344,6 +351,9 @@ class _AzureCosmosDbMongoVcoreSettings(
         env_ignore_empty=True
     )
     _type: Literal["azure_cosmosdb"] = PrivateAttr(default="azure_cosmosdb")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     query_type: Literal['vector'] = "vector"
     connection_string: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -410,6 +420,9 @@ class _ElasticsearchSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["elasticsearch"] = PrivateAttr(default="elasticsearch")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     endpoint: str
     encoded_api_key: str = Field(exclude=True)
     index: str = Field(serialization_alias="index_name")
@@ -480,6 +493,9 @@ class _PineconeSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["pinecone"] = PrivateAttr(default="pinecone")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     environment: str
     api_key: str = Field(exclude=True)
     index_name: str
@@ -547,6 +563,9 @@ class _AzureMLIndexSettings(BaseSettings, DatasourcePayloadConstructor):
         env_ignore_empty=True
     )
     _type: Literal["azure_ml_index"] = PrivateAttr(default="azure_ml_index")
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
     name: str
     version: str
     project_resource_id: str = Field(validation_alias="AZURE_ML_PROJECT_RESOURCE_ID")
@@ -676,35 +695,39 @@ class _AppSettings(BaseModel):
     
     @model_validator(mode="after")
     def set_datasource_settings(self) -> Self:
-        if self.base_settings.datasource_type == "AzureCognitiveSearch":
-            self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure Cognitive Search")
-           
-        elif self.base_settings.datasource_type == "AzureCosmosDB":
-            self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure CosmosDB Mongo vcore")
-           
-        elif self.base_settings.datasource_type == "Elasticsearch":
-            self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Elasticsearch")
-           
-        elif self.base_settings.datasource_type == "Pinecone":
-            self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Pinecone")
-        
-        elif self.base_settings.datasource_type == "AzureMLIndex":
-            self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using Azure ML Index")
-        
-        elif self.base_settings.datasource_type == "AzureSqlServer":
-            self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
-            logging.debug("Using SQL Server")
+        try:
+            if self.base_settings.datasource_type == "AzureCognitiveSearch":
+                self.datasource = _AzureSearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure Cognitive Search")
             
-        else:
-            self.datasource = None
+            elif self.base_settings.datasource_type == "AzureCosmosDB":
+                self.datasource = _AzureCosmosDbMongoVcoreSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure CosmosDB Mongo vcore")
+            
+            elif self.base_settings.datasource_type == "Elasticsearch":
+                self.datasource = _ElasticsearchSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Elasticsearch")
+            
+            elif self.base_settings.datasource_type == "Pinecone":
+                self.datasource = _PineconeSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Pinecone")
+            
+            elif self.base_settings.datasource_type == "AzureMLIndex":
+                self.datasource = _AzureMLIndexSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Azure ML Index")
+            
+            elif self.base_settings.datasource_type == "AzureSqlServer":
+                self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using SQL Server")
+                
+            else:
+                self.datasource = None
+                logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
+                
+            return self
+
+        except ValidationError:
             logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
-            
-        return self
 
 
 app_settings = _AppSettings()

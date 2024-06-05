@@ -46,13 +46,16 @@ Please see the [section below](#add-an-identity-provider) for important informat
 
 3. You can see the local running app at http://127.0.0.1:50505.
 
-#### Local Setup: Chat with your data (Preview)
+NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
+
+#### Local Setup: Chat with your data using Azure Cognitive Search
 [More information about Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/use-your-data)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described above. 
 2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
 
     These variables are required when adding your data with Azure AI Search:
+    - `DATASOURCE_TYPE` (should be set to `AzureCognitiveSearch`)
     - `AZURE_SEARCH_SERVICE`
     - `AZURE_SEARCH_INDEX`
     - `AZURE_SEARCH_KEY`
@@ -75,6 +78,8 @@ Please see the [section below](#add-an-identity-provider) for important informat
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 4. You can see the local running app at http://127.0.0.1:50505.
 
+NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
+
 #### Local Setup: Enable Chat History
 To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. Then specify these additional environment variables: 
 - `AZURE_COSMOSDB_ACCOUNT`
@@ -89,6 +94,12 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 
 /.env
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
+
+#### Local Setup: Enable SQL Server
+To enable SQL Server, you will need to set up SQL Server resources. Then specify these additional environment variables:
+- `DATASOURCE_TYPE` (Should be set to `AzureSqlServer`)
+- `AZURE_SQL_SERVER_CONNECTION_STRING`
+- `AZURE_SQL_SERVER_TABLE_SCHEMA`
 
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
