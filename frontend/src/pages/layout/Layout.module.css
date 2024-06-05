@@ -5,7 +5,7 @@
 }
 
 .header {
-  background-color: #f2f2f2;
+  background-color: #3bcbff;
 }
 
 .headerContainer {
@@ -28,11 +28,11 @@
   line-height: 28px;
   display: flex;
   align-items: flex-end;
-  color: #242424;
+  color: #3bcbff;
 }
 
 .headerIcon {
-  height: 32px;
+  height: 52px;
   width: auto;
   margin-left: 36px;
 }
@@ -55,7 +55,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #ffffff;
+  color: #32333f;
 }
 
 .urlTextBox {
@@ -63,7 +63,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #707070;
+  color: #32333f;
   border: 1px solid #d1d1d1;
   border-radius: 4px;
 }
@@ -76,7 +76,7 @@
   align-items: center;
   padding: 5px 12px;
   gap: 4px;
-  background: #ffffff;
+  background: #32333f;
   border: 1px solid #d1d1d1;
   border-radius: 4px;
 }
@@ -87,7 +87,7 @@
 }
 
 .copyButton {
-  color: #424242;
+  color: #32333f;
 }
 
 .copyButtonText {
@@ -97,7 +97,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #242424;
+  color: #32333f;
 }
 
 @media (max-width: 480px) {

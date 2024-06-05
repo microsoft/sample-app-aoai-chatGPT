@@ -4,10 +4,7 @@
   align-items: flex-start;
   padding: 8.1285px;
   gap: 5.42px;
-  background: #ffffff;
-  box-shadow:
-    0px 1px 2px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+  background:#32333f;
   border-radius: 5.419px;
 }
 
@@ -16,7 +13,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #323130;
+  color: #3bcbff;
   flex: none;
   order: 1;
   align-self: stretch;
@@ -30,6 +27,7 @@
 
 .answerHeader {
   position: relative;
+  background:#32333f;
 }
 
 .answerFooter {
@@ -39,11 +37,13 @@
   height: auto;
   box-sizing: border-box;
   justify-content: space-between;
+  background:#32333f;
 }
 
 .answerDisclaimerContainer {
   justify-content: center;
   display: flex;
+  background:#32333f;
 }
 
 .answerDisclaimer {
@@ -51,11 +51,10 @@
   font-weight: 400;
   font-size: 12px;
   line-height: 16px;
-
   display: flex;
   align-items: center;
   text-align: center;
-  color: #707070;
+  color:#555764;
   flex: none;
   order: 1;
   flex-grow: 0;

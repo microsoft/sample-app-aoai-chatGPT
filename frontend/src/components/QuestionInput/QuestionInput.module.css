@@ -5,7 +5,7 @@
   right: 0%;
   top: 0%;
   bottom: 0%;
-  background: #ffffff;
+  background: #444656;
   box-shadow:
     0px 8px 16px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
@@ -19,12 +19,14 @@
   margin-bottom: 10px;
   margin-left: 12px;
   margin-right: 12px;
+  background: #444656;
 }
 
 .questionInputSendButtonContainer {
   position: absolute;
   right: 24px;
   bottom: 20px;
+  background: #444656;
 }
 
 .questionInputSendButton {
@@ -37,7 +39,7 @@
   width: 24px;
   height: 23px;
   background: none;
-  color: #424242;
+  color: #3bcbff;
 }
 
 .questionInputBottomBorder {
@@ -47,6 +49,7 @@
   left: 0%;
   bottom: 0%;
   background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%);
+  /*ckground: #3bcbff;*/
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
@@ -59,6 +62,5 @@
 
 @media (max-width: 480px) {
   .questionInputContainer {
-    left: 16.5%;
   }
 }
