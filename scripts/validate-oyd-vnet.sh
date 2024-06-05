@@ -1,5 +1,35 @@
 #!/bin/bash -e
 
+: '
+This script was developed to assist customers in validating the private virtual network configuration currently documented here: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/use-your-data-securely
+
+Please note the following prerequisites:
+
+    - Access to a Linux (Bash) shell.  If you are using Windows, some options are to install WSL locally, or to run the script from the Azure Cloud Shell in the Azure Portal.
+        Installation instructions for WSL can be found here: https://learn.microsoft.com/en-us/windows/wsl/install
+        Azure Cloud Shell documentation can be found here: https://learn.microsoft.com/en-us/azure/cloud-shell/overview
+    - The `az` and `jq` commands must be installed in the Linux system where the script is being run.
+        To check if a command is installed, connect to the Linux terminal and run the command `which <insert command name here>`.  If no output is shown, the command is not found and will need to be installed.
+        Linux installation instructions for `az` can be found here: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux
+        Linux installation instructions for `jq` will be distribution dependent.  Please consult the documentation for your Linux distribution package manager for more information.
+    - The current user is logged in using `az login`, and has read access to all of the resources under inspection.
+
+To run the script:
+
+    - Copy this file to your Linux home directory.
+    - Run the script, replacing the parameter values with your own information:  
+        cd ~ && ./validate-oyd-vnet.sh \
+            --subscription-id <subscription_id> \
+            --azure-openai-resource-id <aoai_resource_id> \
+            --azure-search-resource-id <search_resource_id> \
+            --storage-account-resource-id <storage_account_resource_id> \
+            --virtual-network-resource-id <virtual_network_resource_id> \
+            --virtual-network-gateway-resource-id <gateway_resource_id>
+
+DISCLAIMER: This script is not intended to be used in a production system.  It is for validation purposes only, and should be run separately from any production deployment automation, taking into consideration any and all prerequisites referenced above.
+'
+
+
 function get_resource() {
     resource_id=$1
     api_version=$2
