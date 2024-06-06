@@ -865,11 +865,171 @@ async def generate_title(conversation_messages):
 ################################################################################
 ## Boat Functions
 
-async def promptflow_request_v2(request, endpoint):
+
+def prepare_model_args_for_intent(request_body, request_headers):
+    intent_prompt = """
+    You are an AI that classifies user questions based on their intent. When the user asks a question, respond only with one of the following options that best matches the intent of the question, and nothing else:
+
+    BOAT_SUGGESTION_PROMPT: Use this when the user is asking for recommendations or suggestions about boats.
+    Example: "What boat would you recommend for a family of four?"
+
+    VALUE_PROPOSITION_PROMPT: Use this when the user is asking about the benefits, features, or value of a particular boat or service.
+    Example 1: "What are the advantages of buying this model?"
+    Example 2: "What are the features of the tahoe?"
+
+    BOAT_WALKAROUND_PROMPT: Only use this when the user is EXPLICITLY asking for a detailed tour or description of a boat's features and layout.
+    Example: "Can you give me a walkthrough of the new yacht model?"
+
+    OTHER_PROMPT: Use this for any other type of question that does not fit into the above categories.
+    Example: "What is the weather like today?"
+
+    If the question fits multiple categories, default to OTHER_PROMPT
+
+    Do not provide any additional information, explanations, or responses beyond these options.
+    """
+
+    request_messages = request_body.get("messages", [])
+    messages = []
+    if not app_settings.datasource:
+        messages = [
+            {
+                "role": "system",
+                "content": intent_prompt
+            }
+        ]
+
+    # get the last message that has the user role
+    last_user_message = None
+    for message in reversed(request_messages):
+        if message.get("role") == "user":
+            last_user_message = message
+            break
+    
+    if last_user_message:
+        messages.append({
+            "role": last_user_message["role"],
+            "content": last_user_message["content"]
+        })
+    else:
+        messages.append(
+            {
+                "role": "user",
+                "content": "default prompt"
+            }
+        )
+
+    user_json = None
+    if (MS_DEFENDER_ENABLED):
+        authenticated_user_details = get_authenticated_user_details(request_headers)
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers)
+
+    model_args = {
+        "messages": messages,
+        "temperature": app_settings.azure_openai.temperature,
+        "max_tokens": app_settings.azure_openai.max_tokens,
+        "top_p": app_settings.azure_openai.top_p,
+        "stop": app_settings.azure_openai.stop_sequence,
+        "stream": app_settings.azure_openai.stream,
+        "model": app_settings.azure_openai.model,
+        "user": user_json
+    }
+
+    if app_settings.datasource:
+        model_args["extra_body"] = {
+            "data_sources": [
+                app_settings.datasource.construct_payload_configuration(
+                    request=request
+                )
+            ]
+        }
+
+    model_args_clean = copy.deepcopy(model_args)
+    if model_args_clean.get("extra_body"):
+        secret_params = [
+            "key",
+            "connection_string",
+            "embedding_key",
+            "encoded_api_key",
+            "api_key",
+        ]
+        for secret_param in secret_params:
+            if model_args_clean["extra_body"]["data_sources"][0]["parameters"].get(
+                secret_param
+            ):
+                model_args_clean["extra_body"]["data_sources"][0]["parameters"][
+                    secret_param
+                ] = "*****"
+        authentication = model_args_clean["extra_body"]["data_sources"][0][
+            "parameters"
+        ].get("authentication", {})
+        for field in authentication:
+            if field in secret_params:
+                model_args_clean["extra_body"]["data_sources"][0]["parameters"][
+                    "authentication"
+                ][field] = "*****"
+        embeddingDependency = model_args_clean["extra_body"]["data_sources"][0][
+            "parameters"
+        ].get("embedding_dependency", {})
+        if "authentication" in embeddingDependency:
+            for field in embeddingDependency["authentication"]:
+                if field in secret_params:
+                    model_args_clean["extra_body"]["data_sources"][0]["parameters"][
+                        "embedding_dependency"
+                    ]["authentication"][field] = "*****"
+
+    logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
+
+    return model_args
+
+
+async def send_chat_request_v2(request_body, request_headers):
+    filtered_messages = []
+    messages = request_body.get("messages", [])
+    for message in messages:
+        if message.get("role") != 'tool':
+            filtered_messages.append(message)
+            
+    request_body['messages'] = filtered_messages
+    model_args = prepare_model_args(request_body, request_headers)
+
+    try:
+        azure_openai_client = init_openai_client()
+        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
+        response = raw_response.parse()
+        apim_request_id = raw_response.headers.get("apim-request-id") 
+    except Exception as e:
+        logging.exception("Exception in send_chat_request")
+        raise e
+
+    return response, apim_request_id
+
+async def send_chat_intent_request(request_body, request_headers):
+    filtered_messages = []
+    messages = request_body.get("messages", [])
+    for message in messages:
+        if message.get("role") != 'tool':
+            filtered_messages.append(message)
+            
+    request_body['messages'] = filtered_messages
+    model_args = prepare_model_args_for_intent(request_body, request_headers)
+
+    try:
+        azure_openai_client = init_openai_client()
+        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
+        response = raw_response.parse()
+        apim_request_id = raw_response.headers.get("apim-request-id") 
+    except Exception as e:
+        logging.exception("Exception in send_chat_request")
+        raise e
+
+    return response, apim_request_id
+
+
+async def promptflow_request_v2(request, endpoint, key):
     try:
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
+            "Authorization": f"Bearer {key}",
         }
         # Adding timeout for scenarios where response takes longer to come back
         logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
@@ -899,21 +1059,68 @@ async def promptflow_request_v2(request, endpoint):
 
 
 def get_promptflow_endpoint(prompt_type: PromptType):
-    if prompt_type == PromptType.MAIN_PROMPT:
-        return app_settings.promptflow.endpoint_main_prompt
-    elif prompt_type == PromptType.SUMMARY_PROMPT:
-        return app_settings.promptflow.endpoint_summary_prompt
-    elif prompt_type == PromptType.WALKAROUNT_PROMPT:
-        return app_settings.promptflow.endpoint_walkaround_prompt
+    if prompt_type == PromptType.BOAT_SUGGESTION_PROMPT:
+        return app_settings.promptflow.endpoint_boat_suggestion_prompt
+    elif prompt_type == PromptType.VALUE_PROPOSITION_PROMPT:
+        return app_settings.promptflow.endpoint_value_proposition_prompt
+    elif prompt_type == PromptType.BOAT_WALKAROUND_PROMPT:
+        return app_settings.promptflow.endpoint_boat_walkaround_prompt
     else:
         return app_settings.promptflow.endpoint
 
+def get_promptflow_endpoint_key(prompt_type: PromptType):
+    if prompt_type == PromptType.BOAT_SUGGESTION_PROMPT:
+        return app_settings.promptflow.boat_suggestion_ep_key
+    elif prompt_type == PromptType.VALUE_PROPOSITION_PROMPT:
+        return app_settings.promptflow.value_proposition_ep_key
+    elif prompt_type == PromptType.BOAT_WALKAROUND_PROMPT:
+        return app_settings.promptflow.boat_walkaround_ep_key
+    else:
+        return app_settings.promptflow.api_key
 
-async def complete_chat_request_v2(request_body, request_headers, prompt_type: PromptType):
+def get_prompt_type(intent_response):
+    try:
+        if intent_response.choices:
+            for choice in intent_response.choices:
+                if choice.message:
+                    if choice.message.role == "assistant":
+                        content = choice.message.content
+                        if "BOAT_SUGGESTION_PROMPT" in content:
+                            return PromptType.BOAT_SUGGESTION_PROMPT
+                        elif "VALUE_PROPOSITION_PROMPT" in content:
+                            return PromptType.VALUE_PROPOSITION_PROMPT
+                        elif "BOAT_WALKAROUND_PROMPT" in content:
+                            return PromptType.BOAT_WALKAROUND_PROMPT
+    except Exception as e:
+        logging.exception("Exception in get_prompt_type")
+    
+    return PromptType.DEFAULT_PROMPT
+
+
+async def complete_chat_request_v2(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
-        endpoint = get_promptflow_endpoint(prompt_type)
-        response = await promptflow_request_v2(request_body, endpoint)
+        intent_response, apim_request_id = await send_chat_intent_request(request_body, request_headers)
+        prompt_type = get_prompt_type(intent_response)
         history_metadata = request_body.get("history_metadata", {})
+
+        # return a "cannot help" response if type is other
+        if prompt_type == PromptType.DEFAULT_PROMPT:
+            error_response = {
+                "id": intent_response.id,
+                "model": intent_response.model,
+                "created": intent_response.created,
+                "choices": [{"messages": [{"role": "assistant", "content": "Sorry, I cannot help with this request. Please try again."}]}],
+                "object": intent_response.object,
+                "history_metadata": history_metadata,
+                "apim_request_id": apim_request_id
+            }
+            return error_response
+
+        endpoint = get_promptflow_endpoint(prompt_type)
+        key = get_promptflow_endpoint_key(prompt_type)
+
+        response = await promptflow_request_v2(request_body, endpoint, key)
+        
         return format_pf_non_streaming_response(
             response,
             history_metadata,
@@ -921,13 +1128,12 @@ async def complete_chat_request_v2(request_body, request_headers, prompt_type: P
             app_settings.promptflow.citations_field_name
         )
     else:
-        response, apim_request_id = await send_chat_request(request_body, request_headers)
+        response, apim_request_id = await send_chat_request_v2(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-
-async def conversation_internal_v2(request_body, request_headers, prompt_type: PromptType):
+async def conversation_internal_v2(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream:
             result = await stream_chat_request(request_body, request_headers)
@@ -936,7 +1142,7 @@ async def conversation_internal_v2(request_body, request_headers, prompt_type: P
             response.mimetype = "application/json-lines"
             return response
         else:
-            result = await complete_chat_request_v2(request_body, request_headers, prompt_type)
+            result = await complete_chat_request_v2(request_body, request_headers)
             return jsonify(result)
 
     except Exception as ex:
@@ -999,7 +1205,7 @@ async def add_conversation_v2():
         request_body = await request.get_json()
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
-        return await conversation_internal_v2(request_body, request.headers, PromptType.MAIN_PROMPT)
+        return await conversation_internal_v2(request_body, request.headers)
 
     except Exception as e:
         logging.exception("Exception in /v2/history/generate")
@@ -1011,8 +1217,6 @@ async def conversation_v2():
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
 
-    return await conversation_internal_v2(request_json, request.headers, PromptType.MAIN_PROMPT)
-
-
+    return await conversation_internal_v2(request_json, request.headers, PromptType.BOAT_SUGGESTION_PROMPT)
 
 app = create_app()

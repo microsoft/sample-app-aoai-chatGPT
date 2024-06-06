@@ -3,7 +3,7 @@ import { chatHistorySampleData } from '../constants/chatHistory'
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-  const response = await fetch('/conversation', {
+  const response = await fetch('/v2/conversation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -128,7 +128,7 @@ export const historyGenerate = async (
       messages: options.messages
     })
   }
-  const response = await fetch('/history/generate', {
+  const response = await fetch('/v2/history/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

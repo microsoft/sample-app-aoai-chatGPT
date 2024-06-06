@@ -74,9 +74,12 @@ class _PromptflowSettings(BaseSettings):
     )
 
     endpoint: str
-    endpoint_main_prompt: str
-    endpoint_summary_prompt: str
-    endpoint_walkaround_prompt: str
+    endpoint_boat_suggestion_prompt: str
+    endpoint_value_proposition_prompt: str
+    endpoint_boat_walkaround_prompt: str
+    boat_suggestion_ep_key: str
+    value_proposition_ep_key: str
+    boat_walkaround_ep_key: str
     api_key: str
     response_timeout: float = 30.0
     request_field_name: str = "query"
@@ -121,6 +124,7 @@ class _AzureOpenAISettings(BaseSettings):
     presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
     frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
     system_message: str = "You are an AI assistant that helps people find information."
+    intent_message: str = "You are an AI assistant that only has one purpose. To find the intent of what the user is asking."
     preview_api_version: str = MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
     embedding_endpoint: Optional[str] = None
     embedding_key: Optional[str] = None
