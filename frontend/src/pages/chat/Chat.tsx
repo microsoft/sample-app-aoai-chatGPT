@@ -8,6 +8,8 @@ import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
 import { isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
 import Contoso from '../../assets/Contoso.svg'
@@ -959,7 +961,7 @@ const Chat = () => {
             </Stack.Item>
           )}
           {messages && messages.length > 0 && isIntentsPanelOpen && (
-            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Exec Results Panel">
+            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
               <Stack
                 aria-label="Intents Panel Header Container"
                 horizontal
@@ -967,7 +969,7 @@ const Chat = () => {
                 horizontalAlign="space-between"
                 verticalAlign="center">
                 <span aria-label="Intents" className={styles.citationPanelHeader}>
-                  Exec Results
+                  Intents
                 </span>
                 <IconButton
                   iconProps={{ iconName: 'Cancel' }}
@@ -979,9 +981,27 @@ const Chat = () => {
                 {execResults.map((execResult) => {
                   return (
                     <Stack className={styles.exectResultList} verticalAlign="space-between">
-                      <p><span>Intent:</span> {execResult.intent}</p>
-                      {execResult.search_query && <p><span>Search Query:</span> {execResult.search_query}</p>}
-                      {execResult.search_result && <p><span>Search Result:</span> {execResult.search_result}</p>}
+                      <><span>Intent:</span> <p>{execResult.intent}</p></>
+                      {execResult.search_query && <><span>Search Query:</span>
+                        <SyntaxHighlighter
+                          style={nord}
+                          wrapLines={true}
+                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                          language="sql"
+                          PreTag="p">
+                          {execResult.search_query}
+                        </SyntaxHighlighter></>}
+                      {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
+                      {execResult.code_generated && <><span>Code Generated:</span>
+                        <SyntaxHighlighter
+                          style={nord}
+                          wrapLines={true}
+                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                          language="python"
+                          PreTag="p">
+                          {execResult.code_generated}
+                        </SyntaxHighlighter>
+                      </>}
                     </Stack>
                   )
                 })}
