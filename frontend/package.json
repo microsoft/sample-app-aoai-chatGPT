@@ -25,6 +25,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^7.0.1",
+    "react-multi-carousel": "^2.8.5",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.8.1",
     "react-syntax-highlighter": "^15.5.0",

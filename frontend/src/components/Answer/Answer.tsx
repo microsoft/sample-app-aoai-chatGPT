@@ -12,9 +12,11 @@ import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 import { AppStateContext } from '../../state/AppProvider'
+import Carousel from 'react-multi-carousel';
 
 import { parseAnswer } from './AnswerParser'
 
+import 'react-multi-carousel/lib/styles.css'
 import styles from './Answer.module.css'
 
 interface Props {
@@ -22,6 +24,25 @@ interface Props {
   onCitationClicked: (citedDocument: Citation) => void
   onExectResultClicked: () => void
 }
+
+const responsive = {
+  xlDeskop: {
+    breakpoint: { max: 4000, min: 3000 },
+    items: 5
+  },
+  desktop: {
+    breakpoint: { max: 3000, min: 1024 },
+    items: 3
+  },
+  tablet: {
+    breakpoint: { max: 1024, min: 464 },
+    items: 2
+  },
+  mobile: {
+    breakpoint: { max: 464, min: 0 },
+    items: 1
+  }
+};
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
@@ -265,10 +286,19 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
 
   if (answer.walkaround_script && answer.walkaround_script?.length > 0) {
     return (
-      <Stack>
+      <Stack style={{width:'100%'}}>
         <Text variant='xLargePlus'>Walkaround</Text>
         <Stack>
+        <Carousel 
+          responsive={responsive}
+          swipeable={true}
+          draggable={true}
+          showDots={true}
+          autoPlay={false}
+          removeArrowOnDeviceType={["tablet", "mobile"]}
+          >
           {answer.walkaround_script?.map((walkaround) => (
+            <div style={{padding: '6px'}}>
             <Stack key={walkaround.heading} className={styles.walkaroundContainer}>
               <Stack.Item className={styles.walkaroundContainerHeadingContainer}>
                 <Text variant='large' className={styles.walkaroundContainerHeading}>{walkaround.heading}</Text>
@@ -277,7 +307,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 <Text variant='xxLarge' className={styles.walkaroundContainerText}>{walkaround.details}</Text>
               </Stack.Item>
             </Stack>
+            </div>
           ))}
+          </Carousel>
         </Stack>
       </Stack>
     )

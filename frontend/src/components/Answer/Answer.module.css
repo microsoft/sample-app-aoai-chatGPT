@@ -48,8 +48,7 @@
     0px 0px 2px rgba(0, 0, 0, 0.12);
   border-radius: 5.419px;
   margin-top: 16.257px;
-  width: 100%;
-  min-height: 50vh;
+  min-height: 55vh;
 }
 
 .walkaroundContainerHeading {
@@ -73,6 +72,10 @@
   margin-bottom: auto;
 }
 
+.carouselContainer {
+  gap: 12px;
+}
+
 .errorContainer {
   display: flex;
   flex-direction: column;
@@ -89,6 +92,8 @@
   width: 100%;
   padding-top: 16.257px;;
   padding-bottom: 16.257px;;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .errorContainerText {
