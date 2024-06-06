@@ -296,6 +296,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           showDots={true}
           autoPlay={false}
           removeArrowOnDeviceType={["tablet", "mobile"]}
+          keyBoardControl={true}
           >
           {answer.walkaround_script?.map((walkaround) => (
             <div style={{padding: '6px'}}>
