@@ -1102,6 +1102,9 @@ async def complete_chat_request_v2(request_body, request_headers):
         intent_response, apim_request_id = await send_chat_intent_request(request_body, request_headers)
         prompt_type = get_prompt_type(intent_response)
         history_metadata = request_body.get("history_metadata", {})
+        
+        logging.debug(f"Intent Response: {intent_response}")
+        logging.debug(f"Prompt Type: {prompt_type}")
 
         error_json_obj = {
             "title": "Sorry, I cannot help with this request. Please try again.",
@@ -1125,6 +1128,8 @@ async def complete_chat_request_v2(request_body, request_headers):
 
         endpoint = get_promptflow_endpoint(prompt_type)
         key = get_promptflow_endpoint_key(prompt_type)
+
+        logging.debug(f"Promptflow Endpoint: {endpoint}")
 
         response = await promptflow_request_v2(request_body, endpoint, key)
         
