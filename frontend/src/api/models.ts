@@ -7,7 +7,9 @@ export type AskResponse = {
   error?: string
   message_id?: string
   feedback?: Feedback
-  exec_results?: ExecResults[]
+  exec_results?: ExecResults[],
+  value_propositions?: ValuePropositionResult[],
+  walkaround_script?: WalkAroundScriptResult[]
 }
 
 export type Citation = {
@@ -58,6 +60,24 @@ export type ExecResults = {
   intent: string
   search_query: string | null
   search_result: string | null
+}
+
+export type ValuePropositionResults = {
+  value_propositions: ValuePropositionResult[]
+}
+
+export type ValuePropositionResult = {
+  proposition: string
+  details: string
+}
+
+export type WalkAroundScriptResults = {
+  walkaround_script: WalkAroundScriptResult[]
+}
+
+export type WalkAroundScriptResult = {
+  heading: string
+  details: string
 }
 
 export type Conversation = {

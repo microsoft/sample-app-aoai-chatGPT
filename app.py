@@ -1103,13 +1103,20 @@ async def complete_chat_request_v2(request_body, request_headers):
         prompt_type = get_prompt_type(intent_response)
         history_metadata = request_body.get("history_metadata", {})
 
+        error_json_obj = {
+            "title": "Sorry, I cannot help with this request. Please try again.",
+            "subtitle": "Sorry, I cannot help with this request. Please try again."
+        }
+
+        error_json = json.dumps(error_json_obj)
+
         # return a "cannot help" response if type is other
         if prompt_type == PromptType.DEFAULT_PROMPT:
             error_response = {
                 "id": intent_response.id,
                 "model": intent_response.model,
                 "created": intent_response.created,
-                "choices": [{"messages": [{"role": "assistant", "content": "Sorry, I cannot help with this request. Please try again."}]}],
+                "choices": [{"messages": [{"role": "assistant", "content": error_json}]}],
                 "object": intent_response.object,
                 "history_metadata": history_metadata,
                 "apim_request_id": apim_request_id

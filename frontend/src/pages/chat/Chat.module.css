@@ -87,7 +87,7 @@
 .chatMessageUserMessage {
   display: flex;
   padding: 20px;
-  background: #edf5fd;
+  background: #151b1e;
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -96,7 +96,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #242424;
+  color: #ffffff;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -106,7 +106,6 @@
 
 .chatMessageGpt {
   margin-bottom: 12px;
-  max-width: 80%;
   display: flex;
 }
 

@@ -242,6 +242,61 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       )
     }
   }
+
+  if (answer.value_propositions && answer.value_propositions?.length > 0) {
+    return (
+      <Stack style={{width: '100%'}}>
+        <Text variant='xLargePlus'>Value Propositions</Text>
+        <Stack style={{width: '100%'}}>
+          {answer.value_propositions?.map((valueProp) => (
+            <Stack key={valueProp.proposition} className={styles.propositionContainer}>
+              <Stack.Item>
+                <Text variant='large' className={styles.propositionContainerHeading}>{valueProp.proposition}</Text>
+              </Stack.Item>
+              <Stack.Item>
+                <Text className={styles.propositionContainerText}>{valueProp.details}</Text>
+              </Stack.Item>
+            </Stack>
+          ))}
+        </Stack>
+      </Stack>
+    )
+  }
+
+  if (answer.walkaround_script && answer.walkaround_script?.length > 0) {
+    return (
+      <Stack>
+        <Text variant='xLargePlus'>Walkaround</Text>
+        <Stack>
+          {answer.walkaround_script?.map((walkaround) => (
+            <Stack key={walkaround.heading} className={styles.walkaroundContainer}>
+              <Stack.Item className={styles.walkaroundContainerHeadingContainer}>
+                <Text variant='large' className={styles.walkaroundContainerHeading}>{walkaround.heading}</Text>
+              </Stack.Item>
+              <Stack.Item className={styles.walkaroundContainerTextContainer}>
+                <Text variant='xxLarge' className={styles.walkaroundContainerText}>{walkaround.details}</Text>
+              </Stack.Item>
+            </Stack>
+          ))}
+        </Stack>
+      </Stack>
+    )
+  }
+
+  if(answer.error) {
+    return (
+      <Stack style={{width: '100%'}}>
+        <Stack style={{width: '100%'}}>
+            <Stack className={styles.errorContainer}>
+              <Stack.Item >
+                <Text variant='large' className={styles.errorContainerText}>{answer.error}</Text>
+              </Stack.Item>
+            </Stack>
+        </Stack>
+      </Stack>
+    )
+  }
+
   return (
     <>
       <Stack className={styles.answerContainer} tabIndex={0}>

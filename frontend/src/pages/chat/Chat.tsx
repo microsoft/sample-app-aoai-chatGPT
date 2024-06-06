@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
-import { isEmpty } from 'lodash'
+import { isEmpty, result } from 'lodash'
 import DOMPurify from 'dompurify'
 
 import styles from './Chat.module.css'
@@ -30,7 +30,11 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
-  AzureSqlServerCodeExecResult
+  AzureSqlServerCodeExecResult,
+  ValuePropositionResults,
+  WalkAroundScriptResults,
+  ValuePropositionResult,
+  WalkAroundScriptResult
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -62,6 +66,8 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+  const [valuePropositions, setValuePropositions] = useState<ValuePropositionResult[]>([])
+  const [walkaroundScripts, setWalkaroundScripts] = useState<WalkAroundScriptResult[]>([])
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -128,6 +134,16 @@ const Chat = () => {
     if (resultMessage.content.includes('all_exec_results')) {
       const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
       setExecResults(parsedExecResults.all_exec_results)
+    }
+
+    if(resultMessage.content.includes('value_propositions')) {
+      const parsedValuePropositions = JSON.parse(resultMessage.content) as ValuePropositionResults
+      setValuePropositions(parsedValuePropositions.value_propositions)
+    }
+
+    if(resultMessage.content.includes('walkaround_script')) {
+      const parsedWalkaroundScripts = JSON.parse(resultMessage.content) as WalkAroundScriptResults
+      setWalkaroundScripts(parsedWalkaroundScripts.walkaround_script)
     }
 
     if (resultMessage.role === ASSISTANT) {
@@ -722,6 +738,45 @@ const Chat = () => {
     return null;
   }
 
+  const parsePropositionsFromMessage = (message: ChatMessage): ValuePropositionResult[] => {
+    if(message.role && message.role === 'assistant') {
+      try{
+        const valuePropositions = JSON.parse(message.content) as ValuePropositionResults
+        return valuePropositions.value_propositions
+      } catch {
+        return []
+      }
+    }
+
+    return [{proposition: 'P1', details: 'D1'}];
+  }
+
+  const parseWalkaroundScriptsFromMessage = (message: ChatMessage): WalkAroundScriptResult[] => {
+    if(message.role && message.role === 'assistant') {
+      try{
+        const walkaroundScripts = JSON.parse(message.content) as WalkAroundScriptResults
+        return walkaroundScripts.walkaround_script
+      } catch {
+        return []
+      }
+    }
+
+    return [{heading: 'H1', details: 'D1'}];
+  }
+
+  const parseErrorFromMessage = (message: ChatMessage) => {
+    if (message?.role && message?.role === 'assistant') {
+      try {
+        console.log(`error`, message.content)
+        const error = JSON.parse(message.content) as ErrorMessage
+        return error.title
+      } catch {
+        return undefined
+      }
+    }
+    return undefined
+  }
+
   const disabledButton = () => {
     return (
       isLoading ||
@@ -786,7 +841,10 @@ const Chat = () => {
                             plotly_data: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
                             feedback: answer.feedback,
-                            exec_results: execResults
+                            exec_results: execResults,
+                            value_propositions: parsePropositionsFromMessage(answer),
+                            walkaround_script: parseWalkaroundScriptsFromMessage(answer),
+                            error: parseErrorFromMessage(answer)
                           }}
                           onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult()}
