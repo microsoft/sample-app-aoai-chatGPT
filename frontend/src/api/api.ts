@@ -1,6 +1,6 @@
 import { chatHistorySampleData } from '../constants/chatHistory'
 
-import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
+import { BoatFeedback, ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
   const response = await fetch('/v2/conversation', {
@@ -333,6 +333,33 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
     body: JSON.stringify({
       message_id: messageId,
       message_feedback: feedback
+    }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(res => {
+      return res
+    })
+    .catch(_err => {
+      console.error('There was an issue logging feedback.')
+      const errRes: Response = {
+        ...new Response(),
+        ok: false,
+        status: 500
+      }
+      return errRes
+    })
+  return response
+}
+
+
+export const historyConversationFeedback = async (conversationId: string, feedback: BoatFeedback): Promise<Response> => {
+  const response = await fetch('/history/conversation_feedback', {
+    method: 'POST',
+    body: JSON.stringify({
+      conversation_id: conversationId,
+      conversation_feedback: feedback
     }),
     headers: {
       'Content-Type': 'application/json'

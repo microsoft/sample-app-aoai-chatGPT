@@ -76,6 +76,32 @@
   gap: 12px;
 }
 
+.suggestionContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 8.1285px;
+  gap: 5.42px;
+  background: #d0d0d0;
+  box-shadow:
+    0px 1px 2px rgba(0, 0, 0, 0.14),
+    0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 5.419px;
+  margin-top: 16.257px;
+  width: 100%;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.suggestionContainerHeading {
+  color: #000000;
+  font-weight: 700;
+}
+
+.suggestionContainerText {
+  color: #3f3f3f;
+}
+
 .errorContainer {
   display: flex;
   flex-direction: column;

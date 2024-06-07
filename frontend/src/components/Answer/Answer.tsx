@@ -2,7 +2,7 @@ import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
+import { Checkbox, DefaultButton, Dialog, FontIcon, PrimaryButton, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
 import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
@@ -22,7 +22,10 @@ import styles from './Answer.module.css'
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
-  onExectResultClicked: () => void
+  onExectResultClicked: () => void,
+  onBoatSuggestionClicked: (model: string) => void,
+  onWalkAroundClicked: () => void,
+  onFeedbackClicked: () => void
 }
 
 const responsive = {
@@ -44,7 +47,7 @@ const responsive = {
   }
 };
 
-export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
+export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoatSuggestionClicked, onWalkAroundClicked, onFeedbackClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -280,6 +283,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack>
           ))}
         </Stack>
+        <PrimaryButton 
+          text='Walk Around'
+          style={{marginTop: 12, borderRadius: '5.419px', backgroundColor: '#151b1e'}}
+          onClick={onWalkAroundClicked}/>
       </Stack>
     )
   }
@@ -311,6 +318,35 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </div>
           ))}
           </Carousel>
+        </Stack>
+        <PrimaryButton 
+          text='Feedback'
+          style={{marginTop: 12, borderRadius: '5.419px', backgroundColor: '#151b1e'}}
+          onClick={onFeedbackClicked}/>
+      </Stack>
+    )
+  }
+
+  if (answer.boat_suggestions && answer.boat_suggestions?.length > 0) {
+    return (
+      <Stack style={{width: '100%'}}>
+        <Text variant='xLargePlus'>Top Recommendations</Text>
+        <Stack style={{width: '100%'}}>
+          {answer.boat_suggestions?.map((boat) => (
+            <Stack key={boat.model} className={styles.suggestionContainer} horizontal onClick={() => onBoatSuggestionClicked(boat.model)}>
+              <Stack>
+                <img src="#" style={{width: 64, height: 64, borderRadius: '5.419px'}}/>
+              </Stack>
+              <Stack style={{marginLeft: '12px'}}>
+                <Stack.Item>
+                  <Text variant='large' className={styles.suggestionContainerHeading}>{boat.model}</Text>
+                </Stack.Item>
+                <Stack.Item>
+                  <Text className={styles.suggestionContainerText}>{boat.summary}</Text>
+                </Stack.Item>
+              </Stack>
+            </Stack>
+          ))}
         </Stack>
       </Stack>
     )

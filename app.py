@@ -1231,4 +1231,51 @@ async def conversation_v2():
 
     return await conversation_internal_v2(request_json, request.headers, PromptType.BOAT_SUGGESTION_PROMPT)
 
+
+@bp.route("/history/conversation_feedback", methods=["POST"])
+async def add_conversation_feedback():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user["user_principal_id"]
+    cosmos_conversation_client = init_cosmosdb_client()
+
+    ## check request for message_id
+    request_json = await request.get_json()
+    conversation_id = request_json.get("conversation_id", None)
+    conversation_feedback = request_json.get("conversation_feedback", None)
+    try:
+        if not conversation_id:
+            return jsonify({"error": "conversation_id is required"}), 400
+
+        if not conversation_feedback:
+            return jsonify({"error": "conversation_feedback is required"}), 400
+
+        ## update the message in cosmos
+        updated_conversation = await cosmos_conversation_client.update_conversation_feedback(
+            user_id, conversation_id, conversation_feedback
+        )
+        if updated_conversation:
+            return (
+                jsonify(
+                    {
+                        "message": f"Successfully updated conversation with feedback {conversation_feedback}",
+                        "message_id": conversation_id,
+                    }
+                ),
+                200,
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "error": f"Unable to update conversation {conversation_id}. It either does not exist or the user does not have access to it."
+                    }
+                ),
+                404,
+            )
+
+    except Exception as e:
+        logging.exception("Exception in /history/conversation_feedback")
+        return jsonify({"error": str(e)}), 500
+
+
 app = create_app()

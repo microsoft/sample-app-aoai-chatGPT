@@ -9,7 +9,8 @@ export type AskResponse = {
   feedback?: Feedback
   exec_results?: ExecResults[],
   value_propositions?: ValuePropositionResult[],
-  walkaround_script?: WalkAroundScriptResult[]
+  walkaround_script?: WalkAroundScriptResult[],
+  boat_suggestions?: BoatSuggestionResult[]
 }
 
 export type Citation = {
@@ -79,6 +80,16 @@ export type WalkAroundScriptResult = {
   heading: string
   details: string
 }
+
+export type BoatSuggestionResults = {
+  boat_suggestions: BoatSuggestionResult[]
+}
+
+export type BoatSuggestionResult = {
+  model: string
+  summary: string
+}
+
 
 export type Conversation = {
   id: string
@@ -179,4 +190,11 @@ export enum Feedback {
   Sexual = 'sexual',
   Manipulative = 'manipulative',
   OtherHarmful = 'other_harmlful'
+}
+
+export type FeedbackSentiment = 'Good' | 'Improve' | 'Neutral';
+
+export type BoatFeedback = {
+  sentiment: FeedbackSentiment
+  feedback: string
 }

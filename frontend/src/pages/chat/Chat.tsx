@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Text, TextField, PrimaryButton } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
-import { isEmpty, result } from 'lodash'
+import { isEmpty, set } from 'lodash'
 import DOMPurify from 'dompurify'
 
 import styles from './Chat.module.css'
@@ -34,7 +34,11 @@ import {
   ValuePropositionResults,
   WalkAroundScriptResults,
   ValuePropositionResult,
-  WalkAroundScriptResult
+  WalkAroundScriptResult,
+  BoatSuggestionResults,
+  BoatSuggestionResult,
+  FeedbackSentiment,
+  historyConversationFeedback
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -68,6 +72,11 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [valuePropositions, setValuePropositions] = useState<ValuePropositionResult[]>([])
   const [walkaroundScripts, setWalkaroundScripts] = useState<WalkAroundScriptResult[]>([])
+  const [boatSuggestions, setBoatSuggestions] = useState<BoatSuggestionResult[]>([])
+  const [boatModel, setBoatModel] = useState<string>('')
+  const [showFeedBack, setShowFeedBack] = useState<boolean>(true)
+  const [feedback, setFeedback] = useState<string>('')
+  const [feedbackSentiment, setFeedbackSentiment] = useState<FeedbackSentiment>('Neutral')
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -136,14 +145,19 @@ const Chat = () => {
       setExecResults(parsedExecResults.all_exec_results)
     }
 
-    if(resultMessage.content.includes('value_propositions')) {
+    if (resultMessage.content.includes('value_propositions')) {
       const parsedValuePropositions = JSON.parse(resultMessage.content) as ValuePropositionResults
       setValuePropositions(parsedValuePropositions.value_propositions)
     }
 
-    if(resultMessage.content.includes('walkaround_script')) {
+    if (resultMessage.content.includes('walkaround_script')) {
       const parsedWalkaroundScripts = JSON.parse(resultMessage.content) as WalkAroundScriptResults
       setWalkaroundScripts(parsedWalkaroundScripts.walkaround_script)
+    }
+
+    if (resultMessage.content.includes('boat_suggestions')) {
+      const parsedWalkaroundScripts = JSON.parse(resultMessage.content) as BoatSuggestionResults
+      setBoatSuggestions(parsedWalkaroundScripts.boat_suggestions)
     }
 
     if (resultMessage.role === ASSISTANT) {
@@ -545,6 +559,8 @@ const Chat = () => {
         setIsCitationPanelOpen(false)
         setIsIntentsPanelOpen(false)
         setMessages([])
+        setBoatModel('')
+        setShowFeedBack(false)
       }
     }
     setClearingChat(false)
@@ -613,6 +629,10 @@ const Chat = () => {
     setActiveCitation(undefined)
     appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null })
     setProcessMessages(messageStatus.Done)
+    setBoatModel('')
+    setShowFeedBack(false)
+    setFeedback('')
+    setFeedbackSentiment('Neutral')
   }
 
   const stopGenerating = () => {
@@ -624,8 +644,12 @@ const Chat = () => {
   useEffect(() => {
     if (appStateContext?.state.currentChat) {
       setMessages(appStateContext.state.currentChat.messages)
+      setBoatModel('')
+      setShowFeedBack(false)
     } else {
       setMessages([])
+      setBoatModel('')
+      setShowFeedBack(false)
     }
   }, [appStateContext?.state.currentChat])
 
@@ -690,7 +714,7 @@ const Chat = () => {
 
   useLayoutEffect(() => {
     chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [showLoadingMessage, processMessages])
+  }, [showLoadingMessage, processMessages, showFeedBack])
 
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
@@ -739,8 +763,8 @@ const Chat = () => {
   }
 
   const parsePropositionsFromMessage = (message: ChatMessage): ValuePropositionResult[] => {
-    if(message.role && message.role === 'assistant') {
-      try{
+    if (message.role && message.role === 'assistant') {
+      try {
         const valuePropositions = JSON.parse(message.content) as ValuePropositionResults
         return valuePropositions.value_propositions
       } catch {
@@ -748,12 +772,12 @@ const Chat = () => {
       }
     }
 
-    return [{proposition: 'P1', details: 'D1'}];
+    return [{ proposition: 'P1', details: 'D1' }];
   }
 
   const parseWalkaroundScriptsFromMessage = (message: ChatMessage): WalkAroundScriptResult[] => {
-    if(message.role && message.role === 'assistant') {
-      try{
+    if (message.role && message.role === 'assistant') {
+      try {
         const walkaroundScripts = JSON.parse(message.content) as WalkAroundScriptResults
         return walkaroundScripts.walkaround_script
       } catch {
@@ -761,7 +785,20 @@ const Chat = () => {
       }
     }
 
-    return [{heading: 'H1', details: 'D1'}];
+    return [{ heading: 'H1', details: 'D1' }];
+  }
+
+  const parseBoatSuggestionsFromMessage = (message: ChatMessage): BoatSuggestionResult[] => {
+    if (message.role && message.role === 'assistant') {
+      try {
+        const boatSuggestions = JSON.parse(message.content) as BoatSuggestionResults
+        return boatSuggestions.boat_suggestions
+      } catch {
+        return []
+      }
+    }
+
+    return [{ model: 'M1', summary: 'S1' }];
   }
 
   const parseErrorFromMessage = (message: ChatMessage) => {
@@ -785,6 +822,22 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     )
   }
+
+  const submitFeedback = async () => {
+    let conversationId = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
+    if(!conversationId) {
+      return;
+    }
+
+    await historyConversationFeedback(conversationId, { feedback: feedback, sentiment: feedbackSentiment });
+    setShowFeedBack(false);
+    setFeedback('');
+    setFeedbackSentiment('Neutral');
+    newChat();
+  }
+
+  const goodFeedbackColor = () => feedbackSentiment === 'Good' ? '#629e57' : '#151b1e';
+  const badFeedbackColor = () => feedbackSentiment === 'Improve' ? '#fd5772' : '#151b1e';
 
   return (
     <div className={styles.container} role="main">
@@ -844,10 +897,34 @@ const Chat = () => {
                             exec_results: execResults,
                             value_propositions: parsePropositionsFromMessage(answer),
                             walkaround_script: parseWalkaroundScriptsFromMessage(answer),
-                            error: parseErrorFromMessage(answer)
+                            error: parseErrorFromMessage(answer),
+                            boat_suggestions: parseBoatSuggestionsFromMessage(answer)
                           }}
                           onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult()}
+                          onBoatSuggestionClicked={(model: string) => {
+                            setBoatModel(model);
+                            let conversationId = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
+                            let question = `What are the features for the boat model ${model}?`;
+                            appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+                              ? makeApiRequestWithCosmosDB(question, conversationId)
+                              : makeApiRequestWithoutCosmosDB(question, conversationId)
+                          }}
+                          onWalkAroundClicked={() => {
+                            if (boatModel === '') {
+                              return;
+                            }
+                            let conversationId = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
+                            let question = `Give me the walkaround for the boat model ${boatModel}`;
+                            appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+                              ? makeApiRequestWithCosmosDB(question, conversationId)
+                              : makeApiRequestWithoutCosmosDB(question, conversationId)
+                          }}
+                          onFeedbackClicked={() => {
+                            if(feedback === '') {
+                              setShowFeedBack(true);
+                            }
+                           }}
                         />
                       </div>
                     ) : answer.role === ERROR ? (
@@ -872,8 +949,91 @@ const Chat = () => {
                         }}
                         onCitationClicked={() => null}
                         onExectResultClicked={() => null}
+                        onBoatSuggestionClicked={() => null}
+                        onWalkAroundClicked={() => null}
+                        onFeedbackClicked={() => null}
                       />
                     </div>
+                  </>
+                )}
+                {showFeedBack && (
+                  <>
+                    <Stack className={styles.walkaroundContainer}>
+                      <Stack.Item className={styles.walkaroundContainerHeadingContainer}>
+                        <Text variant='large' className={styles.walkaroundContainerHeading}>Rate your Experience</Text>
+                      </Stack.Item>
+                      <Stack.Item className={styles.walkaroundButtonsContainer}>
+                        <Stack horizontal style={{marginTop: 24, gap: 18, width: '100%' }}>
+                            <Stack.Item
+                              className={styles.feedbackButton}
+                              style={{
+                                backgroundColor: goodFeedbackColor(),
+                              }}
+                              onClick={() => {setFeedbackSentiment('Good')}}>
+                              <Text>👍</Text>
+                              <Text className={styles.feedbackText} variant='mediumPlus'>Good</Text>
+                            </Stack.Item>
+
+                            <Stack.Item
+                              className={styles.feedbackButton}
+                              style={{
+                                backgroundColor: badFeedbackColor(),
+                              }}
+                             onClick={() => {setFeedbackSentiment('Improve')}}>
+                              <Text>👎</Text>
+                              <Text
+                                className={styles.feedbackText}
+                                variant='mediumPlus'>Improve</Text>
+                            </Stack.Item>
+                        </Stack>
+                      </Stack.Item>
+                      <Stack.Item style={{width: '100%', padding: 12}}>
+                        <TextField
+                          multiline
+                          rows={6}
+                          onChange={(e, newValue) => {setFeedback(newValue || '')}}
+                          value={feedback}
+                          placeholder='Anything specific you would like to share?'
+                          styles={{
+                              fieldGroup: {
+                                borderRadius: `12px`,
+                                backgroundColor: 'rgba(128, 128, 128, 0.1)',
+                                borderColor: '#333333',
+                                selectors: {
+                                  ':after': {
+                                    border: 'none'
+                                  }
+                                }
+                              },
+                              field: {
+                                backgroundColor: 'transparent',
+                                color: '#7b8285',
+                                paddingLeft: 12,
+                                paddingRight: 12,
+                                paddingTop: 24,
+                                paddingBottom: 24,
+                                fontWeight: 500,
+                                fontSize: 16,
+                                selectors: {
+                                  ':focus-within': {
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    boxShadow: 'none',
+                                  },
+                                },
+                              }
+                          }}
+                        />
+                      </Stack.Item>
+                      <Stack.Item style={{padding: 12, width: '100%'}}>
+                        <PrimaryButton
+                          text="Submit"
+                          style={{marginTop: 12, borderRadius: '5.419px', backgroundColor: '#151b1e', width: '100%', border: 'none'}}
+                          onClick={() => submitFeedback()}
+                        />
+                      </Stack.Item>
+                    </Stack>
                   </>
                 )}
                 <div ref={chatMessageStreamEnd} />
