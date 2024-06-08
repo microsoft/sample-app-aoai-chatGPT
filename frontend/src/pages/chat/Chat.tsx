@@ -12,7 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
-import Etihad from '../../assets/EtihadLogo.svg'
+import Etihad from '../../assets/Etihad.svg'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 
 import {
