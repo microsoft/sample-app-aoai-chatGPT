@@ -4,7 +4,7 @@ import { Dialog, Stack, TextField } from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
 
 import { CosmosDBStatus } from '../../api'
-import Etihad from '../../assets/EtihadLogo.svg'
+import Etihad from '../../assets/Etihad.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 
