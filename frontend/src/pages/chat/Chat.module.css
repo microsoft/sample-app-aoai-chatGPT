@@ -47,6 +47,7 @@
   line-height: 24px;
   margin-top: 36px;
   margin-bottom: 0px;
+  color: #651818;
 }
 
 .chatEmptyStateSubtitle {
@@ -58,7 +59,7 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #616161;
+  color: #651818;
 }
 
 .chatIcon {
