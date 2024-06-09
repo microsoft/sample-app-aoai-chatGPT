@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - Etihad-Incident-Management-BOT
+name: Build and deploy Python app to Azure Web App - Etihad-Incident-Management
 
 on:
   push:
@@ -64,6 +64,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'Etihad-Incident-Management-BOT'
+          app-name: 'Etihad-Incident-Management'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B3E9E99DABD14E4291D36DEF44F1333C }}

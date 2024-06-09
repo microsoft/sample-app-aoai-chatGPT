@@ -129,7 +129,7 @@ async def test_dotenv(test_app: Quart, dotenv_template_params: dict[str, str]):
         message_content = dotenv_template_params["elasticsearchQuery"]
         
     else:
-        message_content = "What is Etihad?"
+        message_content = "What is Contoso?"
         
     request_path = "/conversation"
     request_data = {
