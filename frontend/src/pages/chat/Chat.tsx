@@ -12,8 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
-// import Contoso from '../../assets/Contoso.svg'
-import Etihad from '../../assets/etihad.svg'
+import Etihad from '../../assets/Etihad.svg'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 
 import {
@@ -734,8 +733,6 @@ const Chat = () => {
     )
   }
 
-  console.log("ui: ", ui)
-
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -771,10 +768,8 @@ const Chat = () => {
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
                 <img src={ui?.chat_logo ? ui.chat_logo : Etihad} className={styles.chatIcon} aria-hidden="true" />
-                {/* <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2> */}
-                <h1 className={styles.chatEmptyStateTitle}>Incident Management Chatbot</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
+                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
@@ -912,7 +907,7 @@ const Chat = () => {
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Type your quries..."
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB

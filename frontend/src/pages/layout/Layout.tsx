@@ -4,8 +4,7 @@ import { Dialog, Stack, TextField } from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
 
 import { CosmosDBStatus } from '../../api'
-// import Contoso from '../../assets/Contoso.svg'
-import Etihad from '../../assets/etihad.svg'
+import Etihad from '../../assets/Etihad.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 
@@ -72,8 +71,7 @@ const Layout = () => {
       <header className={styles.header} role={'banner'}>
         <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
           <Stack horizontal verticalAlign="center">
-            <img src={ui?.logo ? ui.logo : Etihad} className={styles.headerIcon} style={{height: "62px"}} aria-hidden="true" alt="" />
-            <p className={styles.etihadAirways}>Etihad Airways</p>
+            <img src={ui?.logo ? ui.logo : Etihad} className={styles.headerIcon} aria-hidden="true" alt="" />
             <Link to="/" className={styles.headerTitleContainer}>
               <h1 className={styles.headerTitle}>{ui?.title}</h1>
             </Link>
