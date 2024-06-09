@@ -75,7 +75,7 @@ const Layout = () => {
             <img src={ui?.logo ? ui.logo : Etihad} className={styles.headerIcon} style={{height: "62px"}} aria-hidden="true" alt="" />
             <p className={styles.etihadAirways}>Etihad Airways</p>
             <Link to="/" className={styles.headerTitleContainer}>
-              <h1 className={styles.headerTitle}>{ui?.title}</h1>
+               {/* <h1 className={styles.headerTitle}>{ui?.title}</h1> */}
             </Link>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
