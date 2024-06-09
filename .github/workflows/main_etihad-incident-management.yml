@@ -66,4 +66,4 @@ jobs:
         with:
           app-name: 'Etihad-Incident-Management'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B3E9E99DABD14E4291D36DEF44F1333C }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_3AF0BB14CD9845208ADD0D6AAF143464 }}
