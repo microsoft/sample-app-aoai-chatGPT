@@ -4,6 +4,13 @@
   height: 100%;
 }
 
+.etihadAirways {
+  margin-left: 15px;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 24px;
+}
+
 .header {
   background-color: #f2f2f2;
 }
