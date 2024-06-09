@@ -5,7 +5,8 @@ WORKDIR /home/node/app
 COPY ./frontend/package*.json ./  
 USER node
 RUN npm ci  
-COPY --chown=node:node ./frontend/ ./frontend   
+COPY --chown=node:node ./frontend/ ./frontend  
+COPY --chown=node:node ./static/ ./static 
 WORKDIR /home/node/app/frontend
 RUN NODE_OPTIONS=--max_old_space_size=8192 npm run build
   
