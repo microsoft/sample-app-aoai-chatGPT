@@ -31,7 +31,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
     These variables are required:
     - `AZURE_OPENAI_RESOURCE`
     - `AZURE_OPENAI_MODEL`
-    - `AZURE_OPENAI_KEY`
+    - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_OPENAI_TEMPERATURE`
@@ -58,7 +58,7 @@ NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space
     - `DATASOURCE_TYPE` (should be set to `AzureCognitiveSearch`)
     - `AZURE_SEARCH_SERVICE`
     - `AZURE_SEARCH_INDEX`
-    - `AZURE_SEARCH_KEY`
+    - `AZURE_SEARCH_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`
