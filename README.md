@@ -220,9 +220,9 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_SEARCH_VECTOR_COLUMNS||List of fields in your Azure AI Search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
 |AZURE_SEARCH_PERMITTED_GROUPS_COLUMN||Field from your Azure AI Search index that contains AAD group IDs that determine document-level access control.|
 |AZURE_SEARCH_STRICTNESS|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
-|AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
+|AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource (only one of AZURE_OPENAI_RESOURCE/AZURE_OPENAI_ENDPOINT is required)|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
-|AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource.|
+|AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource (only one of AZURE_OPENAI_RESOURCE/AZURE_OPENAI_ENDPOINT is required)|
 |AZURE_OPENAI_MODEL_NAME|gpt-35-turbo-16k|The name of the model|
 |AZURE_OPENAI_KEY||One of the API keys of your Azure OpenAI resource|
 |AZURE_OPENAI_TEMPERATURE|0|What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. A value of 0 is recommended when using your data.|
