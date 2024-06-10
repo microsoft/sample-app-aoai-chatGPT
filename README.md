@@ -198,6 +198,8 @@ The app uses Azure OpenAI on your data [(see documentation)](https://learn.micro
    2. assign `Search Index Data Reader` and `Search Service Contributor` to the identity of the Azure OpenAI instance
 3. Do not configure `AZURE_SEARCH_KEY` and `AZURE_OPENAI_KEY` to use entra ID authentication.
 
+note: RBAC assignments can take a few minutes before becoming effective.
+
 ### Best Practices
 We recommend keeping these best practices in mind:
 
