@@ -20,13 +20,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   overflow-y: auto;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 0px);
 }
 
 .chatEmptyState {
@@ -87,7 +86,7 @@
 .chatMessageUserMessage {
   display: flex;
   padding: 20px;
-  background: #151b1e;
+  background: #edf5fd;
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -96,7 +95,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #ffffff;
+  color: #242424;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;
@@ -106,6 +105,7 @@
 
 .chatMessageGpt {
   margin-bottom: 12px;
+  max-width: 80%;
   display: flex;
 }
 
@@ -162,6 +162,14 @@
   color: #ffffff;
   border-radius: 4px;
   z-index: 1;
+}
+
+.selectedButton {
+  background-color: rgb(11, 74, 126);
+}
+
+.hoveredButton:hover {
+  background-color: rgb(126, 18, 18);
 }
 
 .clearChatBroomNoCosmos {
@@ -307,33 +315,6 @@
   flex-grow: 0;
 }
 
-.exectResultList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  border-bottom: 1px solid #323130;
-  margin-top: 12px;
-}
-
-.exectResultList:first-child {
-  margin-top: 0;
-}
-
-.exectResultList:last-child {
-  border-bottom: none;
-}
-
-.exectResultList > p {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-  margin: 3px 0;
-}
-
-.exectResultList > p > span {
-  font-weight: 600;
-}
-
 a {
   padding-left: 5px;
   padding-right: 5px;
@@ -383,60 +364,4 @@ a {
   .citationPanel {
     max-width: 100%;
   }
-}
-
-
-.walkaroundContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8.1285px;
-  gap: 5.42px;
-  background: #263238;
-  box-shadow:
-    0px 1px 2px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 5.419px;
-  margin-top: 16.257px;
-  min-height: 55vh;
-}
-
-.walkaroundContainerHeading {
-  color: #7d8488;
-  font-weight: 700;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.walkaroundContainerHeadingContainer {
-  margin-top: 24px;
-}
-
-.walkaroundButtonsContainer {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-}
-
-.feedbackButton {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #151b1e;
-  padding: 24px;
-  border-radius: 21.676px;
-  width: 100%;
-  cursor: pointer;
-}
-
-.feedbackText {
-  color: #e1e3e3;
-  font-weight: 600;
-}
-
-.feedbackTextField {
-  border-radius: 21.676px;
-  opacity: 0.5;
 }

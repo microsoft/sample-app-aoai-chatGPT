@@ -1,9 +1,9 @@
 import { chatHistorySampleData } from '../constants/chatHistory'
 
-import { BoatFeedback, ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
+import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-  const response = await fetch('/v2/conversation', {
+  const response = await fetch('/conversation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -128,7 +128,7 @@ export const historyGenerate = async (
       messages: options.messages
     })
   }
-  const response = await fetch('/v2/history/generate', {
+  const response = await fetch('/history/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -353,29 +353,38 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
   return response
 }
 
-
-export const historyConversationFeedback = async (conversationId: string, feedback: BoatFeedback): Promise<Response> => {
-  const response = await fetch('/history/conversation_feedback', {
+export async function getRecommendations(payload:object): Promise<Response> {
+  const key='Rn2VC8PWhOjssJtaDgsirHzuZKesKfi8'
+  const response = await fetch('https://dev-pf-boat-suggestion-ep10.eastus.inference.ml.azure.com/score', {
     method: 'POST',
-    body: JSON.stringify({
-      conversation_id: conversationId,
-      conversation_feedback: feedback
-    }),
     headers: {
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+      "Authorization": `Bearer ${key}`,
+    },
+    body: JSON.stringify(payload)
   })
-    .then(res => {
-      return res
-    })
-    .catch(_err => {
-      console.error('There was an issue logging feedback.')
-      const errRes: Response = {
-        ...new Response(),
-        ok: false,
-        status: 500
-      }
-      return errRes
-    })
   return response
 }
+
+export async function getValuePropositions(payload:object): Promise<Response> {
+  const response = await fetch('/valueProposition', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  return response
+}
+
+export async function getWalkthroughData(payload:object): Promise<Response> {
+  const response = await fetch('/walkthrough', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  return response
+}
+

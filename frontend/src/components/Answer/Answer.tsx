@@ -2,7 +2,7 @@ import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Checkbox, DefaultButton, Dialog, FontIcon, PrimaryButton, Stack, Text } from '@fluentui/react'
+import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
 import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
@@ -12,42 +12,17 @@ import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 import { AppStateContext } from '../../state/AppProvider'
-import Carousel from 'react-multi-carousel';
 
 import { parseAnswer } from './AnswerParser'
 
-import 'react-multi-carousel/lib/styles.css'
 import styles from './Answer.module.css'
 
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
-  onExectResultClicked: () => void,
-  onBoatSuggestionClicked: (model: string) => void,
-  onWalkAroundClicked: () => void,
-  onFeedbackClicked: () => void
 }
 
-const responsive = {
-  xlDeskop: {
-    breakpoint: { max: 4000, min: 3000 },
-    items: 5
-  },
-  desktop: {
-    breakpoint: { max: 3000, min: 1024 },
-    items: 3
-  },
-  tablet: {
-    breakpoint: { max: 1024, min: 464 },
-    items: 2
-  },
-  mobile: {
-    breakpoint: { max: 464, min: 0 },
-    items: 1
-  }
-};
-
-export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoatSuggestionClicked, onWalkAroundClicked, onFeedbackClicked }: Props) => {
+export const Answer = ({ answer, onCitationClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -252,7 +227,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoat
   }
 
   const components = {
-    code({ node, ...props }: { node: any;[key: string]: any }) {
+    code({ node, ...props }: { node: any; [key: string]: any }) {
       let language
       if (props.className) {
         const match = props.className.match(/language-(\w+)/)
@@ -266,106 +241,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoat
       )
     }
   }
-
-  if (answer.value_propositions && answer.value_propositions?.length > 0) {
-    return (
-      <Stack style={{width: '100%'}}>
-        <Text variant='xLargePlus'>Value Propositions</Text>
-        <Stack style={{width: '100%'}}>
-          {answer.value_propositions?.map((valueProp) => (
-            <Stack key={valueProp.proposition} className={styles.propositionContainer}>
-              <Stack.Item>
-                <Text variant='large' className={styles.propositionContainerHeading}>{valueProp.proposition}</Text>
-              </Stack.Item>
-              <Stack.Item>
-                <Text className={styles.propositionContainerText}>{valueProp.details}</Text>
-              </Stack.Item>
-            </Stack>
-          ))}
-        </Stack>
-        <PrimaryButton 
-          text='Walk Around'
-          style={{marginTop: 12, borderRadius: '5.419px', backgroundColor: '#151b1e'}}
-          onClick={onWalkAroundClicked}/>
-      </Stack>
-    )
-  }
-
-  if (answer.walkaround_script && answer.walkaround_script?.length > 0) {
-    return (
-      <Stack style={{width:'100%'}}>
-        <Text variant='xLargePlus'>Walkaround</Text>
-        <Stack>
-        <Carousel 
-          responsive={responsive}
-          swipeable={true}
-          draggable={true}
-          showDots={true}
-          autoPlay={false}
-          removeArrowOnDeviceType={["tablet", "mobile"]}
-          keyBoardControl={true}
-          >
-          {answer.walkaround_script?.map((walkaround) => (
-            <div style={{padding: '6px'}}>
-            <Stack key={walkaround.heading} className={styles.walkaroundContainer}>
-              <Stack.Item className={styles.walkaroundContainerHeadingContainer}>
-                <Text variant='large' className={styles.walkaroundContainerHeading}>{walkaround.heading}</Text>
-              </Stack.Item>
-              <Stack.Item className={styles.walkaroundContainerTextContainer}>
-                <Text variant='xxLarge' className={styles.walkaroundContainerText}>{walkaround.details}</Text>
-              </Stack.Item>
-            </Stack>
-            </div>
-          ))}
-          </Carousel>
-        </Stack>
-        <PrimaryButton 
-          text='Feedback'
-          style={{marginTop: 12, borderRadius: '5.419px', backgroundColor: '#151b1e'}}
-          onClick={onFeedbackClicked}/>
-      </Stack>
-    )
-  }
-
-  if (answer.boat_suggestions && answer.boat_suggestions?.length > 0) {
-    return (
-      <Stack style={{width: '100%'}}>
-        <Text variant='xLargePlus'>Top Recommendations</Text>
-        <Stack style={{width: '100%'}}>
-          {answer.boat_suggestions?.map((boat) => (
-            <Stack key={boat.model} className={styles.suggestionContainer} horizontal onClick={() => onBoatSuggestionClicked(boat.model)}>
-              <Stack>
-                <img src="#" style={{width: 64, height: 64, borderRadius: '5.419px'}}/>
-              </Stack>
-              <Stack style={{marginLeft: '12px'}}>
-                <Stack.Item>
-                  <Text variant='large' className={styles.suggestionContainerHeading}>{boat.model}</Text>
-                </Stack.Item>
-                <Stack.Item>
-                  <Text className={styles.suggestionContainerText}>{boat.summary}</Text>
-                </Stack.Item>
-              </Stack>
-            </Stack>
-          ))}
-        </Stack>
-      </Stack>
-    )
-  }
-
-  if(answer.error) {
-    return (
-      <Stack style={{width: '100%'}}>
-        <Stack style={{width: '100%'}}>
-            <Stack className={styles.errorContainer}>
-              <Stack.Item >
-                <Text variant='large' className={styles.errorContainerText}>{answer.error}</Text>
-              </Stack.Item>
-            </Stack>
-        </Stack>
-      </Stack>
-    )
-  }
-
   return (
     <>
       <Stack className={styles.answerContainer} tabIndex={0}>
@@ -393,7 +268,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoat
                     onClick={() => onLikeResponseClicked()}
                     style={
                       feedbackState === Feedback.Positive ||
-                        appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
+                      appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
                         ? { color: 'darkgreen', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -404,8 +279,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoat
                     onClick={() => onDislikeResponseClicked()}
                     style={
                       feedbackState !== Feedback.Positive &&
-                        feedbackState !== Feedback.Neutral &&
-                        feedbackState !== undefined
+                      feedbackState !== Feedback.Neutral &&
+                      feedbackState !== undefined
                         ? { color: 'darkred', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -451,29 +326,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, onBoat
           <Stack.Item className={styles.answerDisclaimerContainer}>
             <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
           </Stack.Item>
-          {!!answer.exec_results?.length && (
-            <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
-              <Stack style={{ width: '100%' }}>
-                <Stack horizontal horizontalAlign="start" verticalAlign="center">
-                  <Text
-                    className={styles.accordionTitle}
-                    onClick={() => onExectResultClicked()}
-                    aria-label="Open exec results"
-                    tabIndex={0}
-                    role="button">
-                    <span>
-                      Show Exec Results
-                    </span>
-                  </Text>
-                  <FontIcon
-                    className={styles.accordionIcon}
-                    onClick={handleChevronClick}
-                    iconName={'ChevronRight'}
-                  />
-                </Stack>
-              </Stack>
-            </Stack.Item>
-          )}
         </Stack>
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>

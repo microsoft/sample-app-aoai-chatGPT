@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
 
 import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
+import { useNavigate } from 'react-router-dom'
 
 interface Props {
   onSend: (question: string, id?: string) => void
@@ -12,10 +13,15 @@ interface Props {
   placeholder?: string
   clearOnSend?: boolean
   conversationId?: string
+  promptMessage: string
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId ,promptMessage}: Props) => {
   const [question, setQuestion] = useState<string>('')
+  const navigate=useNavigate();
+  useEffect(() => {
+    setQuestion(promptMessage)
+  }, [promptMessage])
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
@@ -29,7 +35,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     }
 
     if (clearOnSend) {
-      setQuestion('')
+      setQuestion('');
+      navigate("/recommendations")
     }
   }
 

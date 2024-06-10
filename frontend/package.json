@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc && vite build",
     "watch": "tsc && vite build --watch",
     "test": "jest",
@@ -28,6 +28,7 @@
     "react-multi-carousel": "^2.8.5",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.8.1",
+    "react-swipeable": "^7.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-uuid": "^2.0.0",
     "rehype-raw": "^6.1.1",

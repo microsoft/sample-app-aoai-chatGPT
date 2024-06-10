@@ -1,0 +1,24 @@
+.splash-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    /* background-color: #282c34; */
+    color: white;
+    text-align: center;
+  }
+  
+  .logo {
+    width: 40%;
+    max-width: 300px;
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .logo {
+      width: 60%;
+    }
+  }
+  

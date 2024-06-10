@@ -1,7 +1,12 @@
 .layout {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
+  /* background: rgb(58,73,81); */
+  background-image: url("../../assets//BP-BG.png");
+  /* background: linear-gradient(200deg, rgba(58,73,81,1) 0%, rgba(35,44,48,1) 80%, rgba(58,73,81,1) 99%); */
 }
 
 .header {
@@ -18,7 +23,7 @@
   display: flex;
   align-items: center;
   margin-left: 14px;
-  text-decoration: none;
+  text-decoration: none; 
 }
 
 .headerTitle {

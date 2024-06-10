@@ -7,10 +7,6 @@ export type AskResponse = {
   error?: string
   message_id?: string
   feedback?: Feedback
-  exec_results?: ExecResults[],
-  value_propositions?: ValuePropositionResult[],
-  walkaround_script?: WalkAroundScriptResult[],
-  boat_suggestions?: BoatSuggestionResult[]
 }
 
 export type Citation = {
@@ -56,40 +52,6 @@ export type ChatMessage = {
   feedback?: Feedback
   context?: string
 }
-
-export type ExecResults = {
-  intent: string
-  search_query: string | null
-  search_result: string | null
-}
-
-export type ValuePropositionResults = {
-  value_propositions: ValuePropositionResult[]
-}
-
-export type ValuePropositionResult = {
-  proposition: string
-  details: string
-}
-
-export type WalkAroundScriptResults = {
-  walkaround_script: WalkAroundScriptResult[]
-}
-
-export type WalkAroundScriptResult = {
-  heading: string
-  details: string
-}
-
-export type BoatSuggestionResults = {
-  boat_suggestions: BoatSuggestionResult[]
-}
-
-export type BoatSuggestionResult = {
-  model: string
-  summary: string
-}
-
 
 export type Conversation = {
   id: string
@@ -192,9 +154,17 @@ export enum Feedback {
   OtherHarmful = 'other_harmlful'
 }
 
-export type FeedbackSentiment = 'Good' | 'Improve' | 'Neutral';
+export type Recommendations= {
+  title: string;
+  detail: string;
+}
 
-export type BoatFeedback = {
-  sentiment: FeedbackSentiment
-  feedback: string
+export type ValuePropositions= {
+  title: string;
+  detail: string; 
+}
+
+export type WalkThrough= {
+  title: string;
+  detail: string; 
 }
