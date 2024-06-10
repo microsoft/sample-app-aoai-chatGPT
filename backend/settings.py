@@ -101,7 +101,7 @@ class _AzureOpenAISettings(BaseSettings):
     )
     
     model: str
-    key: str
+    key: Optional[str] = None
     resource: Optional[str] = None
     endpoint: Optional[str] = None
     temperature: float = 0
