@@ -60,7 +60,7 @@ class _ChatHistorySettings(BaseSettings):
 
     database: str
     account: str
-    account_key: str = None
+    account_key: Optional[str] = None
     conversations_container: str
     enable_feedback: bool = False
 
@@ -101,7 +101,7 @@ class _AzureOpenAISettings(BaseSettings):
     )
     
     model: str
-    key: str = None
+    key: Optional[str] = None
     resource: Optional[str] = None
     endpoint: Optional[str] = None
     temperature: float = 0
