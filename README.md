@@ -193,10 +193,13 @@ The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. 
 The app uses Azure OpenAI on your data [(see documentation)](https://learn.microsoft.com/en-us/azure/ai-services/openai/references/on-your-data). To enable entra ID for intra-service authentication
 
 1. enable managed identity on Azure OpenAI
-2. configure AI search
+2. configure AI search to allow access from Azure OpenAI
    1. enable Role Based Access control on the used AI search instance [(see documentation)](https://learn.microsoft.com/en-us/azure/search/search-security-enable-roles)
    2. assign `Search Index Data Reader` and `Search Service Contributor` to the identity of the Azure OpenAI instance
 3. Do not configure `AZURE_SEARCH_KEY` and `AZURE_OPENAI_KEY` to use entra ID authentication.
+4. configure the webapp identity
+   1. enable managed identity in the app service that hosts the webapp
+   2. Go to the Azure OpenAI instance and assign the role `Cognitive Services OpenAI User` to the identity of the webapp
 
 note: RBAC assignments can take a few minutes before becoming effective.
 
