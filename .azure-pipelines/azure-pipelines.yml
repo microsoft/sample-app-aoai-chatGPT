@@ -1,0 +1,52 @@
+trigger:
+- main
+
+parameters:
+- name: azureServiceConnection
+  type: string
+  default: 'MyAzureServiceConnection'  # Replace with your actual service connection name
+
+variables:
+  - group: AzureSecrets  # Replace with your actual variable group
+  - name: vmImageName
+    value: 'ubuntu-latest'
+  - name: resourceGroupName
+    value: ''  # User should replace with their actual resource group name
+  - name: location
+    value: ''  # User should replace with their actual location
+  - name: templateFile
+    value: 'infra/main.bicep'
+  - name: csmParametersFile
+    value: 'infra/main.parameters.json'
+
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- checkout: self
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '${{ parameters.azureServiceConnection }}'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az bicep install
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '${{ parameters.azureServiceConnection }}'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Replacing placeholder with actual value in parameters file"
+      sed -i 's|REPLACE_WITH_PRINCIPAL_ID|$(AZURE_PRINCIPAL_ID)|g' $(csmParametersFile)
+      echo "Updated parameters file:"
+      cat $(csmParametersFile)
+      az deployment sub create --location $(location) --template-file $(templateFile) --parameters @$(csmParametersFile)
+  displayName: 'Deploy Bicep Template'
+
+
+
+
+

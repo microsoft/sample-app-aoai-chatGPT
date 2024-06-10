@@ -206,6 +206,35 @@ module cosmos 'db.bicep' = {
   }
 }
 
+// Storage Account
+module storageAccount 'core/storage/storage-account.bicep' = {
+  name: 'storage-account'
+  scope: resourceGroup
+  params: {
+    name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
+    location: location
+    tags: tags
+    accessTier: 'Hot'
+    allowBlobPublicAccess: false
+    allowCrossTenantReplication: true
+    allowSharedKeyAccess: true
+    defaultToOAuthAuthentication: false
+    deleteRetentionPolicy: {}
+    dnsEndpointType: 'Standard'
+    kind: 'StorageV2'
+    minimumTlsVersion: 'TLS1_2'
+    publicNetworkAccess: 'Disabled'
+    sku: {
+      name: 'Standard_LRS'
+    }
+    containers: [
+      {
+        name: 'example-container'
+        publicAccess: 'None'
+      }
+    ]
+  }
+}
 
 // USER ROLES
 module openAiRoleUser 'core/security/role.bicep' = {
@@ -214,7 +243,7 @@ module openAiRoleUser 'core/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'User'
+    principalType: ''ServicePrincipal'
   }
 }
 
@@ -224,7 +253,7 @@ module searchRoleUser 'core/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
-    principalType: 'User'
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -234,7 +263,7 @@ module searchIndexDataContribRoleUser 'core/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
-    principalType: 'User'
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -244,7 +273,7 @@ module searchServiceContribRoleUser 'core/security/role.bicep' = {
   params: {
     principalId: principalId
     roleDefinitionId: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
-    principalType: 'User'
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -265,6 +294,16 @@ module searchRoleBackend 'core/security/role.bicep' = {
   params: {
     principalId: backend.outputs.identityPrincipalId
     roleDefinitionId: '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module storageAccountRoleUser 'core/security/role.bicep' = {
+  scope: resourceGroup
+  name: 'storage-account-role-user'
+  params: {
+    principalId: principalId
+    roleDefinitionId: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe' // Example role definition ID for Storage Blob Data Contributor
     principalType: 'ServicePrincipal'
   }
 }
