@@ -81,7 +81,7 @@ class _PromptflowSettings(BaseSettings):
     value_proposition_ep_key: str
     boat_walkaround_ep_key: str
     api_key: str
-    response_timeout: float = 30.0
+    response_timeout: float = 120.0
     request_field_name: str = "query"
     response_field_name: str = "reply"
     citations_field_name: str = "documents"

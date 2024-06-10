@@ -11,7 +11,7 @@ const FlashCard: React.FC = () => {
     <>
       {isLoading ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Spinner label="Loading Value Propositions..." />
+          <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading Value Propositions..." />
         </div>
       ) : (
         <>

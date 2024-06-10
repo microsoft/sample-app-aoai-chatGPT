@@ -66,7 +66,7 @@ const CarouselComponent: React.FC = () => {
     <>
       {isLoading ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Spinner label="Loading Walk around..." />
+          <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading Walk Around..." />
         </div>
       ) : (
         <>

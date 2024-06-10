@@ -1,6 +1,8 @@
+import uuid from 'react-uuid'
 import { chatHistorySampleData } from '../constants/chatHistory'
 
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
+import { values } from '@fluentui/react'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
   const response = await fetch('/conversation', {
@@ -353,38 +355,134 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
   return response
 }
 
-export async function getRecommendations(payload:object): Promise<Response> {
-  const key='Rn2VC8PWhOjssJtaDgsirHzuZKesKfi8'
-  const response = await fetch('https://dev-pf-boat-suggestion-ep10.eastus.inference.ml.azure.com/score', {
+export async function getRecommendations(payload: string): Promise<any> {
+  const prevId=uuid().toString();
+
+  const data = {
+    messages: [
+      {
+        id: prevId,
+        role: 'user',
+        content: payload,
+        prompt_type: 1,
+      },
+    ],
+  };
+
+  const response = await fetch('/v3/history/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      "Authorization": `Bearer ${key}`,
     },
-    body: JSON.stringify(payload)
-  })
-  return response
+    body: JSON.stringify(data),
+  });
+
+  const jsonResponse = await response.json();
+  const historyData=[{
+    id: prevId,
+    role: "assistant",
+    content: jsonResponse.messages,
+    date: new Date().toISOString(),
+    conversation_id:jsonResponse.id
+  }]
+  console.log({jsonResponse,historyData})
+
+  historyUpdate(historyData,jsonResponse.id);
+  return jsonResponse;
 }
 
-export async function getValuePropositions(payload:object): Promise<Response> {
-  const response = await fetch('/valueProposition', {
+export async function getValuePropositions(payload: string,conversationId:string): Promise<any> {
+  const prevId = uuid().toString()
+  const data = {
+    messages: [
+      {
+        id: prevId,
+        role: 'user',
+        content: payload,
+        prompt_type: 2,
+        conversation_id: conversationId
+
+      },
+    ],
+  };
+
+  const response = await fetch('/v3/history/generate', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload)
-  })
-  return response
+    body: JSON.stringify(data),
+  });
+
+  const jsonResponse = await response.json();
+  const historyData=[{
+    id: prevId,
+    role: "assistant",
+    content: jsonResponse.messages,
+    conversation_id:conversationId,
+    date: new Date().toISOString()
+  }]
+  historyUpdate(historyData,conversationId);
+  return jsonResponse;
 }
 
-export async function getWalkthroughData(payload:object): Promise<Response> {
-  const response = await fetch('/walkthrough', {
+export async function getWalkthroughData(payload: string,conversationId:string): Promise<any> {
+  const prevId = uuid().toString()
+  const data = {
+    messages: [
+      {
+        id: prevId,
+        role: 'user',
+        content: payload,
+        prompt_type: 3,
+        conversation_id:conversationId,
+
+      },
+    ],
+  };
+
+  const response = await fetch('/v3/history/generate', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(payload)
-  })
-  return response
+    body: JSON.stringify(data),
+  });
+
+  const jsonResponse = await response.json();
+  const historyData=[{
+    id: prevId,
+    role: "assistant",
+    content: jsonResponse.messages,
+    conversation_id:conversationId,
+    date: new Date().toISOString()
+  }]
+  historyUpdate(historyData,conversationId);
+  return jsonResponse;
 }
 
+export async function sendFeedback(feedbackInput:string,feedback:string,conversationId:string): Promise<any> {
+  const prevId = uuid().toString()
+  const data = {
+    messages: [
+      {
+        id: prevId,
+        role: 'user',
+        content: "",
+        conversation_id:conversationId,
+        conversation_feedback:feedback,
+        conversation_feedback_message:feedbackInput
+      },
+    ],
+  };
+  const response = await fetch('/v3/history/conversation_feedback', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+
+  return response;
+}

@@ -191,3 +191,15 @@ class CosmosConversationClient():
             return resp
         else:
             return False
+
+    async def update_conversation_feedback_v3(self, user_id, conversation_id, feedback, feedback_message):
+        conversation = await self.get_conversation(user_id, conversation_id)
+        if conversation:
+            
+            conversation['feedback'] = feedback
+            conversation['feedback_message'] = feedback_message
+
+            resp = await self.upsert_conversation(conversation)
+            return resp
+        else:
+            return False

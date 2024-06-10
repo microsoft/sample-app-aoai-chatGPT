@@ -4,6 +4,7 @@ import styles from '../../pages/chat/Chat.module.css'
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
+import uuid from 'react-uuid';
 
 const About: React.FC = () => {
     const navigate = useNavigate();
@@ -16,16 +17,19 @@ const About: React.FC = () => {
     const fetch = async () => {
         try {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
-            const response = getRecommendations({ question: promptValue })
-            const data = {
-                "output": "{\"value_propositions\": [{\"title\": \"REGENCY 250 LE3 Sport\", \"detail\": \"Offers a luxurious and comfortable experience for a crew of 14, perfect for watersports with its 350-horsepower rating and ski tow pylon.\"}, {\"title\": \"TAHOE 2150\", \"detail\": \"Combines spacious luxury with sporting capability, also featuring the POWERGLIDE\® hull and ski tow pylon, ideal for families enjoying watersports.\"}, {\"title\": \"Sun Tracker Sportfish\", \"detail\": \"A versatile option that combines a fishing boat's utility with the comfort of a party barge, perfect for Lake George outings.\"}]}"
-            }
+  const id=uuid().toString();
 
-            const parsedData = JSON.parse(data?.output);
+            const response =await getRecommendations(promptValue || '')
+            console.log({response})
+            // const data = {
+            //     "output": "{\"value_propositions\": [{\"title\": \"REGENCY 250 LE3 Sport\", \"detail\": \"Offers a luxurious and comfortable experience for a crew of 14, perfect for watersports with its 350-horsepower rating and ski tow pylon.\"}, {\"title\": \"TAHOE 2150\", \"detail\": \"Combines spacious luxury with sporting capability, also featuring the POWERGLIDE\® hull and ski tow pylon, ideal for families enjoying watersports.\"}, {\"title\": \"Sun Tracker Sportfish\", \"detail\": \"A versatile option that combines a fishing boat's utility with the comfort of a party barge, perfect for Lake George outings.\"}]}"
+            // }
+
+            const parsedData = JSON.parse(response?.messages);
             const actuallRecommendations = parsedData?.value_propositions
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: actuallRecommendations })
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
-            appStateContext?.dispatch({ type: 'SET_CONVERSATION_ID', payload: 0 })
+            appStateContext?.dispatch({ type: 'SET_CONVERSATION_ID', payload: response?.id })
         } catch (error) {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
         }
@@ -49,11 +53,18 @@ const About: React.FC = () => {
         }
     }
 
+    const truncateText = (text:string, maxLength:number) => {
+        if (text.length > maxLength) {
+          return text.substring(0, maxLength) + '...';
+        }
+        return text;
+      };
+
     return (
         <div className={styles.chatContainer}>
             {isLoading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <Spinner label="Loading recommendations..." />
+                    <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading recommendations..." />
                 </div>
             ) : (
                 <Stack
@@ -80,7 +91,7 @@ const About: React.FC = () => {
 
                                     <Stack tokens={{ childrenGap: 10 }} style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "70%" }}>
                                         <Text style={{ fontWeight: "bold" }} variant="large">{item.title}</Text>
-                                        <Text >{item.detail}</Text>
+                                        <Text >{truncateText(item.detail, 100)}</Text>
                                     </Stack>
                                 </Stack>
                             </DefaultButton>

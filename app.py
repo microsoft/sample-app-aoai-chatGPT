@@ -865,7 +865,6 @@ async def generate_title(conversation_messages):
 ################################################################################
 ## Boat Functions
 
-
 def prepare_model_args_for_intent(request_body, request_headers):
     intent_prompt = """
     You are an AI that classifies user questions based on their intent. When the user asks a question, respond only with one of the following options that best matches the intent of the question, and nothing else:
@@ -981,7 +980,6 @@ def prepare_model_args_for_intent(request_body, request_headers):
 
     return model_args
 
-
 async def send_chat_request_v2(request_body, request_headers):
     filtered_messages = []
     messages = request_body.get("messages", [])
@@ -1024,7 +1022,6 @@ async def send_chat_intent_request(request_body, request_headers):
 
     return response, apim_request_id
 
-
 async def promptflow_request_v2(request, endpoint, key):
     try:
         headers = {
@@ -1056,7 +1053,6 @@ async def promptflow_request_v2(request, endpoint, key):
         return resp
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request_v2: {e}")
-
 
 def get_promptflow_endpoint(prompt_type: PromptType):
     if prompt_type == PromptType.BOAT_SUGGESTION_PROMPT:
@@ -1095,7 +1091,6 @@ def get_prompt_type(intent_response):
         logging.exception("Exception in get_prompt_type")
     
     return PromptType.DEFAULT_PROMPT
-
 
 async def complete_chat_request_v2(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
@@ -1144,7 +1139,6 @@ async def complete_chat_request_v2(request_body, request_headers):
         history_metadata = request_body.get("history_metadata", {})
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
-
 async def conversation_internal_v2(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream:
@@ -1163,7 +1157,6 @@ async def conversation_internal_v2(request_body, request_headers):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
-
 
 ## Conversation History API V2 ##
 @bp.route("/v2/history/generate", methods=["POST"])
@@ -1288,7 +1281,8 @@ async def add_conversation_v3():
 
     ## check request for conversation_id
     request_json = await request.get_json()
-    conversation_id = request_json.get("conversation_id", None)
+    # conversation_id = request_json.get("conversation_id", None)
+    conversation_id = request_json['messages'][0].get("conversation_id", None)
     
     try:
         # make sure cosmos is configured
@@ -1331,12 +1325,22 @@ async def add_conversation_v3():
         # Submit request to Chat Completions for response
         request_body = await request.get_json()
         history_metadata["conversation_id"] = conversation_id
-        request_body["history_metadata"] = history_metadata
+        #request_body["history_metadata"] = history_metadata
+        request_body["id"] = conversation_id
         return await conversation_internal_v3(request_body, request.headers)
 
     except Exception as e:
         logging.exception("Exception in /v3/history/generate")
         return jsonify({"error": str(e)}), 500
+
+@bp.route("/v3/conversation", methods=["POST"])
+async def conversation_v3():
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    request_json = await request.get_json()
+
+    #return await conversation_internal_v3(request_json, request.headers, PromptType.BOAT_SUGGESTION_PROMPT)
+    return await conversation_internal_v3(request_json, request.headers)
 
 async def conversation_internal_v3(request_body, request_headers):
     try:
@@ -1348,6 +1352,7 @@ async def conversation_internal_v3(request_body, request_headers):
             return response
         else:
             result = await complete_chat_request_v3(request_body, request_headers)
+            result['id'] = request_body['id']
             return jsonify(result)
 
     except Exception as ex:
@@ -1427,7 +1432,7 @@ async def promptflow_request_v3(request, endpoint, key):
                 headers=headers,
             )
         resp = response.json()
-        resp["id"] = request["messages"][-1]["id"]
+        #resp["id"] = request["messages"][-1]["id"]
         return resp
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request_v3: {e}")
@@ -1453,4 +1458,58 @@ async def send_chat_request_v3(request_body, request_headers):
 
     return response, apim_request_id
 
+
+@bp.route("/v3/history/conversation_feedback", methods=["POST"])
+async def add_conversation_feedback_v3():
+    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+    user_id = authenticated_user["user_principal_id"]
+    cosmos_conversation_client = init_cosmosdb_client()
+
+    ## check request for message_id
+    request_json = await request.get_json()
+    conversation_id = request_json['messages'][0].get("conversation_id", None)
+
+    conversation_feedback = request_json['messages'][0].get("conversation_feedback", None) # request_json.get("conversation_feedback", None)
+    conversation_feedback_message = request_json['messages'][0].get("conversation_feedback_message", None)
+
+    try:
+        if not conversation_id:
+            return jsonify({"error": "conversation_id is required"}), 400
+
+        if not conversation_feedback:
+            return jsonify({"error": "conversation_feedback is required"}), 400
+
+        if not conversation_feedback_message:
+            return jsonify({"error": "conversation_feedback is required"}), 400
+        
+        ## update the message in cosmos
+        updated_conversation = await cosmos_conversation_client.update_conversation_feedback_v3(
+            user_id, conversation_id, conversation_feedback, conversation_feedback_message
+        )
+        if updated_conversation:
+            return (
+                jsonify(
+                    {
+                        "message": f"Successfully updated conversation with feedback {conversation_feedback}",
+                        "message_id": conversation_id,
+                    }
+                ),
+                200,
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "error": f"Unable to update conversation {conversation_id}. It either does not exist or the user does not have access to it."
+                    }
+                ),
+                404,
+            )
+
+    except Exception as e:
+        logging.exception("Exception in /history/conversation_feedback")
+        return jsonify({"error": str(e)}), 500
+
+
 app = create_app()
+app.run()

@@ -170,18 +170,22 @@ def format_pf_non_streaming_response(
                 "role": "tool",
                 "content": chatCompletion[citations_field_name]
             })
+
         response_obj = {
-            "id": chatCompletion["id"],
-            "model": "",
-            "created": "",
-            "object": "",
-            "history_metadata": history_metadata,
-            "choices": [
-                {
-                    "messages": messages,
-                }
-            ]
+            "messages": messages[0]['content']            
         }
+        # response_obj = {
+        #     # "id": chatCompletion["id"],
+        #     "model": "",
+        #     "created": "",
+        #     "object": "",
+        #     "history_metadata": history_metadata,
+        #     "choices": [
+        #         {
+        #             "messages": messages,
+        #         }
+        #     ]
+        # }
         return response_obj
     except Exception as e:
         logging.error(f"Exception in format_pf_non_streaming_response: {e}")

@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Text, Stack, TextField, PrimaryButton, DefaultButton, ITextFieldStyles } from '@fluentui/react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../../pages/chat/Chat.module.css';
 import { ThumbDislikeRegular, ThumbLikeRegular } from '@fluentui/react-icons';
+import { sendFeedback } from '../../api';
+import { AppStateContext } from '../../state/AppProvider';
 
 const Feedback: React.FC = () => {
     const [feedback, setFeedback] = useState<string>('');
+  const appStateContext = useContext(AppStateContext);
+
+  const conversationId = appStateContext?.state?.conversationId;
+
     const navigate = useNavigate();
     const [selectedButton, setSelectedButton] = useState<string>("");
     const [showThankYou, setShowThankYou] = useState<boolean>(false);
@@ -35,7 +41,8 @@ const Feedback: React.FC = () => {
     };
 
     const handleSubmit = () => {
-
+        console.log(conversationId)
+        sendFeedback(feedback, selectedButton, conversationId || "")
         setFeedback('');
         setSelectedButton('');
         setShowThankYou(true);
@@ -129,7 +136,7 @@ const Feedback: React.FC = () => {
                             style={{ height: "10%", position: "fixed", bottom: 0 }}
                             styles={{ root: { width: '100%', padding: 20, flexWrap: "wrap" } }}
                         >
-                            <PrimaryButton style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
+                            <PrimaryButton disabled={!selectedButton || feedback===""} style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
                         </Stack>
                     </>)}
             </Stack>
