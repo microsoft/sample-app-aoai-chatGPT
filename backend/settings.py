@@ -60,7 +60,7 @@ class _ChatHistorySettings(BaseSettings):
 
     database: str
     account: str
-    account_key: str
+    account_key: str = None
     conversations_container: str
     enable_feedback: bool = False
 
