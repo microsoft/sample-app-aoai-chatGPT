@@ -47,6 +47,7 @@
   line-height: 24px;
   margin-top: 10px;
   margin-bottom: 0px;
+  color: #FFFFFF;
 }
 
 .chatEmptyStateSubtitle {
@@ -58,7 +59,7 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #3bcbff;
+  color: #FFFFFF;
 }
 
 .chatIcon {
@@ -343,6 +344,16 @@
   font-weight: 600;
 }
 
+.question-input {
+  background: transparent;
+  border: none; /* Optional: Remove border if you want a cleaner look */
+  color: white; /* Optional: Adjust text color for better visibility */
+}
+
+.input-container {
+  background: transparent;
+}
+
 a {
   padding-left: 5px;
   padding-right: 5px;
@@ -387,7 +398,6 @@ a {
 
   .chatEmptyStateTitle {
     line-height: 36px;
-    color: #FFFFFF
   }
 
   .citationPanel {
