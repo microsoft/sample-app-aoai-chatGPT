@@ -39,7 +39,7 @@ const enum messageStatus {
     Done = "Done"
 }
 
-const Chat = () => {
+const Chat = ({ embedDisplay }: { embedDisplay: boolean  }) => {
     const styles = ChatStyles();
     const appStateContext = useContext(AppStateContext)
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
@@ -56,7 +56,7 @@ const Chat = () => {
     const [clearingChat, setClearingChat] = useState<boolean>(false);
     const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true);
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
-    const [audioMuted, setAudioMuted] = useState<boolean>(false);
+    const [audioMuted, setAudioMuted] = useState<boolean>(true);
 
     const [ASSISTANT, TOOL, ERROR] = ["assistant", "tool", "error"]
 
@@ -523,7 +523,7 @@ const Chat = () => {
     }, [AUTH_ENABLED]);
 
     useLayoutEffect(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" })
+        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
     }, [showLoadingMessage, processMessages]);
 
     const onShowCitation = (citation: Citation) => {
@@ -548,7 +548,7 @@ const Chat = () => {
             }
         }
         return [];
-    }
+    };
 
     const disabledButton = () => {
         return isLoading || (messages && messages.length === 0) || clearingChat || appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
@@ -594,7 +594,7 @@ const Chat = () => {
                 </div>
             ) : (
                 <div className={styles.container}>
-                    <div className={styles.chatContainer}>
+                    <div className={embedDisplay ? styles.chatContainerEmbed : styles.chatContainer}>
                         {!messages || messages.length < 1 ? (
                             <div className={styles.chatEmptyState}>
                                 <Image
@@ -721,7 +721,6 @@ const Chat = () => {
                                             disabled={disabledButton()}
                                             aria-label="clear chat button"
                                         />
-
                                     </div>
                                     <QuestionInput
                                         clearOnSend

@@ -11,4 +11,11 @@ export const LayoutStyles = makeStyles({
         paddingRight: '20px',
         boxSizing: 'border-box',
     },
+    containerEmbed: {
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box',
+    },
 });

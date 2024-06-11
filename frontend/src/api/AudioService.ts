@@ -34,6 +34,8 @@ export class AudioService {
             this.speechConfig = SpeechConfig.fromAuthorizationToken(this.speechToken.access_token, this.speechToken.region);
             this.recognizer = SpeechRecognizer.FromConfig(this.speechConfig, this.autoDetectSourceLanguageConfig, this.recognizerAudioConfig);
             this.synthesizer = new SpeechSynthesizer(this.speechConfig, this.synthesizerAudioConfig);
+            // by default mute the audio
+            this.audioPlayer.mute();
         }
 
     }

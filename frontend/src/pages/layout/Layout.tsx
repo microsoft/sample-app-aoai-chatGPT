@@ -7,7 +7,7 @@ import { Header } from "../../components/Header/Header";
 import { LayoutStyles } from "./LayoutStyles";
 import Footer from "../../components/Footer/Footer";
 
-const Layout = ({ isDarkTheme }: { isDarkTheme: boolean }) => {
+const Layout = ({ isDarkTheme, embedDisplay }: { isDarkTheme: boolean, embedDisplay: boolean  }) => {
     const styles = LayoutStyles();
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [copyClicked, setCopyClicked] = useState<boolean>(false);
@@ -33,15 +33,19 @@ const Layout = ({ isDarkTheme }: { isDarkTheme: boolean }) => {
     useEffect(() => { }, [appStateContext?.state.isCosmosDBAvailable.status]);
 
     return (
-        <div className={styles.container}>
-            <Header
+        <div className={ embedDisplay ? styles.containerEmbed : styles.container}>
+            {
+                !embedDisplay && <Header
                 azureImageUrl={LogoImage}
                 onShareClick={handleShareClick}
                 onHistoryClick={handleHistoryClick}
                 appStateContext={appStateContext}
             />
+            }
             <Outlet />
-            <Footer />
+            {
+                !embedDisplay && <Footer />
+            }
         </div>
     );
 };

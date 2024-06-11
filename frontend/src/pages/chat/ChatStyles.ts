@@ -25,6 +25,20 @@ export const ChatStyles = makeStyles({
         },
     },
 
+    chatContainerEmbed: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        ...shorthands.padding('30px'),
+        height: '100vh',
+        backgroundColor: tokens.colorNeutralBackground1,
+        '@media (max-width: 400px)': {
+            ...shorthands.padding('15px'),
+            height: 'calc(100vh - 130px)',
+        },
+    },
+
     title: {
         paddingTop: '15px',
         fontSize: '24px',
