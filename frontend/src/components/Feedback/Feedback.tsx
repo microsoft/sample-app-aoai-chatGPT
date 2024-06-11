@@ -62,7 +62,7 @@ const Feedback: React.FC = () => {
                 horizontalAlign="center"
                 verticalAlign={showThankYou ? "center" : "start"}
                 styles={{ root: { height: '100vh', marginTop: !showThankYou ? "200px" : "0px" } }}
-                tokens={{ childrenGap: 50 }}
+                tokens={{ childrenGap: 40 }}
             >
                 {showThankYou ? (
                     <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center" verticalAlign='center'>
@@ -74,21 +74,21 @@ const Feedback: React.FC = () => {
                         <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center">
                             <Text style={{ color: "#EEE" }} variant="xLarge">Rate your experience</Text>
                         </Stack>
-                        <Stack horizontal style={{ width: "350px" }} tokens={{ childrenGap: 20 }}>
+                        <Stack horizontal style={{ width: "350px" }} tokens={{ childrenGap: 15 }}>
                             <DefaultButton
-                                style={{ width: "50%", height: "100%", backgroundColor: selectedButton === "Like" ? "teal" : "#181e20", borderRadius: 20, padding: 10 }}
+                                style={{ width: "50%", height: "86px", backgroundColor: selectedButton === "Like" ? "teal" : "#151B1E", borderRadius: "21px", padding: "50px" ,border:"none"}}
                                 onClick={() => handleIconClick("Like")}
                             >
-                                <Stack horizontalAlign='center' verticalAlign='center' tokens={{ childrenGap: 10 }}>
-                                    <ThumbLikeRegular color={selectedButton === "Like" ? "black" : 'green'} style={{ width: '100%', height: '100%' }} />
-                                    <Text style={{ color: "#EEE" }}>Good</Text>
+                                <Stack horizontalAlign='center' verticalAlign='center' tokens={{ childrenGap: 5 }}>
+                                    <ThumbLikeRegular color={selectedButton === "Like" ? "black" : 'green'} style={{ width: '100%', height: '100%',marginTop:"8px" }} />
+                                    <Text style={{ color: "#EEE",marginBottom:"8px" }}>Good</Text>
                                 </Stack>
                             </DefaultButton>
                             <DefaultButton
-                                style={{ width: "50%", height: "100%", backgroundColor: selectedButton === "DisLike" ? "teal" : "#181e20", borderRadius: 20, padding: 10 }}
+                                style={{ width: "50%", height: "86px", backgroundColor: selectedButton === "DisLike" ? "teal" : "#151B1E", borderRadius: "21px",  padding: "50px" ,border:"none" }}
                                 onClick={() => handleIconClick("DisLike")}
                             >
-                                <Stack horizontalAlign='center' verticalAlign='center' tokens={{ childrenGap: 10 }}>
+                                <Stack horizontalAlign='center' verticalAlign='center' tokens={{ childrenGap: 5 }}>
                                     <ThumbDislikeRegular color={selectedButton === "DisLike" ? "black" : '#e46969'} style={{ width: '70%', height: '70%' }} />
                                     <Text style={{ color: "#EEE" }}>Improve</Text>
                                 </Stack>
@@ -108,8 +108,7 @@ const Feedback: React.FC = () => {
                                   width:"100%",
                                   overflow: 'hidden',
                                   background: "#232e34",
-        borderRadius:20,
-
+                                    borderRadius: 20,
                                 },
                                 fieldGroup: {
                                   borderRadius: '25px',

@@ -172,11 +172,13 @@ const Home: React.FC = () => {
                         <Stack horizontalAlign='start' style={{ width: "100%" }}>
                             <Text
                                 style={{
-                                    color: "#819188",
+                                    color: "rgba(255, 255, 255, 0.40)",
                                     textTransform: "capitalize",
-                                    marginLeft: 5,
-                                    fontSize: "1.25rem",
-                                    fontWeight: "500"
+                                    marginLeft: 14,
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    fontStyle:"normal",
+                                    lineHeight:"20px"
                                 }}
                                 variant="medium"
                             >
@@ -191,16 +193,16 @@ const Home: React.FC = () => {
                                 alignItems: "flex-start",
                                 justifyContent: "flex-start",
                                 marginBottom: 10,
-                                marginTop: 10,
+                                marginTop: 2,
                                 flexWrap: 'wrap'
                             }}
                         >
                             {tags[key].slice(0, showMore[key] ? tags[key]?.length : 5).map((tag, index) => (
                                 <Stack.Item key={index} grow={1} disableShrink styles={{
                                     root: {
-                                        marginLeft: 5,
+                                        marginLeft: "12px",
                                         marginRight: 5,
-                                        marginTop: 10,
+                                        marginTop: "12px",
                                         '@media (max-width: 1000px)': {
                                             display: "inline-table"
                                         },
@@ -211,15 +213,15 @@ const Home: React.FC = () => {
                                 }}>
                                     <DefaultButton
                                         style={{
-                                            height: "50px",
-                                            padding: "0px 25px",
-                                            backgroundColor: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#264653" : '#101417',
-                                            color: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#FFFFFF" : '#FFFFFF',
-                                            fontSize: "0.875rem",
+                                            height: "42px",
+                                            padding: "0px 14px",
+                                            backgroundColor: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#264653" : '#151B1E',
+                                            color: "#FFFFFF",
+                                            fontSize: "14px",
                                             border: "none",
-                                            fontWeight: 300,
-                                            opacity: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? 1 : 0.9,
-                                            borderRadius: 15,
+                                            fontWeight: 500,
+                                            lineHeight:"20px",
+                                            borderRadius: "12px",
                                             whiteSpace: "nowrap",
                                         }}
                                         onClick={() => typeof tag === 'string' && handleGroupSelection(key, tag)}

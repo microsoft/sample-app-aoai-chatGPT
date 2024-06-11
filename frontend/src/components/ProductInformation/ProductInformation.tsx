@@ -6,8 +6,8 @@ import styles from '../../pages/chat/Chat.module.css'
 import { useNavigate } from 'react-router-dom';
 import { Library16Filled, VehicleShip16Filled } from '@fluentui/react-icons';
 import { AppStateContext } from '../../state/AppProvider';
-import { getValuePropositions, getWalkthroughData } from '../../api';
 import { templete2, templete3 } from '../../constants/templete';
+import { getValuePropositions, getWalkthroughData } from '../../api';
 
 const ProductInformation: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>('FlashCard');
@@ -75,19 +75,17 @@ const ProductInformation: React.FC = () => {
               width: "50%",
             },
        } }}>
-        <Stack horizontal tokens={{ childrenGap: 10 }} style={{ marginBottom: 10, height: "8%", width: "100%", padding: "0px 15px" }}>
+        <Stack horizontal tokens={{ childrenGap: 10 }} style={{ marginBottom: 10, height: "8%", width: "100%",  }}>
           <PrimaryButton
             onClick={() => handleOptionClick('FlashCard')}
             styles={{
               root: {
-                height: 50,
+                height: "40px",
                 width: "50%",
                 background: "transparent",
-                borderRadius: 5,
-                color: '#FFFFFF',
+                borderRadius: 10,
                 boxShadow: 'none',
                 border: `1px solid ${selectedOption === 'FlashCard' ? 'black' : 'transparent'}`,
-
                 selectors: {
                   ':hover': {
                     background: "transparent",
@@ -102,14 +100,14 @@ const ProductInformation: React.FC = () => {
               }
             }}
           >
-            <Library16Filled />
-            <Text style={{ color: "#FFFFFF", marginLeft: 5 }} >{"Value Props"}</Text>
+            <Library16Filled />   
+            <Text style={{ color:selectedOption==="FlashCard"? "#FFF": '#9A9A90', marginLeft: 10,fontSize:"14px",fontWeight:"600",lineHeight:"20px",fontStyle:"normal" }} >{"Value Props"}</Text>
           </PrimaryButton>
           <PrimaryButton
             onClick={() => handleOptionClick('WalkAround')}
             styles={{
               root: {
-                height: 50,
+                height: "40px",
                 width: "50%",
                 background: "transparent",
                 borderRadius: 5,
@@ -132,7 +130,7 @@ const ProductInformation: React.FC = () => {
             }}
           >
             <VehicleShip16Filled />
-            <Text style={{ color: "#FFFFFF", marginLeft: 5 }} >{"Walk Around"}</Text>
+            <Text style={{ color:selectedOption==="WalkAround"? "#FFF": '#9A9A90', marginLeft: 10,fontSize:"14px",fontWeight:"600",lineHeight:"20px",fontStyle:"normal" }} >{"Walk Around"}</Text>
           </PrimaryButton>
         </Stack>
         <Stack

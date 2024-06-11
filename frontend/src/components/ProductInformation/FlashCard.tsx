@@ -25,17 +25,17 @@ const FlashCard: React.FC = () => {
                   maxWidth: '100%',
                   minWidth: '200px',
                   borderRadius: 20,
-                  boxShadow: '1px 1px 0px black',
+                  border:"none"
                 },
               }}
             >
-              <Stack styles={{ root: { padding: 20, width: '100%' } }}>
+              <Stack styles={{ root: { padding: "22px 20px 25px 20px", width: '100%' } }}>
                 <Stack.Item>
-                  <DocumentCardTitle title={item.title} styles={{ root: { fontWeight: '500', textAlign: 'left', padding: 0, height: 20, color: 'white', fontSize: "1rem", whiteSpace: "nowrap", textOverflow: "ellipsis" } }} />
+                  <DocumentCardTitle title={item.title} styles={{ root: { fontWeight: '700', lineHeight:"20px",textAlign: 'left', padding: 0, height: 20, color: 'white', fontSize: "16px", whiteSpace: "nowrap", textOverflow: "ellipsis" } }} />
                 </Stack.Item>
                 <Stack.Item grow>
-                  <DocumentCardDetails styles={{ root: { marginTop: 10 } }}>
-                    <Text style={{ color: 'white' }}>{item.detail}</Text>
+                  <DocumentCardDetails styles={{ root: { marginTop: 11 } }}>
+                    <Text style={{ color: 'rgba(255, 255, 255, 0.75)',fontWeight:500,fontSize:"14px",lineHeight:"20px" }}>{item.detail}</Text>
                   </DocumentCardDetails>
                 </Stack.Item>
               </Stack>

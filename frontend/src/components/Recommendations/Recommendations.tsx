@@ -81,13 +81,13 @@ const About: React.FC = () => {
         }
         else {
             if (normalizedTitle.includes(key1)) {
-                return "../../src/assets/boat_images/CopperRed_BMT-6790_main.avif"
+                return "src/assets/boat_images/CopperRed_BMT-6790_main.avif"
             } else if (normalizedTitle.includes(key2)) {
-                return "../../src/assets/boat_images/WhiteKiwiGraphics_BMT-6808_main.avif"
+                return "src/assets/boat_images/WhiteKiwiGraphics_BMT-6808_main.avif"
             } else if (normalizedTitle.includes(key3)) {
-                return "../../src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+                return "src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
             } else {
-                return "../../src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+                return "src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
             }
         }
     };
@@ -111,19 +111,19 @@ const About: React.FC = () => {
                             <Text style={{ color: "white", marginBottom: 20 }} variant="xLarge">Top Recommendations for this store</Text>
                         )}
                         {dummyData && dummyData.length > 0 && dummyData.map((item, index) => (
-                            <DefaultButton key={index} styles={{ root: { width: '100%', height: "100%", padding: "10px 10px", maxHeight: 150, borderRadius: 30, opacity: selectedItem === item ? 1 : 0.8, backgroundColor: selectedItem === item ? "#FFFFFF" : "#d0d0d0" } }} onClick={() => handleBoatSelection(item)}>
+                            <DefaultButton key={index} styles={{ root: { width: '100%', height: "100%", padding: "12px", maxHeight: 150, borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0" } }} onClick={() => handleBoatSelection(item)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }}>
                                     <Image
                                         src={imagePath(item.title)}
                                         alt={item.title}
                                         width={"30%"}
                                         height={100}
-                                        styles={{ root: { borderRadius: '30%' } }}
+                                        styles={{ root: { borderRadius: '14px'} }}
                                     />
 
                                     <Stack tokens={{ childrenGap: 10 }} style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "70%" }}>
-                                        <Text style={{ fontWeight: "bold" }} variant="large">{item.title}</Text>
-                                        <Text >{truncateText(item.detail, 100)}</Text>
+                                        <Text style={{ fontWeight: "700",fontSize:"14px",lineHeight:"20px",fontStyle:"normal",color:"#000" }} >{item.title}</Text>
+                                        <Text style={{ fontWeight: "400",fontSize:"12px",lineHeight:"20px",fontStyle:"normal",color:"rgba(0, 0, 0, 0.70)" }}>{truncateText(item.detail, 100)}</Text>
                                     </Stack>
                                 </Stack>
                             </DefaultButton>
@@ -149,7 +149,7 @@ const About: React.FC = () => {
                     },
                  } }}
             >
-                <PrimaryButton style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: selectedItem ? "black" : "#191A1B", opacity: selectedItem ? 1 : 0.5, border: "none" }} onClick={handleNextClick}>Submit</PrimaryButton>
+                <PrimaryButton styles={{label:{fontWeight:"500",fontSize: "0.875rem",lineHeight:"20px"}}} style={{ width: "100%", height: "48px",  borderRadius: 10, padding: "0px 14px", background: selectedItem ? "black" : "#191A1B", opacity: selectedItem ? 1 : 0.5, border: "none" }} onClick={handleNextClick}>Submit</PrimaryButton>
             </Stack>
         </div>
     );
