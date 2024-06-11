@@ -7,7 +7,6 @@ import CustomIconButton from '../CustomIconButton';
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import template from '../../constants/templete';
-import { getRecommendations } from '../../api';
 
 const Home: React.FC = () => {
 
@@ -134,14 +133,21 @@ const Home: React.FC = () => {
     const handleSubmit = () => {
             appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputValue })
             navigate("/recommendations");
-
     };
 
     return (
         <Stack
             horizontalAlign="center"
+            styles={{root:{
+                '@media (max-width: 1000px)': {
+                    width:"100%"
+                },
+                '@media (max-width: 2500px) and (min-width: 1000px)': {
+                    width:"50%"
+                },
+            }}}
             style={{
-                width: "100%",
+                // width: "100%",
                 height: "100%",
                 padding: "0px 20px 0px 20px",
             }}
@@ -197,15 +203,18 @@ const Home: React.FC = () => {
                                         marginTop: 10,
                                         '@media (max-width: 1000px)': {
                                             display: "inline-table"
-                                        }
+                                        },
+                                        '@media (max-width: 2500px) and (min-width: 1000px)': {
+                                            display: "inline-table"
+                                        },
                                     }
                                 }}>
                                     <DefaultButton
                                         style={{
                                             height: "50px",
                                             padding: "0px 25px",
-                                            backgroundColor: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "black" : '#101417',
-                                            color: "#FFFFFF",
+                                            backgroundColor: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#264653" : '#101417',
+                                            color: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#FFFFFF" : '#FFFFFF',
                                             fontSize: "0.875rem",
                                             border: "none",
                                             fontWeight: 300,
@@ -254,8 +263,15 @@ const Home: React.FC = () => {
             <Stack
                 tokens={{ childrenGap: 20 }}
                 horizontalAlign='center'
+                styles={{root:{
+                    '@media (max-width: 1000px)': {
+                        width: "100%",
+                    },
+                    '@media (max-width: 2500px) and (min-width: 1000px)': {
+                        width: "50%",
+                    },
+                }}}
                 style={{
-                    width: "100%",
                     position: "fixed",
                     zIndex: 99999,
                     display: "flex",

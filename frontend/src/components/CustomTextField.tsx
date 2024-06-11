@@ -2,7 +2,6 @@ import React, { useContext, useState } from 'react';
 import { TextField, PrimaryButton } from '@fluentui/react';
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../state/AppProvider';
-import { getRecommendations } from '../api';
 
 interface Props {
   placeholder: string,
@@ -53,22 +52,9 @@ const [inputText,setInputText]=useState<string>("");
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
-    try {
-      appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
-      const response = getRecommendations({ question: text+` ${inputText}` })
-      const data = {
-        "output": "{\"value_propositions\": [{\"title\": \"REGENCY 250 LE3 Sport\", \"detail\": \"Offers a luxurious and comfortable experience for a crew of 14, perfect for watersports with its 350-horsepower rating and ski tow pylon.\"}, {\"title\": \"TAHOE 2150\", \"detail\": \"Combines spacious luxury with sporting capability, also featuring the POWERGLIDE\® hull and ski tow pylon, ideal for families enjoying watersports.\"}, {\"title\": \"Sun Tracker Sportfish\", \"detail\": \"A versatile option that combines a fishing boat's utility with the comfort of a party barge, perfect for Lake George outings.\"}]}"
-      }
-
-      const parsedData = JSON.parse(data?.output);
-      const actuallRecommendations = parsedData?.value_propositions
-      appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: actuallRecommendations })
-      appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
-      navigate("recommendations");
-
-    } catch (error) {
-      appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
-    }
+    const inputPayload=text+` ${inputText}`;
+    appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
+    navigate("recommendations");
     setIsButtonClicked(false);
   };
 
@@ -81,6 +67,8 @@ const [inputText,setInputText]=useState<string>("");
   const handleBlur = () => {
     if (!isButtonClicked) {
       onBlur?.();
+      const promptValue=`${text} ${inputText}`;
+      setText?.(promptValue || '')
     }
   };
 

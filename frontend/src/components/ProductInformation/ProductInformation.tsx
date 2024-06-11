@@ -33,14 +33,14 @@ const ProductInformation: React.FC = () => {
 
       if (valuePropositionsResponse) {
         const parsedDataValueProps = JSON.parse(valuePropositionsResponse?.messages);
-        const valuePropositions = parsedDataValueProps?.value_propositions
+        const valuePropositions = parsedDataValueProps?.result
         appStateContext?.dispatch({ type: 'SET_VALUE_PROPOSITION_STATE', payload: valuePropositions })
       }
       const walkaroundResponse = await getWalkthroughData(templete3(selectedboat || ""),conversationId || "")
 
       if (walkaroundResponse) {
         const parsedDataWalkThrough = JSON.parse(walkaroundResponse?.messages);
-        const walkThrough = parsedDataWalkThrough?.value_propositions
+        const walkThrough = parsedDataWalkThrough?.result
         appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_STATE', payload: walkThrough })
       }
 
@@ -64,7 +64,17 @@ const ProductInformation: React.FC = () => {
 
   return (
     <div className={styles.chatContainer}>
-      <Stack horizontalAlign="center" styles={{ root: { height: '100vh', padding: 20, marginTop: 50, width: "100%" } }}>
+      <Stack horizontalAlign="center" 
+        styles={{
+          root: {
+            height: '100vh', padding: 20, marginTop: 50,
+            '@media (max-width: 1000px)': {
+              width: "100%",
+            },
+            '@media (max-width: 2500px) and (min-width: 1000px)': {
+              width: "50%",
+            },
+       } }}>
         <Stack horizontal tokens={{ childrenGap: 10 }} style={{ marginBottom: 10, height: "8%", width: "100%", padding: "0px 15px" }}>
           <PrimaryButton
             onClick={() => handleOptionClick('FlashCard')}
@@ -135,7 +145,14 @@ const ProductInformation: React.FC = () => {
           tokens={{ childrenGap: 20 }}
           horizontalAlign='center'
           style={{ height: "10%", position: "fixed", bottom: 0 }}
-          styles={{ root: { width: '100%', padding: 20, flexWrap: "wrap" } }}
+          styles={{ root: { padding: 20, flexWrap: "wrap",
+              '@media (max-width: 1000px)': {
+                width: "100%",
+              },
+              '@media (max-width: 2500px) and (min-width: 1000px)': {
+                width: "30%",
+              },
+           } }}
         >
           <PrimaryButton style={{ width: "100%", fontSize: "0.875rem", height: "50px", borderRadius: 10, padding: 20, background: "black", border: "none" }} onClick={handleNextClick}>Submit</PrimaryButton>
         </Stack>

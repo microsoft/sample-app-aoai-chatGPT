@@ -4,7 +4,7 @@ import styles from '../../pages/chat/Chat.module.css'
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
-import uuid from 'react-uuid';
+import boatImages from '../../constants/boatImages';
 
 const About: React.FC = () => {
     const navigate = useNavigate();
@@ -17,16 +17,14 @@ const About: React.FC = () => {
     const fetch = async () => {
         try {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
-  const id=uuid().toString();
 
             const response =await getRecommendations(promptValue || '')
-            console.log({response})
             // const data = {
             //     "output": "{\"value_propositions\": [{\"title\": \"REGENCY 250 LE3 Sport\", \"detail\": \"Offers a luxurious and comfortable experience for a crew of 14, perfect for watersports with its 350-horsepower rating and ski tow pylon.\"}, {\"title\": \"TAHOE 2150\", \"detail\": \"Combines spacious luxury with sporting capability, also featuring the POWERGLIDE\® hull and ski tow pylon, ideal for families enjoying watersports.\"}, {\"title\": \"Sun Tracker Sportfish\", \"detail\": \"A versatile option that combines a fishing boat's utility with the comfort of a party barge, perfect for Lake George outings.\"}]}"
             // }
 
             const parsedData = JSON.parse(response?.messages);
-            const actuallRecommendations = parsedData?.value_propositions
+            const actuallRecommendations = parsedData?.result
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: actuallRecommendations })
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
             appStateContext?.dispatch({ type: 'SET_CONVERSATION_ID', payload: response?.id })
@@ -42,29 +40,63 @@ const About: React.FC = () => {
     const handleBoatSelection = (item: any): void => {
         setSelectedItem(item);
     }
-    console.log({ selectedItem })
+
     const handleNextClick = (): void => {
         if (selectedItem) {
             appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem?.title })
-
             navigate("/productInfo");
-
-
         }
     }
 
-    const truncateText = (text:string, maxLength:number) => {
+    const truncateText = (text: string, maxLength: number) => {
         if (text.length > maxLength) {
-          return text.substring(0, maxLength) + '...';
+            return text.substring(0, maxLength) + '...';
         }
         return text;
-      };
+    };
+
+    const normalizeString = (str: string) => {
+        return str.replace(/[\s\W]+/g, '').toLowerCase();
+    };
+
+    const imagePath = (title: string) => {
+        const normalizedTitle = normalizeString(title);
+        let bestMatchKey = '';
+        let bestMatchLength = 0;
+        const key1 = normalizeString("Sun Tracker");
+        const key2 = normalizeString("Tahoe");
+        const key3 = normalizeString("Regency");
+
+        for (const key in boatImages) {
+            const normalizedKey = normalizeString(key);
+            if (normalizedKey.includes(normalizedTitle)) {
+                if (normalizedKey.length > bestMatchLength) {
+                    bestMatchLength = normalizedKey.length;
+                    bestMatchKey = key;
+                }
+            }
+        }
+        if (bestMatchKey) {
+            return boatImages[bestMatchKey]
+        }
+        else {
+            if (normalizedTitle.includes(key1)) {
+                return "../../src/assets/boat_images/CopperRed_BMT-6790_main.avif"
+            } else if (normalizedTitle.includes(key2)) {
+                return "../../src/assets/boat_images/WhiteKiwiGraphics_BMT-6808_main.avif"
+            } else if (normalizedTitle.includes(key3)) {
+                return "../../src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+            } else {
+                return "../../src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+            }
+        }
+    };
 
     return (
         <div className={styles.chatContainer}>
             {isLoading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading recommendations..." />
+                    <Spinner styles={{ circle: { height: 40, width: 40, border: "2px solid #FFFFFF" }, label: { color: "#FFFFFF", fontSize: "1rem" } }} label="Loading recommendations..." />
                 </div>
             ) : (
                 <Stack
@@ -82,7 +114,7 @@ const About: React.FC = () => {
                             <DefaultButton key={index} styles={{ root: { width: '100%', height: "100%", padding: "10px 10px", maxHeight: 150, borderRadius: 30, opacity: selectedItem === item ? 1 : 0.8, backgroundColor: selectedItem === item ? "#FFFFFF" : "#d0d0d0" } }} onClick={() => handleBoatSelection(item)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }}>
                                     <Image
-                                        src={"https://images.unsplash.com/photo-1495433324511-bf8e92934d90"}
+                                        src={imagePath(item.title)}
                                         alt={item.title}
                                         width={"30%"}
                                         height={100}
@@ -108,7 +140,14 @@ const About: React.FC = () => {
                 tokens={{ childrenGap: 20 }}
                 horizontalAlign='center'
                 style={{ height: "10%", position: "fixed", bottom: 0 }}
-                styles={{ root: { width: '100%', padding: 20, flexWrap: "wrap" } }}
+                styles={{ root: { padding: 20, flexWrap: "wrap",
+                    '@media (max-width: 1000px)': {
+                        width: "100%",
+                    },
+                    '@media (max-width: 2500px) and (min-width: 1000px)': {
+                        width: "30%",
+                    },
+                 } }}
             >
                 <PrimaryButton style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: selectedItem ? "black" : "#191A1B", opacity: selectedItem ? 1 : 0.5, border: "none" }} onClick={handleNextClick}>Submit</PrimaryButton>
             </Stack>
