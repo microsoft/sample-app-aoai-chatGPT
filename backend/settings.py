@@ -200,6 +200,7 @@ class _SearchCommonSettings(BaseSettings):
     include_contexts: Optional[List[str]] = ["citations", "intent"]
     vectorization_dimensions: Optional[int] = None
     role_information: str = Field(
+        default="You are an AI assistant that helps people find information.",
         validation_alias="AZURE_OPENAI_SYSTEM_MESSAGE"
     )
 
