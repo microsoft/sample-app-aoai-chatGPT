@@ -63,8 +63,8 @@
 }
 
 .chatIcon {
-  height: 150px;
-  width: 460px;
+  height: 186px;
+  width: 123px;
 }
 
 .chatMessageStream {
@@ -110,10 +110,10 @@
 .chatMessageGpt {
   color: #3bcbff;
   background: #32333f;
+  border-radius: 8px;
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
-
 }
 
 .chatMessageError {
