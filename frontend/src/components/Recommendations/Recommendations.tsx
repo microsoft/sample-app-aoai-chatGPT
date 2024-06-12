@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
 import boatImages from '../../constants/boatImages';
-
+import Image1 from "../../assets/boat_images/BlackHullRedAccentsRedBimini_BMT-6911_main.avif"
 const About: React.FC = () => {
     const navigate = useNavigate();
     const appStateContext = useContext(AppStateContext);
@@ -81,13 +81,13 @@ const About: React.FC = () => {
         }
         else {
             if (normalizedTitle.includes(key1)) {
-                return "src/assets/boat_images/CopperRed_BMT-6790_main.avif"
+                return Image1
             } else if (normalizedTitle.includes(key2)) {
-                return "src/assets/boat_images/WhiteKiwiGraphics_BMT-6808_main.avif"
+                return Image1
             } else if (normalizedTitle.includes(key3)) {
-                return "src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+                return Image1
             } else {
-                return "src/assets/boat_images/DL37_BMT-6802_alt1.jpeg"
+                return Image1
             }
         }
     };
