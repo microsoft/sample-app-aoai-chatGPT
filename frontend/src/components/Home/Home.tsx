@@ -40,10 +40,9 @@ const Home: React.FC = () => {
                     const categoryIndex = updatedTags[key].indexOf(tag);
                     if (categoryIndex !== -1) {
                         const childTags = selectedCategory.child.map((child: ChildItem) => Object.keys(child)[0]);
-                        updatedTags[key].splice(categoryIndex, 1, ...childTags);
+                        updatedTags[key]=[...childTags];
                     }
                 }
-
                 return updatedTags;
             });
 
@@ -127,7 +126,7 @@ const Home: React.FC = () => {
     }, [selectedKeys]);
 
     const buttonDisabled = useMemo(() => {
-        return selectedKeys?.length === 0;
+        return selectedKeys?.length === 0 && inputValue==="";
     }, [selectedKeys, inputValue]);
 
     const handleSubmit = () => {
@@ -213,7 +212,7 @@ const Home: React.FC = () => {
                                 }}>
                                     <DefaultButton
                                         style={{
-                                            height: "42px",
+                                            height: "50px",
                                             padding: "0px 14px",
                                             backgroundColor: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#264653" : '#151B1E',
                                             color: "#FFFFFF",

@@ -5,34 +5,35 @@ import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
 //import boatImages from '../../constants/boatImages';
-import Image1 from "../../assets/boat_images/BlackHullRedAccentsRedBimini_BMT-6911_main.avif"
+import Image1 from "../../assets/BlackHullRedAccentsRedBimini_BMT-6911_main.avif"
+import logo from "../../assets/logo.png"
 
-import R250LE3 from  "../../assets/boat_images/LE35_BMT-6805_alt1.jpeg"
-import R250DL3 from  "../../assets/boat_images/DL34_BMT-6803_alt1.jpeg"
-import R230DL3 from  "../../assets/boat_images/DL37_BMT-6802_alt1.jpeg"
-import TAH16 from  "../../assets/boat_images/WhiteKiwiGraphics_BMT-6808_main.avif"
-import TAH18 from  "../../assets/boat_images/RedWhiteBlueGraphics_BMT-6809_main.avif"
+import R250LE3 from  "../../assets/LE35_BMT-6805_alt1.jpeg"
+import R250DL3 from  "../../assets/DL34_BMT-6803_alt1.jpeg"
+import R230DL3 from  "../../assets/DL37_BMT-6802_alt1.jpeg"
+import TAH16 from  "../../assets/WhiteKiwiGraphics_BMT-6808_main.avif"
+import TAH18 from  "../../assets/RedWhiteBlueGraphics_BMT-6809_main.avif"
 //import TAH21 from  "../../assets/boat_images/BlackHullRedAccentsRedBimini_BMT-6911_alt4.avif"
-import TAH185 from  "../../assets/boat_images/StormBlue_BMT-6814_main.avif"
-import TAH200 from  "../../assets/boat_images/Black_BMT-6815_main.avif"
-import TAH210 from  "../../assets/boat_images/BlackRedAccents_BMT-6810_main.avif"
-import TAH210SI from  "../../assets/boat_images/TriggerGrayRedAccents_BMT-6811_main.avif"
-import TAH1950 from  "../../assets/boat_images/BlackKiwiAccents_BMT-6816_main.avif"
-import TAH2150 from  "../../assets/boat_images/BlackKiwiAccents_BMT-6817_main.avif"
-import TAH2150CC from  "../../assets/boat_images/GrayMistKiwiAccents_BMT-6818_alt3.avif"
-import SFB22 from  "../../assets/boat_images/CharcoalMetallic_BMT-6796_alt1.jpeg"
-import SFB22XP3 from  "../../assets/boat_images/IndigoBlue_BMT-6797_alt1.avif"
-import SPB18 from  "../../assets/boat_images/CopperRed_BMT-6787_main.jpeg"
-import SPB20 from  "../../assets/boat_images/CopperRed_BMT-6788_main.jpeg"
-import SPB22 from  "../../assets/boat_images/CharcoalMetallic_BMT-6789_main.jpeg"
-import SPB22XP3 from  "../../assets/boat_images/CopperRed_BMT-6790_main.avif"
-import SBB16XL from  "../../assets/boat_images/CopperRed_BMT-6793_alt1.jpeg"
-import SBB18 from  "../../assets/boat_images/IndigoBlue_BMT-6794_alt2.jpeg"
-import SF20 from  "../../assets/boat_images/Black_BMT-6798_alt1.jpeg"
-import SF22 from  "../../assets/boat_images/Black_BMT-6799_main.jpeg"
-import SF22XP3 from  "../../assets/boat_images/Caribou_BMT-6800_alt1.jpeg"
-import SF24XP3 from  "../../assets/boat_images/Caribou_BMT-6801_main.avif"
-import SFB20 from  "../../assets/boat_images/IndigoBlue_BMT-6795_main.jpeg"
+import TAH185 from  "../../assets/StormBlue_BMT-6814_main.avif"
+import TAH200 from  "../../assets/Black_BMT-6815_main.avif"
+import TAH210 from  "../../assets/BlackRedAccents_BMT-6810_main.avif"
+import TAH210SI from  "../../assets/TriggerGrayRedAccents_BMT-6811_main.avif"
+import TAH1950 from  "../../assets/BlackKiwiAccents_BMT-6816_main.avif"
+import TAH2150 from  "../../assets/BlackKiwiAccents_BMT-6817_main.avif"
+import TAH2150CC from  "../../assets/GrayMistKiwiAccents_BMT-6818_alt3.avif"
+import SFB22 from  "../../assets/CharcoalMetallic_BMT-6796_alt1.jpeg"
+import SFB22XP3 from  "../../assets/IndigoBlue_BMT-6797_alt1.avif"
+import SPB18 from  "../../assets/CopperRed_BMT-6787_main.jpeg"
+import SPB20 from  "../../assets/CopperRed_BMT-6788_main.jpeg"
+import SPB22 from  "../../assets/CharcoalMetallic_BMT-6789_main.jpeg"
+import SPB22XP3 from  "../../assets/CopperRed_BMT-6790_main.avif"
+import SBB16XL from  "../../assets/CopperRed_BMT-6793_alt1.jpeg"
+import SBB18 from  "../../assets/IndigoBlue_BMT-6794_alt2.jpeg"
+import SF20 from  "../../assets/Black_BMT-6798_alt1.jpeg"
+import SF22 from  "../../assets/Black_BMT-6799_main.jpeg"
+import SF22XP3 from  "../../assets/Caribou_BMT-6800_alt1.jpeg"
+import SF24XP3 from  "../../assets/Caribou_BMT-6801_main.avif"
+import SFB20 from  "../../assets/IndigoBlue_BMT-6795_main.jpeg"
 
 
 const boatImages: {[key:string]: string} = {
@@ -98,9 +99,9 @@ const About: React.FC = () => {
         setSelectedItem(item);
     }
 
-    const handleNextClick = (): void => {
+    const handleNextClick = (selectedItem:string): void => {
         if (selectedItem) {
-            appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem?.title })
+            appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem })
             navigate("/productInfo");
         }
     }
@@ -138,11 +139,11 @@ const About: React.FC = () => {
         }
         else {
             if (normalizedTitle.includes(key1)) {
-                return Image1
+                return SBB18
             } else if (normalizedTitle.includes(key2)) {
-                return Image1
+                return TAH2150
             } else if (normalizedTitle.includes(key3)) {
-                return Image1
+                return R230DL3
             } else {
                 return Image1
             }
@@ -168,7 +169,7 @@ const About: React.FC = () => {
                             <Text style={{ color: "white", marginBottom: 20 }} variant="xLarge">Top Recommendations for this store</Text>
                         )}
                         {dummyData && dummyData.length > 0 && dummyData.map((item, index) => (
-                            <DefaultButton key={index} styles={{ root: { width: '100%', height: "100%", padding: "12px", maxHeight: 150, borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0" } }} onClick={() => handleBoatSelection(item)}>
+                            <DefaultButton key={index} styles={{ root: { width: '100%', height: "100%", padding: "12px", maxHeight: 150, borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0" } }} onClick={()=>handleNextClick(item.title)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }}>
                                     <Image
                                         src={imagePath(item.title)}
@@ -193,7 +194,7 @@ const About: React.FC = () => {
                     )}
                 </Stack>
             )}
-            <Stack
+            {/* <Stack
                 tokens={{ childrenGap: 20 }}
                 horizontalAlign='center'
                 style={{ height: "10%", position: "fixed", bottom: 0 }}
@@ -207,7 +208,7 @@ const About: React.FC = () => {
                  } }}
             >
                 <PrimaryButton styles={{label:{fontWeight:"500",fontSize: "0.875rem",lineHeight:"20px"}}} style={{ width: "100%", height: "48px",  borderRadius: 10, padding: "0px 14px", background: selectedItem ? "black" : "#191A1B", opacity: selectedItem ? 1 : 0.5, border: "none" }} onClick={handleNextClick}>Submit</PrimaryButton>
-            </Stack>
+            </Stack> */}
         </div>
     );
 };

@@ -142,7 +142,7 @@ const Feedback: React.FC = () => {
                                   },
                             } }}
                         >
-                            <PrimaryButton disabled={!selectedButton || feedback===""} style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
+                            <PrimaryButton disabled={!selectedButton && feedback===""} style={{ width: "100%", height: "50px", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
                         </Stack>
                     </>)}
             </Stack>
