@@ -1479,8 +1479,8 @@ async def add_conversation_feedback_v3():
         if not conversation_feedback:
             return jsonify({"error": "conversation_feedback is required"}), 400
 
-        if not conversation_feedback_message:
-            return jsonify({"error": "conversation_feedback is required"}), 400
+        # if not conversation_feedback_message:
+        #     return jsonify({"error": "conversation_feedback is required"}), 400
         
         ## update the message in cosmos
         updated_conversation = await cosmos_conversation_client.update_conversation_feedback_v3(
