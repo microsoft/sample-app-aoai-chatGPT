@@ -825,7 +825,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && (
+              {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
