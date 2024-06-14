@@ -9,7 +9,7 @@ import { AppStateContext } from '../../state/AppProvider';
 import { templete2, templete3 } from '../../constants/templete';
 import { getValuePropositions, getWalkthroughData } from '../../api';
 import BackButton from '../BackButton';
-
+ 
 const ProductInformation: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>('FlashCard');
   const navigate = useNavigate();
@@ -17,16 +17,16 @@ const ProductInformation: React.FC = () => {
   const selectedboat = appStateContext?.state?.selectedBoat;
   const conversationId = appStateContext?.state?.conversationId;
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-
+ 
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
-
+ 
     window.addEventListener('resize', handleResize);
-
+ 
     // Cleanup the event listener on component unmount
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
+ 
   const renderLibraryIcon = () => {
     if (screenWidth <= 1000) {
       return <Library16Filled />;
@@ -41,13 +41,13 @@ const ProductInformation: React.FC = () => {
       return <VehicleShip24Filled />;
     }
   };
-
-
+ 
+ 
   const fetch = async () => {
     try {
       appStateContext?.dispatch({ type: 'SET_VALUE_PROPOSITION_LOADING', payload: true })
       appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_LOADING', payload: true })
-
+ 
       const valuePropositionsResponse = await getValuePropositions(templete2(selectedboat || ""),conversationId || "")
       // const valuePropositionsResponse =
       // {
@@ -57,38 +57,38 @@ const ProductInformation: React.FC = () => {
       // {
       //   "messages": "{\"result\": [{\"title\": \"Driver Console\", \"detail\": \"Features an advanced 8\” TAHOE CRUISE\® digital touchscreen dashboard for unprecedented insight and control, paired with a sport steering wheel and responsive hydraulic steering.\"}, {\"title\": \"Seating Capacity\", \"detail\": \"Accommodates up to 11 passengers in a feature-rich interior, ensuring comfort during full days of cruising and adventure.\"}, {\"title\": \"Entertainment System\", \"detail\": \"Equipped with a powerful KICKER\® Bluetooth stereo system and an advanced phone management station for all-day entertainment.\"}, {\"title\": \"Storage Solutions\", \"detail\": \"Plentiful storage options are available for all your gear, keeping the deck clear and organized.\"}, {\"title\": \"Water Sports Features\", \"detail\": \"Comes with a removable ski tow pylon for water sports and adventure.\"}, {\"title\": \"Swim Platforms\", \"detail\": \"Features aft swim platforms with a boarding ladder, making it easy to access the water.\"}]}"
       // }
-
+ 
       if (valuePropositionsResponse) {
         const parsedDataValueProps = JSON.parse(valuePropositionsResponse?.messages);
         const valuePropositions = parsedDataValueProps?.result
         appStateContext?.dispatch({ type: 'SET_VALUE_PROPOSITION_STATE', payload: valuePropositions })
       }
       const walkaroundResponse = await getWalkthroughData(templete3(selectedboat || ""),conversationId || "")
-
+ 
       if (walkaroundResponse) {
         const parsedDataWalkThrough = JSON.parse(walkaroundResponse?.messages);
         const walkThrough = parsedDataWalkThrough?.result
         appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_STATE', payload: walkThrough })
       }
-
+ 
     } catch (error) {
       appStateContext?.dispatch({ type: 'SET_VALUE_PROPOSITION_LOADING', payload: false })
       appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_LOADING', payload: false })
     }
   }
-
+ 
   useEffect(() => {
     fetch();
   }, [])
-
+ 
   const handleOptionClick = (option: string) => {
     setSelectedOption(option);
   };
-
+ 
   const handleNextClick = () => {
     navigate("/feedback");
   };
-
+ 
   const shipIconStyles: IIconProps = {
     iconName: 'VehicleBoat',
     styles: {
@@ -105,14 +105,14 @@ const ProductInformation: React.FC = () => {
             },
             '@media (max-width: 2500px) and (min-width: 1500px)': {
                 fontSize:"30px",
-
+ 
             },
             color: '#FFFFFF',
             cursor: 'pointer',
         },
     },
 };
-
+ 
   const iconStyles: IIconProps = {
     iconName: 'Library',
     styles: {
@@ -125,18 +125,18 @@ const ProductInformation: React.FC = () => {
             },
             '@media (max-width: 1500px) and (min-width: 1000px)': {
                 fontWeight: "bold", fontSize: "28px",
-                marginBottom:20
+                // marginBottom:20
             },
             '@media (max-width: 2500px) and (min-width: 1500px)': {
                 fontSize:"30px",
-
+ 
             },
             color: '#FFFFFF',
             cursor: 'pointer',
         },
     },
 };
-
+ 
   return (
     <div className={styles.chatContainer}>
       <Stack horizontalAlign="center"
@@ -146,12 +146,16 @@ const ProductInformation: React.FC = () => {
             '@media (max-width: 1000px)': {
               width: "100%",
             },
-            '@media (max-width: 2500px) and (min-width: 1000px)': {
+            '@media (max-width: 1500px) and (min-width: 1000px)': {
+              width: "80%",
+              marginTop: "80px"
+            },
+            '@media (max-width: 2500px) and (min-width: 1500px)': {
               width: "50%",
             },
           }
         }}>
-        <div style={{ display: "flex", width: "100%", padding: "0px 20px",alignItems:"center" }}>
+        <div style={{ display: "flex", width: "100%", padding: "0px",alignItems:"center",marginBottom:"20px" }}>
           <BackButton onClick={() => navigate("/recommendations")}></BackButton>
           <Text
             styles={{
@@ -166,7 +170,7 @@ const ProductInformation: React.FC = () => {
             }}
             style={{ color: "white", display: "flex", alignItems: "center" }} >Details</Text>
         </div>
-        <Stack horizontal tokens={{ childrenGap: 10 }} style={{ width: "100%", padding: "0px 20px" }}
+        <Stack horizontal tokens={{ childrenGap: 10 }} style={{ width: "100%", padding: "0px" }}
           styles={{
             root: {
               marginTop:10,
@@ -176,7 +180,7 @@ const ProductInformation: React.FC = () => {
               },
               '@media (max-width: 2500px) and (min-width: 1000px)': {
                 // height: "12%"
-                
+               
               },
             }
           }}
@@ -250,7 +254,7 @@ const ProductInformation: React.FC = () => {
                   },
                   ':active': {
                     background: "transparent",
-
+ 
                   },
                   ':focus': {
                     background: "transparent",
@@ -275,11 +279,12 @@ const ProductInformation: React.FC = () => {
           </PrimaryButton>
         </Stack>
         <Stack
-          style={{ height:selectedOption==="WalkAround" ? "80%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px 20px" }}
+          style={{ height:selectedOption==="WalkAround" ? "70%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px" }}
           tokens={{ childrenGap: 10 }}
           styles={{root:{
             '@media (max-width: 2500px) and (min-width: 1000px)': {
-              marginTop:10
+              // marginTop:10
+              marginTop: "40px"
             },
           }}}
         >
@@ -291,14 +296,17 @@ const ProductInformation: React.FC = () => {
           style={{ height: "12%", position: "fixed", zIndex: 99999, bottom: 0, background: "transparent" }}
           styles={{
             root: {
-              padding: 20, flexWrap: "wrap",
+              flexWrap: "wrap",
               '@media (max-width: 600px)': {
                 width: "100%",
               },
               '@media (max-width: 1000px) and (min-width: 600px)': {
                 width: "60%",
               },
-              '@media (max-width: 2500px) and (min-width: 1000px)': {
+              '@media (max-width: 1500px) and (min-width: 1000px)': {
+                width: "80%",
+              },
+              '@media (max-width: 2500px) and (min-width: 1500px)': {
                 width: "40%",
               },
             }
@@ -326,5 +334,5 @@ const ProductInformation: React.FC = () => {
     </div>
   );
 };
-
+ 
 export default ProductInformation;

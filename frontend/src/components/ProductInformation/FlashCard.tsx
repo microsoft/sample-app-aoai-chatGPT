@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 import { DocumentCard, DocumentCardTitle, DocumentCardDetails, Stack, Text, Spinner } from '@fluentui/react';
 import { AppStateContext } from '../../state/AppProvider';
-
+ 
 const FlashCard: React.FC = () => {
   const appStateContext = useContext(AppStateContext);
   const valuesProps = appStateContext?.state?.valuePropositions
   const isLoading = appStateContext?.state?.isLoadingValuePropositions
-
+ 
   return (
     <>
       {isLoading ? (
@@ -45,34 +45,36 @@ const FlashCard: React.FC = () => {
                   },
                 }
               }}>
-                <Stack.Item>
+                <Stack.Item style={{marginBottom: "15px"}}>
                   <Text styles={{
                     root: {
                       '@media (max-width: 1000px) and (min-width: 600px)': {
                         fontWeight: '800',
-                        fontSize: "24px",
+                        fontSize: "28px",
                         lineHeight:30,
                       },
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '700',
-                        fontSize: "24px"
+                        fontSize: "28px",
+                        lineHeight:"20px"
                       },
-                      fontWeight: '700', fontSize: "14px", lineHeight: "20px", textAlign: 'left', padding: 0, color: '#000000'
+                      fontWeight: '700', fontSize: "14px", lineHeight: "20px", textAlign: 'left', padding: 0, color: '151B1E'
                     }
                   }}>{item.title}</Text>
                 </Stack.Item>
                 <Stack.Item >
-                  <Text style={{ color: '#000000' }} styles={{
+                  <Text style={{ color: '#2D3F2B' }} styles={{
                     root: {
                       fontWeight: 500, fontSize: "14px", lineHeight: "20px",
                       '@media (max-width: 1000px) and (min-width: 600px)': {
                         fontWeight: '500',
-                        fontSize: "24px",
+                        fontSize: "28px",
                         lineHeight:30,
                       },
+ 
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '600',
-                        fontSize: "20px",
+                        fontSize: "28px",
                         lineHeight: "30px"
                       },
                     }
@@ -89,5 +91,5 @@ const FlashCard: React.FC = () => {
     </>
   );
 };
-
+ 
 export default FlashCard;
