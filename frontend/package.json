@@ -28,6 +28,8 @@
     "react-multi-carousel": "^2.8.5",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.8.1",
+    "react-spring": "^9.7.3",
+    "react-spring-3d-carousel": "^1.3.4",
     "react-swipeable": "^7.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-uuid": "^2.0.0",
