@@ -155,8 +155,9 @@ export enum Feedback {
 }
 
 export type Recommendations= {
-  title: string;
-  detail: string;
+  product: string;
+  model: string;
+  summary: string;
 }
 
 export type ValuePropositions= {

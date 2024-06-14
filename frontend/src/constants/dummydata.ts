@@ -38,11 +38,11 @@ export const dummydata: Tags = {
         {
             category: "Lakes",
             child: [
-                { "Lake Okeechobee": "Lake Okeechobee" },
-                { "Lake George": "Lake George" },
-                { "Lake Apopka": "Lake Apopka" },
-                { "Lake Kissimmee": "Lake Kissimmee" },
-                { "Lake Toho": "Lake Toho" }
+                { "Okeechobee": "Lake Okeechobee" },
+                { "George": "Lake George" },
+                { "Apopka": "Lake Apopka" },
+                { "Kissimmee": "Lake Kissimmee" },
+                { "Toho": "Lake Toho" }
             ]
         },
         {
@@ -85,7 +85,7 @@ export const dummydata: Tags = {
     ],
     prioritize: [
         {
-            category: "Luxury Experience",
+            category: "Luxury",
             child: []
         },
         {

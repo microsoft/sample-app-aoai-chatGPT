@@ -1,110 +1,58 @@
-import React, { useContext } from 'react';
-import Carousel from 'react-multi-carousel';
-import 'react-multi-carousel/lib/styles.css';
-import "./carouselStyle.css"
-import { Text, Stack, mergeStyles, Spinner } from '@fluentui/react';
-import { AppStateContext } from '../state/AppProvider';
+import React, { useState, useEffect } from "react";
+import Carousel from "react-spring-3d-carousel";
+import { useSpring, animated } from "react-spring";
+import { useDrag } from "react-use-gesture";
+import { config } from "react-spring";
 
-const carouselContainerStyle = mergeStyles({
-  marginTop: 20,
-  width: '90%',
-  backgroundColor: '#eccb3c',
-  borderRadius: 10,
-  height: "80%",
-});
+interface Card {
+  content: JSX.Element;
+  onClick: () => void;
+}
 
-const slideStyle = mergeStyles({
-  padding: "50px 10px",
-  textAlign: 'center',
-  boxSizing: 'border-box',
-  height: "100%",
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-});
+interface CarrousselProps {
+  cards: Card[];
+  width: string;
+  height: string;
+  margin: string;
+  offset: number;
+  showArrows: boolean;
+}
 
-const titleStyle = mergeStyles({
-  position: 'absolute',
-  top: 20,
-  left: 20,
-  fontWeight: 'bold',
-});
+export default function CarouselComponent(props: CarrousselProps) {
+  const [offsetRadius, setOffsetRadius] = useState<number>(2);
+  const [showArrows, setShowArrows] = useState<boolean>(false);
+  const [goToSlide, setGoToSlide] = useState<number>(0);
+  const [cards, setCards] = useState<Card[]>([]);
 
-const contentStackStyle = mergeStyles({
-  height: '100%',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: 20,
-});
+  useEffect(() => {
+    setOffsetRadius(props.offset);
+    setShowArrows(props.showArrows);
+    setCards(props.cards.map((element, index) => {
+      return { ...element, onClick: () => setGoToSlide(index) };
+    }));
+  }, [props.offset, props.showArrows, props.cards]);
 
-const responsive = {
-  superLargeDesktop: {
-    breakpoint: { max: 4000, min: 3000 },
-    items: 1
-  },
-  desktop: {
-    breakpoint: { max: 3000, min: 1024 },
-    items: 1
-  },
-  tablet: {
-    breakpoint: { max: 1024, min: 464 },
-    items: 1
-  },
-  mobile: {
-    breakpoint: { max: 464, min: 0 },
-    items: 1
-  }
-};
-
-const CarouselComponent: React.FC = () => {
-  const appStateContext = useContext(AppStateContext);
-  const walkthroughData = appStateContext?.state?.walkthorugh;
-  const isLoading = appStateContext?.state?.isLoadingWalkThrough
+  const bind = useDrag(({ down, movement: [mx] }) => {
+    if (!down) {
+      const newIndex = mx > 0 ? goToSlide - 1 : goToSlide + 1;
+      if (newIndex >= 0 && newIndex < cards.length) {
+        setGoToSlide(newIndex);
+      }
+    }
+  });
 
   return (
-    <>
-      {isLoading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading Walk Around..." />
-        </div>
-      ) : (
-        <>
-          {walkthroughData && walkthroughData?.length > 0 ? (
-            <div className={carouselContainerStyle}>
-              <Carousel
-                responsive={responsive}
-                showDots
-                infinite={false}
-                autoPlay={false}
-                arrows={false}
-                itemClass='react-multi-carousel-list'
-              >
-                {walkthroughData.map((item) => (
-                  <div key={item.title} className={slideStyle}>
-                    <Text variant="xLarge" className={titleStyle}>
-                      {item.title}
-                    </Text>
-                    <Stack tokens={{ childrenGap: 10 }} className={contentStackStyle}>
-                      {/* <ul style={{ padding: '0 20px', margin: 0, listStyle: 'disc', display: "flex", alignItems: 'center', flexDirection: "column", marginTop: 20 }}> */}
-                      <Text key={item.title} style={{ fontWeight: 500, textAlign: "justify", marginBottom: 10, marginTop: 10, fontSize: "1.25rem" }}>
-                        {item.detail}
-                      </Text>
-                      {/* </ul> */}
-                    </Stack>
-                  </div>
-                ))}
-              </Carousel>
-            </div>
-          ) : (
-            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-              <Text style={{ color: "#FFFFFF", fontSize: "1.25rem", fontWeight: "bold" }}>No Walk Around Found</Text>
-            </div>
-          )}
-        </>
-      )}
-    </>
+    <div
+      {...bind()}
+      style={{ width: props.width, height: props.height, margin: props.margin, touchAction: 'pan-y' }}
+    >
+      <Carousel
+        slides={cards}
+        goToSlide={goToSlide}
+        offsetRadius={offsetRadius}
+        showNavigation={showArrows}
+        animationConfig={config.gentle}
+      />
+    </div>
   );
-};
-
-export default CarouselComponent;
+}

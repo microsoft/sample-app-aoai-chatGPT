@@ -1,19 +1,10 @@
 import * as React from 'react';
-import { Stack, TextField, IconButton } from '@fluentui/react';
+import { Stack, TextField, IconButton, PrimaryButton } from '@fluentui/react';
 import uuid from 'react-uuid';
-
+import style from "../../pages/layout/Layout.module.css"
+import { Send24Filled, Send28Filled } from '@fluentui/react-icons';
 
 const UserInfo: React.FC = () => {
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-    borderRadius: '35px',
-    padding: '15px',
-    backgroundColor:"#313F46",
-    boxShadow: 'none',
-    border: "2px solid #378588"
-  };
 
   const textFieldStyle: React.CSSProperties = {
     flex: 1,
@@ -45,9 +36,12 @@ const UserInfo: React.FC = () => {
   };
 
   return (
-    <Stack tokens={{ childrenGap: 20 }} styles={{ root: { width: 350, margin: 'auto' } }}>
-      <div style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
-        <div style={containerStyle}>
+    <Stack horizontalAlign='center' tokens={{ childrenGap: 20 }} styles={{ root: { width: "100%", margin: 'auto' } }}>
+      <div style={{
+        display: "flex", alignItems: "center", flexDirection: "column",
+        width: "100%", padding: "0px 20px"
+      }}>
+        <div className={style.inputField}>
           <div style={textFieldWrapperStyle}>
             <TextField
               placeholder={"Enter your Full Name"}
@@ -69,6 +63,12 @@ const UserInfo: React.FC = () => {
                   backgroundColor: 'inherit',
                   overflow: 'hidden',
                   color: "#FFFFFF",
+                  '@media (max-width: 1000px)': {
+                    fontSize: "14px"
+                  },
+                  '@media (max-width: 2500px) and (min-width: 1000px)': {
+                    fontSize: "24px"
+                  },
                   '::placeholder': {
                     color: '#7c909b',
                   },
@@ -79,18 +79,21 @@ const UserInfo: React.FC = () => {
               onKeyDown={handleKeyDown}
             />
           </div>
-          <IconButton
-            iconProps={{ iconName: 'Send' }}
-            ariaLabel="Send"
+          <PrimaryButton
+            onClick={handleSave}
             styles={{
               root: {
                 backgroundColor: 'transparent',
                 color: "#FFFFFF",
-                borderRadius: 10
+                borderRadius: 10, border: "none",
+                minWidth:0,
+                padding:"0px 5px"
               }
             }}
-            onClick={handleSave}
-          />
+          >
+            <Send28Filled />
+          </PrimaryButton>
+
         </div>
       </div>
     </Stack>

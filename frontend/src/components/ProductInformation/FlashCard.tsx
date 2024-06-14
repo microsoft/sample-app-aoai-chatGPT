@@ -4,18 +4,18 @@ import { AppStateContext } from '../../state/AppProvider';
 
 const FlashCard: React.FC = () => {
   const appStateContext = useContext(AppStateContext);
-  const valuesProps=appStateContext?.state?.valuePropositions
-  const isLoading=appStateContext?.state?.isLoadingValuePropositions
+  const valuesProps = appStateContext?.state?.valuePropositions
+  const isLoading = appStateContext?.state?.isLoadingValuePropositions
 
   return (
     <>
       {isLoading ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Spinner styles={{circle:{height:40,width:40,border:"2px solid #FFFFFF"},label:{color:"#FFFFFF",fontSize:"1rem"}}} label="Loading Value Propositions..." />
+          <Spinner styles={{ circle: { height: 40, width: 40, border: "2px solid #FFFFFF" }, label: { color: "#FFFFFF", fontSize: "1rem" } }} label="Loading Value Propositions..." />
         </div>
       ) : (
         <>
-          {valuesProps && valuesProps?.length>0 ? valuesProps.map((item, index) => (
+          {valuesProps && valuesProps?.length > 0 ? valuesProps.map((item, index) => (
             <DocumentCard
               key={index}
               styles={{
@@ -23,30 +23,70 @@ const FlashCard: React.FC = () => {
                   backgroundColor: '#75ac51',
                   width: '100%',
                   maxWidth: '100%',
+                  height:"fit-content",
+                  '@media (max-width: 2500px) and (min-width: 600px)': {
+                    minHeight: "150px",
+                    marginBottom: 10
+                  },
+                  '@media (max-width: 600px)': {
+                    marginTop: index===0 ?"30px":0
+                  },
                   minWidth: '200px',
                   borderRadius: 20,
-                  border:"none"
+                  border: "none"
                 },
               }}
             >
-              <Stack styles={{ root: { padding: "22px 20px 25px 20px", width: '100%' } }}>
+              <Stack styles={{
+                root: {
+                  padding: "22px 20px 25px 20px", width: '100%', height: "100%",
+                  '@media (max-width: 2500px) and (min-width: 1000px)': {
+                    padding: 30
+                  },
+                }
+              }}>
                 <Stack.Item>
-                  <DocumentCardTitle title={item.title} styles={{ root: { fontWeight: '700', lineHeight:"20px",textAlign: 'left', padding: 0, height: 20, color: 'white', fontSize: "16px", whiteSpace: "nowrap", textOverflow: "ellipsis" } }} />
+                  <Text styles={{
+                    root: {
+                      '@media (max-width: 1000px) and (min-width: 600px)': {
+                        fontWeight: '800',
+                        fontSize: "24px",
+                        lineHeight:30,
+                      },
+                      '@media (max-width: 2500px) and (min-width: 1000px)': {
+                        fontWeight: '700',
+                        fontSize: "24px"
+                      },
+                      fontWeight: '700', fontSize: "14px", lineHeight: "20px", textAlign: 'left', padding: 0, color: '#000000'
+                    }
+                  }}>{item.title}</Text>
                 </Stack.Item>
-                <Stack.Item grow>
-                  <DocumentCardDetails styles={{ root: { marginTop: 11 } }}>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.75)',fontWeight:500,fontSize:"14px",lineHeight:"20px" }}>{item.detail}</Text>
-                  </DocumentCardDetails>
+                <Stack.Item >
+                  <Text style={{ color: '#000000' }} styles={{
+                    root: {
+                      fontWeight: 500, fontSize: "14px", lineHeight: "20px",
+                      '@media (max-width: 1000px) and (min-width: 600px)': {
+                        fontWeight: '500',
+                        fontSize: "24px",
+                        lineHeight:30,
+                      },
+                      '@media (max-width: 2500px) and (min-width: 1000px)': {
+                        fontWeight: '600',
+                        fontSize: "20px",
+                        lineHeight: "30px"
+                      },
+                    }
+                  }}>{item.detail}</Text>
                 </Stack.Item>
               </Stack>
             </DocumentCard>
           )) : (
-<div style={{height:"100%",display:"flex",alignItems:"center"}}>
-  <Text style={{color:"#FFFFFF",fontSize:"1.25rem",fontWeight:"bold"}}>No Value Props Found</Text>
-</div>
+            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+              <Text style={{ color: "#FFFFFF", fontSize: "1.25rem", fontWeight: "bold" }}>No Value Props Found</Text>
+            </div>
           )}
         </>)}
-      </>
+    </>
   );
 };
 

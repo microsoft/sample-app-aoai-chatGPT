@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { TextField, PrimaryButton } from '@fluentui/react';
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../state/AppProvider';
+import style from "../pages/layout/Layout.module.css"
 
 interface Props {
   placeholder: string,
@@ -45,14 +46,14 @@ const CustomTextField: React.FC<Props> = ({ placeholder, onButtonClick, text, se
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setInputText(newValue || '');
   };
-const [inputText,setInputText]=useState<string>("");
+  const [inputText, setInputText] = useState<string>("");
   const navigate = useNavigate();
 
   const handleNavigate = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
-    const inputPayload=text+` ${inputText}`;
+    const inputPayload = text + ` ${inputText}`;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("recommendations");
     setIsButtonClicked(false);
@@ -67,7 +68,7 @@ const [inputText,setInputText]=useState<string>("");
   const handleBlur = () => {
     if (!isButtonClicked) {
       onBlur?.();
-      const promptValue=`${text} ${inputText}`;
+      const promptValue = `${text} ${inputText}`;
       setText?.(promptValue || '')
     }
   };
@@ -84,7 +85,7 @@ const [inputText,setInputText]=useState<string>("");
 
   return (
     <div style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
-      <div style={containerStyle}>
+      <div className={isTextFieldFocused ? style.focusInputField : style.mainInputField}>
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
@@ -96,7 +97,16 @@ const [inputText,setInputText]=useState<string>("");
             styles={{
               root: {
                 color: "#FFFFFF",
-                height: isTextFieldFocused ? "150px" : "30px",
+                '@media (max-width: 1000px)': {
+                  fontSize: "14px",
+                  height: isTextFieldFocused ? "150px" : "30px",
+                },
+                '@media (max-width: 2500px) and (min-width: 1000px)': {
+                  fontSize: "24px",
+                  fontWeight: "100",
+                  marginLeft: !isTextFieldFocused ? 15 : 2,
+                  height: isTextFieldFocused ? "230px" : "50px",
+                },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
               },
@@ -104,7 +114,15 @@ const [inputText,setInputText]=useState<string>("");
                 borderRadius: '25px',
                 backgroundColor: 'inherit',
                 margin: "-2px",
-                height: isTextFieldFocused ? "150px" : "30px",
+                '@media (max-width: 1000px)': {
+                  fontSize: "14px",
+                  height: isTextFieldFocused ? "150px" : "30px",
+                },
+                '@media (max-width: 2500px) and (min-width: 400px)': {
+                  fontSize: "24px",
+                  fontWeight: "100",
+                  height: isTextFieldFocused ? "230px" : "50px",
+                },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
                 lineHeight: isTextFieldFocused ? "1.6em" : "1,5em",
@@ -112,13 +130,34 @@ const [inputText,setInputText]=useState<string>("");
               },
               field: {
                 backgroundColor: 'inherit',
-                height: isTextFieldFocused ? "150px" : "30px",
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
+                '@media (max-width: 600px)': {
+                  fontSize: "14px",
+                  height: isTextFieldFocused ? "150px" : "30px",
+                },
+                '@media (max-width: 1000px) and (min-width: 600px)': {
+                  fontSize: "18px",
+                  fontWeight: "500",
+                  height: isTextFieldFocused ? "230px" : "50px",
+                },
+                '@media (max-width: 2500px) and (min-width: 1000px)': {
+                  fontSize: "30px",
+                  fontWeight: "100",
+                  height: isTextFieldFocused ? "230px" : "50px",
+                },
                 lineHeight: isTextFieldFocused ? "1.6em" : "1.5em",
                 color: "#FFFFFF",
                 '::placeholder': {
                   color: '#7c909b',
+                  '@media (max-width: 1500px) and (min-width: 1000px)': {
+                    fontWeight: "500",
+                    fontSize:"16px"
+                  },
+                  '@media (max-width: 2500px) and (min-width: 1500px)': {
+                    fontWeight: "500",
+                    fontSize:"30px"
+                  },
                 },
               },
             }}
@@ -126,16 +165,39 @@ const [inputText,setInputText]=useState<string>("");
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             onFocus={onFocus}
-            onBlur={handleBlur} 
+            onBlur={handleBlur}
           />
         </div>
       </div>
       {isButtonRequired && (
         <PrimaryButton
+          styles={
+            {
+              root: {
+                '@media (max-width: 600px)': {
+                  height: "50px",
+                  width:"380px !important"
+                },
+                '@media (max-width: 1000px) and (min-width: 600px)': {
+                  height: "60px",
+                },
+                '@media (max-width: 2500px) and (min-width: 1000px)': {
+                  height: "80px"
+                },
+              },
+              label:{
+                '@media (max-width: 1000px) and (min-width: 600px)': {
+                  fontSize:"20px"
+                },
+                '@media (max-width: 2500px) and (min-width: 1000px)': {
+                  fontSize:"30px"
+                },
+              }
+            }
+          }
           style={{
             width: "100%",
             marginTop: 20,
-            height: "50px",
             borderRadius: 10,
             padding: 20,
             fontSize: "0.875rem",

@@ -114,3 +114,115 @@
     margin-left: 26px;
   }
 }
+
+.inputField {
+  display: flex;
+  align-items: center; 
+  width: 100%;
+  height: 56px;
+  border-radius: 35px;
+  padding: 15px;
+  background-color: #313F46;
+  box-shadow: none;
+  border: 2px solid #378588;
+}
+
+.mainInputField {
+  display: flex;
+  align-items: center; 
+  width: 100%;
+  height: 56px;
+  border-radius: 35px;
+  padding: 15px;
+  background-color: #313F46;
+  box-shadow: none;
+}
+.focusInputField {
+  display: flex;
+  align-items: center; 
+  width: 100%;
+  height: 180px;
+  border-radius: 16px;
+  padding: 15px;
+  background-color: #313F46;
+  box-shadow: none;
+}
+
+.textFieldDiv{
+  width:"100%"
+}
+
+@media (max-width: 480px) {
+  .inputField {
+    display: flex;
+    align-items: center; 
+    width: 100%;
+    border-radius: 35px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+    border: 2px solid #378588;
+  }
+
+  .focusInputField {
+    display: flex;
+    align-items: center; 
+    width: 380px;
+    height: 180px;
+    border-radius: 16px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 1000px) and (min-width: 500px) {
+  .mainInputField {
+    display: flex;
+    align-items: center; 
+    width: 100%;
+    height: 80px;
+    border-radius: 50px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 2520px) and (min-width: 1000px) {
+  .inputField {
+    display: flex;
+    align-items: center; 
+    width: 35%;
+    height: 72px;
+    border-radius: 35px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+    border: 2px solid #378588;
+  }
+  .mainInputField {
+    display: flex;
+    align-items: center; 
+    width: 100%;
+    height: 90px;
+    border-radius: 50px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+  }
+  .focusInputField {
+    display: flex;
+    align-items: center; 
+    width: 100%;
+    height: 255px;
+    border-radius: 24px;
+    padding: 15px;
+    background-color: #313F46;
+    box-shadow: none;
+  }
+
+  .textFieldDiv{
+    width:"86%"
+  }
+}

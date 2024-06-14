@@ -1,0 +1,100 @@
+.inputContainer {
+    width: 90%
+}
+
+.focusInputContainer {
+    width: 85%
+}
+
+.buttonContainer {
+    width: 10%;
+    margin-top: 0 !important
+}
+
+.resetAll {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    cursor: pointer;
+    /* width: 100%; */
+    margin-bottom: 12px;
+    color: #FFFFFF;
+    background:#2F3A40
+}
+
+@media (max-width: 620px) and (min-width: 400px) {
+    .inputContainer {
+        width: 80% !important
+    }
+
+    .buttonContainer {
+        width: 20%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .focusInputContainer {
+        width: 100%
+    }
+
+    .resetAll {
+        padding-right: 12px;
+    }
+}
+
+@media (max-width: 1000px) and (min-width: 620px) {
+    .resetAll {
+        font-size: 24px;
+    }
+
+    .buttonContainer {
+        width: 15%;
+        margin-top: 0 !important
+    }
+}
+
+@media (max-width: 2000px) and (min-width: 1000px) {
+    .inputContainer {
+        width: 90% !important
+    }
+
+    .focusInputContainer {
+        width: 100%
+    }
+
+    .buttonContainer {
+        width: 10%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    .resetAll {
+        padding: 10px 20px;
+        font-size: 24px;
+        border-radius: 50px;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 2500px) and (min-width: 2000px) {
+    .inputContainer {
+        width: 90% !important
+    }
+
+    .focusInputContainer {
+        width: 100%
+    }
+
+    .buttonContainer {
+        width: 10%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+    }
+
+    .resetAll {
+        font-size: 32px;
+    }
+}

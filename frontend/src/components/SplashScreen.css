@@ -21,4 +21,13 @@
       width: 60%;
     }
   }
+
+    
+  @media (max-width: 1920px) {
+    .logo {
+      width: 40%;
+      max-width: 500px;
+      margin-bottom: 20px;
+    }
+  }
   
