@@ -160,18 +160,36 @@ const Chat = () => {
     }
   }
 
-  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string, filebase64?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
 
-    const userMessage: ChatMessage = {
+    let userMessage: ChatMessage
+    if (filebase64) {
+      userMessage = {
+      id: uuid(),
+      role: 'user',
+      content: question,
+      date: new Date().toISOString(),
+      image: filebase64
+      }
+    }
+    else {
+      userMessage = {
       id: uuid(),
       role: 'user',
       content: question,
       date: new Date().toISOString()
+      }
     }
+    // const userMessage: ChatMessage = {
+    //   id: uuid(),
+    //   role: 'user',
+    //   content: question,
+    //   date: new Date().toISOString()
+    // }
 
     let conversation: Conversation | null | undefined
     if (!conversationId) {
@@ -284,7 +302,7 @@ const Chat = () => {
     return abortController.abort()
   }
 
-  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string, filebase64?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -777,7 +795,12 @@ const Chat = () => {
                   <>
                     {answer.role === 'user' ? (
                       <div className={styles.chatMessageUser} tabIndex={0}>
-                        <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                        {answer?.content && answer.content.trim() && (
+                          <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                        )}
+                        {answer?.image && (
+                          <img src={answer.image} className={styles.chatImage} alt="User sent image"/>
+                        )}
                       </div>
                     ) : answer.role === 'assistant' ? (
                       <div className={styles.chatMessageGpt}>
@@ -825,7 +848,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && messages.length > 0 && (
+              {isLoading && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -909,10 +932,10 @@ const Chat = () => {
                 clearOnSend
                 placeholder="Type a new question..."
                 disabled={isLoading}
-                onSend={(question, id) => {
+                onSend={(question, id, filebase64) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                    ? makeApiRequestWithCosmosDB(question, id)
-                    : makeApiRequestWithoutCosmosDB(question, id)
+                    ? makeApiRequestWithCosmosDB(question, id, filebase64)
+                    : makeApiRequestWithoutCosmosDB(question, id, filebase64)
                 }}
                 conversationId={
                   appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined

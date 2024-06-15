@@ -3,13 +3,34 @@ import { chatHistorySampleData } from '../constants/chatHistory'
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+  const transformedMessages = options.messages.map(item => {
+    if (item.image) {
+      return {
+        ...item,
+        content: [
+          {
+            type: "text",
+            text: item.content
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: item.image
+            }
+          }
+        ]
+      };
+    } else {
+      return item;
+    }
+  });
   const response = await fetch('/conversation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      messages: options.messages
+      messages: transformedMessages
     }),
     signal: abortSignal
   })
