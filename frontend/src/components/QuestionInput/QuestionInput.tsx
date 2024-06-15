@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { AddSquareRegular, SendRegular, DismissCircleFilled, AddSquareFilled } from '@fluentui/react-icons'
 
@@ -75,7 +75,23 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       reader.onerror = (error) => {
         console.error("There was an error reading the file!", error)
       }
+  }
+
+  // Function to handle paste event
+  const handlePaste = (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+          convertToBase64(blob);
+        }
+        break;
+      }
     }
+  };
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -87,6 +103,13 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       // sendQuestion()
     }
   }
+
+  useEffect(()=>{
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [])
 
   const sendQuestionDisabled = disabled || (!question.trim() && !filebase64)
   const handleClearImage = () => {
