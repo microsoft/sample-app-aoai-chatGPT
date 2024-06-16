@@ -5,12 +5,12 @@
 html,
 body {
   height: 100%;
-  margin: 0;
-  padding: 0;
+  margin: 20;
+  padding: 20;
 }
 
 html {
-  background: #f2f2f2;
+  background: #fffffff;
   font-family:
     'Segoe UI',
     'Segoe UI Web (West European)',
