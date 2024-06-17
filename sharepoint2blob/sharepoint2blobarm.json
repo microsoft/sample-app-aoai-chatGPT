@@ -12,11 +12,7 @@
         },
         "ingestionStorageAccountName": {
             "defaultValue": "armqueue2",
-            "type": "String",
-            "minLength": 1,
-            "metadata": {
-                "required": true
-            }
+            "type": "String"
         },
         "EnqueueInterval": {
             "defaultValue": 60,
