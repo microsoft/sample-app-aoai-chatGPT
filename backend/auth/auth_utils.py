@@ -1,4 +1,5 @@
 import logging
+
 import requests
 
 
@@ -26,9 +27,16 @@ def get_authenticated_user_details(request_headers):
 
 
 def ms_graph_authorisation_check(access_token: str, site_id: str, page_id: str):
-    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/pages/{page_id}"
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/pages/{page_id}"    
     headers = {"Authorization": "Bearer " + access_token, "Accept": "application/json"}
     response = requests.get(url, headers=headers)
+
+    logging.log(logging.INFO, f"Checking access to {url}")
+
     success = response.status_code == 200
+
+    if not success:
+        logging.log(logging.INFO, headers)
+        logging.log(logging.ERROR, response)
     
     return success
