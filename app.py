@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import logging
+import sys
 import uuid
 from dotenv import load_dotenv
 import httpx
@@ -104,6 +105,23 @@ async def assets(path):
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
+
+# Create logger
+logger = logging.getLogger(__name__)
+
+# Stream handler to capture stdout
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+stdout_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# Stream handler to capture stderr
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.ERROR)
+stderr_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+# Add handlers to logger
+logger.addHandler(stdout_handler)
+logger.addHandler(stderr_handler)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
