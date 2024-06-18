@@ -1,36 +1,25 @@
 import copy
 import json
-import os
 import logging
-import sys
+import os
 import uuid
-from dotenv import load_dotenv
+
 import httpx
-from quart import (
-    Blueprint,
-    Quart,
-    jsonify,
-    make_response,
-    request,
-    send_from_directory,
-    render_template,
-    abort
-)
-
+from azure.identity.aio import (DefaultAzureCredential,
+                                get_bearer_token_provider)
+from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
-from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
-from backend.auth.auth_utils import get_authenticated_user_details, ms_graph_authorisation_check
-from backend.history.cosmosdbservice import CosmosConversationClient
+from quart import (Blueprint, Quart, abort, jsonify, make_response,
+                   render_template, request, send_from_directory)
 
-from backend.utils import (
-    format_as_ndjson,
-    format_stream_response,
-    generateFilterString,
-    parse_multi_columns,
-    format_non_streaming_response,
-    convert_to_pf_format,
-    format_pf_non_streaming_response,
-)
+from backend.auth.auth_utils import (get_authenticated_user_details,
+                                     ms_graph_authorisation_check)
+from backend.history.cosmosdbservice import CosmosConversationClient
+from backend.utils import (convert_to_pf_format, format_as_ndjson,
+                           format_non_streaming_response,
+                           format_pf_non_streaming_response,
+                           format_stream_response, generateFilterString,
+                           parse_multi_columns)
 
 bp_module_name = "routes"
 bp = Blueprint(bp_module_name, __name__, static_folder="static", template_folder="static")
@@ -105,23 +94,6 @@ async def assets(path):
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
-
-# Create logger
-logger = logging.getLogger(__name__)
-
-# Stream handler to capture stdout
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.DEBUG if DEBUG else logging.INFO)
-stdout_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-# Stream handler to capture stderr
-stderr_handler = logging.StreamHandler(sys.stderr)
-stderr_handler.setLevel(logging.ERROR)
-stderr_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-# Add handlers to logger
-logger.addHandler(stdout_handler)
-logger.addHandler(stderr_handler)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
