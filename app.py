@@ -207,7 +207,8 @@ def prepare_model_args(request_body, request_headers):
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        user_json = get_msdefender_user_json(authenticated_user_details, request_headers)
+        conversation_id = request_body.get("conversation_id", None)        
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id)
 
     model_args = {
         "messages": messages,
