@@ -985,6 +985,34 @@ def chunk_blob_container(
 
     return result
 
+def create_table_of_contents(rootdir):
+    """
+    Creates a nested dictionary that represents the folder structure of rootdir
+    """
+    structure = {"folder_name": os.path.basename(rootdir), "children": []}
+    for item in os.listdir(rootdir):
+        item_path = os.path.join(rootdir, item)
+        if os.path.isdir(item_path):
+            structure["children"].append(create_table_of_contents(item_path))
+        else:
+            structure["children"].append({"file_name": item})
+    return structure
+
+def create_table_of_contents_tree(rootdir, prefix=""):
+    """
+    Generate a text-based tree representation of the directory structure
+    """
+    tree = []
+    items = os.listdir(rootdir)
+    pointers = ['├── '] * (len(items) - 1) + ['└── ']
+    
+    for pointer, item in zip(pointers, items):
+        tree.append(prefix + pointer + item)
+        path = os.path.join(rootdir, item)
+        if os.path.isdir(path):
+            tree.extend(create_table_of_contents_tree(path, prefix + '│   ' if pointer == '├── ' else prefix + '    '))
+    
+    return tree
 
 def chunk_directory(
         directory_path: str,
@@ -1033,7 +1061,7 @@ def chunk_directory(
 
     if njobs==1:
         print("Single process to chunk and parse the files. --njobs > 1 can help performance.")
-        for file_path in tqdm(files_to_process):
+        for file_path in files_to_process:
             total_files += 1
             result, is_error = process_file(file_path=file_path,directory_path=directory_path, ignore_errors=ignore_errors,
                                        num_tokens=num_tokens,

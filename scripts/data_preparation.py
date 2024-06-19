@@ -14,7 +14,7 @@ from azure.search.documents import SearchClient
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-from data_utils import chunk_directory, chunk_blob_container
+from data_utils import chunk_directory, chunk_blob_container, create_table_of_contents_tree
 
 # Configure environment variables  
 load_dotenv() # take environment variables from .env.
@@ -316,6 +316,50 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
             raise Exception(f"INDEXING FAILED for {num_failures} documents. Please recreate the index."
                             f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}")
 
+def upload_toc_to_index(service_name, subscription_id, resource_group, index_name, toc, credential=None, upload_batch_size = 50, admin_key=None):
+    if credential is None and admin_key is None:
+        raise ValueError("credential and admin_key cannot be None")
+    
+    tocd = {
+        "content": toc,
+        "id": "toc",
+        "filepath": "table_of_contents.txt",
+        "title": "Table of Contents",
+        "url": None
+    }
+
+    # add id to documents
+    tocd.update({"@search.action": "upload"})
+    
+    
+    endpoint = "https://{}.search.windows.net/".format(service_name)
+    if not admin_key:
+        admin_key = json.loads(
+            subprocess.run(
+                f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
+                shell=True,
+                capture_output=True,
+            ).stdout
+        )["primaryKey"]
+
+    search_client = SearchClient(
+        endpoint=endpoint,
+        index_name=index_name,
+        credential=AzureKeyCredential(admin_key),
+    )
+
+    results = search_client.upload_documents(documents=[tocd])
+    num_failures = 0
+    errors = set()
+    for result in results:
+        if not result.succeeded:
+            print(f"Indexing Failed for {result.key} with ERROR: {result.error_message}")
+            num_failures += 1
+            errors.add(result.error_message)
+        if num_failures > 0:
+            raise Exception(f"INDEXING FAILED for {num_failures} documents. Please recreate the index."
+                            f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}")
+
 def validate_index(service_name, subscription_id, resource_group, index_name):
     api_version = "2024-03-01-Preview"
     admin_key = json.loads(
@@ -411,6 +455,8 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
             result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                     azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
                                     add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+            table_of_contents = create_table_of_contents_tree(data_config["path"])
+            table_of_contents = "\n".join(table_of_contents)
         else:
             raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
@@ -425,6 +471,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         # upload documents to index
         print("Uploading documents to index...")
         upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        upload_toc_to_index(service_name, subscription_id, resource_group, index_name, table_of_contents, credential)
 
     # check if index is ready/validate index
     print("Validating index...")
