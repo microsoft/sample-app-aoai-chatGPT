@@ -79,7 +79,7 @@ frontend_settings = {
         app_settings.chat_history.enable_feedback
     ),
     "ui": {
-        "title": app_settings.ui.title,
+        "title": "",
         "logo": app_settings.ui.logo,
         "chat_logo": app_settings.ui.chat_logo or app_settings.ui.logo,
         "chat_title": app_settings.ui.chat_title,
