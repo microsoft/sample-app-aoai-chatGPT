@@ -4,28 +4,32 @@ import html
 import json
 import os
 import re
-import requests
-import openai
-import re
+import ssl
+import subprocess
 import tempfile
 import time
+import urllib.request
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import markdown
+import requests
 import tiktoken
-from azure.identity import DefaultAzureCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from openai import AzureOpenAI
 from tqdm import tqdm
-from typing import Any
 
+# Configure environment variables  
+load_dotenv() # take environment variables from .env.
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -104,10 +108,26 @@ class PdfTextSplitter(TextSplitter):
 
         return caption
     
+    def mask_urls(self, text) -> Tuple[Dict[str, str], str]:
+
+        def find_urls(string):
+            regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^()\s<>]+|\(([^()\s<>]+|(\([^()\s<>]+\)))*\))+(?:\(([^()\s<>]+|(\([^()\s<>]+\)))*\)|[^()\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+            urls = re.findall(regex, string)
+            return [x[0] for x in urls]
+        url_dict = {}
+        masked_text = text
+        urls = set(find_urls(text))
+
+        for i, url in enumerate(urls):
+            masked_text = masked_text.replace(url, f"##URL{i}##")
+            url_dict[f"##URL{i}##"] = url
+        return url_dict, masked_text
+
     def split_text(self, text: str) -> List[str]:
+        url_dict, masked_text = self.mask_urls(text)
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
-        splits = text.split(start_tag)
+        splits = masked_text.split(start_tag)
         
         final_chunks = self.chunk_rest(splits[0]) # the first split is before the first table tag so it is regular text
         
@@ -128,7 +148,7 @@ class PdfTextSplitter(TextSplitter):
                 table_caption_prefix = ""
             
 
-        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size)]
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size, url_dict)]
 
         return final_final_chunks
 
@@ -593,11 +613,17 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
     full_text = "".join([page_text for _, _, page_text in page_map])
     return full_text
 
-def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> Generator[Tuple[str, int], None, None]:
+def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
+    def unmask_urls(text, url_dict={}):
+        if "##URL" in text:
+            for key, value in url_dict.items():
+                text = text.replace(key, value)
+        return text
     # TODO: solve for token overlap
     current_chunk = ""
     total_size = 0
     for chunked_content in chunked_content_list:
+        chunked_content = unmask_urls(chunked_content, url_dict)
         chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
         if total_size > 0:
             new_size = total_size + chunk_size
@@ -610,31 +636,62 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int) -> G
     if total_size > 0:
         yield current_chunk, total_size
 
+def get_payload_and_headers_cohere(
+    text, aad_token) -> Tuple[Dict, Dict]:
+    oai_headers =  {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {aad_token}",
+    }
 
+    cohere_body = { "texts": [text], "input_type": "search_document" }
+    return cohere_body, oai_headers
+    
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
-    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
+    FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
+    FLAG_COHERE = os.getenv("FLAG_COHERE", "ENGLISH")
+    FLAG_AOAI = os.getenv("FLAG_AOAI", "V3")
+
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
     try:
-        endpoint_parts = endpoint.split("/openai/deployments/")
-        base_url = endpoint_parts[0]
-        deployment_id = endpoint_parts[1].split("/embeddings")[0]
+        if FLAG_EMBEDDING_MODEL == "AOAI":
+            endpoint_parts = endpoint.split("/openai/deployments/")
+            base_url = endpoint_parts[0]
+            deployment_id = endpoint_parts[1].split("/embeddings")[0]
+            api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
+            if azure_credential is not None:
+                api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            else:
+                api_key = embedding_model_key if embedding_model_key else os.getenv("AZURE_OPENAI_API_KEY")
+            
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
+            if FLAG_AOAI == "V2":
+                embeddings = client.embeddings.create(model=deployment_id, input=text)
+            elif FLAG_AOAI == "V3":   
+                embeddings = client.embeddings.create(model=deployment_id, 
+                                                      input=text, 
+                                                      dimensions=int(os.getenv("VECTOR_DIMENSION", 1536)))
+            
+            return embeddings.dict()['data'][0]['embedding']
+        
+        if FLAG_EMBEDDING_MODEL == "COHERE":
+            if FLAG_COHERE == "MULTILINGUAL":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_MULTILINGUAL_API_KEY")
+            elif FLAG_COHERE == "ENGLISH":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_ENGLISH_API_KEY")
+            data, headers = get_payload_and_headers_cohere(text, key)
 
-        openai.api_version = '2023-05-15'
-        openai.api_base = base_url
-
-        if azure_credential is not None:
-            openai.api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-            openai.api_type = "azure_ad"
-        else:
-            openai.api_type = 'azure'
-            openai.api_key = key
-
-        embeddings = openai.Embedding.create(deployment_id=deployment_id, input=text)
-        return embeddings['data'][0]["embedding"]
+            body = str.encode(json.dumps(data))
+            req = urllib.request.Request(endpoint, body, headers)
+            response = urllib.request.urlopen(req)
+            result = response.read()
+            result_content = json.loads(result.decode('utf-8'))
+                        
+            return result_content["embeddings"][0]   
+        
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
@@ -732,11 +789,12 @@ def chunk_content(
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    for _ in range(RETRY_COUNT):
+                    for i in range(RETRY_COUNT):
                         try:
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
-                        except:
+                        except Exception as e:
+                            print(f"Error getting embedding for chunk with error={e}, retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
                             time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")

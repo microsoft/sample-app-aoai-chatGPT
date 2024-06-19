@@ -4,16 +4,20 @@ import dataclasses
 import json
 import os
 import subprocess
+import time
 
 import requests
-import time
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
 from azure.search.documents import SearchClient
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 from data_utils import chunk_directory, chunk_blob_container
+
+# Configure environment variables  
+load_dotenv() # take environment variables from .env.
 
 SUPPORTED_LANGUAGE_CODES = {
     "ar": "Arabic",
@@ -71,7 +75,7 @@ def check_if_search_service_exists(search_service_name: str,
     url = (
         f"https://management.azure.com/subscriptions/{subscription_id}"
         f"/resourceGroups/{resource_group}/providers/Microsoft.Search/searchServices"
-        f"/{search_service_name}?api-version=2021-04-01-preview"
+        f"/{search_service_name}?api-version=2024-03-01-Preview"
     )
 
     headers = {
@@ -108,7 +112,7 @@ def create_search_service(
     url = (
         f"https://management.azure.com/subscriptions/{subscription_id}"
         f"/resourceGroups/{resource_group}/providers/Microsoft.Search/searchServices"
-        f"/{search_service_name}?api-version=2021-04-01-preview"
+        f"/{search_service_name}?api-version=2024-03-01-Preview"
     )
 
     payload = {
@@ -155,7 +159,7 @@ def create_or_update_search_index(
             ).stdout
         )["primaryKey"]
 
-    url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2023-07-01-Preview"
+    url = f"https://{service_name}.search.windows.net/indexes/{index_name}?api-version=2024-03-01-Preview"
     headers = {
         "Content-Type": "application/json",
         "api-key": admin_key,
@@ -228,17 +232,30 @@ def create_or_update_search_index(
             "type": "Collection(Edm.Single)",
             "searchable": True,
             "retrievable": True,
-            "dimensions": 1536,
-            "vectorSearchConfiguration": vector_config_name
+            "stored": True,
+            "dimensions": int(os.getenv("VECTOR_DIMENSION", 1536)),
+            "vectorSearchProfile": vector_config_name
         })
 
         body["vectorSearch"] = {
-            "algorithmConfigurations": [
-                {
-                    "name": vector_config_name,
-                    "kind": "hnsw"
+        "algorithms": [
+            {
+                "name": "my-hnsw-config-1",
+                "kind": "hnsw",
+                "hnswParameters": {
+                    "m": 4,
+                    "efConstruction": 400,
+                    "efSearch": 500,
+                    "metric": "cosine"
                 }
-            ]
+            }
+        ],
+        "profiles": [
+            {
+                "name": vector_config_name,
+                "algorithm": "my-hnsw-config-1"
+            }
+        ]
         }
 
     response = requests.put(url, json=body, headers=headers)
@@ -300,7 +317,7 @@ def upload_documents_to_index(service_name, subscription_id, resource_group, ind
                             f"To Debug: PLEASE CHECK chunk_size and upload_batch_size. \n Error Messages: {list(errors)}")
 
 def validate_index(service_name, subscription_id, resource_group, index_name):
-    api_version = "2021-04-30-Preview"
+    api_version = "2024-03-01-Preview"
     admin_key = json.loads(
         subprocess.run(
             f"az search admin-key show --subscription {subscription_id} --resource-group {resource_group} --service-name {service_name}",
@@ -428,7 +445,7 @@ if __name__ == "__main__":
     parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
     parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
     parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
-    parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2023-03-15-preview'")
+    parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2024-03-01-Preview'")
     parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
     parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
     args = parser.parse_args()

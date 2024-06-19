@@ -188,13 +188,6 @@
                 "description": "Azure OpenAI System Message"
             }
         },
-        "AzureOpenAIApiVersion": {
-            "type": "string",
-            "defaultValue": "2023-06-01-preview",
-            "metadata": {
-                "description": "Azure OpenAI Api Version"
-            }
-        },
         "AzureOpenAIStream": {
             "type": "bool",
             "defaultValue": true,
@@ -358,7 +351,7 @@
         }
     },
     "variables": {
-        "WebAppImageName": "DOCKER|fruoccopublic.azurecr.io/sample-app-aoai-chatgpt:latest",
+        "WebAppImageName": "DOCKER|sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:latest",
         "cosmosdb_account_name": "[format('db-{0}', parameters('WebsiteName'))]",
         "cosmosdb_database_name": "db_conversation_history",
         "cosmosdb_container_name": "conversations",
@@ -482,10 +475,6 @@
                         {
                             "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
                             "value": "[parameters('AzureOpenAISystemMessage')]"
-                        },
-                        {
-                            "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
-                            "value": "[parameters('AzureOpenAIApiVersion')]"
                         },
                         {
                             "name": "AZURE_OPENAI_STREAM",

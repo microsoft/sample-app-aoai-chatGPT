@@ -6,6 +6,7 @@ Follow the instructions in this section to prepare your data locally. This is ea
 - Install the necessary packages listed in requirements.txt, e.g. `pip install --user -r requirements.txt`
 
 ## Configure
+- Create a .env file similar to the .env.example file. Fill in the values for the environment variables.
 - Create a config file like `config.json`. The format should be a list of JSON objects, with each object specifying a configuration of local data path and target search service and index.
 
 ```
@@ -34,6 +35,9 @@ Disclaimer: Make sure there are no duplicate pages in your data. That could impa
 - Run the data preparation script, passing in your config file. You can set njobs for parallel parsing of your files.
 
      `python data_preparation.py --config config.json --njobs=4`
+
+### Batch creation of index
+Refer to the script run_batch_create_index.py to create multiple indexes in batch using one script.
 
 ## Optional: Use URL prefix
 Each document can be associated with a URL that is stored with each document chunk in the Azure Cognitive Search index in the `url` field. If your documents were downloaded from the web, you can specify a URL prefix to use to construct the document URLs when ingesting your data. Your config file should have an additional `url_prefix` parameter like so:
