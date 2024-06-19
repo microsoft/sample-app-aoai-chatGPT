@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Azure Container Registry Login
-      uses: Azure/docker-login@v1
+      uses: Azure/docker-login@v2
       with:
         # Container registry username
         username: ${{ secrets.SAMPLEAPP_ACR_USERNAME }}
