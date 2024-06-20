@@ -26,11 +26,12 @@ const FlashCard: React.FC = () => {
                   height:"fit-content",
                   '@media (max-width: 2500px) and (min-width: 600px)': {
                     minHeight: "150px",
-                    marginBottom: 10
+                    marginBottom: 20
                   },
                   '@media (max-width: 600px)': {
-                    //marginTop: index===0 ?"30px":0
+                    // marginTop: index===0 ?"30px":0
                     marginBottom: 10
+ 
                   },
                   minWidth: '200px',
                   borderRadius: 20,
@@ -56,7 +57,7 @@ const FlashCard: React.FC = () => {
                       },
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '700',
-                        fontSize: "28px",
+                        fontSize: "24px",
                         lineHeight:"20px"
                       },
                       fontWeight: '700', fontSize: "14px", lineHeight: "20px", textAlign: 'left', padding: 0, color: '151B1E'
@@ -75,7 +76,7 @@ const FlashCard: React.FC = () => {
  
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '600',
-                        fontSize: "28px",
+                        fontSize: "18px",
                         lineHeight: "30px"
                       },
                     }

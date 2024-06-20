@@ -9,7 +9,6 @@ import template from '../../constants/templete';
 import style from "./Home.module.css"
 import Chip from '../Chip';
 import TextFieldComponent from './TextField';
-//import TextFieldComponent from '../TextField';
  
 const Home: React.FC = () => {
  
@@ -175,7 +174,8 @@ const Home: React.FC = () => {
                     {Object.keys(tags).map((key) => (
                         <React.Fragment key={key}>
                             {key === "who" && <div className={style.resetDiv} >
-                                <DefaultButton onClick={() => resetAllClick()} className={style.resetButton}>Reset</DefaultButton>
+                                <DefaultButton onClick={() => resetAllClick()} className={style.resetButton} styles={{
+                                    label:{fontWeight:"normal",color:"rgba(255,255,255,0.41)"}}}>Reset</DefaultButton>
                             </div>}
                             <Stack className={style.tagTypeStack}>
                                 <Text className={style.heading}>
@@ -199,9 +199,15 @@ const Home: React.FC = () => {
                                         <DefaultButton
                                         className={style.tagButton}
                                             style={{
-                                                backgroundColor:tags[key]?.level==="level1"?"#151B1E":tags[key]?.level==="level2" && !selectedKeys.some(selected => selected.value === tag && selected.key === key)?"#909B97": selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#629E57" : '#151B1E',
-                                                color: selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#000000" : "#FFFFFF",
+                                                backgroundColor:key!=="prioritize" && tags[key]?.level==="level1"?"#151B1E":tags[key]?.level==="level2" && !selectedKeys.some(selected => selected.value === tag && selected.key === key)?"#909B97": selectedKeys.some(selected => selected.value === tag && selected.key === key) ? "#629E57" : '#151B1E',
+                                                color: selectedKeys.some(selected => selected.value === tag && selected.key === key) || tags[key]?.level==="level2" ? "#151B1E" : "#FFFFFF",
  
+                                            }}
+                                            styles={{
+                                                label:{
+                                                    display:"block",
+                                                    lineHeight:"24px"
+                                                }
                                             }}
                                             onClick={() => typeof tag === 'string' && handleGroupSelection(key, tag)}
                                         >
@@ -243,7 +249,7 @@ const Home: React.FC = () => {
                 </Stack>
  
             </Stack>
-            <div className={style.footer} style={{height:isTextFieldFocused?"260px":"100px",alignItems:isTextFieldFocused?"end":"center"}}>
+            <div className={style.footer} style={{height:isTextFieldFocused?"280px":"140px",bottom:isTextFieldFocused?"20px":"0px",alignItems:isTextFieldFocused?"end":"center"}}>
                 <Stack
                     tokens={{ childrenGap: 20 }}
                     horizontalAlign='center'

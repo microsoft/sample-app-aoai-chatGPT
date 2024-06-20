@@ -37,7 +37,7 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
             },
             '@media (max-width: 2500px) and (min-width: 600px)': {
               fontWeight: "bold",
-              fontSize: "28px",
+              fontSize: "24px",
             },
           }
         }}>
@@ -50,7 +50,7 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
               fontWeight: "500",
             },
             '@media (max-width: 2500px) and (min-width: 600px)': {
-              fontSize: "26px",
+              fontSize: "22px",
               fontWeight: "400",
             },
           }

@@ -9,19 +9,22 @@ const iconStyles: IIconProps = {
     styles: {
         root: {
             marginRight:20,
-            '@media (max-width: 599px)': {
-                fontWeight: "bold", fontSize: "18px",
-            },
-            '@media (max-width: 1000px) and (min-width: 600px)': {
-                fontWeight: "bold", fontSize: "28px",
-            },
-            '@media (max-width: 1500px) and (min-width: 1000px)': {
-                fontWeight: "bold", fontSize: "28px",
-            },
-            '@media (max-width: 2500px) and (min-width: 1500px)': {
-                fontSize:"28px",
+            marginTop:4,
+            fontWeight: "bold", fontSize: "24px",
  
-            },
+            // '@media (max-width: 599px)': {
+            //     fontWeight: "bold", fontSize: "18px",
+            // },
+            // '@media (max-width: 1000px) and (min-width: 600px)': {
+            //     fontWeight: "bold", fontSize: "28px",
+            // },
+            // '@media (max-width: 1500px) and (min-width: 1000px)': {
+            //     fontWeight: "bold", fontSize: "28px",
+            // },
+            // '@media (max-width: 2500px) and (min-width: 1500px)': {
+            //     fontSize:"28px",
+ 
+            // },
             color: '#FFFFFF',
             cursor: 'pointer',
         },

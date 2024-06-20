@@ -8,22 +8,19 @@
 .mainContentStackContainer {
     flex: 1;
     overflow-y: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 2rem;
-    /* padding-bottom: calc(100px + 1rem); */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
  
 .contentStackContainer {
+    margin-top: 50px;
+    max-width: 1040px;
     width: 100%;
     padding: 0px 20px 0px 20px;
 }
  
 .resetDiv {
-    padding: 5px 0px;
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
@@ -33,15 +30,22 @@
 }
  
 .resetButton {
+    height: auto;
     background: #2F3A40;
     color: #FFFFFF;
     border: none;
     border-radius: 50px;
+    font-size: 22px;
+    font-weight: normal;
+    padding: 15px 40px;
 }
- 
+.resetButton:hover {
+    background-color: #2F3A40;
+    color: black;
+    border-color: #FFFFFF;
+  }
 .tagTypeStack {
-    padding: 12px 0px;
- 
+    padding: 0 0 20px;
 }
  
 .heading {
@@ -50,29 +54,33 @@
     width: 100%;
     color: rgba(255, 255, 255, 0.40);
     text-transform: capitalize;
-    margin-bottom: 5px;
+    font-size: 22px;
+    font-weight: normal;
 }
  
 .mainStackTags {
     display: -webkit-inline-box;
     margin-top: 0;
     width: 100%;
-    gap: 14px;
+    gap: 25px;
     flex-wrap: wrap;
     margin-bottom: 30px;
 }
  
 .stackitem {
-    width: calc(33.3333% - 10px);
-    height: 50px;
+    width: calc((100% / 3) - 17px);
+    /* height: 50px; */
 }
  
 .tagButton {
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 12px;
-    padding: 0px 15px
+    border-radius: 24px;
+    padding: 25px 15px;
+    font-size: 22px;
+    letter-spacing: 1px;
+    font-weight: 600;
 }
  
 .footer {
@@ -80,11 +88,12 @@
     align-items: center;
     justify-content: center;
     color: white;
-    padding: 1rem;
     position: sticky;
-    bottom: 0;
-    height: 100px;
+    bottom: 20px;
+    max-width: 1040px;
     width: 100%;
+    margin: 0 auto;
+ 
 }
  
 .footerMainStack {
@@ -92,19 +101,60 @@
     flex-direction: row;
     align-items: end;
     justify-content: center;
+    width: 100%;
     padding: 0px 20px 0px 20px;
 }
  
 .buttonContainer {
     margin-top: 0 !important;
-    width: 20%;
+    /* width: 20%; */
     display: flex;
     align-items: flex-end;
     justify-content: end;
 }
  
-/* Extra small devices (phones) */
-@media (max-width: 599px) {
+.inputContainer {
+    width: 100% !important
+}
+ 
+@media all and (max-width:767px){
+    .tagButton {
+        border-radius: 20px;
+        padding: 25px 15px;
+        font-size: 18px;
+    }
+ 
+    .heading {
+        font-size: 24px;
+    }
+ 
+    .resetButton {
+        font-size: 24px;
+    }
+}
+@media all and (max-width:575px){
+    .resetButton {
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+    .heading {
+        font-size: 20px;
+    }
+    .mainStackTags {
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .stackitem {
+        width: auto;
+        min-width: 105px;
+    }
+    .tagButton {
+        border-radius: 15px;
+        padding: 15px;
+        font-size: 16px;
+    }
+}
+ /* @media (max-width: 599px) {
     .contentStackContainer {
         width: 100%;
         padding: 0px 20px 0px 20px;
@@ -125,8 +175,6 @@
     }
  
     .stackitem {
-        /* min-width: calc(33.3333% - 10px);
-        width: fit-content; */
         width: calc(33.3333% - 10px);
         height: 50px;
     }
@@ -135,11 +183,9 @@
         width: 100%;
  
     }
+} */
  
-}
- 
-/* Small devices (phones) */
-@media (min-width: 600px) and (max-width: 959px) {
+/* @media (min-width: 600px) and (max-width: 959px) {
     .contentStackContainer {
         width: 90%;
         padding: 0px 20px 0px 20px;
@@ -166,8 +212,7 @@
         margin-bottom: 50px;
     }
     .stackitem {
-        /* min-width: calc(33.3333% - 10px);
-        width: fit-content; */
+ 
         width: calc(33.3333% - 10px);
  
         height: 70px;
@@ -196,10 +241,9 @@
     }
  
  
-}
+} */
  
-/* Medium devices (tablets) */
-@media (min-width: 960px) and (max-width: 1279px) {
+/* @media (min-width: 960px) and (max-width: 1279px) {
     .contentStackContainer {
         width: 90%;
         padding: 0px 20px 0px 20px;
@@ -222,8 +266,7 @@
     }
  
     .stackitem {
-        /* min-width: calc(33.3333% - 10px);
-        width: fit-content; */
+ 
         width: calc(33.3333% - 10px);
  
         height: 80px;
@@ -250,12 +293,12 @@
         width: 90%;
     }
  
-}
+} */
  
-/* Large devices (desktops) */
-@media (min-width: 1280px) and (max-width: 1919px) {
+/* @media (min-width: 1280px) and (max-width: 1919px) {
     .contentStackContainer {
-        width: 80%;
+        width: 1100px;
+        max-width: 1366px;
         padding: 0px 20px 0px 20px;
     }
  
@@ -276,8 +319,6 @@
     }
  
     .stackitem {
-        /* min-width: calc(33.3333% - 10px);
-        width: fit-content; */
         width: calc(33.3333% - 10px);
  
         height: 90px;
@@ -302,15 +343,15 @@
     }
  
     .footerMainStack {
-        width: 80%;
+        width: 1100px;
+        max-width: 1366px;
     }
  
-}
+} */
  
-/* Extra large devices (large desktops) */
-@media (min-width: 1920px) {
+/* @media (min-width: 1920px) {
     .contentStackContainer {
-        width: 60%;
+        width: 1100px;
         padding: 0px 20px 0px 20px;
     }
  
@@ -329,8 +370,6 @@
     }
  
     .stackitem {
-        /* min-width: calc(33.3333% - 10px);
-        width: fit-content; */
         width: calc(33.3333% - 10px);
         height: 90px;
     }
@@ -355,7 +394,13 @@
     }
  
     .footerMainStack {
-        width: 60%;
+        width: 1100px;
     }
  
+} */
+ 
+@media all and (max-width:575px){
+    .footer{
+        height: 100px !important;
+    }
 }

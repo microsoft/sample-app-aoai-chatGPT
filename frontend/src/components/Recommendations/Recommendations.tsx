@@ -86,7 +86,7 @@ const imageClass = mergeStyles({
         padding: "20px"
     },
     '@media (min-width: 1000px) and (max-width: 2500px)': {
-        height: '190px !important',
+        height: '160px !important',
         width: "250px",
         marginLeft: 5,
         padding: "20px"
@@ -104,7 +104,7 @@ const divClass = mergeStyles({
         width: "200px"
     },
     '@media (min-width: 1000px) and (max-width: 2500px)': {
-        height: '200px',
+        height: '140px',
         width: "250px"
     },
 });
@@ -221,8 +221,8 @@ const About: React.FC = () => {
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                         minHeight: 200
                                     },
-                                    '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                        minHeight: 200,
+                                    '@media (max-width: 2500px) and (min-width: 756px)': {
+                                        height:180,
                                         padding: 20,
                                     },
                                     height: "100%", padding: "12px", borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0"
@@ -274,12 +274,12 @@ const About: React.FC = () => {
                                                         marginBottom: 20
                                                     },
                                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                                        fontWeight: "bold", fontSize: "28px", lineHeight: "20px", fontStyle: "normal",
+                                                        fontWeight: "bold", fontSize: "20px", lineHeight: "20px", fontStyle: "normal",
                                                         marginBottom: 20
                                                     },
                                                 }
                                             }}
-                                            style={{ color: "#000" }} >{item.product}-{item.model}</Text>
+                                            style={{ color: "#000" }} > {item.product}-{item.model}</Text>
                                         <Text
                                             styles={{
                                                 root: {
@@ -291,7 +291,7 @@ const About: React.FC = () => {
                                                         fontWeight: "500", fontSize: "18px", lineHeight: "30px", fontStyle: "normal",
                                                     },
                                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                                        fontWeight: "500", fontSize: "24px", lineHeight: "30px", fontStyle: "normal",
+                                                        fontWeight: "500", fontSize: "16px", lineHeight: "24px", fontStyle: "normal",
                                                     },
                                                 }
                                             }}

@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
-import { TextField, PrimaryButton } from '@fluentui/react';
+import { TextField, PrimaryButton, FontSizes } from '@fluentui/react';
 import { useNavigate } from 'react-router-dom';
-//import { AppStateContext } from '../state/AppProvider';
 import style from "../../pages/layout/Layout.module.css"
 import { AppStateContext } from '../../state/AppProvider';
  
@@ -39,6 +38,8 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
   const textFieldWrapperStyle: React.CSSProperties = {
     flex: 1,
     borderRadius: '25px',
+    height: "100%",
+    padding:isTextFieldFocused ? "25px 25px" :"0"
   };
   const appStateContext = useContext(AppStateContext)
  
@@ -97,32 +98,32 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
             styles={{
               root: {
                 color: "#000000",
-                '@media (max-width: 1000px)': {
-                  fontSize: "14px",
-                  height: isTextFieldFocused ? "150px" : "30px",
-                },
-                '@media (max-width: 2500px) and (min-width: 1000px)': {
-                  fontSize: "24px",
-                  fontWeight: "100",
-                  marginLeft: !isTextFieldFocused ? 15 : 2,
-                  height: isTextFieldFocused ? "230px" : "50px",
-                },
+                // '@media (max-width: 1000px)': {
+                //   fontSize: "14px",
+                //   height: isTextFieldFocused ? "150px" : "30px",
+                // },
+                // '@media (max-width: 2500px) and (min-width: 1000px)': {
+                //   fontSize: "24px",
+                //   fontWeight: "100",
+                //   marginLeft: !isTextFieldFocused ? 15 : 2,
+                //   height: isTextFieldFocused ? "230px" : "50px",
+                // },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
               },
               fieldGroup: {
                 borderRadius: '25px',
                 backgroundColor: 'inherit',
-                margin: "-2px",
-                '@media (max-width: 1000px)': {
-                  fontSize: "14px",
-                  height: isTextFieldFocused ? "150px" : "30px",
-                },
-                '@media (max-width: 2500px) and (min-width: 1000px)': {
-                  fontSize: "24px",
-                  fontWeight: "100",
-                  height: isTextFieldFocused ? "230px" : "50px",
-                },
+                minHeight:'auto',
+                // '@media (max-width: 1000px)': {
+                //   fontSize: "14px",
+                //   height: isTextFieldFocused ? "150px" : "30px",
+                // },
+                // '@media (max-width: 2500px) and (min-width: 1000px)': {
+                //   fontSize: "24px",
+                //   fontWeight: "100",
+                //   height: isTextFieldFocused ? "230px" : "50px",
+                // },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
                 lineHeight: isTextFieldFocused ? "1.6em" : "1,5em",
@@ -131,33 +132,38 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
               field: {
                 backgroundColor: 'inherit',
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
+                fontSize:"24px",
+                fontWeight:isTextFieldFocused ? 400:600,
+ 
                 overflow: 'hidden',
-                '@media (max-width: 600px)': {
-                  fontSize: "14px",
-                  height: isTextFieldFocused ? "150px" : "30px",
+                // '@media (max-width: 600px)': {
+                //   fontSize: "14px",
+                //   height: isTextFieldFocused ? "150px" : "30px",
+                // },
+                // '@media (max-width: 1000px) and (min-width: 600px)': {
+                //   fontSize: "18px",
+                //   fontWeight: "500",
+                //   height: isTextFieldFocused ? "230px" : "50px",
+                // },
+                // '@media (max-width: 2500px) and (min-width: 1000px)': {
+                //   fontSize: "30px",
+                //   fontWeight: "100",
+                //   height: isTextFieldFocused ? "230px" : "50px",
+                // },
+                lineHeight: isTextFieldFocused ? "1.6em" : "1.2em",
+                color:"#3A4146",
+                '@media all and (max-width:575px)':{
+                  padding:'0 10px',
+                  fontSize:"20px",
+                  lineHeight:'normal',
                 },
-                '@media (max-width: 1000px) and (min-width: 600px)': {
-                  fontSize: "18px",
-                  fontWeight: "500",
-                  height: isTextFieldFocused ? "230px" : "50px",
-                },
-                '@media (max-width: 2500px) and (min-width: 1000px)': {
-                  fontSize: "30px",
-                  fontWeight: "100",
-                  height: isTextFieldFocused ? "230px" : "50px",
-                },
-                lineHeight: isTextFieldFocused ? "1.6em" : "1.5em",
-                color: "#000000",
                 '::placeholder': {
-                  color: '#000000',
-                  '@media (max-width: 1500px) and (min-width: 1000px)': {
+                  color:"#3A4146",
                     fontWeight: "500",
-                    fontSize:"20px"
-                  },
-                  '@media (max-width: 2500px) and (min-width: 1500px)': {
-                    fontWeight: "500",
-                    fontSize:"30px"
-                  },
+                    fontSize:"22px",
+                    '@media all and (max-width:575px)':{
+                      fontSize:"20px",
+                    },
                 },
               },
             }}

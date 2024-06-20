@@ -20,20 +20,30 @@ const CustomPrimaryButton: React.FC<Props> = ({ onButtonClick, disabled }) => {
       styles={{
         root: {
           color: "#FFFFFF",
-          borderRadius: 50, border: '1.5px solid black',
+          borderRadius: '100%', border: '1.5px solid black',
+          padding:"21px",
+          marginLeft:10,
           minWidth:0,
-                      height: "56px",
-            width: "56px",
-            '@media (max-width: 1000px) and (min-width: 500px)': {
-              height: "80px",
-              minWidth:"80px",
-              marginLeft: 10,
-            },
-            '@media (max-width: 2500px) and (min-width: 1000px)': {
-              height: "90px",
-              minWidth:"90px",
-              marginLeft: 20,
-            },
+          height:"auto",
+          '@media all and (max-width:575px)':{
+            padding:'13px',
+          },
+ 
+            // '@media (max-width: 1000px) and (min-width: 500px)': {
+            //   height: "80px",
+            //   minWidth:"80px",
+            //   marginLeft: 10,
+            // },
+            // '@media (max-width: 2500px) and (min-width: 1000px)': {
+            //   height: "90px",
+            //   minWidth:"90px",
+            //   marginLeft: 20,
+            // },
+        },
+        label: {
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         },
         // root: {
         //   padding: '12px 20px',

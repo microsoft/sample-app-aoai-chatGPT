@@ -44,7 +44,7 @@ const UserInfo: React.FC = () => {
         <div className={style.inputField}>
           <div style={textFieldWrapperStyle}>
             <TextField
-              placeholder={"Enter your Full Name"}
+              placeholder={"Enter your city name"}
               borderless
               value={inputValue}
               styles={{
