@@ -80,13 +80,16 @@ const Feedback: React.FC = () => {
                 tokens={{ childrenGap: 40 }}
             >
                 {showThankYou ? (
-                    <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center" verticalAlign='center' style={{width:"60%" }}>
+                    <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center" verticalAlign='center' >
                         <Text variant="xxLarge" style={{ color: "#FFFFFF", marginBottom: 20 }}
                             styles={{
                                 root: {
                                     marginBottom:20,
-                                    '@media (max-width: 1000px)': {
+                                    '@media (max-width: 600px)': {
                                         fontSize: "18px"
+                                    },
+                                    '@media (max-width: 1000px) and (min-width: 600px)': {
+                                        fontSize: "24px"
                                     },
                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
                                         fontSize: "32px"
@@ -132,6 +135,9 @@ const Feedback: React.FC = () => {
                                     '@media (max-width: 1000px)': {
                                         fontSize: "18px"
  
+                                    },
+                                    '@media (max-width: 1000px) and (min-width: 600px)': {
+                                        fontSize: "24px",
                                     },
                                     '@media (max-width: 1500px) and (min-width: 1000px)': {
                                         fontSize: "40px",

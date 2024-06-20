@@ -29,7 +29,8 @@ const FlashCard: React.FC = () => {
                     marginBottom: 10
                   },
                   '@media (max-width: 600px)': {
-                    marginTop: index===0 ?"30px":0
+                    //marginTop: index===0 ?"30px":0
+                    marginBottom: 10
                   },
                   minWidth: '200px',
                   borderRadius: 20,

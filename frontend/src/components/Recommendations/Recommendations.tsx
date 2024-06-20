@@ -4,6 +4,8 @@ import styles from '../../pages/chat/Chat.module.css'
 import { useNavigate } from 'react-router-dom';
 import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
+import commonStyle from "../ProductInformation/ProductInfo.module.css";
+import style from "./Recommendations.module.css"
 
 //import boatImages from '../../constants/boatImages';
 import { mergeStyles } from '@fluentui/react/lib/Styling';
@@ -200,54 +202,15 @@ const About: React.FC = () => {
                     <Spinner styles={{ circle: { height: 40, width: 40, border: "2px solid #FFFFFF" }, label: { color: "#FFFFFF", fontSize: "1rem" } }} label="Loading recommendations..." />
                 </div>
             ) : (
-                <Stack
-                    horizontalAlign="center"
-                    styles={{
-                        root: {
-                            height: '90vh', 
-                            '@media (max-width: 1000px)': {
-                                marginTop: 30,
-                            },
-                            '@media (max-width: 600px)': {
-                                width: "100%"
-                            },
-                            '@media (max-width: 1000px) and (min-width: 600px)': {
-                                width: "100%",
-                            },
-                            '@media (max-width: 1500px) and (min-width: 1000px)': {
-                                width: "80%",
-                                marginTop: 80,
-                            },
-                            '@media (max-width: 2500px) and (min-width: 1500px)': {
-                                width: "60%",
-                                marginTop: 80,
-                            },
-                        }
-                    }}
-                >
-                    <Stack
-                        tokens={{ childrenGap: 20 }}
-                        styles={{ root: { width: '100%' } }}
-                    >
+                <Stack className={style.contentMainStackContainer}>
+                    <Stack className={style.contentStackContainer}>
                         {dummyData && dummyData.length > 0 && (
-                            <div style={{display:"flex",alignItems:"center",marginBottom:'20px'}}>
-                                 <BackButton onClick={()=>navigate("/")}></BackButton>
-                            <Text
-                                styles={{
-                                    root: {
-                                        '@media (max-width: 600px)': {
-                                            fontWeight: "bold", fontSize: "14px", lineHeight: "20px", fontStyle: "normal",
-                                        },
-                                        '@media (max-width: 1000px) and (min-width: 600px)': {
-                                            fontWeight: "bold", fontSize: "28px", lineHeight: "30px", fontStyle: "normal", marginBottom: 20 
-                                        },
-                                        '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                            fontWeight: "bold", fontSize: "32px", lineHeight: "30px", fontStyle: "normal", marginBottom: 20 
-                                        },
-                                    }
-                                }}
-                                style={{ color: "white",display:"flex",alignItems:"center"}} >Top Recommendations for this store</Text>
-                        </div>)}
+                            <div className={commonStyle.headingDiv}>
+                                <BackButton onClick={() => navigate("/")}></BackButton>
+                                <Text
+                                    className={commonStyle.headingText}>Top Recommendations for this store</Text>
+                            </div>
+                        )}
                         {dummyData && dummyData.length > 0 && dummyData.map((item, index) => (
                             <DefaultButton key={index} styles={{
                                 root: {
@@ -286,9 +249,9 @@ const About: React.FC = () => {
                                             className={imageClass}
                                         />
                                     </div>
-
+ 
                                     <Stack tokens={{ childrenGap: 10 }}
-                                        style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "100%", marginLeft: 15}}
+                                        style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "100%", marginLeft: 15 }}
                                         styles={{
                                             root: {
                                                 '@media (max-width: 1000px)': {
@@ -296,7 +259,7 @@ const About: React.FC = () => {
                                                 },
                                                 '@media (max-width: 2500px) and (min-width: 1000px)': {
                                                     marginLeft: 20,
-                                                    padding:"18px" 
+                                                    padding: "18px"
                                                 },
                                             }
                                         }}>
@@ -308,15 +271,15 @@ const About: React.FC = () => {
                                                     },
                                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                                         fontWeight: "bold", fontSize: "24px", lineHeight: "20px", fontStyle: "normal",
-                                                        marginBottom:20
+                                                        marginBottom: 20
                                                     },
                                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
                                                         fontWeight: "bold", fontSize: "28px", lineHeight: "20px", fontStyle: "normal",
-                                                        marginBottom:20
+                                                        marginBottom: 20
                                                     },
                                                 }
                                             }}
-                                            style={{ color: "#000" }} >{item.model}</Text>
+                                            style={{ color: "#000" }} >{item.product}-{item.model}</Text>
                                         <Text
                                             styles={{
                                                 root: {
@@ -347,6 +310,7 @@ const About: React.FC = () => {
             )}
         </div>
     );
-};
+
+}
 
 export default About;

@@ -1,0 +1,262 @@
+.mainStackContainer {
+    height: 100vh;
+    overflow: hidden;
+    width: 100%
+}
+ 
+.headerMainStackContainer {
+    position: sticky;
+    width: 100%;
+    z-index: 1000;
+    color: #fff;
+    padding: 10px 20px;
+    text-align: center;
+    top: 0;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+ 
+}
+ 
+.headerStackContainer {
+    width: 100%;
+    padding: 0px 20px 0px 20px;
+ 
+}
+ 
+.contentMainStackContainer {
+    /* margin-top: 130px; */
+    /* margin-bottom: 70px; */
+    overflow-y: auto;
+    padding: 20px;
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+ 
+.contentStackContainer {
+    width: 100%;
+    padding: 0px 20px 0px 20px;
+}
+ 
+.footerMainStackContainer {
+    position: sticky;
+    width: 100%;
+    z-index: 1000;
+    color: #fff;
+    padding: 20px 20px;
+    text-align: center;
+    bottom: 0;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+ 
+.footerStackContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+ 
+.headingDiv {
+    display: flex;
+    width: 100%;
+    padding: 0px;
+    align-items: center;
+    padding: 20px 0px;
+}
+ 
+.headingText {
+    color: white;
+    display: flex;
+    align-items: center
+}
+ 
+.button {
+    width: 100%;
+    font-size: large;
+    border-radius: 10px;
+    background: black;
+    border: none
+}
+ 
+@media (max-width: 599px) {
+    .contentMainStackContainer {
+        height: calc(100vh - 220px);
+    }
+ 
+    .contentStackContainer {
+        width: 100%;
+        padding: 0px;
+ 
+    }
+ 
+    .footerMainStackContainer {
+        height: 90px;
+    }
+ 
+    .headerMainStackContainer {
+        height: 130px;
+    }
+ 
+    .headerStackContainer {
+        width: 100%;
+        padding: 0px;
+ 
+    }
+ 
+    .footerStackContainer {
+        width: 100%;
+    }
+ 
+    .button {
+        width: 100%;
+        height: 100%;
+    }
+ 
+    .headingText {
+        font-size: 22px;
+    }
+}
+ 
+/* Small devices (phones) */
+@media (min-width: 600px) and (max-width: 959px) {
+    .contentStackContainer {
+        width: 90%;
+    }
+ 
+    .footerMainStackContainer {
+        height: 130px;
+    }
+ 
+    .headerMainStackContainer {
+        height: 200px;
+    }
+ 
+    .headerStackContainer {
+        width: 90%;
+    }
+ 
+    .footerStackContainer {
+        width: 90%;
+    }
+ 
+    .button {
+        width: 100%;
+        height: 100%;
+        font-size: 22px;
+    }
+ 
+    .headingText {
+        font-size: 32px;
+    }
+}
+ 
+/* Medium devices (tablets) */
+@media (min-width: 960px) and (max-width: 1279px) {
+    .contentStackContainer {
+        width: 90%;
+    }
+ 
+    .footerMainStackContainer {
+        height: 130px;
+    }
+ 
+    .headerMainStackContainer {
+        height: 200px;
+    }
+ 
+    .headerStackContainer {
+        width: 90%;
+    }
+ 
+    .footerStackContainer {
+        width: 90%;
+    }
+ 
+    .button {
+        width: 100%;
+        height: 100%;
+        font-size: 28px;
+ 
+    }
+ 
+    .headingText {
+        font-size: 28px;
+ 
+    }
+}
+ 
+/* Large devices (desktops) */
+@media (min-width: 1280px) and (max-width: 1898px) {
+    .contentStackContainer {
+        width: 60%;
+    }
+ 
+    .footerMainStackContainer {
+        height: 130px;
+    }
+ 
+    .headerMainStackContainer {
+        height: 200px;
+    }
+ 
+    .headerStackContainer {
+        width: 60%;
+    }
+ 
+    .footerStackContainer {
+        width: 60%;
+    }
+ 
+    .button {
+        width: 100%;
+        height: 100%;
+        font-size: 28px;
+ 
+    }
+ 
+    .headingText {
+        font-size: 28px;
+    }
+}
+ 
+/* Extra large devices (large desktops) */
+@media (min-width: 1899px) {
+    .contentStackContainer {
+        width: 60%;
+    }
+ 
+    .footerMainStackContainer {
+        height: 130px;
+    }
+ 
+    .headerMainStackContainer {
+        height: 200px;
+    }
+ 
+    .headerStackContainer {
+        width: 60%;
+    }
+ 
+    .footerStackContainer {
+        width: 60%;
+    }
+ 
+    .button {
+        width: 100%;
+        height: 100%;
+        font-size: 32px;
+ 
+    }
+ 
+    .headingText {
+        font-size: 32px;
+    }
+}

@@ -9,6 +9,7 @@ import { AppStateContext } from '../../state/AppProvider';
 import { templete2, templete3 } from '../../constants/templete';
 import { getValuePropositions, getWalkthroughData } from '../../api';
 import BackButton from '../BackButton';
+import style from "./ProductInfo.module.css"
  
 const ProductInformation: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>('FlashCard');
@@ -89,246 +90,192 @@ const ProductInformation: React.FC = () => {
     navigate("/feedback");
   };
  
-  const shipIconStyles: IIconProps = {
-    iconName: 'VehicleBoat',
-    styles: {
-        root: {
-            '@media (max-width: 600px)': {
-                fontWeight: "bold", fontSize: "14px",
-            },
-            '@media (max-width: 1000px) and (min-width: 600px)': {
-                fontWeight: "bold", fontSize: "28px",
-            },
-            '@media (max-width: 1500px) and (min-width: 1000px)': {
-                fontWeight: "bold", fontSize: "28px",
-                marginBottom:20
-            },
-            '@media (max-width: 2500px) and (min-width: 1500px)': {
-                fontSize:"30px",
- 
-            },
-            color: '#FFFFFF',
-            cursor: 'pointer',
-        },
-    },
-};
- 
   const iconStyles: IIconProps = {
     iconName: 'Library',
     styles: {
-        root: {
-            '@media (max-width: 600px)': {
-                fontWeight: "bold", fontSize: "14px",
-            },
-            '@media (max-width: 1000px) and (min-width: 600px)': {
-                fontWeight: "bold", fontSize: "28px",
-            },
-            '@media (max-width: 1500px) and (min-width: 1000px)': {
-                fontWeight: "bold", fontSize: "28px",
-                // marginBottom:20
-            },
-            '@media (max-width: 2500px) and (min-width: 1500px)': {
-                fontSize:"30px",
- 
-            },
-            color: '#FFFFFF',
-            cursor: 'pointer',
+      root: {
+        '@media (max-width: 600px)': {
+          fontWeight: "bold", fontSize: "14px",
         },
+        '@media (max-width: 1000px) and (min-width: 600px)': {
+          fontWeight: "bold", fontSize: "28px",
+        },
+        '@media (max-width: 1500px) and (min-width: 1000px)': {
+          fontWeight: "bold", fontSize: "28px",
+        },
+        '@media (max-width: 2500px) and (min-width: 1500px)': {
+          fontSize: "30px",
+        },
+        color: '#FFFFFF',
+        cursor: 'pointer',
+      },
     },
-};
+  };
  
   return (
     <div className={styles.chatContainer}>
-      <Stack horizontalAlign="center"
-        styles={{
-          root: {
-            height: '100vh', marginTop: 24,
-            '@media (max-width: 1000px)': {
-              width: "100%",
-            },
-            '@media (max-width: 1500px) and (min-width: 1000px)': {
-              width: "80%",
-              marginTop: "80px"
-            },
-            '@media (max-width: 2500px) and (min-width: 1500px)': {
-              width: "50%",
-            },
-          }
-        }}>
-        <div style={{ display: "flex", width: "100%", padding: "0px",alignItems:"center",marginBottom:"20px" }}>
-          <BackButton onClick={() => navigate("/recommendations")}></BackButton>
-          <Text
-            styles={{
-              root: {
-                '@media (max-width: 600px)': {
-                  fontWeight: "bold", fontSize: "14px", lineHeight: "20px", fontStyle: "normal",
-                },
-                '@media (max-width: 2500px) and (min-width: 600px)': {
-                  fontWeight: "bold", fontSize: "32px", lineHeight: "30px", fontStyle: "normal", marginBottom: 20
-                },
-              }
-            }}
-            style={{ color: "white", display: "flex", alignItems: "center" }} >Details</Text>
-        </div>
-        <Stack horizontal tokens={{ childrenGap: 10 }} style={{ width: "100%", padding: "0px" }}
-          styles={{
-            root: {
-              marginTop:10,
-              '@media (max-width: 1000px)': {
-                marginTop:20,
-                height: "8%"
-              },
-              '@media (max-width: 2500px) and (min-width: 1000px)': {
-                // height: "12%"
-               
-              },
-            }
-          }}
-        >
-          <PrimaryButton
-            onClick={() => handleOptionClick('FlashCard')}
-            styles={{
-              root: {
-                width: "50%",
-                '@media (max-width: 600px)': {
-                  height: "40px",
-                },
-                '@media (max-width: 2500px) and (min-width: 600px)': {
-                  height: "80px",
-                },
-                background: "transparent",
-                borderRadius: 10,
-                boxShadow: 'none',
-                border: `1px solid ${selectedOption === 'FlashCard' ? 'black !important' : 'transparent'}`,
-                selectors: {
-                  ':hover': {
-                    background: "transparent !important",
-                  },
-                  ':active': {
-                    background: "transparent",
-                  },
-                  ':focus': {
-                    background: "transparent",
-                  },
-                },
-              }
-            }}
-          >
-            <Icon {...iconStyles} />
-            <Text
-              styles={{
-                root: {
-                  '@media (max-width: 600px)': {
-                    fontSize: "14px", fontWeight: "600"
-                  },
-                  '@media (max-width: 2500px) and (min-width: 600px)': {
-                    fontSize: "28px", fontWeight: "600"
-                  },
-                }
-              }}
-              style={{ color: selectedOption === "FlashCard" ? "#FFF" : '#9A9A90', marginLeft: 10, lineHeight: "20px", fontStyle: "normal" }}
-            >{"Value Props"}</Text>
-          </PrimaryButton>
-          <PrimaryButton
-            onClick={() => handleOptionClick('WalkAround')}
-            styles={{
-              root: {
-                '@media (max-width: 600px)': {
-                  height: "40px",
-                },
-                '@media (max-width: 2500px) and (min-width: 600px)': {
-                  height: "80px",
-                  ':hover': {
-                    background: "transparent !important",
-                  },
-                },
-                width: "50%",
-                background: "transparent",
-                borderRadius: 5,
-                border: `1px solid ${selectedOption === 'WalkAround' ? 'black !important' : 'transparent'}`,
-                color: '#FFFFFF',
-                boxShadow: 'none',
-                selectors: {
-                  ':hover': {
-                    background: "transparent !important",
-                  },
-                  ':active': {
-                    background: "transparent",
+      <Stack className={style.mainStackContainer}>
+        <Stack className={style.headerMainStackContainer}>
+          <Stack className={style.headerStackContainer}>
  
-                  },
-                  ':focus': {
+            <div className={style.headingDiv}>
+              <BackButton onClick={() => navigate("/recommendations")}></BackButton>
+              <Text
+                className={style.headingText}>Details</Text>
+            </div>
+            <Stack horizontal tokens={{ childrenGap: 10 }} style={{ width: "100%", padding: "0px" }}
+              // styles={{
+              //   root: {
+              //     marginTop: 10,
+              //     '@media (max-width: 1000px)': {
+              //       marginTop: 20,
+              //       height: "8%"
+              //     },
+              //     '@media (max-width: 2500px) and (min-width: 1000px)': {
+              //       // height: "12%"
+ 
+              //     },
+              //   }
+              // }}
+            >
+              <PrimaryButton
+                onClick={() => handleOptionClick('FlashCard')}
+                styles={{
+                  root: {
+                    width: "50%",
+                    '@media (max-width: 600px)': {
+                      height: "40px",
+                    },
+                    '@media (max-width: 2500px) and (min-width: 600px)': {
+                      height: "80px",
+                    },
                     background: "transparent",
-                  },
-                },
-              }
-            }}
+                    borderRadius: 10,
+                    boxShadow: 'none',
+                    border: `1px solid ${selectedOption === 'FlashCard' ? 'black !important' : 'transparent'}`,
+                    selectors: {
+                      ':hover': {
+                        background: "transparent !important",
+                      },
+                      ':active': {
+                        background: "transparent",
+                      },
+                      ':focus': {
+                        background: "transparent",
+                      },
+                    },
+                  }
+                }}
+              >
+                <Icon {...iconStyles} />
+                <Text
+                  styles={{
+                    root: {
+                      '@media (max-width: 600px)': {
+                        fontSize: "14px", fontWeight: "600"
+                      },
+                      '@media (max-width: 2500px) and (min-width: 600px)': {
+                        fontSize: "28px", fontWeight: "600"
+                      },
+                    }
+                  }}
+                  style={{ color: selectedOption === "FlashCard" ? "#FFF" : '#9A9A90', marginLeft: 10, lineHeight: "20px", fontStyle: "normal" }}
+                >{"Value Props"}</Text>
+              </PrimaryButton>
+              <PrimaryButton
+                onClick={() => handleOptionClick('WalkAround')}
+                styles={{
+                  root: {
+                    '@media (max-width: 600px)': {
+                      height: "40px",
+                    },
+                    '@media (max-width: 2500px) and (min-width: 600px)': {
+                      height: "80px",
+                      ':hover': {
+                        background: "transparent !important",
+                      },
+                    },
+                    width: "50%",
+                    background: "transparent",
+                    borderRadius: 5,
+                    border: `1px solid ${selectedOption === 'WalkAround' ? 'black !important' : 'transparent'}`,
+                    color: '#FFFFFF',
+                    boxShadow: 'none',
+                    selectors: {
+                      ':hover': {
+                        background: "transparent !important",
+                      },
+                      ':active': {
+                        background: "transparent",
+ 
+                      },
+                      ':focus': {
+                        background: "transparent",
+                      },
+                    },
+                  }
+                }}
+              >
+                {renderBoatIcon()}
+                <Text
+                  styles={{
+                    root: {
+                      '@media (max-width: 600px)': {
+                        fontSize: "14px", fontWeight: "600"
+                      },
+                      '@media (max-width: 2500px) and (min-width: 600px)': {
+                        fontSize: "28px", fontWeight: "600"
+                      },
+                    }
+                  }}
+                  style={{ color: selectedOption === "WalkAround" ? "#FFF" : '#9A9A90', marginLeft: 10 }} >{"Walk Around"}</Text>
+              </PrimaryButton>
+            </Stack>
+          </Stack>
+        </Stack>
+        <Stack
+          className={style.contentMainStackContainer} style={{justifyContent:selectedOption === "WalkAround" ?"center" :""}}>
+          <Stack
+            className={style.contentStackContainer}
+          // style={{ height:selectedOption==="WalkAround" ? "70%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px" }}
+          // tokens={{ childrenGap: 10 }}
+          // styles={{root:{
+          //   '@media (max-width: 2500px) and (min-width: 1000px)': {
+          //     // marginTop:10
+          //     marginTop: "40px"
+          //   },
+          // }}}
           >
-            {renderBoatIcon()}
-            <Text
-              styles={{
-                root: {
-                  '@media (max-width: 600px)': {
-                    fontSize: "14px", fontWeight: "600"
-                  },
-                  '@media (max-width: 2500px) and (min-width: 600px)': {
-                    fontSize: "28px", fontWeight: "600"
-                  },
-                }
-              }}
-              style={{ color: selectedOption === "WalkAround" ? "#FFF" : '#9A9A90', marginLeft: 10 }} >{"Walk Around"}</Text>
-          </PrimaryButton>
+            {selectedOption === 'WalkAround' ? <WalkAround /> : <FlashCard />}
+          </Stack>
         </Stack>
         <Stack
-          style={{ height:selectedOption==="WalkAround" ? "70%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px" }}
-          tokens={{ childrenGap: 10 }}
-          styles={{root:{
-            '@media (max-width: 2500px) and (min-width: 1000px)': {
-              // marginTop:10
-              marginTop: "40px"
-            },
-          }}}
+          className={style.footerMainStackContainer}
+        // tokens={{ childrenGap: 20 }}
+        // horizontalAlign='center'
+        // style={{ height: "12%", position: "fixed", zIndex: 99999, bottom: 0, background: "transparent" }}
+        // styles={{
+        //   root: {
+        //     flexWrap: "wrap",
+        //     '@media (max-width: 600px)': {
+        //       width: "100%",
+        //     },
+        //     '@media (max-width: 1000px) and (min-width: 600px)': {
+        //       width: "60%",
+        //     },
+        //     '@media (max-width: 1500px) and (min-width: 1000px)': {
+        //       width: "80%",
+        //     },
+        //     '@media (max-width: 2500px) and (min-width: 1500px)': {
+        //       width: "40%",
+        //     },
+        //   }
+        // }}
         >
-          {selectedOption === 'WalkAround' ? <WalkAround /> : <FlashCard />}
-        </Stack>
-        <Stack
-          tokens={{ childrenGap: 20 }}
-          horizontalAlign='center'
-          style={{ height: "12%", position: "fixed", zIndex: 99999, bottom: 0, background: "transparent" }}
-          styles={{
-            root: {
-              flexWrap: "wrap",
-              '@media (max-width: 600px)': {
-                width: "100%",
-              },
-              '@media (max-width: 1000px) and (min-width: 600px)': {
-                width: "60%",
-              },
-              '@media (max-width: 1500px) and (min-width: 1000px)': {
-                width: "80%",
-              },
-              '@media (max-width: 2500px) and (min-width: 1500px)': {
-                width: "40%",
-              },
-            }
-          }}
-        >
-          <PrimaryButton styles={{
-            root: {
-              fontSize: "0.875rem",
-              '@media (max-width: 600px)': {
-                height: "50px",
-              },
-              '@media (max-width: 2500px) and (min-width: 600px)': {
-                height: "80px",
-                marginTop: 15
-              },
-            },
-            label: {
-              '@media (max-width: 2500px) and (min-width: 600px)': {
-                fontSize: "24px",
-              },
-            }
-          }} style={{ width: "100%", borderRadius: 10, padding: 20, background: "black", border: "none" }} onClick={handleNextClick}>Done</PrimaryButton>
+          <Stack
+            className={style.footerStackContainer}>
+            <PrimaryButton className={style.button} onClick={handleNextClick}>Done</PrimaryButton>
+          </Stack>
         </Stack>
       </Stack>
     </div>

@@ -1,100 +1,361 @@
-.inputContainer {
-    width: 90%
+.mainStackContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
 }
-
-.focusInputContainer {
-    width: 85%
+ 
+.mainContentStackContainer {
+    flex: 1;
+    overflow-y: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 2rem;
+    /* padding-bottom: calc(100px + 1rem); */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
-.buttonContainer {
-    width: 10%;
-    margin-top: 0 !important
+ 
+.contentStackContainer {
+    width: 100%;
+    padding: 0px 20px 0px 20px;
 }
-
-.resetAll {
+ 
+.resetDiv {
+    padding: 5px 0px;
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
     cursor: pointer;
     /* width: 100%; */
-    margin-bottom: 12px;
     color: #FFFFFF;
-    background:#2F3A40
 }
-
-@media (max-width: 620px) and (min-width: 400px) {
-    .inputContainer {
-        width: 80% !important
+ 
+.resetButton {
+    background: #2F3A40;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 50px;
+}
+ 
+.tagTypeStack {
+    padding: 12px 0px;
+ 
+}
+ 
+.heading {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    color: rgba(255, 255, 255, 0.40);
+    text-transform: capitalize;
+    margin-bottom: 5px;
+}
+ 
+.mainStackTags {
+    display: -webkit-inline-box;
+    margin-top: 0;
+    width: 100%;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+ 
+.stackitem {
+    width: calc(33.3333% - 10px);
+    height: 50px;
+}
+ 
+.tagButton {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 0px 15px
+}
+ 
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    padding: 1rem;
+    position: sticky;
+    bottom: 0;
+    height: 100px;
+    width: 100%;
+}
+ 
+.footerMainStack {
+    display: flex;
+    flex-direction: row;
+    align-items: end;
+    justify-content: center;
+    padding: 0px 20px 0px 20px;
+}
+ 
+.buttonContainer {
+    margin-top: 0 !important;
+    width: 20%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: end;
+}
+ 
+/* Extra small devices (phones) */
+@media (max-width: 599px) {
+    .contentStackContainer {
+        width: 100%;
+        padding: 0px 20px 0px 20px;
     }
-
+ 
+    .mainContentStackContainer {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+ 
+    .inputContainer {
+        width: 100% !important
+    }
+ 
     .buttonContainer {
+        margin-left: 2;
         width: 20%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
     }
-
-    .focusInputContainer {
-        width: 100%
+ 
+    .stackitem {
+        /* min-width: calc(33.3333% - 10px);
+        width: fit-content; */
+        width: calc(33.3333% - 10px);
+        height: 50px;
     }
-
-    .resetAll {
-        padding-right: 12px;
+ 
+    .footerMainStack {
+        width: 100%;
+ 
     }
+ 
 }
-
-@media (max-width: 1000px) and (min-width: 620px) {
-    .resetAll {
+ 
+/* Small devices (phones) */
+@media (min-width: 600px) and (max-width: 959px) {
+    .contentStackContainer {
+        width: 90%;
+        padding: 0px 20px 0px 20px;
+    }
+ 
+    .mainContentStackContainer {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+ 
+    .resetButton {
         font-size: 24px;
     }
-
-    .buttonContainer {
-        width: 15%;
-        margin-top: 0 !important
-    }
-}
-
-@media (max-width: 2000px) and (min-width: 1000px) {
+ 
     .inputContainer {
-        width: 65% !important
+        width: 100% !important
     }
-
-    .focusInputContainer {
-        width: 100%
-    }
-
+ 
     .buttonContainer {
+        margin-left: 2;
         width: 15%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: flex-end;
     }
-
-    .resetAll {
-        padding: 10px 20px;
+    .mainStackTags {
+        margin-bottom: 50px;
+    }
+    .stackitem {
+        /* min-width: calc(33.3333% - 10px);
+        width: fit-content; */
+        width: calc(33.3333% - 10px);
+ 
+        height: 70px;
+    }
+    .resetButton {
         font-size: 24px;
-        border-radius: 50px;
-        margin-left: auto;
+        padding: 30px;
     }
+ 
+    .tagButton {
+        font-size: 24px;
+    }
+ 
+    .heading {
+        font-size: 24px;
+    margin-bottom: 10px;
+ 
+    }
+ 
+    .footer {
+        bottom: 10px;
+    }
+ 
+    .footerMainStack {
+        width: 90%;
+    }
+ 
+ 
 }
-
-@media (max-width: 2500px) and (min-width: 2000px) {
+ 
+/* Medium devices (tablets) */
+@media (min-width: 960px) and (max-width: 1279px) {
+    .contentStackContainer {
+        width: 90%;
+        padding: 0px 20px 0px 20px;
+    }
+ 
+    .mainContentStackContainer {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+    .mainStackTags {
+        margin-bottom: 50px;
+    }
     .inputContainer {
-        width: 90% !important
+        width: 100% !important
     }
-
-    .focusInputContainer {
-        width: 100%
-    }
-
+ 
     .buttonContainer {
+        margin-left: 2;
+        width: 15%;
+    }
+ 
+    .stackitem {
+        /* min-width: calc(33.3333% - 10px);
+        width: fit-content; */
+        width: calc(33.3333% - 10px);
+ 
+        height: 80px;
+    }
+    .resetButton {
+        font-size: 24px;
+        padding: 30px;
+    }
+ 
+    .tagButton {
+        font-size: 24px;
+    }
+ 
+    .heading {
+        font-size: 24px;
+    margin-bottom: 10px;
+    }
+ 
+    .footer {
+        bottom: 10px;
+    }
+ 
+    .footerMainStack {
+        width: 90%;
+    }
+ 
+}
+ 
+/* Large devices (desktops) */
+@media (min-width: 1280px) and (max-width: 1919px) {
+    .contentStackContainer {
+        width: 80%;
+        padding: 0px 20px 0px 20px;
+    }
+ 
+    .mainContentStackContainer {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+    .mainStackTags {
+        margin-bottom: 50px;
+    }
+    .inputContainer {
+        width: 100% !important
+    }
+ 
+    .buttonContainer {
+        margin-left: 2;
         width: 10%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: flex-start;
     }
-
-    .resetAll {
+ 
+    .stackitem {
+        /* min-width: calc(33.3333% - 10px);
+        width: fit-content; */
+        width: calc(33.3333% - 10px);
+ 
+        height: 90px;
+    }
+    .resetButton {
+        font-size: 28px;
+        padding: 30px;
+    }
+ 
+    .tagButton {
+        font-size: 28px;
+    }
+ 
+    .heading {
         font-size: 32px;
+    margin-bottom: 10px;
+ 
     }
+ 
+    .footer {
+        bottom: 10px;
+    }
+ 
+    .footerMainStack {
+        width: 80%;
+    }
+ 
+}
+ 
+/* Extra large devices (large desktops) */
+@media (min-width: 1920px) {
+    .contentStackContainer {
+        width: 60%;
+        padding: 0px 20px 0px 20px;
+    }
+ 
+    .mainContentStackContainer {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+ 
+    .inputContainer {
+        width: 100% !important
+    }
+ 
+    .buttonContainer {
+        margin-left: 2;
+        width: 10%;
+    }
+ 
+    .stackitem {
+        /* min-width: calc(33.3333% - 10px);
+        width: fit-content; */
+        width: calc(33.3333% - 10px);
+        height: 90px;
+    }
+ 
+    .resetButton {
+        font-size: 28px;
+        padding: 30px;
+    }
+   
+    .tagButton {
+        font-size: 28px;
+    }
+ 
+    .footer {
+        bottom: 10px;
+    }
+ 
+    .heading {
+        font-size: 32px;
+    margin-bottom: 10px;
+ 
+    }
+ 
+    .footerMainStack {
+        width: 60%;
+    }
+ 
 }
