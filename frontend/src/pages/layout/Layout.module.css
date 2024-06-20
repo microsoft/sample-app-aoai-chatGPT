@@ -139,6 +139,20 @@
   color: black;
   box-shadow: none;
 }
+
+.userinputField {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  border-radius: 35px;
+  padding: 15px;
+  background-color: #313F46;
+  box-shadow: none;
+  border: 2px solid #378588;
+}
+
+
 .focusInputField {
   display: flex;
   align-items: center;

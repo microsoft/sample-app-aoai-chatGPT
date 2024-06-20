@@ -5,7 +5,7 @@
   justify-content: center;
   background-color: #eccb3c;
   width: 300px;
-  height: 400px;
+  min-height: 350px;
   padding: 0 2rem 2rem 2rem;
   border-radius: 20px;
 }

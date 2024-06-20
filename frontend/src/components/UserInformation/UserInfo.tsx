@@ -41,7 +41,7 @@ const UserInfo: React.FC = () => {
         display: "flex", alignItems: "center", flexDirection: "column",
         width: "100%", padding: "0px 20px"
       }}>
-        <div className={style.inputField}>
+        <div className={style.userinputField}>
           <div style={textFieldWrapperStyle}>
             <TextField
               placeholder={"Enter your city name"}
