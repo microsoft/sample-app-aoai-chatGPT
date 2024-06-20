@@ -122,10 +122,14 @@ const About: React.FC = () => {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
 
             const response =await getRecommendations(promptValue || '')
+            
             // const response = {
-            //     "messages": "{\"result\": [{\"title\": \"REGENCY 250 LE3 Sport\", \"detail\": \"Offers a luxurious and comfortable experience for a crew of 14, perfect for watersports with its 350-horsepower rating and ski tow pylon.\"}, {\"title\": \"TAHOE 2150\", \"detail\": \"Combines spacious luxury with sporting capability, also featuring the POWERGLIDE\® hull and ski tow pylon, ideal for families enjoying watersports.\"}, {\"title\": \"Sun Tracker Sportfish\", \"detail\": \"A versatile option that combines a fishing boat's utility with the comfort of a party barge, perfect for Lake George outings.\"}]}"
+            //     "messages": "{\"result\": "result": [{ "product": "Regency", "model": "230 LE3 Sport", "summary": "Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports." }, { "product": "Regency", "model": "250 LE3 Sport", "summary": "Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports." }, { "product": "Regency", "model": "DL3 Series", "summary": "Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System." }] }}"
             // }
+            
+            //const response = { "messages": "{\"result\": [{ \"product\": \"Regency\", \"model\": \" Regency 230 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports.\" }, { \"product\": \"Regency\", \"model\": \"250 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports.\" }, { \"product\": \"Regency\", \"model\": \"DL3 Series\", \"summary\": \"Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System.\" }]}" };
 
+           
             const parsedData = JSON.parse(response?.messages);
             const actuallRecommendations = parsedData?.result
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: actuallRecommendations })
@@ -144,12 +148,15 @@ const About: React.FC = () => {
         setSelectedItem(item);
     }
 
-    const handleNextClick = (selectedItem: string): void => {
+    const handleNextClick = (selectedItem: string, selectedProduct: string): void => {
         if (selectedItem) {
             appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem })
+            //appStateContext?.dispatch({ type: 'SET_SELECTED_PRODUCT', payload: selectedProduct })
             navigate("/productInfo");
         }
     }
+
+    
 
     const truncateText = (text: string, maxLength: number) => {
         if (text.length > maxLength) {
@@ -161,41 +168,55 @@ const About: React.FC = () => {
     const normalizeString = (str: string) => {
         return str.replace(/[\s\W]+/g, '').toLowerCase();
     };
+    const key1 = normalizeString("Sun Tracker");
+    const key2 = normalizeString("Tahoe");
+    const key3 = normalizeString("Regency");
 
-    const imagePath = (title: string) => {
+    const imagePath = (product:string, title:string) => {
+        const normalizedProduct = normalizeString(product);
         const normalizedTitle = normalizeString(title);
         let bestMatchKey = '';
         let bestMatchLength = 0;
-        const key1 = normalizeString("Sun Tracker");
-        const key2 = normalizeString("Tahoe");
-        const key3 = normalizeString("Regency");
-
+    
         for (const key in boatImages) {
             const normalizedKey = normalizeString(key);
-            if (normalizedKey.includes(normalizedTitle)) {
+            if (normalizedKey.includes(normalizedProduct) && normalizedKey.includes(normalizedTitle)) {
                 if (normalizedKey.length > bestMatchLength) {
                     bestMatchLength = normalizedKey.length;
                     bestMatchKey = key;
                 }
             }
         }
+        
+        console.log({ bestMatchKey, normalizedProduct, normalizedTitle });
+        
         if (bestMatchKey) {
-            return boatImages[bestMatchKey]
-        }
-        else {
-            if (normalizedTitle.includes(key1)) {
-                return SBB18
-            } else if (normalizedTitle.includes(key2)) {
-                return TAH2150
-            } else if (normalizedTitle.includes(key3)) {
-                return R230DL3
+            return boatImages[bestMatchKey];
+        } else {
+            if (normalizedProduct.includes(key1) || normalizedTitle.includes(key1)) {
+                return SBB18;
+            } else if (normalizedProduct.includes(key2) || normalizedTitle.includes(key2)) {
+                return TAH2150;
+            } else if (normalizedProduct.includes(key3) || normalizedTitle.includes(key3)) {
+                return R230DL3;
             } else {
-                return Image1
+                return Image1;
             }
         }
     };
+    
+
+    const getDisplayTitle = (title:string, product:string) => {
+        if (title?.toLowerCase()?.includes(product?.toLowerCase())) {
+            return title;
+        } else {
+            return `${product} - ${title}`;
+        }
+    };
+    
 
     return (
+
         <div className={styles.chatContainer}>
             {isLoading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
@@ -227,7 +248,7 @@ const About: React.FC = () => {
                                     },
                                     height: "100%", padding: "12px", borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0"
                                 }
-                            }} onClick={() => handleNextClick(item.model)}>
+                            }} onClick={() => handleNextClick(item.model,item.product)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }} styles={{
                                     root: {
                                         '@media (max-width: 600px)': {
@@ -243,7 +264,7 @@ const About: React.FC = () => {
                                 }}>
                                     <div className={divClass}>
                                         <Image
-                                            src={imagePath(item.model)}
+                                            src={imagePath(item.product,item.model)}
                                             alt={item.model}
                                             height={72}
                                             className={imageClass}
@@ -279,7 +300,7 @@ const About: React.FC = () => {
                                                     },
                                                 }
                                             }}
-                                            style={{ color: "#000" }} > {item.product}-{item.model}</Text>
+                                            style={{ color: "#000" }} > { getDisplayTitle(item.model, item.product) } </Text>
                                         <Text
                                             styles={{
                                                 root: {
