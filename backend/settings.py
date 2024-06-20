@@ -60,7 +60,7 @@ class _ChatHistorySettings(BaseSettings):
 
     database: str
     account: str
-    account_key: str
+    account_key: Optional[str] = None
     conversations_container: str
     enable_feedback: bool = False
 
@@ -101,7 +101,7 @@ class _AzureOpenAISettings(BaseSettings):
     )
     
     model: str
-    key: str
+    key: Optional[str] = None
     resource: Optional[str] = None
     endpoint: Optional[str] = None
     temperature: float = 0
@@ -200,6 +200,7 @@ class _SearchCommonSettings(BaseSettings):
     include_contexts: Optional[List[str]] = ["citations", "intent"]
     vectorization_dimensions: Optional[int] = None
     role_information: str = Field(
+        default="You are an AI assistant that helps people find information.",
         validation_alias="AZURE_OPENAI_SYSTEM_MESSAGE"
     )
 

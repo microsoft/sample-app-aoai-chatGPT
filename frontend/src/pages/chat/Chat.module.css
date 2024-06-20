@@ -47,6 +47,7 @@
   line-height: 24px;
   margin-top: 10px;
   margin-bottom: 0px;
+  color: #FFFFFF;
 }
 
 .chatEmptyStateSubtitle {
@@ -58,12 +59,12 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #3bcbff;
+  color: #FFFFFF;
 }
 
 .chatIcon {
-  height: 150px;
-  width: 460px;
+  height: 186px;
+  width: 123px;
 }
 
 .chatMessageStream {
@@ -109,10 +110,10 @@
 .chatMessageGpt {
   color: #3bcbff;
   background: #32333f;
+  border-radius: 8px;
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
-
 }
 
 .chatMessageError {
@@ -219,12 +220,13 @@
   bottom: 116px;
   border: 1px solid #d1d1d1;
   border-radius: 16px;
+  background-color: #FFFFFF
 }
 
 .stopGeneratingIcon {
   width: 14px;
   height: 14px;
-  color: #424242;
+  background-color: #fc565e;
 }
 
 .stopGeneratingText {
@@ -341,6 +343,16 @@
 
 .exectResultList > span {
   font-weight: 600;
+}
+
+.question-input {
+  background: transparent;
+  border: none; /* Optional: Remove border if you want a cleaner look */
+  color: white; /* Optional: Adjust text color for better visibility */
+}
+
+.input-container {
+  background: transparent;
 }
 
 a {

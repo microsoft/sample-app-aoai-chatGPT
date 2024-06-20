@@ -1,0 +1,15 @@
+[
+    {
+		"data_path": "https://printecstorageaipoc.blob.core.windows.net/printeccontaineraipoc/Cardlink POS_Connection Priority.txt",
+		"sas_token": "sp=r&st=2024-06-05T06:32:56Z&se=2024-06-05T14:32:56Z&spr=https&sv=2022-11-02&sr=b&sig=pKLovi45B7s1RoU8VsOfJq4Mmi6juYG2Oq5n4i%2BXbPY%3D",
+        "location": "francecentral",
+        "subscription_id": "cf8616eb-ce6f-446a-998e-1df5528840d4",
+        "resource_group": "GRP_AI_POC",
+        "search_service_name": "printecsearchaipoc",
+        "index_name": "printeccontaineraipoc",
+        "chunk_size": 1024,
+        "token_overlap": 128,
+        "semantic_config_name": "default",
+        "language": "el"
+    }
+]
