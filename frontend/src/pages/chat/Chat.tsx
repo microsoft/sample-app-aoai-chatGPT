@@ -13,7 +13,7 @@ import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
 import Contoso from '../../assets/Contoso.svg'
-import { XSSAllowTags } from '../../constants/xssAllowTags'
+import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
   ChatMessage,
@@ -32,7 +32,6 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
-  AzureSqlServerCodeExecResult
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
