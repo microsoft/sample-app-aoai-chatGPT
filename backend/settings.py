@@ -661,6 +661,7 @@ class _BaseSettings(BaseSettings):
     auth_enabled: bool = False
     sanitize_answer: bool = False
     use_promptflow: bool = False
+    application_insights_connection_string: Optional[str] = None
 
 
 class _AppSettings(BaseModel):

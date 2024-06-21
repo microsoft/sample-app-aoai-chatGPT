@@ -33,6 +33,7 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+from backend.tracing import emit_traces
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -316,6 +317,12 @@ async def send_chat_request(request_body, request_headers):
         azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
+        # if app_settings.base_settings.application_insights_connection_string is not None:
+        #     emit_traces(
+        #         app_settings.base_settings.application_insights_connection_string,
+        #         model_args["messages"][-1]["content"],
+        #         response
+        #     )
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
