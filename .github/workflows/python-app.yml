@@ -29,7 +29,8 @@ jobs:
     - name: Test with pytest
       run: |
         export PYTHONPATH=$(pwd)
-        pytest -v --show-capture=stdout -k "not integration"
+        coverage run pytest -v --show-capture=stdout -k "not integration"
+        coverage report -m
 
   test_windows:
     runs-on:
@@ -47,4 +48,5 @@ jobs:
     - name: Test with pytest
       run: |
         $env:PYTHONPATH=$pwd
-        pytest -v --show-capture=stdout -k "not integration"
+        coverage run pytest -v --show-capture=stdout -k "not integration"
+        coverage report -m
