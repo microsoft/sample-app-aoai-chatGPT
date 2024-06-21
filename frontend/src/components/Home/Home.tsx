@@ -17,6 +17,7 @@ const Home: React.FC = () => {
     const [isTextFieldFocused, setIsTextFieldFocused] = useState<boolean>(false);
     const [showMore, setShowMore] = useState<{ [key: string]: boolean }>({});
     const [selectedKeys, setSelectedKeys] = useState<{ key: string, value: string, type: 'parent' | 'child', promptValue: string }[]>([]);
+    const [textFieldValue,setTextFieldValue] = useState<string>('');
  
     const navigate = useNavigate();
     const [tags, setTags] = useState<{ [key: string]: { tags: string[], level: string } }>(() => {
@@ -116,8 +117,7 @@ const Home: React.FC = () => {
             }
         });
  
-        result += "What are the top 3 boat models we should recommend?";
- 
+        result += "What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
         return result.trim();
     };
  
@@ -133,7 +133,9 @@ const Home: React.FC = () => {
     }, [selectedKeys, inputValue]);
  
     const handleSubmit = () => {
-        appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputValue })
+        const inputPayload = inputValue + ` ${textFieldValue}`;
+        appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
+        
         navigate("/recommendations");
     };
  
@@ -259,8 +261,8 @@ const Home: React.FC = () => {
                         <TextFieldComponent
                             placeholder='Anything else?'
                             allowBorder={false}
-                            text={inputValue}
-                            setText={setInputValue}
+                            text={textFieldValue}
+                            setText={setTextFieldValue}
                             isButtonRequired={isTextFieldFocused}
                             onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
                             onBlur={() => setIsTextFieldFocused(false)}

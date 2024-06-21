@@ -6,7 +6,7 @@ const FlashCard: React.FC = () => {
   const appStateContext = useContext(AppStateContext);
   const valuesProps = appStateContext?.state?.valuePropositions
   const isLoading = appStateContext?.state?.isLoadingValuePropositions
- 
+  
   return (
     <>
       {isLoading ? (
@@ -85,7 +85,7 @@ const FlashCard: React.FC = () => {
               </Stack>
             </DocumentCard>
           )) : (
-            <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+            <div style={{ height: "100%", display: "flex", alignItems: "center" , justifyContent : "center"}}>
               <Text style={{ color: "#FFFFFF", fontSize: "1.25rem", fontWeight: "bold" }}>No Value Props Found</Text>
             </div>
           )}

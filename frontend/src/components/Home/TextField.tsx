@@ -47,6 +47,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
  
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setInputText(newValue || '');
+    setText?.(newValue || '');
   };
   const [inputText, setInputText] = useState<string>("");
   const navigate = useNavigate();
@@ -70,8 +71,6 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
   const handleBlur = () => {
     if (!isButtonClicked) {
       onBlur?.();
-      const promptValue = `${text} ${inputText}`;
-      setText?.(promptValue || '')
     }
   };
  

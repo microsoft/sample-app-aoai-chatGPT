@@ -25,6 +25,8 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
       return { ...state, promptvalue: action.payload };
     case 'SET_SELECTED_BOAT':
       return { ...state, selectedBoat: action.payload };
+      case 'SET_SELECTED_BRAND':
+      return { ...state, selectedBrand: action.payload };
     case 'UPDATE_CHAT_HISTORY_LOADING_STATE':
       return { ...state, chatHistoryLoadingState: action.payload }
     case 'UPDATE_CHAT_HISTORY':

@@ -155,7 +155,7 @@ export enum Feedback {
 }
 
 export type Recommendations= {
-  product: string;
+  brand: string;
   model: string;
   summary: string;
 }

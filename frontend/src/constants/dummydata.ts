@@ -95,6 +95,10 @@ export const dummydata: Tags = {
         {
             category: "Value",
             child: []
+        },
+        {
+            category: "First time buyer",
+            child: []
         }
     ],
     // Uncomment the following section if you need product data as well.

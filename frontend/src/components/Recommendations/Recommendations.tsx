@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Text, Stack, DefaultButton, Image, Spinner, PrimaryButton } from '@fluentui/react';
 import styles from '../../pages/chat/Chat.module.css'
 import { useNavigate } from 'react-router-dom';
@@ -41,31 +41,31 @@ import SFB20 from  "../../assets/IndigoBlue_BMT-6795_main.jpeg"
 
 
 const boatImages: {[key:string]: string} = {
-    "R250 LE3": R250LE3,
-    "R250 DL3": R250DL3,
-    "R230 DL3": R230DL3,
-    "TAH16": TAH16,
-    "TAH18": TAH18,
-    "TAH185": TAH185,
-    "TAH200": TAH200,
-    "TAH210": TAH210,
-    "TAH210SI": TAH210SI,
-    "TAH1950": TAH1950,
-    "TAH2150": TAH2150,
-    "TAH2150CC": TAH2150CC,
-    "SFB22": SFB22,
-    "SFB22XP3": SFB22XP3,
-    "SPB18": SPB18,
-    "SPB20": SPB20,
-    "SPB22": SPB22,
-    "SPB22XP3": SPB22XP3,
-    "SBB16XL": SBB16XL,
-    "SBB18": SBB18,
-    "SF20": SF20,
-    "SF22": SF22,
-    "SF22XP3": SF22XP3,
-    "SF24XP3": SF24XP3,
-    "SFB20": SFB20,
+    "Regency R250 LE3": R250LE3,
+    "Regency R250 DL3": R250DL3,
+    "Regency R230 DL3": R230DL3,
+    "Tahoe TAH16": TAH16,
+    "Tahoe TAH18": TAH18,
+    "Tahoe TAH185": TAH185,
+    "Tahoe TAH200": TAH200,
+    "Tahoe TAH210": TAH210,
+    "Tahoe TAH210SI": TAH210SI,
+    "Tahoe TAH1950": TAH1950,
+    "Tahoe TAH2150": TAH2150,
+    "Tahoe TAH2150CC": TAH2150CC,
+    "Sun Tracker SFB22": SFB22,
+    "Sun Tracker SFB22XP3": SFB22XP3,
+    "Sun Tracker SPB18": SPB18,
+    "Sun Tracker SPB20": SPB20,
+    "Sun Tracker SPB22": SPB22,
+    "Sun Tracker SPB22XP3": SPB22XP3,
+    "Sun Tracker SBB16XL": SBB16XL,
+    "Sun Tracker SBB18": SBB18,
+    "Sun Tracker SF20": SF20,
+    "Sun Tracker SF22": SF22,
+    "Sun Tracker SF22XP3": SF22XP3,
+    "Sun Tracker SF24XP3": SF24XP3,
+    "Sun Tracker SFB20": SFB20,
   }
 
 
@@ -151,7 +151,7 @@ const About: React.FC = () => {
     const handleNextClick = (selectedItem: string, selectedProduct: string): void => {
         if (selectedItem) {
             appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem })
-            //appStateContext?.dispatch({ type: 'SET_SELECTED_PRODUCT', payload: selectedProduct })
+            appStateContext?.dispatch({ type: 'SET_SELECTED_BRAND', payload: selectedProduct })
             navigate("/productInfo");
         }
     }
@@ -172,45 +172,61 @@ const About: React.FC = () => {
     const key2 = normalizeString("Tahoe");
     const key3 = normalizeString("Regency");
 
-    const imagePath = (product:string, title:string) => {
-        const normalizedProduct = normalizeString(product);
-        const normalizedTitle = normalizeString(title);
+    const calculateMatchScore = (key: string, parts: string[]): number => {
+        let score = 0;
+        parts.forEach(part => {
+            if (key.includes(part)) {
+                score += part.length;
+            }
+        });
+        return score;
+    };
+   
+    // Function to get image path based on product and model
+    const imagePath = (brand:string, model:string) => {
+        const normalizedBrand = normalizeString(brand);
+        const normalizedModel = normalizeString(brand + model);
+        const modelParts = model.split(/[\s\W]+/).map(part => part.toLowerCase());
+   
         let bestMatchKey = '';
-        let bestMatchLength = 0;
-    
+        let bestMatchScore = 0;
+   
+        // Check each key in boatImages
         for (const key in boatImages) {
             const normalizedKey = normalizeString(key);
-            if (normalizedKey.includes(normalizedProduct) && normalizedKey.includes(normalizedTitle)) {
-                if (normalizedKey.length > bestMatchLength) {
-                    bestMatchLength = normalizedKey.length;
-                    bestMatchKey = key;
-                }
+            const matchScore = calculateMatchScore(normalizedKey, modelParts);
+            console.log(normalizedBrand,normalizedModel,modelParts,matchScore,normalizedKey)
+            if (matchScore > bestMatchScore && bestMatchScore  > 2) {
+                bestMatchScore = matchScore;
+                bestMatchKey = key;
             }
         }
-        
-        console.log({ bestMatchKey, normalizedProduct, normalizedTitle });
-        
-        if (bestMatchKey) {
-            return boatImages[bestMatchKey];
-        } else {
-            if (normalizedProduct.includes(key1) || normalizedTitle.includes(key1)) {
+   
+        // If no match is found, fall back to default images based on product
+        if (!bestMatchKey) {
+            const key1 = normalizeString("Sun Tracker");
+            const key2 = normalizeString("Tahoe");
+            const key3 = normalizeString("Regency");
+   
+            if (normalizedBrand.includes(key1)) {
                 return SBB18;
-            } else if (normalizedProduct.includes(key2) || normalizedTitle.includes(key2)) {
+            } else if (normalizedBrand.includes(key2)) {
                 return TAH2150;
-            } else if (normalizedProduct.includes(key3) || normalizedTitle.includes(key3)) {
+            } else if (normalizedBrand.includes(key3)) {
                 return R230DL3;
             } else {
                 return Image1;
             }
         }
+   
+        return boatImages[bestMatchKey];
     };
-    
 
-    const getDisplayTitle = (title:string, product:string) => {
-        if (title?.toLowerCase()?.includes(product?.toLowerCase())) {
+    const getDisplayTitle = (title:string, brand:string) => {
+        if (title?.toLowerCase()?.includes(brand?.toLowerCase())) {
             return title;
         } else {
-            return `${product} - ${title}`;
+            return `${brand} - ${title}`;
         }
     };
     
@@ -248,7 +264,7 @@ const About: React.FC = () => {
                                     },
                                     height: "100%", padding: "12px", borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0"
                                 }
-                            }} onClick={() => handleNextClick(item.model,item.product)}>
+                            }} onClick={() => handleNextClick(item.model,item.brand)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }} styles={{
                                     root: {
                                         '@media (max-width: 600px)': {
@@ -264,7 +280,7 @@ const About: React.FC = () => {
                                 }}>
                                     <div className={divClass}>
                                         <Image
-                                            src={imagePath(item.product,item.model)}
+                                            src={imagePath(item.brand,item.model)}
                                             alt={item.model}
                                             height={72}
                                             className={imageClass}
@@ -300,7 +316,7 @@ const About: React.FC = () => {
                                                     },
                                                 }
                                             }}
-                                            style={{ color: "#000" }} > { getDisplayTitle(item.model, item.product) } </Text>
+                                            style={{ color: "#000" }} > { getDisplayTitle(item.model, item.brand) } </Text>
                                         <Text
                                             styles={{
                                                 root: {
