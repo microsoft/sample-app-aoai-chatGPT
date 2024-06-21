@@ -42,8 +42,10 @@ import SFB20 from  "../../assets/IndigoBlue_BMT-6795_main.jpeg"
 
 const boatImages: {[key:string]: string} = {
     "Regency 250 LE3": R250LE3,
+    "Regency LE3 Series": R250LE3,
     "Regency 250 DL3": R250DL3,
     "Regency 230 DL3": R230DL3,
+    "Regency DL3 Series": R230DL3,
     "Tahoe 16": TAH16,
     "Tahoe 18": TAH18,
     "Tahoe 185": TAH185,
@@ -67,15 +69,21 @@ const boatImages: {[key:string]: string} = {
     "SF24XP3": SF24XP3,
     "SFB20": SFB20,
     "Sun Tracker Fishing Barge 22": SFB22,
+    "Sun Tracker Fishin' Barge 22": SFB22,
     "Sun Tracker Fishing Barge 18": SPB18,
+    "Sun Tracker Fishin' Barge 18": SPB18,
     "Sun Tracker Party Barge 20": SPB20,
+    "Sun Tracker Party Barge 20 DLX": SPB20,
     "Sun Tracker Party Barge 22": SPB22,
     "Sun Tracker Party Barge 22XP3": SPB22XP3,
     "SportFish 20": SF20,
     "SportFish 22": SF22,
+    "SportFish 22 DLX": SF22,
     "SportFish 22XP3": SF22XP3,
     "SportFish 24XP3": SF24XP3,
+    "SportFish 24 XP3": SF24XP3,
     "Sun Tracker Fishing Barge 20": SFB20,
+    "Sun Tracker Fishin' Barge 20": SFB20,
   }
 
 
@@ -132,13 +140,7 @@ const About: React.FC = () => {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
 
             const response =await getRecommendations(promptValue || '')
-            
-            // const response = {
-            //     "messages": "{\"result\": "result": [{ "product": "Regency", "model": "230 LE3 Sport", "summary": "Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports." }, { "product": "Regency", "model": "250 LE3 Sport", "summary": "Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports." }, { "product": "Regency", "model": "DL3 Series", "summary": "Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System." }] }}"
-            // }
-            
-            //const response = { "messages": "{\"result\": [{ \"product\": \"Regency\", \"model\": \" Regency 230 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports.\" }, { \"product\": \"Regency\", \"model\": \"250 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports.\" }, { \"product\": \"Regency\", \"model\": \"DL3 Series\", \"summary\": \"Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System.\" }]}" };
-
+        
            
             const parsedData = JSON.parse(response?.messages);
             const actuallRecommendations = parsedData?.result

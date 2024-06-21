@@ -35,8 +35,6 @@ from backend.utils import (
 )
 from backend.prompt_type import PromptType
 
-logging.basicConfig(filename='./boats.log', encoding='utf-8', filemode='w', level=logging.DEBUG, force=True)
-
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 
