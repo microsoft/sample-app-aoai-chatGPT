@@ -130,10 +130,7 @@
 }
  
 .mainInputField {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 15px 10px;
+  padding: 7px 25px;
   border-radius: 50px;
   background-color: #909B97;
   color: black;
@@ -173,69 +170,3 @@
     padding: 14px 10px;
   }
 }
-/*
-@media (max-width: 480px) {
-  .inputField {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    border-radius: 35px;
-    padding: 15px;
-    box-shadow: none;
-    border: 2px solid #378588;
-  }
- 
-  .focusInputField {
-    display: flex;
-    align-items: center;
-    height: 180px;
-    border-radius: 16px;
-    padding: 15px;
-    box-shadow: none;
-  }
-} */
- 
-/* @media (max-width: 1000px) and (min-width: 500px) {
-  .mainInputField {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    border-radius: 50px;
-    padding: 15px;
-    box-shadow: none;
-  }
-} */
-/*
-@media (max-width: 2520px) and (min-width: 1000px) {
-  .inputField {
-    display: flex;
-    align-items: center;
-    width: 35%;
-    height: 72px;
-    border-radius: 35px;
-    padding: 15px;
-    box-shadow: none;
-    border: 2px solid #378588;
-  }
-  .mainInputField {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    border-radius: 50px;
-    padding: 15px;
-    box-shadow: none;
-  }
-  .focusInputField {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 255px;
-    border-radius: 24px;
-    padding: 15px;
-    box-shadow: none;
-  }
- 
-  .textFieldDiv{
-    width:"86%"
-  }
-} */

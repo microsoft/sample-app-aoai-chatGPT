@@ -71,13 +71,15 @@
     width: 100%;
     padding: 0px;
     align-items: center;
-    padding: 20px 0px;
+    padding: 0 0 10px;
 }
  
 .headingText {
     color: white;
     display: flex;
-    align-items: center
+    align-items: flex-start;
+    font-size: 20px;
+    line-height: 100%;
 }
  
 .button {
@@ -123,7 +125,7 @@
     }
  
     .headingText {
-        font-size: 22px;
+        font-size: 20px;
     }
 }
  

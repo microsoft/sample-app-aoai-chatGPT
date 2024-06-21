@@ -14,10 +14,10 @@
 }
  
 .contentStackContainer {
-    margin-top: 50px;
     max-width: 1040px;
     width: 100%;
-    padding: 0px 20px 0px 20px;
+    padding: 50px 20px 0px 20px;
+    height: 100%;
 }
  
 .resetDiv {
@@ -35,9 +35,11 @@
     color: #FFFFFF;
     border: none;
     border-radius: 50px;
-    font-size: 22px;
+    /* font-size: 22px; */
+    font-size: 18px;
+    letter-spacing: 1px;
     font-weight: normal;
-    padding: 15px 40px;
+    padding: 15px 30px;
 }
 .resetButton:hover {
     background-color: #2F3A40;
@@ -45,40 +47,36 @@
     border-color: #FFFFFF;
   }
 .tagTypeStack {
-    padding: 0 0 20px;
+    padding: 0 0 15px;
 }
  
 .heading {
-    display: flex;
-    align-items: center;
-    width: 100%;
     color: rgba(255, 255, 255, 0.40);
     text-transform: capitalize;
-    font-size: 22px;
-    font-weight: normal;
+    font-size: 18px;
 }
  
 .mainStackTags {
     display: -webkit-inline-box;
-    margin-top: 0;
-    width: 100%;
-    gap: 25px;
+    gap: 20px;
     flex-wrap: wrap;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+}
+.mainStackTags:last-of-type{
+    margin-bottom: 0;
 }
  
 .stackitem {
-    width: calc((100% / 3) - 17px);
-    /* height: 50px; */
+    width: calc((100% / 3) - 14px);
 }
  
 .tagButton {
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 24px;
-    padding: 25px 15px;
-    font-size: 22px;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 20px;
     letter-spacing: 1px;
     font-weight: 600;
 }
@@ -99,10 +97,10 @@
 .footerMainStack {
     display: flex;
     flex-direction: row;
-    align-items: end;
+    align-items: flex-end;
     justify-content: center;
     width: 100%;
-    padding: 0px 20px 0px 20px;
+    padding: 0px 20px;
 }
  
 .buttonContainer {
@@ -118,289 +116,39 @@
 }
  
 @media all and (max-width:767px){
-    .tagButton {
-        border-radius: 20px;
-        padding: 25px 15px;
-        font-size: 18px;
-    }
- 
-    .heading {
-        font-size: 24px;
-    }
- 
-    .resetButton {
-        font-size: 24px;
-    }
+
+
 }
+
 @media all and (max-width:575px){
-    .resetButton {
-        font-size: 18px;
-        padding: 10px 20px;
-    }
-    .heading {
-        font-size: 20px;
+    .contentStackContainer {
+        padding: 30px 20px 0px 20px;
     }
     .mainStackTags {
         gap: 10px;
-        margin-bottom: 20px;
     }
     .stackitem {
         width: auto;
-        min-width: 105px;
+        min-width: calc(33.33% - 7px);
     }
     .tagButton {
-        border-radius: 15px;
-        padding: 15px;
-        font-size: 16px;
+        font-size: 18px;
+    }
+    .resetButton{
+        padding: 8px 20px;
     }
 }
- /* @media (max-width: 599px) {
-    .contentStackContainer {
-        width: 100%;
-        padding: 0px 20px 0px 20px;
-    }
- 
-    .mainContentStackContainer {
-        padding-left: 0.875rem;
-        padding-right: 0.875rem;
-    }
- 
-    .inputContainer {
-        width: 100% !important
-    }
- 
-    .buttonContainer {
-        margin-left: 2;
-        width: 20%;
-    }
- 
-    .stackitem {
-        width: calc(33.3333% - 10px);
-        height: 50px;
-    }
- 
-    .footerMainStack {
-        width: 100%;
- 
-    }
-} */
- 
-/* @media (min-width: 600px) and (max-width: 959px) {
-    .contentStackContainer {
-        width: 90%;
-        padding: 0px 20px 0px 20px;
-    }
- 
-    .mainContentStackContainer {
-        padding-left: 0.875rem;
-        padding-right: 0.875rem;
-    }
- 
-    .resetButton {
-        font-size: 24px;
-    }
- 
-    .inputContainer {
-        width: 100% !important
-    }
- 
-    .buttonContainer {
-        margin-left: 2;
-        width: 15%;
-    }
-    .mainStackTags {
-        margin-bottom: 50px;
-    }
-    .stackitem {
- 
-        width: calc(33.3333% - 10px);
- 
-        height: 70px;
-    }
-    .resetButton {
-        font-size: 24px;
-        padding: 30px;
-    }
- 
-    .tagButton {
-        font-size: 24px;
-    }
- 
-    .heading {
-        font-size: 24px;
-    margin-bottom: 10px;
- 
-    }
- 
-    .footer {
-        bottom: 10px;
-    }
- 
-    .footerMainStack {
-        width: 90%;
-    }
- 
- 
-} */
- 
-/* @media (min-width: 960px) and (max-width: 1279px) {
-    .contentStackContainer {
-        width: 90%;
-        padding: 0px 20px 0px 20px;
-    }
- 
-    .mainContentStackContainer {
-        padding-left: 0.875rem;
-        padding-right: 0.875rem;
-    }
-    .mainStackTags {
-        margin-bottom: 50px;
-    }
-    .inputContainer {
-        width: 100% !important
-    }
- 
-    .buttonContainer {
-        margin-left: 2;
-        width: 15%;
-    }
- 
-    .stackitem {
- 
-        width: calc(33.3333% - 10px);
- 
-        height: 80px;
-    }
-    .resetButton {
-        font-size: 24px;
-        padding: 30px;
-    }
- 
-    .tagButton {
-        font-size: 24px;
-    }
- 
-    .heading {
-        font-size: 24px;
-    margin-bottom: 10px;
-    }
- 
-    .footer {
-        bottom: 10px;
-    }
- 
-    .footerMainStack {
-        width: 90%;
-    }
- 
-} */
- 
-/* @media (min-width: 1280px) and (max-width: 1919px) {
-    .contentStackContainer {
-        width: 1100px;
-        max-width: 1366px;
-        padding: 0px 20px 0px 20px;
-    }
- 
-    .mainContentStackContainer {
-        padding-left: 0.875rem;
-        padding-right: 0.875rem;
-    }
-    .mainStackTags {
-        margin-bottom: 50px;
-    }
-    .inputContainer {
-        width: 100% !important
-    }
- 
-    .buttonContainer {
-        margin-left: 2;
-        width: 10%;
-    }
- 
-    .stackitem {
-        width: calc(33.3333% - 10px);
- 
-        height: 90px;
-    }
-    .resetButton {
-        font-size: 28px;
-        padding: 30px;
-    }
- 
-    .tagButton {
-        font-size: 28px;
-    }
- 
-    .heading {
-        font-size: 32px;
-    margin-bottom: 10px;
- 
-    }
- 
-    .footer {
-        bottom: 10px;
-    }
- 
-    .footerMainStack {
-        width: 1100px;
-        max-width: 1366px;
-    }
- 
-} */
- 
-/* @media (min-width: 1920px) {
-    .contentStackContainer {
-        width: 1100px;
-        padding: 0px 20px 0px 20px;
-    }
- 
-    .mainContentStackContainer {
-        padding-left: 0.875rem;
-        padding-right: 0.875rem;
-    }
- 
-    .inputContainer {
-        width: 100% !important
-    }
- 
-    .buttonContainer {
-        margin-left: 2;
-        width: 10%;
-    }
- 
-    .stackitem {
-        width: calc(33.3333% - 10px);
-        height: 90px;
-    }
- 
-    .resetButton {
-        font-size: 28px;
-        padding: 30px;
-    }
-   
-    .tagButton {
-        font-size: 28px;
-    }
- 
-    .footer {
-        bottom: 10px;
-    }
- 
-    .heading {
-        font-size: 32px;
-    margin-bottom: 10px;
- 
-    }
- 
-    .footerMainStack {
-        width: 1100px;
-    }
- 
-} */
- 
-@media all and (max-width:575px){
-    .footer{
-        height: 100px !important;
-    }
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
 }
