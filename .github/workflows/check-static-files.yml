@@ -39,6 +39,13 @@ jobs:
              frontend/public/favicon.ico
              frontend/src/assets
 
-      - name: Check logo customizations
+      - name: Comment on logo customizations
+        if: steps.changed-logo-files.outputs.any_changed == 'true'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            "Hello contributor, it appears that your pull request contains some customizations to branding. We are unable to approve your PR at this time. If you believe this message to be in error, please correct these unsupported changes and try again, or reach out to one of the maintainers of the repo to discuss the changes."
+        
+      - name: Fail on logo customizations
         if: steps.changed-logo-files.outputs.any_changed == 'true'
         run: echo "Logos are customized, which is not a supported change." && exit 1
