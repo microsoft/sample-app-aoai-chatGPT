@@ -1292,9 +1292,13 @@ async def add_conversation_v3():
         history_metadata = {}
         if not conversation_id:
             title = await generate_title(request_json["messages"])
+            state = request_json['messages'][0].get("state", None)
+            city = request_json['messages'][0].get("city", None)
+
             conversation_dict = await cosmos_conversation_client.create_conversation(
-                user_id=user_id, title=title
+                user_id=user_id, title=title , state= state , city = city
             )
+
             conversation_id = conversation_dict["id"]
             history_metadata["title"] = title
             history_metadata["date"] = conversation_dict["createdAt"]
