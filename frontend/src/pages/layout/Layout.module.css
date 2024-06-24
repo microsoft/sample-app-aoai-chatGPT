@@ -1,12 +1,6 @@
 .layout {
-  display: flex;
-  flex-direction: column;
-  background-repeat: no-repeat;
-  background-size: cover;
-  height: 100vh;
-  /* background: rgb(58,73,81); */
-  background-image: url("../../assets//BP-BG.png");
-  /* background: linear-gradient(200deg, rgba(58,73,81,1) 0%, rgba(35,44,48,1) 80%, rgba(58,73,81,1) 99%); */
+  background: url("../../assets//BP-BG.png") no-repeat center center/cover;
+  min-height: 100%;
 }
  
 .header {
@@ -140,8 +134,8 @@
 .userinputField {
   display: flex;
   align-items: center;
-  width: 100%;
-  height: 56px;
+  width: 40%;
+  height: 70px;
   border-radius: 35px;
   padding: 15px;
   background-color: #313F46;
@@ -168,5 +162,10 @@
 @media all and (max-width:575px){
   .mainInputField{
     padding: 14px 10px;
+  }
+
+  .userinputField {
+    width: 100%;
+    height: 56px;
   }
 }

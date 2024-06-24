@@ -9,8 +9,24 @@ import template from '../../constants/templete'
 import style from './Home.module.css'
 import Chip from '../Chip'
 import TextFieldComponent from './TextField'
+import DesktopTextField from './DesktopTextField';
 
 const Home: React.FC = () => {
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   const appStateContext = useContext(AppStateContext)
   const [inputValue, setInputValue] = useState<string>('')
   const [isTextFieldFocused, setIsTextFieldFocused] = useState<boolean>(false)
@@ -170,23 +186,22 @@ const Home: React.FC = () => {
   }
 
   return (
+    <>
     <Stack className={style.mainStackContainer}>
       <Stack className={style.mainContentStackContainer}>
+        <div className={style.resetDiv}>
+          <DefaultButton
+            onClick={() => resetAllClick()}
+            className={style.resetButton}
+            styles={{
+              label: { fontWeight: 'normal', color: 'rgba(255,255,255,0.41)' }
+            }}>
+            Reset
+          </DefaultButton>
+        </div>
         <Stack className={style.contentStackContainer} style={{ opacity: isTextFieldFocused ? 0.3 : 1 }}>
           {Object.keys(tags).map(key => (
             <React.Fragment key={key}>
-              {key === 'who' && (
-                <div className={style.resetDiv}>
-                  <DefaultButton
-                    onClick={() => resetAllClick()}
-                    className={style.resetButton}
-                    styles={{
-                      label: { fontWeight: 'normal', color: 'rgba(255,255,255,0.41)' }
-                    }}>
-                    Reset
-                  </DefaultButton>
-                </div>
-              )}
               <Stack className={style.tagTypeStack}>
                 <Text className={style.heading}>
                   <div>
@@ -265,32 +280,50 @@ const Home: React.FC = () => {
           ))}
         </Stack>
       </Stack>
-      <div
-        className={style.footer}
-        style={{
-          height: isTextFieldFocused ? '280px' : '100px',
-          bottom: isTextFieldFocused ? '20px' : '0px',
-          alignItems: isTextFieldFocused ? 'end' : 'center'
-        }}>
-        <Stack tokens={{ childrenGap: 20 }} horizontalAlign="center" className={style.footerMainStack}>
-          <div className={style.inputContainer}>
-            <TextFieldComponent
-              placeholder="Anything else?"
-              allowBorder={false}
-              text={textFieldValue}
-              setText={setTextFieldValue}
-              isButtonRequired={isTextFieldFocused}
-              onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
-              onBlur={() => setIsTextFieldFocused(false)}
-              isTextFieldFocused={isTextFieldFocused} // Remove focused state on blur
-            />
-          </div>
-          <div className={style.buttonContainer}>
-            <CustomIconButton onButtonClick={handleSubmit} disabled={buttonDisabled} />
-          </div>
-        </Stack>
-      </div>
+      {/* {windowWidth <1700 ? ( */}
+
+            {/* ) : ( */}
+        <div className={style.desktopTextField}>
+        <DesktopTextField 
+                      placeholder="Anything else?"
+                      allowBorder={false}
+                      // text={textFieldValue}
+                      // setText={setTextFieldValue}
+                      isButtonRequired={true}
+                      promptValue={inputValue}
+                      onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
+                      onBlur={() => setIsTextFieldFocused(false)}
+                      isTextFieldFocused={isTextFieldFocused} 
+        />
+        </div>
+            {/* )} */}
     </Stack>
+          <div
+          className={style.footer}
+          style={{
+            height: isTextFieldFocused ? '280px' : '100px',
+            bottom: isTextFieldFocused ? '20px' : '0px',
+            alignItems: isTextFieldFocused ? 'end' : 'center',
+          }}>
+          <Stack tokens={{ childrenGap: 20 }} horizontalAlign="center" className={style.footerMainStack}>
+            <div className={style.inputContainer}>
+              <TextFieldComponent
+                placeholder="Anything else?"
+                allowBorder={false}
+                text={textFieldValue}
+                setText={setTextFieldValue}
+                isButtonRequired={isTextFieldFocused}
+                onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
+                onBlur={() => setIsTextFieldFocused(false)}
+                isTextFieldFocused={isTextFieldFocused} // Remove focused state on blur
+              />
+            </div>
+            <div className={style.buttonContainer}>
+              <CustomIconButton onButtonClick={handleSubmit} disabled={buttonDisabled} />
+            </div>
+          </Stack>
+        </div>
+        </>
   )
 }
 

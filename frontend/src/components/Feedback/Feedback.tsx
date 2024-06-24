@@ -64,7 +64,7 @@ const Feedback: React.FC = () => {
                 verticalAlign={"center"}
                 styles={{
                     root: {
-                        height: '100vh', marginTop: !showThankYou ? "100px" : "0px",
+                        height: '100vh', marginTop: !showThankYou ? "0px" : "0px",
                         '@media (max-width: 1000px)': {
                             width: "100%",
                             padding: "0px 20px"
@@ -234,9 +234,9 @@ const Feedback: React.FC = () => {
                                     overflow: 'hidden',
                                     background: "#232e34",
                                     borderRadius: 20,
-                                    ":hover": {
+                                    // ":hover": {
                                         border: "1px solid black"
-                                    }
+                                    // }
                                 },
                                 fieldGroup: {
                                     borderRadius: '25px',

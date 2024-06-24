@@ -33,7 +33,7 @@ const WalkAround: React.FC = () => {
           {walkthroughData && walkthroughData?.length > 0 ? (
             <CarouselComponent
               cards={cards}
-              height="500px"
+              height="calc(100vh - 300px)"
               width="50%"
               margin="0 auto"
               offset={2}

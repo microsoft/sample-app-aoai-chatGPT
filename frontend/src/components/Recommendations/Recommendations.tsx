@@ -139,8 +139,10 @@ const About: React.FC = () => {
         try {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
 
-            const response =await getRecommendations(promptValue || '')
-        
+             const response =await getRecommendations(promptValue || '')
+            // const response = {
+            //     "messages": "{\"result\":[{\"brand\": \"Regency\", \"model\": \"SFB20\", \"summary\": \"Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports.\"}, {\"brand\": \"Sun Tracker\", \"model\": \"250 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports.\"}, {\"brand\": \"Tahao\", \"model\": \"DL3 Series\", \"summary\": \"Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System.\"}]}"
+            // };
            
             const parsedData = JSON.parse(response?.messages);
             const actuallRecommendations = parsedData?.result
@@ -254,10 +256,12 @@ const About: React.FC = () => {
                 <Stack className={style.contentMainStackContainer}>
                     <Stack className={style.contentStackContainer}>
                         {dummyData && dummyData.length > 0 && (
+                            <div className={style.headingMainDiv}>
                             <div className={commonStyle.headingDiv}>
                                 <BackButton onClick={() => navigate("/")}></BackButton>
                                 <Text
                                     className={commonStyle.headingText}>Top Recommendations for this store</Text>
+                            </div>
                             </div>
                         )}
                         {dummyData && dummyData.length > 0 && dummyData.map((item, index) => (
