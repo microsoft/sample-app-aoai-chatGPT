@@ -810,7 +810,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: "Generating an ANSWER...",
                           citations: [],
                           plotly_data: null
                         }}
