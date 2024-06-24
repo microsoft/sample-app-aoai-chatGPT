@@ -1,8 +1,5 @@
 .container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  height: 100%;
 }
 
 .chatRoot {
@@ -16,16 +13,15 @@
 }
 
 .chatContainer {
-  flex: 1;
+  padding: 50px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  overflow-y: auto;
-  max-height: calc(100vh - 0px);
+}
+@media all and (orientation=portrait){
+  .chatContainer {
+    padding: 30px 0;
+  }
 }
 
 .chatEmptyState {

@@ -36,7 +36,7 @@ const UserInfo: React.FC = () => {
   };
 
   return (
-    <Stack horizontalAlign='center' tokens={{ childrenGap: 20 }} styles={{ root: { width: "100%", margin: 'auto' } }}>
+    <Stack horizontalAlign='center' tokens={{ childrenGap: 20 }} styles={{ root: { width: "100%", margin: 'auto' , height:"100vh", justifyContent:'center' } }}>
       <div style={{
         display: "flex", alignItems: "center", flexDirection: "column",
         width: "100%", padding: "0px 20px"

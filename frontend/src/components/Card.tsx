@@ -17,6 +17,13 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
       ? "0 20px 25px rgba(0, 0, 0, 0.25)"
       : "0 2px 10px rgba(0, 0, 0, 0.08)",
   });
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...';
+    }
+    return text;
+};
  
   return (
     <animated.div
@@ -25,19 +32,21 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
       onMouseEnter={() => setShown(true)}
       onMouseLeave={() => setShown(false)}
     >
-      <Stack styles={{ root: { display: "flex", flexDirection: "column", height: "100%" } }}>
+      <Stack styles={{ root: { display: "flex", flexDirection: "column", height: "100%"} }}>
         <Text styles={{
           root: {
-            height: "20%",
             textAlign: "left",
-            marginTop: 30,
             '@media (max-width: 600px)': {
               fontWeight: "bold",
               fontSize: "16px",
             },
-            '@media (max-width: 2500px) and (min-width: 600px)': {
+            '@media (max-width: 1300px) and (min-width: 600px)': {
               fontWeight: "bold",
               fontSize: "24px",
+            },
+            '@media (max-width: 2500px) and (min-width: 1300px)': {
+              fontWeight: "bold",
+              fontSize: "32px",
             },
           }
         }}>
@@ -45,17 +54,23 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
         </Text>
         <Text styles={{
           root: {
+            letterSpacing:"2px",
+            marginTop:"auto",
             '@media (max-width: 600px)': {
-              fontSize: "20px",
+              fontSize: "15px",
               fontWeight: "500",
             },
-            '@media (max-width: 2500px) and (min-width: 600px)': {
-              fontSize: "22px",
-              fontWeight: "400",
+            '@media (max-width: 1700px) and (min-width: 600px)': {
+              fontWeight: "500",
+              fontSize: "24px",
+            },
+            '@media (max-width: 2500px) and (min-width: 1700px)': {
+              fontWeight: "500",
+              fontSize: "36px",
             },
           }
         }}>
-          {detail}
+          {truncateText(detail, 350)}
         </Text>
       </Stack>
     </animated.div>

@@ -1,22 +1,7 @@
-.mainStackContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
-}
- 
-.mainContentStackContainer {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
- 
 .contentStackContainer {
     max-width: 1040px;
     width: 100%;
-    padding: 50px 20px 0px 20px;
+    padding: 20px;
     height: 100%;
 }
  
@@ -24,8 +9,9 @@
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
+    padding: 0 20px;
     cursor: pointer;
-    /* width: 100%; */
+    width: 100%;
     color: #FFFFFF;
 }
  
@@ -81,19 +67,6 @@
     font-weight: 600;
 }
  
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    position: sticky;
-    bottom: 20px;
-    max-width: 1040px;
-    width: 100%;
-    margin: 0 auto;
- 
-}
- 
 .footerMainStack {
     display: flex;
     flex-direction: row;
@@ -114,9 +87,72 @@
 .inputContainer {
     width: 100% !important
 }
- 
-@media all and (max-width:767px){
+.inputFieldContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    flex: 0 0 100%;
+}
 
+.mainInputField {
+    border-radius: 20px;
+    width: 100%;
+    height: 400px;
+    background-color: #313F46;
+    color: black;
+    box-shadow: none;
+  }
+
+  .desktopTextField {
+    display: flex;
+    flex: 0 0 35%;
+    padding-top: 108px;
+}
+ 
+.footer {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    position: absolute;
+    bottom: 20px;
+    max-width: 1040px;
+    width: 100%;
+    margin: 0 auto;
+}
+.mainContentStackContainer {
+    flex: 0 0 65%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.mainStackContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    width: 80%;
+    gap: 20px;
+}
+@media all and (orientation=portrait){
+    .desktopTextField {
+        display: none;
+    }
+    .mainStackContainer{
+        max-width: 1040px;
+        width: 100%;
+        gap: 0;
+    }
+    .mainContentStackContainer{
+        flex: 0 0 100%;
+        height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+    .footer {
+        display: flex;
+    }
 
 }
 
