@@ -1,0 +1,4 @@
+.conteiner {
+  width: calc(100% - 10px);
+  overflow-y: auto;
+}

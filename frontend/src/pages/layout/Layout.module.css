@@ -109,3 +109,17 @@
     margin-left: 26px;
   }
 }
+
+.btnToggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .btnToggle {
+    display: flex;
+  }
+
+  .container {
+    justify-content: space-between !important;
+  }
+}
