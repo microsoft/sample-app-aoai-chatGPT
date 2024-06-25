@@ -6,7 +6,7 @@ import { AppStateContext } from '../../state/AppProvider';
 import { getRecommendations } from '../../api';
 import commonStyle from "../ProductInformation/ProductInfo.module.css";
 import style from "./Recommendations.module.css"
-
+import loading from "../../assets/loader.gif"
 //import boatImages from '../../constants/boatImages';
 import { mergeStyles } from '@fluentui/react/lib/Styling';
 import BackButton from '../BackButton';
@@ -98,14 +98,14 @@ const imageClass = mergeStyles({
         width: "100px"
     },
     '@media (min-width: 600px) and (max-width: 1000px)': {
-        height: '190px !important',
-        width: "250px",
+        height: '130px !important',
+        width: "200px",
         marginLeft: 5,
         padding: "20px"
     },
     '@media (min-width: 1000px) and (max-width: 2500px)': {
-        height: '160px !important',
-        width: "250px",
+        height: '120px !important',
+        width: "200px",
         marginLeft: 5,
         padding: "20px"
     },
@@ -118,12 +118,12 @@ const divClass = mergeStyles({
         width: "100px"
     },
     '@media (min-width: 600px) and (max-width: 1000px)': {
-        height: '200px',
-        width: "200px"
+        height: '130px',
+        width: "150px"
     },
     '@media (min-width: 1000px) and (max-width: 2500px)': {
-        height: '140px',
-        width: "250px"
+        height: '120px',
+        width: "200px"
     },
 });
 
@@ -139,7 +139,7 @@ const About: React.FC = () => {
         try {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
 
-             const response =await getRecommendations(promptValue || '')
+            const response =await getRecommendations(promptValue || '')
             // const response = {
             //     "messages": "{\"result\":[{\"brand\": \"Regency\", \"model\": \"SFB20\", \"summary\": \"Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports.\"}, {\"brand\": \"Sun Tracker\", \"model\": \"250 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports.\"}, {\"brand\": \"Tahao\", \"model\": \"DL3 Series\", \"summary\": \"Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System.\"}]}"
             // };
@@ -249,8 +249,8 @@ const About: React.FC = () => {
 
         <div className={styles.chatContainer}>
             {isLoading ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <Spinner styles={{ circle: { height: 40, width: 40, border: "2px solid #FFFFFF" }, label: { color: "#FFFFFF", fontSize: "1rem" } }} label="Loading recommendations..." />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 100px)" }}>
+                    <img src={loading} alt="Logo" className="logo" style={{opacity:"0.3",width:"300px"}} />
                 </div>
             ) : (
                 <Stack className={style.contentMainStackContainer}>
@@ -272,10 +272,12 @@ const About: React.FC = () => {
                                         maxHeight: 150
                                     },
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
-                                        minHeight: 200
+                                        // minHeight: 200
+                                        height:180,
+
                                     },
                                     '@media (max-width: 2500px) and (min-width: 756px)': {
-                                        height:180,
+                                        height:160,
                                         padding: 20,
                                     },
                                     height: "100%", padding: "12px", borderRadius: "20px", backgroundColor: selectedItem === item ? "#FFFFFF" : "#D0D0D0"
@@ -320,7 +322,7 @@ const About: React.FC = () => {
                                             styles={{
                                                 root: {
                                                     '@media (max-width: 600px)': {
-                                                        fontWeight: "700", fontSize: "14px", lineHeight: "20px", fontStyle: "normal",
+                                                        fontWeight: "700", fontSize: "14px", lineHeight: "30px", fontStyle: "normal",
                                                     },
                                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                                         fontWeight: "bold", fontSize: "24px", lineHeight: "20px", fontStyle: "normal",

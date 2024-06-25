@@ -32,21 +32,23 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
       onMouseEnter={() => setShown(true)}
       onMouseLeave={() => setShown(false)}
     >
-      <Stack styles={{ root: { display: "flex", flexDirection: "column", height: "100%"} }}>
+      <Stack styles={{ root: { display: "flex", flexDirection: "column", height: "100%",padding:"0px 0px 10px 0px"} }}>
         <Text styles={{
           root: {
+            height:"25%",
             textAlign: "left",
+            color:"#151B1E",
             '@media (max-width: 600px)': {
               fontWeight: "bold",
               fontSize: "16px",
             },
             '@media (max-width: 1300px) and (min-width: 600px)': {
               fontWeight: "bold",
-              fontSize: "24px",
+              fontSize: "22px",
             },
             '@media (max-width: 2500px) and (min-width: 1300px)': {
               fontWeight: "bold",
-              fontSize: "32px",
+              fontSize: "24px",
             },
           }
         }}>
@@ -54,19 +56,20 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
         </Text>
         <Text styles={{
           root: {
-            letterSpacing:"2px",
             marginTop:"auto",
-            '@media (max-width: 600px)': {
-              fontSize: "15px",
+            color:"#151B1E",
+            '@media (max-width: 575px)': {
+              fontSize: "18px",
               fontWeight: "500",
+              lineHeight:"1.6rem",
             },
             '@media (max-width: 1700px) and (min-width: 600px)': {
-              fontWeight: "500",
-              fontSize: "24px",
+              fontWeight: "400",
+              fontSize: "22px",
             },
             '@media (max-width: 2500px) and (min-width: 1700px)': {
-              fontWeight: "500",
-              fontSize: "36px",
+              fontWeight: "400",
+              fontSize: "28px",
             },
           }
         }}>

@@ -22,10 +22,13 @@ const CustomPrimaryButton: React.FC<Props> = ({ onButtonClick, disabled }) => {
           borderRadius: '100%',
           border: '1.5px solid black',
           marginLeft: 10,
-          height: '54px',
-          width: '54px',
+          height: '58px',
+          width: '58px',
           minWidth: 'auto',
-          '@media all and (max-width:575px)': {}
+          // '@media all and (max-width:575px)': {
+          //   height: '54px',
+          //   width: '54px',
+          // }
         },
         label: {
           display: 'flex',

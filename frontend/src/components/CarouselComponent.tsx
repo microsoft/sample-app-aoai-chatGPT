@@ -3,6 +3,7 @@ import Carousel from "react-spring-3d-carousel";
 import { useSpring, animated } from "react-spring";
 import { useDrag } from "react-use-gesture";
 import { config } from "react-spring";
+import style from "./Card.module.css";
 
 interface Card {
   content: JSX.Element;
@@ -42,7 +43,7 @@ export default function CarouselComponent(props: CarrousselProps) {
   });
 
   return (
-    <div
+    <div className={style.carouselWrapper}
       {...bind()}
       style={{ width: props.width, height: props.height, margin: props.margin, touchAction: 'pan-y' }}
     >

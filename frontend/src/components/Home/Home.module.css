@@ -1,27 +1,22 @@
 .contentStackContainer {
     max-width: 1040px;
     width: 100%;
-    padding: 20px;
     height: 100%;
 }
  
 .resetDiv {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0 20px;
     cursor: pointer;
-    width: 100%;
     color: #FFFFFF;
+    position: absolute;
+    right: -10px;
+    z-index: 5;
 }
  
 .resetButton {
-    height: auto;
     background: #2F3A40;
     color: #FFFFFF;
     border: none;
     border-radius: 50px;
-    /* font-size: 22px; */
     font-size: 18px;
     letter-spacing: 1px;
     font-weight: normal;
@@ -62,8 +57,8 @@
     border: none;
     border-radius: 12px;
     padding: 15px;
-    font-size: 20px;
-    letter-spacing: 1px;
+    font-size: 14px;
+    letter-spacing: 0px;
     font-weight: 600;
 }
  
@@ -73,7 +68,7 @@
     align-items: flex-end;
     justify-content: center;
     width: 100%;
-    padding: 0px 20px;
+    padding: 0px 50px;
 }
  
 .buttonContainer {
@@ -99,7 +94,7 @@
 .mainInputField {
     border-radius: 20px;
     width: 100%;
-    height: 400px;
+    /* height: 400px; */
     background-color: #313F46;
     color: black;
     box-shadow: none;
@@ -107,8 +102,9 @@
 
   .desktopTextField {
     display: flex;
+    flex-direction: column;
     flex: 0 0 35%;
-    padding-top: 108px;
+    padding-top: 60px;
 }
  
 .footer {
@@ -127,14 +123,16 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 20px;
 }
 .mainStackContainer {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
-    width: 80%;
-    gap: 20px;
+    gap: 50px;
+    position: relative;
+    width: 100%;
 }
 @media all and (orientation=portrait){
     .desktopTextField {
@@ -149,9 +147,13 @@
         flex: 0 0 100%;
         height: calc(100vh - 200px);
         overflow-y: auto;
+        margin-top: 0;
     }
     .footer {
         display: flex;
+    }
+    .resetDiv {
+        right: 30px;
     }
 
 }
@@ -163,15 +165,18 @@
     .mainStackTags {
         gap: 10px;
     }
+    .footerMainStack {
+        padding: 0px 20px;
+    }
     .stackitem {
         width: auto;
         min-width: calc(33.33% - 7px);
     }
     .tagButton {
-        font-size: 18px;
+        font-size: 16px;
     }
     .resetButton{
-        padding: 8px 20px;
+        padding: 7px 9px;
     }
 }
 

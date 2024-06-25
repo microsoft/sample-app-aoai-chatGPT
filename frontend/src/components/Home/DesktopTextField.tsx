@@ -3,6 +3,7 @@ import { TextField, PrimaryButton, FontSizes, DefaultButton } from '@fluentui/re
 import { useNavigate } from 'react-router-dom';
 import style from "./Home.module.css"
 import { AppStateContext } from '../../state/AppProvider';
+import { Send16Filled, Send24Filled, Send28Filled } from '@fluentui/react-icons';
  
 interface Props {
   placeholder: string,
@@ -12,10 +13,11 @@ interface Props {
   isButtonRequired?: boolean
   onFocus?: () => void;
   onBlur?: () => void;
-  isTextFieldFocused?: boolean
+  isTextFieldFocused?: boolean;
+  isButtonEnabled?:boolean
 }
  
-const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  promptValue,allowBorder = false, isButtonRequired = true, onFocus, onBlur, isTextFieldFocused = false }) => {
+const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  promptValue,allowBorder = false, isButtonRequired = true, onFocus, onBlur, isTextFieldFocused = false,isButtonEnabled=false }) => {
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -52,6 +54,8 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  prompt
   const navigate = useNavigate();
  
   const handleNavigate = (event: React.MouseEvent<HTMLButtonElement>) => {
+ console.log({isButtonEnabled,inputText,promptValue})
+
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
@@ -82,7 +86,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  prompt
       setIsButtonClicked(false);
     }, 0);
   };
- 
+
   return (
     <div className={style.inputFieldContainer}>
       <div className={style.mainInputField}>
@@ -93,7 +97,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  prompt
             value={inputText}
             resizable={false}
             multiline
-            rows={12}
+            rows={14}
             styles={{
               root: {
                 color: "#000000",
@@ -114,15 +118,15 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  prompt
                 backgroundColor: 'inherit',
                 textOverflow: 'ellipsis',
 
-                fontSize:"24px",
-                fontWeight: 400,
+                fontSize:"16px",
+                fontWeight: 300,
                 overflow: 'hidden',
                 lineHeight: "1.2em",
                 color:"#ffffff",
                 '::placeholder': {
                   color:"#8fa5b0",
                     fontWeight: "300",
-                    fontSize:"22px",
+                    fontSize:"16px",
                 },
               },
             }}
@@ -136,29 +140,39 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick,  prompt
       </div>
       {isButtonRequired && (
         <PrimaryButton
+        disabled={!isButtonEnabled && inputText==="" && promptValue===""}
           styles={
             {
               label:{
+                color:"#515F67",
+                fontWeight:500,
+                fontSize:"20px",
+
                 '@media (max-width: 2500px) and (min-width: 1300px)': {
-                  fontSize:"20px"
                 },
               }
             }
           }
           style={{
             width: "100%",
-            marginTop: 20,
+            // marginTop: 20,
             borderRadius: 10,
-            padding: 25,
+            padding: 22,
             fontSize: "0.875rem",
-            background: "#151B1E",
-            border: "none"
+            background:isButtonEnabled || inputText!=="" || promptValue!=="" ? "#151B1E": "#151B1E",
+            border: "none",
+            boxShadow:"none"
           }}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onClick={handleNavigate}
         >
-          Submit
+          <div style={{display:'flex',alignItems:'center',justifyContent:"center"}}>
+            <span style={{color:(!isButtonEnabled && inputText==="" && promptValue==="") ? '#515F67' :"#FFFFFF",fontSize:"16px",fontWeight:"600",lineHeight:"2rem"}}>
+          Let's Go
+          </span>
+          <Send16Filled color={(!isButtonEnabled && inputText==="" && promptValue==="") ? '#515F67' :"#FFFFFF"} height={"12px"} width={"!2px"} style={{marginLeft:10}} />
+          </div>
         </PrimaryButton>
       )}
       </div>

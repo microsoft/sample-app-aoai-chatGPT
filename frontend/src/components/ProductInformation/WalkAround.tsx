@@ -3,6 +3,7 @@ import CarouselComponent from '../CarouselComponent';
 import uuid from 'react-uuid';
 import { AppStateContext } from '../../state/AppProvider';
 import Card from '../Card';
+import loading from "../../assets/loader.gif"
 import { Spinner, Text } from '@fluentui/react';
 
 interface Walkthrough {
@@ -25,8 +26,8 @@ const WalkAround: React.FC = () => {
   return (
     <>
       {isLoading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <Spinner styles={{ circle: { height: 40, width: 40, border: "2px solid #FFFFFF" }, label: { color: "#FFFFFF", fontSize: "1rem" } }} label="Loading Walk Around..." />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 100px)" }}>
+          <img src={loading} alt="Logo" className="logo" style={{opacity:"0.3",width:"300px"}} />
         </div>
       ) : (
         <>

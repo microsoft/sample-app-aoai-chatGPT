@@ -13,7 +13,10 @@ const iconStyles: IIconProps = {
       fontWeight: 'bold',
       fontSize: '20px',
       color: '#FFFFFF',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      "@media (max-width: 767px)" : {
+        fontSize: '16px',
+      }
     }
   }
 }
