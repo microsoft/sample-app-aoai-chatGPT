@@ -34,39 +34,34 @@
     /* margin-top: 130px; */
     /* margin-bottom: 70px; */
     /* overflow-y: auto; */
-    margin-top: 15px;
-    padding: 20px 0px 0px 0px;
+    padding: 20px 0px 20px 0px;
     /* height: calc(100vh - 200px); */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
- 
+.walkThroughStackContainer{
+    min-height: 350px;
+}
 .contentStackContainer {
     max-width: 1040px;
     padding: 0px 20px;
     display: flex;
     column-gap: 20px;
+    row-gap: 20px;
     flex-direction: row;
     flex-wrap: wrap;
 }
 
 .contentStackContainerWalkthrough {
-    width: 100%;
-    padding: 0px 20px 0px 20px;
+    padding: 40px 0;
+    min-height: calc(100vh - 350px);
 }
  
 .footerMainStackContainer {
-    /* position: sticky; */
-    width: 100%;
-    z-index: 1000;
     color: #fff;
-    /* padding: 20px 20px; */
     text-align: center;
-    /* bottom: 0; */
-    /* display: flex; */
-    /* flex-direction: column; */
-    /* align-items: center; */
+    margin-top: auto;
 }
  
 .footerStackContainer {
@@ -88,7 +83,7 @@
 }
  
 .headingText {
-    color: white;
+    color: #FFFFFF;
     display: flex;
     align-items: flex-start;
     font-size: 26px;
@@ -99,25 +94,26 @@
     width: 100%;
     font-size: large;
     border-radius: 10px;
-    padding: 25px;
+    padding: 30px;
     background: black;
     border: none
 }
- 
-@media (max-width: 767px) {
-    .contentMainStackContainer {
-        /* height: calc(100vh - 220px); */
+
+@media all and (orientation=portrait){
+    .walkThroughStackContainer{
+        min-height: auto;
     }
+
+    .mainStackContainer {
+        width: 100%;
+    }
+}
+@media all and (max-width: 767px) {
  
-    .contentStackContainer {
-        
+    .contentStackContainer {        
         row-gap: 10px;
         flex-direction: column;
         flex-wrap: nowrap;
-    }
- 
-    .headerMainStackContainer {
-        height: 130px;
     }
  
     .headerStackContainer {
@@ -130,13 +126,14 @@
         padding:0px 20px;
     }
  
-    .button {
+    /* .button {
         width: 100%;
         margin-top: 20px;
         height: 56px;
-    }
+    } */
  
     .headingText {
-        font-size: 20px;
+        font-size: 18px;
+        font-weight: 600;
     }
 }

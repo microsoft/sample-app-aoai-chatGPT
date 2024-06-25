@@ -18,7 +18,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ logo, loadingText = '', dur
     return (
         <div className="splash-screen">
             <img src={logo} alt="Logo" className="logo" />
-            <Spinner size={SpinnerSize.large} styles={{
+            {/* <Spinner size={SpinnerSize.large} styles={{
                 label: {
                     color: 'white'
                 },
@@ -30,7 +30,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ logo, loadingText = '', dur
                         height: 60, width: 60
                     },
                 }
-            }} label={loadingText} />
+            }} label={loadingText} /> */}
         </div>
     );
 };

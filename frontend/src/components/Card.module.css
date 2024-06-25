@@ -4,10 +4,9 @@
   /* align-items: center; */
   justify-content: center;
   background-color: #eccb3c;
-  width: 700px;
-  height: 70%;
+  width: 500px;
   min-height: 350px;
-  padding: 20px;
+  padding:30px;
   border-radius: 20px;
 }
 
@@ -34,6 +33,10 @@
   align-items: center;
 }
 
+.carouselWrapper > div > div{
+  align-items: normal;
+}
+
 @media (max-width: 575px) {
   .card {
       display: flex;
@@ -42,6 +45,8 @@
       justify-content: center;
       background-color: #eccb3c;
       width: 320px;
-      border-radius: 10px;
+     padding: 20px;
+
+      border-radius: 20px;
     }
 }

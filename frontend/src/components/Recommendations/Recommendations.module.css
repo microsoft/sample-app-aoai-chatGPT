@@ -12,5 +12,7 @@
     padding: 0px 20px;
 }
 @media all and (orientation=portrait){
-
+    .contentMainStackContainer {
+        width: 100%;
+    }
 }

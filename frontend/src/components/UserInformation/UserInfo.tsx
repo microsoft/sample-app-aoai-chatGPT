@@ -36,11 +36,27 @@ const UserInfo: React.FC = () => {
   };
 
   return (
-    <Stack horizontalAlign='center' tokens={{ childrenGap: 20 }} styles={{ root: { width: "100%", margin: 'auto' , height:"100vh", justifyContent:'center' } }}>
-      <div style={{
-        display: "flex", alignItems: "center", flexDirection: "column",
-        width: "100%", padding: "0px 20px"
+    <Stack horizontalAlign='center'
+      tokens={{ childrenGap: 20 }}
+      styles={{
+        root: {
+          width: "100%",
+          margin: 'auto',
+          height: "calc(100vh - 100px)",
+          '@media (max-width: 600px)': {
+            height: "calc(100vh - 70px)",
+          },
+          justifyContent: 'center'
+        }
       }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "column",
+          width: "100%",
+          padding: "0px 20px"
+        }}>
         <div className={style.userinputField}>
           <div style={textFieldWrapperStyle}>
             <TextField
@@ -86,14 +102,13 @@ const UserInfo: React.FC = () => {
                 backgroundColor: 'transparent',
                 color: "#FFFFFF",
                 borderRadius: 10, border: "none",
-                minWidth:0,
-                padding:"0px 5px"
+                minWidth: 0,
+                padding: "0px 5px"
               }
             }}
           >
             <Send28Filled />
           </PrimaryButton>
-
         </div>
       </div>
     </Stack>
