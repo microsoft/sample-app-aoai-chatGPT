@@ -91,7 +91,7 @@ const Layout = () => {
                 size={40}
                 className={styles.btnToggle}
                 onClick={() => handleToggleSidebar(!toggled)}
-                color="white"
+                color="#334768"
               />
               <img src={ui?.logo ? ui.logo : Contoso} className={styles.headerIcon} aria-hidden="true" alt="" />
               <Link to="/" className={styles.headerTitleContainer}>

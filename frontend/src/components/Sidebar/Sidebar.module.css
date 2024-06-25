@@ -2,3 +2,18 @@
   width: calc(100% - 10px);
   overflow-y: auto;
 }
+
+css-dip3t8::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px; /* or add it to the track */
+}
+
+css-dip3t8::-webkit-scrollbar-track {
+  height: 20px;
+  margin-block: -3px;
+}
+
+css-dip3t8::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+}
