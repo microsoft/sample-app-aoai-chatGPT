@@ -17,6 +17,22 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
   return response
 }
 
+export async function uploadFileToIndex(event: any): Promise<null> {
+  const fd = new FormData()
+  console.log(event)
+  const file = event.target.files[0]
+  console.log(file)
+  fd.append("file", file)
+  let response = fetch('/indexupload', {
+    method: 'POST',
+    body: fd,
+    //headers: {
+    //  'Content-Type': 'multipart/form-data',
+    //},
+  })
+  return null
+}
+
 export async function getUserInfo(): Promise<UserInfo[]> {
   const response = await fetch('/.auth/me')
   if (!response.ok) {

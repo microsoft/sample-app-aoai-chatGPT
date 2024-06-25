@@ -14,6 +14,8 @@ from quart import (
     render_template,
 )
 
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.formrecognizer import DocumentAnalysisClient
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
     DefaultAzureCredential,
@@ -833,6 +835,29 @@ async def ensure_cosmos():
             )
         else:
             return jsonify({"error": "CosmosDB is not working"}), 500
+
+@bp.route("/indexupload", methods=["GET", "POST"])
+async def upload_to_index():
+    for name, file in (await request.files).items():
+        print(f'Processing {name}: {len(file.read())}')
+        credential = AzureKeyCredential("254a5a937d6a4975bf7ed705d75c6a42")
+        document_analysis_client = DocumentAnalysisClient("https://sbd-ea-useast2-sbx-formrecognizer.cognitiveservices.azure.com/", credential)
+
+        # The local file path to the document you want to analyze
+        document_path = r""
+        # Submitting the document for analysis
+        analyze_result = document_analysis_client.begin_analyze_document("prebuilt-layout", document=file).result()
+        
+        # Convert the analysis result to JSON
+        result_json = analyze_result.to_dict()
+        with open("temp/analyze_result.json", "w") as f:
+            json.dump(result_json, f, indent=4)
+
+        # Save the JSON to a local file
+        output_json_path = r""
+        with open(output_json_path, "w") as output_file:
+            json.dump(result_json, output_file, indent=4)
+        print("Analysis result saved to:", output_json_path)
 
 
 async def generate_title(conversation_messages):

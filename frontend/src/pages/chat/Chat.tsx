@@ -32,7 +32,8 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
-  AzureSqlServerCodeExecResult
+  AzureSqlServerCodeExecResult,
+  uploadFileToIndex
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -732,7 +733,8 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     )
   }
-
+  const fileUpload = useRef<HTMLInputElement>(null)
+  
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -841,6 +843,10 @@ const Chat = () => {
                 </Stack>
               )}
               <Stack>
+              <div className="sidebar-header" onClick={() => {fileUpload.current?.click()}} role="button">
+                <button>Upload File</button>
+                <input ref={fileUpload} type="file" onChange={uploadFileToIndex} hidden={true}/>
+              </div>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
                     role="button"
