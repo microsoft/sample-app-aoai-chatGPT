@@ -4,6 +4,7 @@ import os
 import logging
 import uuid
 import httpx
+from func import list_blob_filenames_CDN_urls
 from quart import (
     Blueprint,
     Quart,
@@ -52,6 +53,11 @@ async def index():
         favicon=app_settings.ui.favicon
     )
 
+@bp.route("/filenames_cdn_urls", methods=["GET"])
+async def get_filenames_urls():
+    container_name = 'webpage-ley73'
+    conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
+    return await list_blob_filenames_CDN_urls(conn_str, container_name)
 
 @bp.route("/favicon.ico")
 async def favicon():
@@ -791,7 +797,6 @@ async def clear_messages():
     except Exception as e:
         logging.exception("Exception in /history/clear_messages")
         return jsonify({"error": str(e)}), 500
-
 
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
