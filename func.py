@@ -132,9 +132,9 @@ def generate_sas_url_for_blob_with_inline(connection_string, container_name, blo
     return blob_url
 
 
-container_name = "webpage-ley73"
-x = list_blob_filenames_CDN_urls(connection_string, container_name)
-print(x)
+# container_name = "webpage-ley73"
+# x = list_blob_filenames_CDN_urls(connection_string, container_name)
+# print(x)
 
 
 # sas_url = generate_sas_url_for_blob(connection_string, container_name, blob_name)
