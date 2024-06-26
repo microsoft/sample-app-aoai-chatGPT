@@ -2,14 +2,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 
 .chatRoot {
   flex: 1;
   display: flex;
   margin-top: 0px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   margin-left: 20px;
   margin-right: 20px;
   gap: 5px;
@@ -56,14 +55,17 @@
   font-size: 16px;
   line-height: 150%;
   align-items: flex-end;
-  text-align: center;
+  text-align: left;
   letter-spacing: -0.01em;
   color: #616161;
+  max-width: 600px;
+  padding: 0 10px;
 }
 
 .chatIcon {
   height: 62px;
   width: auto;
+  margin-top: 36px;
 }
 
 .chatMessageStream {
@@ -102,6 +104,7 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 80%;
+  flex-wrap: wrap;
 }
 
 .chatMessageGpt {
@@ -385,4 +388,19 @@ a {
   .citationPanel {
     max-width: 100%;
   }
+}
+
+.chatEmptyStateSubtitle a {
+  padding: 0;
+}
+
+.chatMessageUserAttachment {
+  flex-basis: 100%;
+}
+
+.userAttachmentDisclaimer {
+  font-size: 12px;
+  color: #707070;
+  flex-basis: 100%;
+  margin-top: 10px;
 }

@@ -32,12 +32,23 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
+<<<<<<< HEAD
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+=======
+  AzureSqlServerCodeExecResult
+} from '../../api'
+import { Answer } from '../../components/Answer'
+import { QuestionInput } from '../../components/QuestionInput'
+import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
+import { AppStateContext } from '../../state/AppProvider'
+import { useBoolean } from '@fluentui/react-hooks'
+import { FileType, UploadedFile } from '../../custom/fileUploadUtils'
+>>>>>>> 72317a5 (feat: add PDF upload)
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -166,7 +177,11 @@ const Chat = () => {
     }
   }
 
-  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithoutCosmosDB = async (
+    question: string,
+    conversationId?: string,
+    uploadedFile?: UploadedFile
+  ) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -176,7 +191,8 @@ const Chat = () => {
       id: uuid(),
       role: 'user',
       content: question,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      uploaded_file: uploadedFile
     }
 
     let conversation: Conversation | null | undefined
@@ -290,7 +306,7 @@ const Chat = () => {
     return abortController.abort()
   }
 
-  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string, uploadedFile?: UploadedFile) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -712,22 +728,21 @@ const Chat = () => {
   }
 
   const parsePlotFromMessage = (message: ChatMessage) => {
-    if (message?.role && message?.role === "tool") {
+    if (message?.role && message?.role === 'tool') {
       try {
-        const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
-        const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
+        const execResults = JSON.parse(message.content) as AzureSqlServerExecResults
+        const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result
         if (codeExecResult === undefined) {
-          return null;
+          return null
         }
-        return codeExecResult;
-      }
-      catch {
-        return null;
+        return codeExecResult
+      } catch {
+        return null
       }
       // const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
       // return execResults.all_exec_results.at(-1)?.code_exec_result;
     }
-    return null;
+    return null
   }
 
   const disabledButton = () => {
@@ -775,7 +790,9 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                <h2
+                  className={styles.chatEmptyStateSubtitle}
+                  dangerouslySetInnerHTML={{ __html: ui?.chat_description ?? '' }}></h2>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
@@ -783,7 +800,21 @@ const Chat = () => {
                   <>
                     {answer.role === 'user' ? (
                       <div className={styles.chatMessageUser} tabIndex={0}>
-                        <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                        <div className={styles.chatMessageUserMessage}>
+                          {answer.uploaded_file != null &&
+                            answer.uploaded_file.type === FileType.Image &&
+                            answer.uploaded_file.contents && (
+                              <div className={styles.chatMessageUserAttachment}>
+                                <img width="100" height="auto" src={answer.uploaded_file.contents} alt=""></img>
+                              </div>
+                            )}
+                          <div>{answer.content}</div>
+                          {answer.uploaded_file != null && answer.uploaded_file.contents && (
+                            <div className={styles.userAttachmentDisclaimer}>
+                              {answer.uploaded_file.name} is being referenced
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : answer.role === 'assistant' ? (
                       <div className={styles.chatMessageGpt}>
@@ -816,7 +847,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: 'Generating answer...',
                           citations: [],
                           plotly_data: null
                         }}
@@ -915,10 +946,10 @@ const Chat = () => {
                 clearOnSend
                 placeholder="Type a new question..."
                 disabled={isLoading}
-                onSend={(question, id) => {
+                onSend={(question, id, uploadedFile) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                    ? makeApiRequestWithCosmosDB(question, id)
-                    : makeApiRequestWithoutCosmosDB(question, id)
+                    ? makeApiRequestWithCosmosDB(question, id, uploadedFile)
+                    : makeApiRequestWithoutCosmosDB(question, id, uploadedFile)
                 }}
                 conversationId={
                   appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
@@ -984,30 +1015,43 @@ const Chat = () => {
                 />
               </Stack>
               <Stack horizontalAlign="space-between">
-                {execResults.map((execResult) => {
+                {execResults.map(execResult => {
                   return (
                     <Stack className={styles.exectResultList} verticalAlign="space-between">
-                      <><span>Intent:</span> <p>{execResult.intent}</p></>
-                      {execResult.search_query && <><span>Search Query:</span>
-                        <SyntaxHighlighter
-                          style={nord}
-                          wrapLines={true}
-                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
-                          language="sql"
-                          PreTag="p">
-                          {execResult.search_query}
-                        </SyntaxHighlighter></>}
-                      {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
-                      {execResult.code_generated && <><span>Code Generated:</span>
-                        <SyntaxHighlighter
-                          style={nord}
-                          wrapLines={true}
-                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
-                          language="python"
-                          PreTag="p">
-                          {execResult.code_generated}
-                        </SyntaxHighlighter>
-                      </>}
+                      <>
+                        <span>Intent:</span> <p>{execResult.intent}</p>
+                      </>
+                      {execResult.search_query && (
+                        <>
+                          <span>Search Query:</span>
+                          <SyntaxHighlighter
+                            style={nord}
+                            wrapLines={true}
+                            lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                            language="sql"
+                            PreTag="p">
+                            {execResult.search_query}
+                          </SyntaxHighlighter>
+                        </>
+                      )}
+                      {execResult.search_result && (
+                        <>
+                          <span>Search Result:</span> <p>{execResult.search_result}</p>
+                        </>
+                      )}
+                      {execResult.code_generated && (
+                        <>
+                          <span>Code Generated:</span>
+                          <SyntaxHighlighter
+                            style={nord}
+                            wrapLines={true}
+                            lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                            language="python"
+                            PreTag="p">
+                            {execResult.code_generated}
+                          </SyntaxHighlighter>
+                        </>
+                      )}
                     </Stack>
                   )
                 })}

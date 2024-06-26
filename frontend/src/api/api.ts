@@ -1,15 +1,39 @@
 import { chatHistorySampleData } from '../constants/chatHistory'
+import { FileType, UploadedFile } from '../custom/fileUploadUtils'
 
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+  const formatContent = (message: any) => {
+    const apiMessage = structuredClone(message)
+
+    const uploadedFile = apiMessage.uploaded_file as UploadedFile | undefined | null
+    if (uploadedFile != null && uploadedFile.contents) {
+      if (uploadedFile.type === FileType.Image) {
+        apiMessage.content = [
+          { type: 'image_url', image_url: { url: uploadedFile.contents } },
+          { type: 'text', text: apiMessage.content }
+        ]
+      } else if (uploadedFile.type === FileType.Pdf) {
+        apiMessage.content = [
+          {
+            type: 'text',
+            text: `Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
+          },
+          { type: 'text', text: apiMessage.content }
+        ]
+      }
+    }
+    return apiMessage
+  }
+
   const response = await fetch('/conversation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      messages: options.messages
+      messages: options.messages.map(formatContent)
     }),
     signal: abortSignal
   })

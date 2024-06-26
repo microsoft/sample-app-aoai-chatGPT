@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
+import pdfToText from 'react-pdftotext'
 
 import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
+import { ACCEPTED_FILE_TYPES, FileType, UploadedFile } from '../../custom/fileUploadUtils'
 
 interface Props {
-  onSend: (question: string, id?: string) => void
+  onSend: (question: string, id?: string, uploadedFile?: UploadedFile) => void
   disabled: boolean
   placeholder?: string
   clearOnSend?: boolean
@@ -16,20 +18,61 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [fileError, setFileError] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
       return
     }
 
-    if (conversationId) {
-      onSend(question, conversationId)
-    } else {
-      onSend(question)
+    const send = (uploadedFile?: UploadedFile) => {
+      if (conversationId) {
+        onSend(question, conversationId, uploadedFile)
+      } else {
+        onSend(question, undefined, uploadedFile)
+      }
+
+      if (clearOnSend) {
+        setQuestion('')
+        setSelectedFile(null)
+        if (fileInputRef?.current?.value) {
+          fileInputRef.current.value = ''
+        }
+      }
     }
 
-    if (clearOnSend) {
-      setQuestion('')
+    if (selectedFile) {
+      if (selectedFile.type === 'application/pdf') {
+        pdfToText(selectedFile)
+          .then(extractedText => {
+            if (extractedText.length === 0) {
+              setFileError('Could not read text from PDF. Please try uploading a different file.')
+            } else {
+              send({
+                name: selectedFile.name,
+                type: FileType.Pdf,
+                contents: extractedText
+              })
+            }
+          })
+          .catch(_error => {
+            setFileError('Failed to upload PDF. Please try uploading a different file.')
+          })
+      } else {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          send({
+            name: selectedFile.name,
+            type: FileType.Image,
+            contents: reader.result as string
+          })
+        }
+        reader.readAsDataURL(selectedFile)
+      }
+    } else {
+      send()
     }
   }
 
@@ -44,10 +87,33 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     setQuestion(newValue || '')
   }
 
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setFileError('File size exceeds 5MB limit.')
+        setSelectedFile(null)
+      } else {
+        setFileError('')
+        setSelectedFile(file)
+      }
+    }
+  }
+
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
     <Stack horizontal className={styles.questionInputContainer}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_FILE_TYPES.join(',')}
+        onChange={onFileChange}
+        disabled={disabled}
+        className={styles.fileInput}
+      />
+      {fileError && <div className={styles.errorText}>{fileError}</div>}
       <TextField
         className={styles.questionInputTextArea}
         placeholder={placeholder}

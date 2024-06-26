@@ -25,11 +25,13 @@
   position: absolute;
   right: 24px;
   bottom: 20px;
+  z-index: 2;
 }
 
 .questionInputSendButton {
   width: 24px;
   height: 23px;
+  cursor: pointer;
 }
 
 .questionInputSendButtonDisabled {
@@ -61,4 +63,21 @@
   .questionInputContainer {
     left: 16.5%;
   }
+}
+
+.fileInput {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 1;
+}
+
+input.fileInput::file-selector-button {
+  font-weight: 700;
+  color: #005ea2;
+  padding: 12px 20px;
+  border: 2px solid #005ea2;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
 }
