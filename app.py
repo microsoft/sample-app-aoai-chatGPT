@@ -54,13 +54,22 @@ async def index():
     )
 
 @bp.route("/filenames_cdn_urls", methods=["GET"])
-async def get_filenames_urls():
+def get_filenames_urls():
     try:
         container_name = 'webpage-ley73'
         conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
-        return await list_blob_filenames_CDN_urls(conn_str, container_name), 200
+        filenames_with_urls = list_blob_filenames_CDN_urls(conn_str, container_name)
+        return jsonify(filenames_with_urls), 200
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500
+
+# async def get_filenames_urls():
+#     try:
+#         container_name = 'webpage-ley73'
+#         conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
+#         return await list_blob_filenames_CDN_urls(conn_str, container_name), 200
+#     except Exception as ex:
+#         return jsonify({"error": str(ex)}), 500
 
 @bp.route("/favicon.ico")
 async def favicon():
