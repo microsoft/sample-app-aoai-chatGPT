@@ -57,7 +57,7 @@ async def index():
 async def get_filenames_urls():
     try:
         container_name = 'webpage-ley73'
-        conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
+        conn_str = "DefaultEndpointsProtocol=https;AccountName=strag062kuf;AccountKey=EqNTyx5pZE/S47jFROlCEMfFnmHRytCaZ8xNWo93ypsEIp+K0x6FXbz3a8RshCDAryqSsQVGn1HN+AStOBPyiw==;EndpointSuffix=core.windows.net"
 
         # Debugging: Print connection string and container name
         print(f"Connection String: {conn_str}")
