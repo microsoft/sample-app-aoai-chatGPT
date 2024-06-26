@@ -13,6 +13,7 @@ import InputLevel2 from './components/Home/InputLevel2'
 import Recommendations from './components/Recommendations/Recommendations'
 import ProductInformation from './components/ProductInformation/ProductInformation'
 import Feedback from './components/Feedback/Feedback'
+import PreventBackNavigation from './components/common/PreventBackNavigation'
 
 initializeIcons()
 
@@ -21,6 +22,7 @@ export default function App() {
   return (
     <AppStateProvider>
       <HashRouter>
+      <PreventBackNavigation />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Chat />} />

@@ -124,12 +124,14 @@ const ProductInformation: React.FC = () => {
   }
 
   return (
-    <div className={styles.chatContainer}>
+    // <div className={styles.chatContainer}>
       <Stack className={style.mainStackContainer}>
         <Stack className={style.headerMainStackContainer}>
           <Stack className={style.headerStackContainer}>
             <div className={style.headingDiv}>
+              <div className={style.backButton}>
               <BackButton onClick={() => navigate('/recommendations')}></BackButton>
+              </div>
               <Text
                 className={style.headingText}>Details</Text>
             </div>
@@ -245,9 +247,10 @@ const ProductInformation: React.FC = () => {
           </Stack>
         </Stack>
         <Stack
-          className={selectedOption === 'WalkAround' ? style.contentStackContainerWalkthrough :style.contentMainStackContainer} style={{ justifyContent: selectedOption === 'WalkAround' ? 'center' : '' }}>
+          className={selectedOption === 'WalkAround' ? style.contentStackContainerWalkthrough :style.contentMainStackContainer} 
+          style={{ justifyContent: isLoading && selectedOption !== 'WalkAround' ? "center" : "" }}
+          >
           <Stack
-            style={{ height: isLoading ? "100%" : "" }}
             className={selectedOption !== 'WalkAround' ? style.contentStackContainer : style.walkThroughStackContainer}
           // style={{ height:selectedOption==="WalkAround" ? "70%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px" }}
           // tokens={{ childrenGap: 10 }}
@@ -289,24 +292,27 @@ const ProductInformation: React.FC = () => {
             <PrimaryButton
             styles={{root:{
               boxShadow: 'none',
-              border: '2px solid #1d262a !important' ,
+              border: '0px solid black !important' ,
               selectors: {
                 ':hover': {
-                  background: 'black !important'
+                  background: 'black !important',
+                  border:"none !important"
                 },
                 ':active': {
-                  background: '#202a2f'
+                  background: '#202a2f',
+                  border:"none !important"
                 },
                 ':focus': {
-                  background: 'transparent'
+                  background: 'transparent',
+                  border:"none !important"
                 }
               }
             }}}
-            className={style.button} disabled = {isLoading} onClick={handleNextClick}>Done</PrimaryButton>
+            className={style.button} disabled = {isLoading} onClick={handleNextClick}>I'm Done</PrimaryButton>
           </Stack>
         </Stack>
       </Stack>
-    </div>
+    // </div>
   );
 };
  

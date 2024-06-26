@@ -8,14 +8,18 @@ const iconStyles: IIconProps = {
   iconName: 'Back',
   styles: {
     root: {
-      marginRight: 20,
+      padding:"7px 12px",
+      background:"#2F3A40",
       marginTop: 4,
+      marginRight: 40,
+      borderRadius:"4px",
       fontWeight: 'bold',
       fontSize: '20px',
       color: '#FFFFFF',
       cursor: 'pointer',
       "@media (max-width: 767px)" : {
         fontSize: '16px',
+        marginRight: 20,
       }
     }
   }

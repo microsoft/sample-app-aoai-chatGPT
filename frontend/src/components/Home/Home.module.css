@@ -8,7 +8,7 @@
     cursor: pointer;
     color: #FFFFFF;
     position: absolute;
-    right: -10px;
+    right: 30px;
     z-index: 5;
 }
  
@@ -38,17 +38,19 @@
 }
  
 .mainStackTags {
-    display: -webkit-inline-box;
+    display: inline-flex;
+    flex-direction: row;
     gap: 20px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 28px;
 }
 .mainStackTags:last-of-type{
     margin-bottom: 0;
 }
  
 .stackitem {
-    width: calc((100% / 3) - 14px);
+    min-width: calc((100% / 3) - 14px);
+    max-width: fit-content;
 }
  
 .tagButton {
@@ -68,7 +70,7 @@
     align-items: flex-end;
     justify-content: center;
     width: 100%;
-    padding: 0px 50px;
+    padding: 0px 30px;
 }
  
 .buttonContainer {
@@ -119,7 +121,7 @@
     margin: 0 auto;
 }
 .mainContentStackContainer {
-    flex: 0 0 65%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -133,41 +135,30 @@
     gap: 50px;
     position: relative;
     width: 100%;
+    padding: 0 30px;
 }
-@media all and (orientation=portrait){
+@media all and (orientation:portrait){
     .desktopTextField {
         display: none;
     }
-    .mainStackContainer{
-        max-width: 1040px;
-        width: 100%;
-        gap: 0;
-    }
     .mainContentStackContainer{
         flex: 0 0 100%;
-        height: calc(100vh - 200px);
+        height: calc(100vh - 190px);
         overflow-y: auto;
         margin-top: 0;
     }
     .footer {
         display: flex;
     }
-    .resetDiv {
-        right: 30px;
-    }
 
 }
 
 @media all and (max-width:575px){
-    .contentStackContainer {
-        padding: 30px 20px 0px 20px;
-    }
+
     .mainStackTags {
         gap: 10px;
     }
-    .footerMainStack {
-        padding: 0px 20px;
-    }
+
     .stackitem {
         width: auto;
         min-width: calc(33.33% - 7px);
@@ -180,7 +171,7 @@
     }
 }
 
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
     width: 12px;
 }
 
@@ -192,4 +183,6 @@
 ::-webkit-scrollbar-thumb {
     border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
-}
+} */
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css');

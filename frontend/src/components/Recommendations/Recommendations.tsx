@@ -125,6 +125,10 @@ const divClass = mergeStyles({
         height: '120px',
         width: "200px"
     },
+    '.ms-Image > img':{
+        width:"100%",
+        objectFit:"contain"
+    }
 });
 
 const About: React.FC = () => {
@@ -260,7 +264,7 @@ const About: React.FC = () => {
                             <div className={commonStyle.headingDiv}>
                                 <BackButton onClick={() => navigate("/")}></BackButton>
                                 <Text
-                                    className={commonStyle.headingText}>Top Recommendations for this store</Text>
+                                    className={commonStyle.headingText}>Top Recommendations</Text>
                             </div>
                             </div>
                         )}
@@ -268,9 +272,9 @@ const About: React.FC = () => {
                             <DefaultButton key={index} styles={{
                                 root: {
                                     width: '100%',
-                                    '@media (max-width: 600px)': {
-                                        maxHeight: 150
-                                    },
+                                    // '@media (max-width: 600px)': {
+                                    //     maxHeight: 150
+                                    // },
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                         // minHeight: 200
                                         height:180,
@@ -285,9 +289,9 @@ const About: React.FC = () => {
                             }} onClick={() => handleNextClick(item.model,item.brand)}>
                                 <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 10 }} style={{ width: "100%" }} styles={{
                                     root: {
-                                        '@media (max-width: 600px)': {
-                                            maxHeight: 150
-                                        },
+                                        // '@media (max-width: 600px)': {
+                                        //     maxHeight: 150
+                                        // },
                                         '@media (max-width: 1000px) and (min-width: 600px)': {
                                             minHeight: 200
                                         },
@@ -306,31 +310,29 @@ const About: React.FC = () => {
                                     </div>
  
                                     <Stack tokens={{ childrenGap: 10 }}
-                                        style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "100%", marginLeft: 15 }}
+                                        style={{ display: "flex", alignItems: "start", justifyContent: "center", textAlign: "initial", width: "100%", marginLeft: 0, padding:"15px 0px 15px 15px", }}
                                         styles={{
                                             root: {
                                                 '@media (max-width: 1000px)': {
-                                                    marginLeft: 10
                                                 },
                                                 '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                                    marginLeft: 20,
-                                                    padding: "18px"
                                                 },
                                             }
                                         }}>
                                         <Text
                                             styles={{
                                                 root: {
+                                                    marginBottom: 10,
+                                                    fontWeight: "bold",
                                                     '@media (max-width: 600px)': {
-                                                        fontWeight: "700", fontSize: "14px", lineHeight: "30px", fontStyle: "normal",
+                                                        fontSize: "14px", lineHeight: "18px"
                                                     },
                                                     '@media (max-width: 1000px) and (min-width: 600px)': {
-                                                        fontWeight: "bold", fontSize: "24px", lineHeight: "20px", fontStyle: "normal",
-                                                        marginBottom: 20
+                                                        fontSize: "18px", lineHeight: "22px"
                                                     },
                                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                                        fontWeight: "bold", fontSize: "20px", lineHeight: "20px", fontStyle: "normal",
-                                                        marginBottom: 20
+                                                         fontSize: "20px", lineHeight: "24px"
+                                                        
                                                     },
                                                 }
                                             }}
@@ -338,15 +340,15 @@ const About: React.FC = () => {
                                         <Text
                                             styles={{
                                                 root: {
-                                                    marginTop: 0,
+                                                    marginTop: 0,fontSize: "16px", lineHeight: "24px",
                                                     '@media (max-width: 600px)': {
-                                                        fontWeight: "500", fontSize: "12px", lineHeight: "18px", fontStyle: "normal",
+                                                        fontSize: "12px", lineHeight: "18px",
                                                     },
                                                     '@media (max-width: 1000px) and (min-width: 600px)': {
-                                                        fontWeight: "500", fontSize: "18px", lineHeight: "30px", fontStyle: "normal",
+                                                        fontSize: "14px", lineHeight: "22px",
                                                     },
                                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                                        fontWeight: "500", fontSize: "16px", lineHeight: "24px", fontStyle: "normal",
+                                                        // fontSize: "16px", lineHeight: "24px",
                                                     },
                                                 }
                                             }}

@@ -11,7 +11,7 @@ const FlashCard: React.FC = () => {
   return (
     <>
       {isLoading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 100px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
           <img src={loading} alt="Logo" className="logo" style={{opacity:"0.3",width:"300px"}} />
         </div>
       ) : (
@@ -52,6 +52,14 @@ const FlashCard: React.FC = () => {
                         display:'block'
 
                       },
+                      '@media (max-width: 1000px) and (min-width: 600px)': {
+                        fontWeight: '700',
+                        fontSize: "18px",
+                        lineHeight: "22px",
+                        marginBottom: "8px",
+                        display:'block'
+
+                      },
                       '@media (max-width: 600px)': {
                         marginBottom: "12px",
                         fontWeight: '700', fontSize: "16px", lineHeight: "20px",
@@ -63,16 +71,16 @@ const FlashCard: React.FC = () => {
                 <Stack.Item >
                   <Text style={{ color: '#2D3F2B' }} styles={{
                     root: {
-                      fontWeight: '600',
+                      fontWeight: '500',
                       fontSize: "18px",
-                      lineHeight: "28px",
+                      lineHeight: "25px",
 
                       '@media (max-width: 600px)': {
                         fontWeight: 500, fontSize: "16px", lineHeight: "20px",
                       },
 
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
-                        fontWeight: '600',
+                        fontWeight: '500',
                         fontSize: "16px",
                         lineHeight: "22px"
                       },
