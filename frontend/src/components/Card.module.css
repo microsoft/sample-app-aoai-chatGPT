@@ -5,9 +5,10 @@
   justify-content: center;
   background-color: #eccb3c;
   width: 500px;
-  min-height: 350px;
+  /* min-height: 350px; */
   padding:30px;
   border-radius: 20px;
+  overflow: hidden;
 }
 
 .card img {
@@ -49,4 +50,21 @@
 
       border-radius: 20px;
     }
+}
+
+.cardTitle {
+  text-align: left;
+  color: #151B1E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* Single line truncation */
+}
+.cardDetail {
+  color: #151B1E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 13; /* Number of lines to show */
+  -webkit-box-orient: vertical;
+  white-space: normal; /* Allow wrapping for line clamping */
 }

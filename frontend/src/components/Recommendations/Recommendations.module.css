@@ -9,10 +9,14 @@
     width: 100%;
     max-width: 1040px;
     gap:15px;
-    padding: 0px 20px;
+    padding: 0px 30px;
 }
 @media all and (orientation=portrait){
     .contentMainStackContainer {
         width: 100%;
-    }
+}
+.contentStackContainer {
+    padding: 0px 20px;
+
+}
 }

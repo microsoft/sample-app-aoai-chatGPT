@@ -85,6 +85,22 @@
   background: #d1d1d1;
 }
  
+.comboBoxField {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  border-radius: 35px;
+  padding: 15px;
+  background-color: #313F46;
+  box-shadow: none;
+  border: 2px solid #378588;
+  margin-bottom: 16px;
+}
+
+.comboBoxWrapper {
+  flex: 1;
+}
 .copyButton {
   color: #424242;
 }

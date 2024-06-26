@@ -26,9 +26,9 @@ const WalkAround: React.FC = () => {
   return (
     <>
       {isLoading ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 100px)" }}>
+        // <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 100px)" }}>
           <img src={loading} alt="Logo" className="logo" style={{opacity:"0.3",width:"300px"}} />
-        </div>
+        // </div>
       ) : (
         <>
           {walkthroughData && walkthroughData?.length > 0 ? (

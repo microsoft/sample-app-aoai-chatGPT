@@ -5,13 +5,14 @@ import styles from '../../pages/chat/Chat.module.css';
 import { ThumbDislikeRegular, ThumbLikeRegular } from '@fluentui/react-icons';
 import { sendFeedback } from '../../api';
 import { AppStateContext } from '../../state/AppProvider';
- 
+import style from "./Feedback.module.css";
+
 const Feedback: React.FC = () => {
     const [feedback, setFeedback] = useState<string>('');
     const appStateContext = useContext(AppStateContext);
- 
+
     const conversationId = appStateContext?.state?.conversationId;
- 
+
     const navigate = useNavigate();
     const [selectedButton, setSelectedButton] = useState<string>("");
     const [showThankYou, setShowThankYou] = useState<boolean>(false);
@@ -26,21 +27,21 @@ const Feedback: React.FC = () => {
     const textFieldStyle: React.CSSProperties = {
         flex: 1,
         width: "100%",
-        height:"300px",
+        height: "300px",
         border: 'none',
         outline: 'none',
         backgroundColor: 'inherit',
     };
- 
+
     const textFieldWrapperStyle: React.CSSProperties = {
         flex: 1,
         borderRadius: '25px',
     };
- 
+
     const handleFeedbackChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         setFeedback(newValue || '');
     };
- 
+
     const handleSubmit = () => {
         console.log(conversationId)
         sendFeedback(feedback, selectedButton, conversationId || "")
@@ -48,30 +49,26 @@ const Feedback: React.FC = () => {
         setSelectedButton('');
         setShowThankYou(true);
     };
- 
+
     const handleNaviagte = () => {
         navigate("/");
     }
- 
+
     const handleIconClick = (selectedValue: string): void => {
         setSelectedButton(selectedValue);
     }
- 
+
     return (
-        <div style={{
-            display:"flex",
-            alignItems:"center",
-            justifyContent:"center",
-        }}>
+        <div className={style.mainContainer}>
             <Stack
                 horizontalAlign="center"
                 verticalAlign={"center"}
                 styles={{
                     root: {
-                        height: '100vh', marginTop: !showThankYou ? "0px" : "0px",
-                        width:"100%",
+                        height: '100%', marginTop: !showThankYou ? "0px" : "0px",
+                        width: "100%",
                         maxWidth: "500px",
-                        padding:"50px 20px"
+                        padding: "0px 20px"
                     }
                 }}
                 tokens={{ childrenGap: 30 }}
@@ -81,7 +78,7 @@ const Feedback: React.FC = () => {
                         <Text variant="xxLarge" style={{ color: "#FFFFFF", marginBottom: 20 }}
                             styles={{
                                 root: {
-                                    marginBottom:20,
+                                    marginBottom: 20,
                                     '@media (max-width: 600px)': {
                                         fontSize: "18px"
                                     },
@@ -99,10 +96,10 @@ const Feedback: React.FC = () => {
                                 root: {
                                     '@media (max-width: 600px)': {
                                         // height: "50px"
-                                        width:"fit-content",
-                                        padding:"20px 30px"
+                                        width: "fit-content",
+                                        padding: "20px 30px"
                                     },
-                                    padding:"30px 30px"
+                                    padding: "30px 30px"
 
                                 },
                                 label: {
@@ -111,24 +108,24 @@ const Feedback: React.FC = () => {
                                     },
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                         fontSize: "1.25rem"
- 
- 
+
+
                                     },
                                     '@media (max-width: 2500px) and (min-width: 1000px)': {
                                         fontSize: "24px"
                                     },
                                 }
                             }}
-                            style={{  borderRadius: 10,  background: 'black', border: "none" }} onClick={handleNaviagte}>Go to Home</PrimaryButton>
+                            style={{ borderRadius: 10, background: 'black', border: "none" }} onClick={handleNaviagte}>Go to Home</PrimaryButton>
                     </Stack>
                 ) : (
                     <>
-                        <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center" style={{marginBottom:5}}>
+                        <Stack tokens={{ childrenGap: 10 }} horizontalAlign="center" style={{ marginBottom: 5 }}>
                             <Text styles={{
                                 root: {
                                     '@media (max-width: 1000px)': {
                                         fontSize: "18px"
- 
+
                                     },
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                         fontSize: "24px",
@@ -229,7 +226,7 @@ const Feedback: React.FC = () => {
                                     background: "#232e34",
                                     borderRadius: 20,
                                     // ":hover": {
-                                        border: "1px solid black"
+                                    border: "1px solid black"
                                     // }
                                 },
                                 fieldGroup: {
@@ -244,14 +241,14 @@ const Feedback: React.FC = () => {
                                     lineHeight: "1.6em",
                                     color: "white",
                                     '@media (max-width: 1000px)': {
-                                        fontSize: "14px"
+                                        fontSize: "18px"
                                     },
                                     '@media (max-width: 1500px) and (min-width: 1000px)': {
                                         fontSize: "28px",
                                         marginLeft: 10
                                     },
                                     '@media (max-width: 2500px) and (min-width: 1500px)': {
-                                        fontSize: "24px",
+                                        fontSize: "22px",
                                         marginLeft: 10
                                     },
                                     padding: 20, selectors: {
@@ -280,32 +277,26 @@ const Feedback: React.FC = () => {
                             <PrimaryButton
                                 styles={{
                                     root: {
-                                        fontSize: "0.875rem",
+                                        color: "#FFFFFF",
+                                        padding: 32,
                                         '@media (max-width: 600px)': {
-                                            height: "50px",
-                                        },
-                                        '@media (max-width: 1000px) and (min-width: 600px)': {
-                                            height: "70px",
-                                        },
-                                        '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                            height: "80px",
+                                            padding:"27px"
                                         },
                                     },
                                     label: {
-                                        '@media (max-width: 1000px) and (min-width: 600px)': {
-                                            fontSize: "20px",
+                                        '@media (max-width: 600px)': {
+                                            fontSize: "18px",
                                         },
-                                        '@media (max-width: 2500px) and (min-width: 1000px)': {
-                                            fontSize: "24px",
-                                        },
+                                        fontSize: "20px",
+                                        fontWeight: 600,
                                     }
                                 }}
-                                disabled={!selectedButton && feedback === ""} style={{ width: "100%", fontSize: "0.875rem", borderRadius: 10, padding: 20, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
+                                disabled={!selectedButton && feedback === ""} style={{ width: "100%", borderRadius: 10, background: 'black', border: "none" }} onClick={handleSubmit}>Submit</PrimaryButton>
                         </Stack>
                     </>)}
             </Stack>
-            </div>
+        </div>
     );
 };
- 
+
 export default Feedback;

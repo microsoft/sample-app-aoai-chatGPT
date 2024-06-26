@@ -56,7 +56,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
-    const inputPayload = text + ` ${inputText}`;
+    const inputPayload = text + ` ${text}`;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("recommendations");
     setIsButtonClicked(false);
@@ -90,7 +90,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
           <TextField
             placeholder={placeholder}
             borderless
-            value={inputText}
+            value={text}
             resizable={false}
             multiline
             rows={isTextFieldFocused ? 2 : 1}
