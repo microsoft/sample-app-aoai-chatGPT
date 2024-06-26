@@ -116,6 +116,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         onChange={onFileChange}
         disabled={disabled}
         className={styles.fileInput}
+        aria-label="Upload file"
       />
       <TextField
         className={styles.questionInputTextArea}
@@ -126,6 +127,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         value={question}
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
+        ariaLabel="Type a question"
+        inputClassName={styles.textAreaOverrides}
       />
       <div
         className={styles.questionInputSendButtonContainer}

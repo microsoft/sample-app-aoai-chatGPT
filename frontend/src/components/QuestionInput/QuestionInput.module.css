@@ -81,6 +81,7 @@ input.fileInput::file-selector-button {
   background-color: white;
   cursor: pointer;
   margin-right: 12px !important;
+  font-size: 16px !important;
   font-family:
     'Segoe UI',
     'Segoe UI Web (West European)',
@@ -96,4 +97,8 @@ input.fileInput::file-selector-button {
   position: absolute;
   top: -30px;
   z-index: 1;
+}
+
+.textAreaOverrides {
+  font-size: 16px !important;
 }
