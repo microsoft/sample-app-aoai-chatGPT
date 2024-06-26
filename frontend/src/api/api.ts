@@ -327,6 +327,7 @@ export const frontendSettings = async (): Promise<Response | null> => {
 
   return response
 }
+
 export const historyMessageFeedback = async (messageId: string, feedback: string): Promise<Response> => {
   const response = await fetch('/history/message_feedback', {
     method: 'POST',
@@ -350,5 +351,20 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
       }
       return errRes
     })
+  return response
+}
+
+export const pdfList = async (): Promise<Response | null> => {
+  const response = await fetch('/filenames_cdn_urls', {
+    method: 'GET'
+  })
+    .then(res => {
+      return res.json()
+    })
+    .catch(_err => {
+      console.error('There was an issue fetching your data.')
+      return null
+    })
+
   return response
 }

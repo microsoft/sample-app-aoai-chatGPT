@@ -1,7 +1,8 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
 import { ChevronDoubleLeft, ChevronDoubleRight } from 'react-bootstrap-icons'
 import styles from '../Sidebar/Sidebar.module.css'
+import { pdfList } from '../../api'
 
 const mockData = {
   '0010-2022.pdf': 'https://leyes.azureedge.net/webpage-ley73/0010-2022.pdf',
@@ -49,6 +50,19 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
   handleCollapsedChange,
   children
 }) => {
+  useEffect(() => {
+    const getPdfList = async () => {
+      pdfList()
+        .then(response => {
+          console.log(response)
+        })
+        .catch(_err => {
+          console.error('There was an issue fetching your data.')
+        })
+    }
+    getPdfList()
+  }, [])
+
   return (
     <div style={{ display: 'flex', height: '100vh', position: 'fixed', width: '100%' }}>
       <Sidebar
