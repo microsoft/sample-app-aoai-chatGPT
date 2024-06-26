@@ -4,7 +4,7 @@ import { ChevronDoubleLeft, ChevronDoubleRight } from 'react-bootstrap-icons'
 import styles from '../Sidebar/Sidebar.module.css'
 
 const mockData = {
-  'Archivo-1': 'http://www.google.com',
+  '0010-2022.pdf': 'https://leyes.azureedge.net/webpage-ley73/0010-2022.pdf',
   'Archivo-2': 'http://www.google.com',
   'Archivo-3': 'http://www.google.com',
   'Archivo-4': 'http://www.google.com',
@@ -23,6 +23,16 @@ const mockData = {
   'Archivo-17': 'http://www.google.com',
   'Archivo-18': 'http://www.google.com'
 }
+
+/*
+Bug al pasar de celular a pc pantalla
+Mejorar SidebarMenuProps
+Cambiar fondo mobile vista mas blanco no tan transparente 
+Ajustar para nombres largos salto de linea
+Ver posibilidad visualizar PDF en la misma pagina con un modal
+Ver posibilidad cambiar iconos 
+Optimizar
+*/
 
 interface SidebarMenuProps {
   collapsed: boolean
