@@ -54,14 +54,33 @@ async def index():
     )
 
 @bp.route("/filenames_cdn_urls", methods=["GET"])
-def get_filenames_urls():
+async def get_filenames_urls():
     try:
         container_name = 'webpage-ley73'
         conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
+
+        # Debugging: Print connection string and container name
+        print(f"Connection String: {conn_str}")
+        print(f"Container Name: {container_name}")
+
+        if not conn_str:
+            raise ValueError("Connection string is not set")
+        if not container_name:
+            raise ValueError("Container name is not set")
+
         filenames_with_urls = list_blob_filenames_CDN_urls(conn_str, container_name)
         return jsonify(filenames_with_urls), 200
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500
+
+# def get_filenames_urls():
+    # try:
+    #     container_name = 'webpage-ley73'
+    #     conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
+    #     filenames_with_urls = list_blob_filenames_CDN_urls(conn_str, container_name)
+    #     return jsonify(filenames_with_urls), 200
+    # except Exception as ex:
+    #     return jsonify({"error": str(ex)}), 500
 
 # async def get_filenames_urls():
 #     try:
