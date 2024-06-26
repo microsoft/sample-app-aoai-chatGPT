@@ -80,4 +80,20 @@ input.fileInput::file-selector-button {
   border-radius: 4px;
   background-color: white;
   cursor: pointer;
+  margin-right: 12px !important;
+  font-family:
+    'Segoe UI',
+    'Segoe UI Web (West European)',
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    'Helvetica Neue',
+    sans-serif !important;
+}
+
+.errorText {
+  position: absolute;
+  top: -30px;
+  z-index: 1;
 }

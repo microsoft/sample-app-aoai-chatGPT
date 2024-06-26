@@ -19,8 +19,8 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [fileError, setFileError] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [fileError, setFileError] = useState<string>('')
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
@@ -92,8 +92,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        setFileError('File size exceeds 5MB limit.')
+        setFileError(`The file ${file.name} exceeded the 5MB limit. Please try uploading a smaller file.`)
         setSelectedFile(null)
+        if (fileInputRef?.current?.value) {
+          fileInputRef.current.value = ''
+        }
       } else {
         setFileError('')
         setSelectedFile(file)
@@ -105,6 +108,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
   return (
     <Stack horizontal className={styles.questionInputContainer}>
+      {fileError && <div className={styles.errorText}>{fileError}</div>}
       <input
         ref={fileInputRef}
         type="file"
@@ -113,7 +117,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         disabled={disabled}
         className={styles.fileInput}
       />
-      {fileError && <div className={styles.errorText}>{fileError}</div>}
       <TextField
         className={styles.questionInputTextArea}
         placeholder={placeholder}

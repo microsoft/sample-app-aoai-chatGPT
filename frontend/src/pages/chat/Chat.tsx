@@ -31,16 +31,7 @@ import {
   ChatHistoryLoadingState,
   CosmosDBStatus,
   ErrorMessage,
-  ExecResults,
-<<<<<<< HEAD
-} from "../../api";
-import { Answer } from "../../components/Answer";
-import { QuestionInput } from "../../components/QuestionInput";
-import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
-import { AppStateContext } from "../../state/AppProvider";
-import { useBoolean } from "@fluentui/react-hooks";
-=======
-  AzureSqlServerCodeExecResult
+  ExecResults
 } from '../../api'
 import { Answer } from '../../components/Answer'
 import { QuestionInput } from '../../components/QuestionInput'
@@ -48,7 +39,6 @@ import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
 import { AppStateContext } from '../../state/AppProvider'
 import { useBoolean } from '@fluentui/react-hooks'
 import { FileType, UploadedFile } from '../../custom/fileUploadUtils'
->>>>>>> 72317a5 (feat: add PDF upload)
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -788,7 +778,12 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={logo} className={styles.chatIcon} aria-hidden="true" />
+                <img
+                  src={logo}
+                  className={styles.chatIcon}
+                  aria-hidden="true"
+                  alt="Official logo for the State of New Jersey"
+                />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                 <h2
                   className={styles.chatEmptyStateSubtitle}
@@ -805,7 +800,11 @@ const Chat = () => {
                             answer.uploaded_file.type === FileType.Image &&
                             answer.uploaded_file.contents && (
                               <div className={styles.chatMessageUserAttachment}>
-                                <img width="100" height="auto" src={answer.uploaded_file.contents} alt=""></img>
+                                <img
+                                  width="100"
+                                  height="auto"
+                                  src={answer.uploaded_file.contents}
+                                  alt={answer.uploaded_file.name}></img>
                               </div>
                             )}
                           <div>{answer.content}</div>
