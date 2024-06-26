@@ -291,8 +291,8 @@ const Home: React.FC = () => {
         <DesktopTextField 
                       placeholder="Anything else?"
                       allowBorder={false}
-                      // text={textFieldValue}
-                      // setText={setTextFieldValue}
+                      text={textFieldValue}
+                      setText={setTextFieldValue}
                       isButtonRequired={true}
                       promptValue={inputValue}
                       onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
