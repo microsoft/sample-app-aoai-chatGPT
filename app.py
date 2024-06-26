@@ -53,7 +53,7 @@ async def index():
         favicon=app_settings.ui.favicon
     )
 
-@bp.route("/filenames_cdn_urls")
+@bp.route("/filenames_cdn_urls", methods=["GET"])
 async def get_filenames_urls():
     container_name = 'webpage-ley73'
     conn_str = os.environ.get("BLOB_CONNECTION_STRING_WEBPAGE_LEY73")
