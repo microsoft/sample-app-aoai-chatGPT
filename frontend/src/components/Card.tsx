@@ -29,38 +29,30 @@ const Card: React.FC<CardProps> = ({ title, detail }) => {
         <Text className={Styles.cardTitle} styles={{
           root: {
             height: "25%",
-            '@media (max-width: 600px)': {
-              fontWeight: "bold",
+            '@media (max-width: 599px)': {
               fontSize: "16px",
             },
-            '@media (max-width: 1300px) and (min-width: 600px)': {
-              fontWeight: "bold",
-              fontSize: "22px",
+            fontWeight: "bold",
+            fontSize: "24px",
             },
-            '@media (max-width: 2500px) and (min-width: 1300px)': {
-              fontWeight: "bold",
-              fontSize: "24px",
-            },
-          }
         }}>
           {title}
         </Text>
         <Text className={Styles.cardDetail} styles={{
           root: {
             marginTop: "auto",
-            '@media (max-width: 575px)': {
-              fontSize: "18px",
-              fontWeight: "500",
+            '@media (max-width: 599px)': {
+              fontSize: "20px",
+              fontWeight: "400",
               lineHeight: "1.6rem",
             },
-            '@media (max-width: 1700px) and (min-width: 600px)': {
+            '@media (max-height: 700px) ': {
+              fontSize: "18px",
               fontWeight: "400",
-              fontSize: "22px",
+              lineHeight: "1.6rem",
             },
-            '@media (max-width: 2500px) and (min-width: 1700px)': {
-              fontWeight: "400",
-              fontSize: "28px",
-            },
+            fontSize: "24px",
+            fontWeight: "400",
           }
         }}>
           {detail}

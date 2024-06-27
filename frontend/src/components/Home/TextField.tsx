@@ -14,9 +14,10 @@ interface Props {
   onFocus?: () => void;
   onBlur?: () => void;
   isTextFieldFocused?: boolean;
+  disabled?: boolean;
 }
  
-const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text, setText, allowBorder = false, isButtonRequired = true, onFocus, onBlur, isTextFieldFocused = false }) => {
+const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text, setText, allowBorder = false, isButtonRequired = true, onFocus, onBlur, isTextFieldFocused = false,disabled=false }) => {
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -89,6 +90,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
+            disabled={disabled}
             borderless
             value={text}
             resizable={false}
@@ -97,16 +99,6 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
             styles={{
               root: {
                 color: "#151B1E",
-                // '@media (max-width: 1000px)': {
-                //   fontSize: "14px",
-                //   height: isTextFieldFocused ? "150px" : "30px",
-                // },
-                // '@media (max-width: 2500px) and (min-width: 1000px)': {
-                //   fontSize: "24px",
-                //   fontWeight: "100",
-                //   marginLeft: !isTextFieldFocused ? 15 : 2,
-                //   height: isTextFieldFocused ? "230px" : "50px",
-                // },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
               },
@@ -114,15 +106,6 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
                 borderRadius: '25px',
                 backgroundColor: 'inherit',
                 minHeight:'auto',
-                // '@media (max-width: 1000px)': {
-                //   fontSize: "14px",
-                //   height: isTextFieldFocused ? "150px" : "30px",
-                // },
-                // '@media (max-width: 2500px) and (min-width: 1000px)': {
-                //   fontSize: "24px",
-                //   fontWeight: "100",
-                //   height: isTextFieldFocused ? "230px" : "50px",
-                // },
                 textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
                 overflow: 'hidden',
                 lineHeight: isTextFieldFocused ? "1.6em" : "1,5em",
@@ -140,7 +123,6 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
                 '::placeholder': {
                   color:"#3A4146",
                     fontWeight: "400",
-                    // paddingLeft:"10px",
                     fontSize:"20px",
                     lineHeight:"28px"
                 },

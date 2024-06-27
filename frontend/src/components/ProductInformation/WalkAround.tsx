@@ -31,7 +31,7 @@ const WalkAround: React.FC = () => {
         // </div>
       ) : (
         <>
-          {walkthroughData && walkthroughData?.length > 0 ? (
+          {walkthroughData && walkthroughData?.length > 0 && (
             <CarouselComponent
               cards={cards}
               height="calc(100vh - 300px)"
@@ -40,10 +40,6 @@ const WalkAround: React.FC = () => {
               offset={2}
               showArrows={false}
             />
-          ) : (
-            <div style={{ height: "100%", display: "flex", alignItems: "center" , justifyContent : "center" }}>
-              <Text style={{ color: "#FFFFFF", fontSize: "1.25rem", fontWeight: "bold" }}>No Walk Around Found</Text>
-            </div>
           )}
         </>
       )}

@@ -16,6 +16,7 @@ import { templete2, templete3 } from '../../constants/templete';
 import { getValuePropositions, getWalkthroughData } from '../../api';
 import BackButton from '../BackButton';
 import style from './ProductInfo.module.css';
+import PrimaryButtonComponent from '../common/PrimaryButtonComponent';
 
 const ProductInformation: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>('FlashCard');
@@ -26,6 +27,8 @@ const ProductInformation: React.FC = () => {
   const conversationId = appStateContext?.state?.conversationId;
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const isLoading = appStateContext?.state?.isLoadingValuePropositions
+  const walkthroughData = appStateContext?.state?.walkthorugh;
+  const valuesProps = appStateContext?.state?.valuePropositions
 
   useEffect(() => {
     const handleResize = () => setScreenWidth(window.innerWidth);
@@ -133,25 +136,12 @@ const ProductInformation: React.FC = () => {
               <BackButton onClick={() => navigate('/recommendations')}></BackButton>
               </div>
               <Text
-                className={style.headingText}>Details</Text>
+                className={style.headingText}>{(valuesProps && valuesProps?.length > 0 || walkthroughData && walkthroughData?.length > 0) || isLoading ? `${selectedbrand}-${selectedboat}` : "No data found please try again"}</Text>
             </div>
             <Stack
               horizontal
               tokens={{ childrenGap: 10 }}
               style={{ width: '100%', padding: '0px', marginTop: 15}}
-            // styles={{
-            //   root: {
-            //     marginTop: 10,
-            //     '@media (max-width: 1000px)': {
-            //       marginTop: 20,
-            //       height: "8%"
-            //     },
-            //     '@media (max-width: 2500px) and (min-width: 1000px)': {
-            //       // height: "12%"
-
-            //     },
-            //   }
-            // }}
             >
               <PrimaryButton
                 onClick={() => handleOptionClick('FlashCard')}
@@ -161,7 +151,7 @@ const ProductInformation: React.FC = () => {
                     '@media (max-width: 600px)': {
                       height: '40px'
                     },
-                    height: '60px',
+                    height: '50px',
                     background: `${selectedOption === 'FlashCard' ? "#202A2F !important" : "transparent"}`,
                     borderRadius: 10,
                     boxShadow: 'none',
@@ -207,7 +197,7 @@ const ProductInformation: React.FC = () => {
                     '@media (max-width: 600px)': {
                       height: '40px'
                     },
-                    height: '60px',
+                    height: '50px',
                     width: '50%',
                     background: `${selectedOption === 'WalkAround' ? "#202A2F !important" : "transparent"}`,
                     borderRadius: 10,
@@ -252,63 +242,14 @@ const ProductInformation: React.FC = () => {
           >
           <Stack
             className={selectedOption !== 'WalkAround' ? style.contentStackContainer : style.walkThroughStackContainer}
-          // style={{ height:selectedOption==="WalkAround" ? "70%":"" ,width: "100%", display: "flex", flexDirection: "column", flexWrap: "wrap", flexFlow: "column", overflow: "hidden", alignItems: "center",justifyContent:selectedOption === 'WalkAround' ?"center":"flex-start", padding: selectedOption === 'WalkAround' ? "0px" : "0px" }}
-          // tokens={{ childrenGap: 10 }}
-          // styles={{root:{
-          //   '@media (max-width: 2500px) and (min-width: 1000px)': {
-          //     // marginTop:10
-          //     marginTop: "40px"
-          //   },
-          // }}}
           >
             {selectedOption === 'WalkAround' ? <WalkAround /> : <FlashCard />}
           </Stack>
         </Stack>
-        <Stack
-          className={style.footerMainStackContainer}
-        // tokens={{ childrenGap: 20 }}
-        // horizontalAlign='center'
-        // style={{ height: "12%", position: "fixed", zIndex: 99999, bottom: 0, background: "transparent" }}
-        // styles={{
-        //   root: {
-        //     flexWrap: "wrap",
-        //     '@media (max-width: 600px)': {
-        //       width: "100%",
-        //     },
-        //     '@media (max-width: 1000px) and (min-width: 600px)': {
-        //       width: "60%",
-        //     },
-        //     '@media (max-width: 1500px) and (min-width: 1000px)': {
-        //       width: "80%",
-        //     },
-        //     '@media (max-width: 2500px) and (min-width: 1500px)': {
-        //       width: "40%",
-        //     },
-        //   }
-        // }}
-        >
+        <Stack className={style.footerMainStackContainer} >
           <Stack
             className={style.footerStackContainer}>
-            <PrimaryButton
-            styles={{root:{
-              boxShadow: 'none',
-              border: '0px solid black !important' ,
-              selectors: {
-                ':hover': {
-                  background: 'black !important',
-                  border:"none !important"
-                },
-                ':active': {
-                  background: '#202a2f',
-                  border:"none !important"
-                },
-                ':focus': {
-                  background: 'transparent',
-                  border:"none !important"
-                }
-              }
-            }}}
-            className={style.button} disabled = {isLoading} onClick={handleNextClick}>I'm Done</PrimaryButton>
+            <PrimaryButtonComponent label="I'm Done" onClick={handleNextClick} disabled={isLoading || false}/>
           </Stack>
         </Stack>
       </Stack>
