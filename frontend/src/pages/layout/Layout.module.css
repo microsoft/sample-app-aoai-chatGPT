@@ -1,111 +1,124 @@
 .layout {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100vh;
+  background-image: url('/assets/antarctic-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .header {
-  background-color: #f2f2f2;
+  background-color: rgba(167, 213, 228, 0.9);
+  padding: 10px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .headerContainer {
   display: flex;
-  justify-content: left;
+  justify-content: space-between;
   align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .headerTitleContainer {
   display: flex;
   align-items: center;
-  margin-left: 14px;
   text-decoration: none;
 }
 
 .headerTitle {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 20px;
-  line-height: 28px;
-  display: flex;
-  align-items: flex-end;
-  color: #242424;
+  font-family: 'Arial', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: #000080;
+  margin-left: 10px;
 }
 
 .headerIcon {
-  height: 32px;
+  height: 40px;
   width: auto;
-  margin-left: 36px;
 }
 
-.shareButtonContainer {
+.buttonContainer {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  margin-right: 20px;
+  gap: 10px;
 }
 
-.shareButton {
+.button {
+  background-color: #e5438e;
   color: #ffffff;
-}
-
-.shareButtonText {
-  font-style: normal;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #d3297a;
+}
+
+.shareDialog {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.shareDialogTitle {
+  color: #000080;
+  margin-bottom: 15px;
 }
 
 .urlTextBox {
-  font-style: normal;
-  font-weight: 400;
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #a7d5e4;
+  border-radius: 4px;
   font-size: 14px;
-  line-height: 20px;
-  color: #707070;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 5px 12px;
-  gap: 4px;
-  background: #ffffff;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-  cursor: pointer;
-  background: #d1d1d1;
 }
 
 .copyButton {
-  color: #424242;
-}
-
-.copyButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  background-color: #e5438e;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
   display: flex;
   align-items: center;
-  color: #242424;
+  gap: 5px;
 }
 
-@media (max-width: 480px) {
-  .headerTitleContainer {
-    margin-left: 4px;
+.copyButton:hover {
+  background-color: #d3297a;
+}
+
+.copyIcon {
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .headerTitle {
+    font-size: 20px;
   }
 
   .headerIcon {
-    margin-left: 26px;
+    height: 32px;
+  }
+
+  .buttonContainer {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .button {
+    padding: 6px 12px;
+    font-size: 14px;
   }
 }
