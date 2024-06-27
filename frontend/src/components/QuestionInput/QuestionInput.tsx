@@ -8,6 +8,7 @@ import Send from '../../assets/Send.svg'
 import styles from './QuestionInput.module.css'
 import { ACCEPTED_FILE_TYPES, FileType, UploadedFile } from '../../custom/fileUploadUtils'
 import { logEvent } from '../../custom/logEvent'
+import InfoIcon from '../../assets/info.svg'
 
 interface Props {
   onSend: (question: string, id?: string, uploadedFile?: UploadedFile) => void
@@ -94,7 +95,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        setFileError(`The file ${file.name} exceeded the 5MB limit. Please try uploading a smaller file.`)
+        setFileError(`File size of attachments cannot exceed 5 MB. Please try a smaller file.`)
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {
           fileInputRef.current.value = ''
@@ -111,7 +112,12 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
   return (
     <Stack horizontal className={styles.questionInputContainer}>
-      {fileError && <div className={styles.errorText}>{fileError}</div>}
+      {fileError && (
+        <div className={styles.errorText}>
+          <img src={InfoIcon} alt="" />
+          {fileError}
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"
