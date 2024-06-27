@@ -1,47 +1,14 @@
 import { FC, useEffect, useState } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
-import { ChevronDoubleLeft, ChevronDoubleRight } from 'react-bootstrap-icons'
+import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash } from 'react-bootstrap-icons'
 import styles from '../Sidebar/Sidebar.module.css'
 import { pdfList } from '../../api'
-
-const mockData = {
-  '0010-2022.pdf': 'https://leyes.azureedge.net/webpage-ley73/0010-2022.pdf',
-  'Archivo-2': 'http://www.google.com',
-  'Archivo-3': 'http://www.google.com',
-  'Archivo-4': 'http://www.google.com',
-  'Archivo-5': 'http://www.google.com',
-  'Archivo-6': 'http://www.google.com',
-  'Archivo-7': 'http://www.google.com',
-  'Archivo-8': 'http://www.google.com',
-  'Archivo-9': 'http://www.google.com',
-  'Archivo-10': 'http://www.google.com',
-  'Archivo-11': 'http://www.google.com',
-  'Archivo-12': 'http://www.google.com',
-  'Archivo-13': 'http://www.google.com',
-  'Archivo-14': 'http://www.google.com',
-  'Archivo-15': 'http://www.google.com',
-  'Archivo-16': 'http://www.google.com',
-  'Archivo-17': 'http://www.google.com',
-  'Archivo-18': 'http://www.google.com'
-}
-
-/*
-Controlar caso null mostrando vino vacio
-Ver si hay necesidad de un spinner
-Bug al pasar de celular a pc pantalla
-Mejorar SidebarMenuProps
-Cambiar fondo mobile vista mas blanco no tan transparente 
-Ajustar para nombres largos salto de linea
-Ver posibilidad visualizar PDF en la misma pagina con un modal
-Ver posibilidad cambiar iconos 
-Optimizar
-*/
 
 interface SidebarMenuProps {
   collapsed: boolean
   toggled: boolean
-  handleToggleSidebar: any
-  handleCollapsedChange: any
+  handleToggleSidebar: (state: any) => void
+  handleCollapsedChange: (state: any) => void
   children: React.ReactNode
 }
 
@@ -60,6 +27,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         .then(response => {
           if (response !== null) {
             setPdfListJson(response)
+          } else {
+            setPdfListJson({})
           }
         })
         .catch(_err => {
@@ -76,11 +45,13 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         onBackdropClick={() => handleToggleSidebar(false)}
         toggled={toggled}
         breakPoint="md"
+        onBreakPoint={(broken: boolean) => (broken ? null : handleToggleSidebar(false))}
         collapsed={toggled ? false : collapsed}
         rootStyles={
           collapsed && !toggled
             ? {
                 ['.' + sidebarClasses.container]: {
+                  backgroundColor: 'rgb(249, 249, 249, 0.8)',
                   '&::-webkit-scrollbar': {
                     display: 'none'
                   }
@@ -88,6 +59,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
               }
             : {
                 ['.' + sidebarClasses.container]: {
+                  backgroundColor: 'rgb(249, 249, 249, 0.8)',
                   '&::-webkit-scrollbar': {
                     width: '5px',
                     height: '5px',
@@ -133,15 +105,37 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 }
               }}></MenuItem>
           )}
-          {Object.entries(pdfListJson).map(([key, value]) => (
-            <MenuItem
-              style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
-              onClick={() => {
-                window.open(value)
-              }}>
-              {key}
-            </MenuItem>
-          ))}
+          {Object.keys(pdfListJson).length > 0 ? (
+            Object.entries(pdfListJson).map(([key, value]) => (
+              <MenuItem
+                style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
+                rootStyles={{
+                  ['.' + menuClasses.label]: {
+                    whiteSpace: 'normal'
+                  },
+                  ['.' + menuClasses.button]: {
+                    height: '100% !important',
+                    paddingTop: '10px',
+                    paddingBottom: '10px'
+                  }
+                }}
+                onClick={() => {
+                  window.open(value)
+                }}>
+                {key}
+              </MenuItem>
+            ))
+          ) : (
+            <div
+              style={
+                collapsed && !toggled
+                  ? { visibility: 'hidden' }
+                  : { display: 'flex', alignItems: 'center', marginTop: '75%' }
+              }>
+              <DatabaseSlash color="#334768" size={35} style={{ marginLeft: '8px' }} />
+              <span style={{ fontSize: '24px', marginLeft: '5px' }}>No files available</span>
+            </div>
+          )}
         </Menu>
       </Sidebar>
       <main className={`col ${styles.conteiner}`}>{children}</main>
