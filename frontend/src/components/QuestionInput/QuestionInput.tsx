@@ -7,6 +7,7 @@ import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
 import { ACCEPTED_FILE_TYPES, FileType, UploadedFile } from '../../custom/fileUploadUtils'
+import { logEvent } from '../../custom/logEvent'
 
 interface Props {
   onSend: (question: string, id?: string, uploadedFile?: UploadedFile) => void
@@ -37,6 +38,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       if (clearOnSend) {
         setQuestion('')
         setSelectedFile(null)
+        setFileError('')
         if (fileInputRef?.current?.value) {
           fileInputRef.current.value = ''
         }
@@ -97,6 +99,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         if (fileInputRef?.current?.value) {
           fileInputRef.current.value = ''
         }
+        logEvent('[Error] File exceeded limit', { object_size: file.size, object_type: file.type })
       } else {
         setFileError('')
         setSelectedFile(file)

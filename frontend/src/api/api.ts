@@ -296,45 +296,11 @@ export const historyRename = async (convId: string, title: string): Promise<Resp
 }
 
 export const historyEnsure = async (): Promise<CosmosDBHealth> => {
-  const response = await fetch('/history/ensure', {
-    method: 'GET'
-  })
-    .then(async res => {
-      const respJson = await res.json()
-      let formattedResponse
-      if (respJson.message) {
-        formattedResponse = CosmosDBStatus.Working
-      } else {
-        if (res.status === 500) {
-          formattedResponse = CosmosDBStatus.NotWorking
-        } else if (res.status === 401) {
-          formattedResponse = CosmosDBStatus.InvalidCredentials
-        } else if (res.status === 422) {
-          formattedResponse = respJson.error
-        } else {
-          formattedResponse = CosmosDBStatus.NotConfigured
-        }
-      }
-      if (!res.ok) {
-        return {
-          cosmosDB: false,
-          status: formattedResponse
-        }
-      } else {
-        return {
-          cosmosDB: true,
-          status: formattedResponse
-        }
-      }
-    })
-    .catch(err => {
-      console.error('There was an issue fetching your data.')
-      return {
-        cosmosDB: false,
-        status: err
-      }
-    })
-  return response
+  // Hard-coded response to avoid extra API call and 404 errors
+  return {
+    cosmosDB: false,
+    status: CosmosDBStatus.NotConfigured
+  }
 }
 
 export const frontendSettings = async (): Promise<Response | null> => {
