@@ -5,6 +5,8 @@ import style from "../../pages/layout/Layout.module.css"
 import { Send24Filled, Send28Filled } from '@fluentui/react-icons';
 import { useEffect, useState } from 'react';
 import { getCities, getStates } from '../../api';
+import CityAutocompleteInput from '../common/CityAutoComplete';
+import PrimaryButtonComponent from '../common/PrimaryButtonComponent';
 
 const UserInfo: React.FC = () => {
   const [states, setStates] = useState<IComboBoxOption[]>([]);
@@ -39,7 +41,9 @@ const UserInfo: React.FC = () => {
   const handleSave = () => {
     const dataToSave = { name: inputValue, id: uuid() };
     localStorage.setItem('userInfo', JSON.stringify([dataToSave]));
+    if(inputValue){
     window.location.reload();
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,6 +71,24 @@ const UserInfo: React.FC = () => {
     }
   };
 
+  const suggestions = [
+    "DANIA BEACH, FL",
+    "JACKSONVILLE, FL",
+    "ORLANDO, FL",
+    "DESTIN, FL",
+    "BRADENTON, FL",
+    "FORT MYERS, FL",
+    "MIAMI, FL",
+    "BRADENTON, FL",
+    "PORT ST. LUCIE, FL",
+    "TALLAHASSEE, FL",
+    "PALM BAY, FL",
+    "TAMPA, FL",
+    "GAINESVILLE, FL",
+    "DAYTONA, FL",
+    "ISLAMORADA, FL",
+      ]
+
   return (
     <Stack horizontalAlign='center'
       tokens={{ childrenGap: 20 }}
@@ -87,6 +109,7 @@ const UserInfo: React.FC = () => {
           alignItems: "center",
           flexDirection: "column",
           width: "100%",
+          gap:"10px",
           padding: "0px 20px"
         }}>
         {/* <div className={style.comboBoxField}>
@@ -110,7 +133,9 @@ const UserInfo: React.FC = () => {
             />
           </div>
         </div> */}
-        <div className={style.userinputField}>
+        <CityAutocompleteInput suggestions={suggestions} setSelectedValue={setInputValue} handleSave={handleSave}/>
+        {/* <PrimaryButtonComponent onClick={handleSave} label='Submit' disabled={inputValue===""} width='300px'/> */}
+        {/* <div className={style.userinputField}>
           <div style={textFieldWrapperStyle}>
             <TextField
               placeholder={"Enter your city name"}
@@ -179,7 +204,7 @@ const UserInfo: React.FC = () => {
             <Send28Filled />
           </PrimaryButton>
 
-        </div>
+        </div> */}
       </div>
     </Stack>
   );

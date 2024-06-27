@@ -88,27 +88,63 @@
  
 .headingDiv {
     display: flex;
-    width: 100%;
-    padding: 0px;
     align-items: center;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
     padding: 0 0 8px;
 }
- 
+.backButton {
+    flex-shrink: 0;
+}
 .headingText {
+    display: flex;
+    align-items: flex-start;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    white-space: nowrap; /* Prevents text from wrapping */
+    flex-grow: 1; /* Allows the text to grow */
+    max-width: calc(100% - 60px);
+    color: #FFFFFF;
+    font-size: 26px;
+    line-height: 100%; 
+}
+
+.noDataDiv {
+    display: flex;
+    align-items: flex-start;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    white-space: nowrap; /* Prevents text from wrapping */
+    flex-grow: 1; /* Allows the text to grow */
+    max-width: calc(100% - 60px);
+    color: #FFFFFF;
+    font-size: 26px;
+    line-height: 100%;
+}
+.thankuText {
     color: #FFFFFF;
     display: flex;
     align-items: flex-start;
     font-size: 26px;
     line-height: 100%;
 }
+
+.noDataText {
+    color: #8f9ca0;
+    display: flex;
+    align-items: flex-start;
+    font-size: 20px;
+    line-height: 100%;
+}
  
 .button {
-    width: 100%;
     font-size: 20px;
     font-weight: 600;
-    border-radius: 10px;
-    padding: 30px;
-    background: black;
+    border-radius: 12px;
+    padding: 25px;
     border: none
 }
 
@@ -135,9 +171,42 @@
         font-weight: 600;
     }
 
+    .thankuText {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
     .button {
         font-size: 18px;
         font-weight: 600;
         padding: 25px;
+    }
+}
+
+@media all and (max-width:575px){
+    .contentStackContainer {
+        padding: 0px 20px;
+    }
+    .headerStackContainer {
+        padding: 0px 20px;
+    }
+    .footerStackContainer {
+        padding: 0px 20px;
+    }
+    .noDataText {
+        color: #8f9ca0;
+        display: flex;
+        align-items: flex-start;
+        font-size: 16px;
+        line-height: 100%;
+    }
+}
+
+@media all and (min-width:576px){
+    .headingText{
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
     }
 }

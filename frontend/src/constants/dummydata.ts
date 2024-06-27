@@ -29,31 +29,35 @@ export const dummydata: Tags = {
     ],
     where: [
         {
-            category: "Ocean",
+            category: "Saltwater",
             child: [
-                { "Atlantic": "the Atlantic Ocean" },
-                { "Gulf": "the Gulf of Mexico" }
+                { "Inshore": "Inshore" },
+                { "Offshore": "Offshore" }
             ]
         },
         {
-            category: "Lakes",
+            category: "Freshwater",
             child: [
-                { "Okeechobee": "Lake Okeechobee" },
-                { "George": "Lake George" },
-                { "Apopka": "Lake Apopka" },
-                { "Kissimmee": "Lake Kissimmee" },
-                { "Toho": "Lake Toho" }
-            ]
-        },
-        {
-            category: "Rivers",
-            child: [
+                { "Lake Okeechobee": "Lake Okeechobee" },
+                { "Lake George": "Lake George" },
+                { "Lake Apopka": "Lake Apopka" },
+                { "Lake Kissimmee": "Lake Kissimmee" },
+                { "Lake Toho": "Lake Toho" },
                 { "St. Johns River": "St. Johns River" },
                 { "Suwannee River": "Suwannee River" },
                 { "Caloosahatchee River": "Caloosahatchee River" },
                 { "Peace River": "Peace River" }
             ]
-        }
+        },
+        // {
+        //     category: "Rivers",
+        //     child: [
+        //         { "St. Johns River": "St. Johns River" },
+        //         { "Suwannee River": "Suwannee River" },
+        //         { "Caloosahatchee River": "Caloosahatchee River" },
+        //         { "Peace River": "Peace River" }
+        //     ]
+        // }
     ],
     activities: [
         {

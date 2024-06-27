@@ -52,19 +52,18 @@
     }
 }
 
+
 .cardTitle {
   text-align: left;
   color: #151B1E;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; /* Single line truncation */
+  white-space: nowrap; 
 }
 .cardDetail {
   color: #151B1E;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 13; /* Number of lines to show */
-  -webkit-box-orient: vertical;
-  white-space: normal; /* Allow wrapping for line clamping */
+  display: contents;
+  white-space: normal; 
 }

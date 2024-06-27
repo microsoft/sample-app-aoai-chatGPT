@@ -13,6 +13,7 @@ import DesktopTextField from './DesktopTextField';
 
 const Home: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const appendedQuestion=". What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
 
   useEffect(() => {
     const handleResize = () => {
@@ -134,8 +135,6 @@ const Home: React.FC = () => {
         }
       })
 
-      result += "What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
-
     return result.trim()
   }
 
@@ -145,20 +144,20 @@ const Home: React.FC = () => {
       setInputValue(processedTemplate)
     } else {
       setInputValue("")
+      setTextFieldValue("")
     }
   }, [selectedKeys])
 
   const buttonDisabled = useMemo(() => {
-    return selectedKeys?.length === 0 && inputValue==="" && textFieldValue===""
+    return selectedKeys?.length === 0 
   }, [selectedKeys, inputValue,textFieldValue])
 
   const handleSubmit = () => {
-    const inputPayload = inputValue + ` ${textFieldValue}`;
+    const inputPayload = inputValue + ` ${textFieldValue}` + appendedQuestion;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
-    
     navigate("/recommendations");
 };
-
+console.log({inputValue})
   const handleRemove = (selectedKey: string) => {
     setSelectedKeys(selectedKeys.filter(item => item.key !== selectedKey))
     setTags(prevTags => {
@@ -185,7 +184,8 @@ const Home: React.FC = () => {
       return initialTags
     })
     setSelectedKeys([])
-    setInputValue("")
+    setInputValue("");
+    setTextFieldValue("");
   }
 
   return (
@@ -252,22 +252,16 @@ const Home: React.FC = () => {
                   </Stack.Item>
                 ))}
                 {tags[key].tags.length > 5 && (
-                  <Stack.Item
-                    grow={1}
-                    disableShrink
-                    styles={{
-                      root: {
-                        minWidth: '90px',
-                        maxWidth: '90px',
-                        marginLeft: 10,
-                        marginTop: 10,
-                        display: 'inline-table'
-                      }
-                    }}>
+                  <Stack.Item  grow={1} disableShrink className={style.stackitem}>
                     <DefaultButton
                       styles={{
                         root: {
-                          height: '50px',
+                          width: "60px",
+                          height: "100%",
+                          padding: "18px",
+                          fontSize: "14px",
+                          letterSpacing: "0px",
+                          fontWeight: 600,
                           backgroundColor: 'transparent',
                           color: '#819188',
                           border: '1px solid black',
@@ -321,6 +315,7 @@ const Home: React.FC = () => {
                 onFocus={() => setIsTextFieldFocused(true)} // Set focused state on focus
                 onBlur={() => setIsTextFieldFocused(false)}
                 isTextFieldFocused={isTextFieldFocused} // Remove focused state on blur
+                disabled={buttonDisabled}
               />
             </div>
             <div className={style.buttonContainer}>

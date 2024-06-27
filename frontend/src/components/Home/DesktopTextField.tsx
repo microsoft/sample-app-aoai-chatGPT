@@ -47,6 +47,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
   const appStateContext = useContext(AppStateContext)
  
   const [isButtonClicked, setIsButtonClicked] = useState(false);
+  const appendedQuestion=". What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
  
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setInputText(newValue || '');
@@ -56,12 +57,11 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
   const navigate = useNavigate();
  
   const handleNavigate = (event: React.MouseEvent<HTMLButtonElement>) => {
- console.log({isButtonEnabled,inputText,promptValue})
- 
+
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
-    const inputPayload = promptValue + ` ${text}`;
+    const inputPayload = promptValue + ` ${text}` + appendedQuestion;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("recommendations");
     setIsButtonClicked(false);
@@ -88,7 +88,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
       setIsButtonClicked(false);
     }, 0);
   };
- 
+
   return (
     <div className={style.inputFieldContainer}>
       <div className={style.mainInputField}>
@@ -99,7 +99,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
             value={text}
             resizable={false}
             multiline
-            rows={14}
+            rows={16}
             styles={{
               root: {
                 color: "#000000",
@@ -111,7 +111,6 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
                 backgroundColor: 'inherit',
                 minHeight:'auto',
                 textOverflow: 'ellipsis',
- 
                 overflow: 'hidden',
                 lineHeight: "1,5em",
                 border: 'none',
@@ -119,7 +118,6 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
               field: {
                 backgroundColor: 'inherit',
                 textOverflow: 'ellipsis',
- 
                 fontSize:"16px",
                 fontWeight: 300,
                 overflow: 'hidden',
@@ -137,19 +135,20 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
             onKeyDown={handleKeyDown}
             onFocus={onFocus}
             onBlur={handleBlur}
+            disabled={!isButtonEnabled}
           />
         </div>
       </div>
       {isButtonRequired && (
         <PrimaryButton
-        disabled={!isButtonEnabled && inputText==="" && promptValue===""}
+        disabled={!isButtonEnabled}
           styles={
             {
               label:{
                 color:"#515F67",
                 fontWeight:500,
                 fontSize:"20px",
- 
+
                 '@media (max-width: 2500px) and (min-width: 1300px)': {
                 },
               }
@@ -158,8 +157,8 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
           style={{
             width: "100%",
             // marginTop: 20,
-            borderRadius: 10,
-            padding: 22,
+            borderRadius: 12,
+            padding: 25,
             fontSize: "0.875rem",
             background:isButtonEnabled || inputText!=="" || promptValue!=="" ? "#151B1E": "#151B1E",
             border: "none",
@@ -170,10 +169,10 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
           onClick={handleNavigate}
         >
           <div style={{display:'flex',alignItems:'center',justifyContent:"center"}}>
-            <span style={{color:(!isButtonEnabled && inputText==="" && promptValue==="") ? '#515F67' :"#FFFFFF",fontSize:"16px",fontWeight:"600",lineHeight:"2rem"}}>
+            <span style={{color:(!isButtonEnabled) ? '#515F67' :"#FFFFFF",fontSize:"16px",fontWeight:"600",lineHeight:"2rem"}}>
           Let's Go
           </span>
-          <Send16Filled color={(!isButtonEnabled && inputText==="" && promptValue==="") ? '#515F67' :"#FFFFFF"} height={"12px"} width={"!2px"} style={{marginLeft:10}} />
+          <Send16Filled color={(!isButtonEnabled) ? '#515F67' :"#FFFFFF"} height={"12px"} width={"!2px"} style={{marginLeft:10}} />
           </div>
         </PrimaryButton>
       )}

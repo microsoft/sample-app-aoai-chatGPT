@@ -15,8 +15,10 @@
     .contentMainStackContainer {
         width: 100%;
 }
-.contentStackContainer {
-    padding: 0px 20px;
-
 }
+
+@media all and (max-width:575px){
+    .contentStackContainer {
+        padding: 0px 20px;
+    }
 }
