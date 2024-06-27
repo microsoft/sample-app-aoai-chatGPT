@@ -10,20 +10,62 @@ body {
 }
 
 html {
-  background: #f2f2f2;
+  background: #a7d5e4; /* Light blue background as fallback */
   font-family:
-    'Segoe UI',
-    'Segoe UI Web (West European)',
-    'Segoe UI',
-    -apple-system,
-    BlinkMacSystemFont,
-    Roboto,
+    'Arial',
     'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #000080; /* Navy blue text color */
+}
+
+body {
+  background-image: url('/assets/antarctic-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 #root {
   height: 100%;
+}
+
+/* Global styles for buttons */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Global styles for inputs */
+input {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Accessibility focus styles */
+:focus {
+  outline: 2px solid #e5438e; /* Pink outline for focus */
+  outline-offset: 2px;
+}
+
+/* Scrollbar styles for webkit browsers */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
