@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
 import { ChevronDoubleLeft, ChevronDoubleRight } from 'react-bootstrap-icons'
 import styles from '../Sidebar/Sidebar.module.css'
@@ -26,6 +26,8 @@ const mockData = {
 }
 
 /*
+Controlar caso null mostrando vino vacio
+Ver si hay necesidad de un spinner
 Bug al pasar de celular a pc pantalla
 Mejorar SidebarMenuProps
 Cambiar fondo mobile vista mas blanco no tan transparente 
@@ -50,11 +52,15 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
   handleCollapsedChange,
   children
 }) => {
+  const [pdfListJson, setPdfListJson] = useState<Object>({})
+
   useEffect(() => {
     const getPdfList = async () => {
       pdfList()
         .then(response => {
-          console.log(response)
+          if (response !== null) {
+            setPdfListJson(response)
+          }
         })
         .catch(_err => {
           console.error('There was an issue fetching your data.')
@@ -127,7 +133,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 }
               }}></MenuItem>
           )}
-          {Object.entries(mockData).map(([key, value]) => (
+          {Object.entries(pdfListJson).map(([key, value]) => (
             <MenuItem
               style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
               onClick={() => {
