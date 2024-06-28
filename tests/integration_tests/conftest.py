@@ -28,6 +28,13 @@ def dotenv_template_params_from_kv(secret_client: SecretClient) -> dict[str, str
 
 @pytest.fixture(scope="module")
 def dotenv_template_params_from_env() -> dict[str, str]:
+    def get_and_unset_variable(var_name):
+        # we need this function to ensure that the environment is clean before
+        # testing with generated dotenv files.
+        var_value = os.getenv(var_name)
+        os.environ[var_name] = ""
+        return var_value
+        
     env_secrets = [
         "AZURE_COSMOSDB_ACCOUNT",
         "AZURE_COSMOSDB_ACCOUNT_KEY",
@@ -48,5 +55,5 @@ def dotenv_template_params_from_env() -> dict[str, str]:
         "ELASTICSEARCH_QUERY"
     ]
     
-    return {s: os.getenv(s) for s in env_secrets}
+    return {s: get_and_unset_variable(s) for s in env_secrets}
 
