@@ -47,7 +47,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
   const appStateContext = useContext(AppStateContext)
  
   const [isButtonClicked, setIsButtonClicked] = useState(false);
-  const appendedQuestion=". What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
+  const appendedQuestion=" What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
  
   const handleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setInputText(newValue || '');
@@ -61,7 +61,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
     event.stopPropagation();
     event.preventDefault();
     setIsButtonClicked(true);
-    const inputPayload = promptValue + ` ${text}` + appendedQuestion;
+    const inputPayload = promptValue + ` ${text && text+"."}` + appendedQuestion;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("recommendations");
     setIsButtonClicked(false);
@@ -91,7 +91,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
 
   return (
     <div className={style.inputFieldContainer}>
-      <div className={style.mainInputField}>
+      <div className={style.mainInputField} style={{backgroundColor:!isButtonEnabled?"#37474F":"#909B97"}}>
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
@@ -119,13 +119,13 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
                 backgroundColor: 'inherit',
                 textOverflow: 'ellipsis',
                 fontSize:"16px",
-                fontWeight: 300,
+                fontWeight: 500,
                 overflow: 'hidden',
                 lineHeight: "1.2em",
-                color:"#ffffff",
+                color:"#151B1E",
                 '::placeholder': {
-                  color:"#8fa5b0",
-                    fontWeight: "300",
+                  color:!isButtonEnabled ? "#536F7D": "#151B1E",
+                    fontWeight: "400",
                     fontSize:"16px",
                 },
               },
