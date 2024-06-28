@@ -83,25 +83,25 @@ def dotenv_rendered_template_path(
     )
 
     if datasource != "none":
-        dotenv_template_params["datasourceType"] = datasource
+        dotenv_template_params["DATASOURCE_TYPE"] = datasource
     
     if datasource != "Elasticsearch" and use_elasticsearch_embeddings:
         pytest.skip("Elasticsearch embeddings not supported for test.")
         
     if datasource == "Elasticsearch":
-        dotenv_template_params["useElasticsearchEmbeddings"] = use_elasticsearch_embeddings
+        dotenv_template_params["USE_ELASTICSEARCH_EMBEDDINGS"] = use_elasticsearch_embeddings
     
-    dotenv_template_params["useAoaiEmbeddings"] = use_aoai_embeddings
+    dotenv_template_params["USE_AOAI_EMBEDDINGS"] = use_aoai_embeddings
     
     if use_aoai_embeddings or use_elasticsearch_embeddings:
-        dotenv_template_params["azureSearchQueryType"] = "vector"
-        dotenv_template_params["elasticsearchQueryType"] = "vector"
+        dotenv_template_params["AZURE_SEARCH_QUERY_TYPE"] = "vector"
+        dotenv_template_params["ELASTICSEARCH_QUERY_TYPE"] = "vector"
     else:
-        dotenv_template_params["azureSearchQueryType"] = "simple"
-        dotenv_template_params["elasticsearchQueryType"] = "simple"
+        dotenv_template_params["AZURE_SEARCH_QUERY_TYPE"] = "simple"
+        dotenv_template_params["ELASTICSEARCH_QUERY_TYPE"] = "simple"
     
-    dotenv_template_params["enableChatHistory"] = enable_chat_history
-    dotenv_template_params["azureOpenaiStream"] = stream
+    dotenv_template_params["ENABLE_CHAT_HISTORY"] = enable_chat_history
+    dotenv_template_params["AZURE_OPENAI_STREAM"] = stream
     
     return render_template_to_tempfile(
         rendered_template_name,
@@ -122,11 +122,11 @@ def test_app(dotenv_rendered_template_path) -> Quart:
 
 @pytest.mark.asyncio
 async def test_dotenv(test_app: Quart, dotenv_template_params: dict[str, str]):
-    if dotenv_template_params["datasourceType"] == "AzureCognitiveSearch":
-        message_content = dotenv_template_params["azureSearchQuery"]
+    if dotenv_template_params["DATASOURCE_TYPE"] == "AzureCognitiveSearch":
+        message_content = dotenv_template_params["AZURE_SEARCH_QUERY"]
         
-    elif dotenv_template_params["datasourceType"] == "Elasticsearch":
-        message_content = dotenv_template_params["elasticsearchQuery"]
+    elif dotenv_template_params["DATASOURCE_TYPE"] == "Elasticsearch":
+        message_content = dotenv_template_params["ELASTICSEARCH_QUERY"]
         
     else:
         message_content = "What is Contoso?"
