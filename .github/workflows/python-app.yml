@@ -27,9 +27,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
     - name: Test with pytest
+      env:
+        AZUREOPENAIENDPOINT: ${{ secrets.AZUREOPENAIENDPOINT }}
+        AZUREOPENAIMODEL: ${{ secrets.AZUREOPENAIMODEL }}
+        AZUREOPENAIKEY: ${{ secrets.AZUREOPENAIKEY }}
+        AZUREOPENAIEMBEDDINGNAME: ${{ secrets.AZUREOPENAIEMBEDDINGNAME }}
+        AZURECOSMOSDBACCOUNT: ${{ secrets.AZURECOSMOSDBACCOUNT }}
+        AZURECOSMOSDBDATABASE: ${{ secrets.AZURECOSMOSDBDATABASE }}
+        AZURECOSMOSDBCONVERSATIONSCONTAINER: ${{ secrets.AZURECOSMOSDBCONVERSATIONSCONTAINER }}
+        AZURECOSMOSDBACCOUNTKEY: ${{ secrets.AZURECOSMOSDBACCOUNTKEY }}
+        AZURESEARCHSERVICE: ${{ secrets.AZURESEARCHSERVICE }}
+        AZURESEARCHINDEX: ${{ secrets.AZURESEARCHINDEX }}
+        AZURESEARCHKEY: ${{ secrets.AZURESEARCHKEY }}
+        AZURESEARCHQUERY: ${{ secrets.AZURESEARCHQUERY }}
+        ELASTICSEARCHEMBEDDINGMODELID: ${{ secrets.ELASTICSEARCHEMBEDDINGMODELID }}
+        ELASTICSEARCHENCODEDAPIKEY: ${{ secrets.ELASTICSEARCHENCODEDAPIKEY }}
+        ELASTICSEARCHENDPOINT: ${{ secrets.ELASTICSEARCHENDPOINT }}
+        ELASTICSEARCHINDEX: ${{ secrets.ELASTICSEARCHINDEX }}
+        ELASTICSEARCHQUERY: ${{ secrets.ELASTICSEARCHQUERY }}
       run: |
         export PYTHONPATH=$(pwd)
-        coverage run --omit=tests/integration_tests -m pytest -v --show-capture=stdout -k "not integration"
+        coverage run -m pytest -v --show-capture=stdout
         coverage report -m
         coverage xml
 
