@@ -18,11 +18,16 @@ interface Props {
   conversationId?: string
 }
 
+const MAX_INPUT_LENGTH = 1048576
+function isValidLength(content: string) {
+  return content.length <= MAX_INPUT_LENGTH
+}
+
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [fileError, setFileError] = useState<string>('')
+  const [inputError, setInputError] = useState<string>('')
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
@@ -30,6 +35,28 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     }
 
     const send = (uploadedFile?: UploadedFile) => {
+      if (uploadedFile != null && uploadedFile.type === FileType.Pdf && !isValidLength(uploadedFile.contents)) {
+        setInputError(`File contents cannot exceed ${MAX_INPUT_LENGTH} characters. Please try a smaller file.`)
+        setSelectedFile(null)
+        if (fileInputRef?.current?.value) {
+          fileInputRef.current.value = ''
+        }
+        logEvent('submit_prompt_client_error_file_length', {
+          object_type: uploadedFile.extension,
+          object_length: uploadedFile.contents.length,
+          object_size: uploadedFile.size
+        })
+        return
+      }
+
+      if (!isValidLength(question)) {
+        setInputError(`Prompt cannot exceed ${MAX_INPUT_LENGTH} characters. Please try a smaller prompt.`)
+        logEvent('submit_prompt_client_error_prompt_length', {
+          object_length: question.length
+        })
+        return
+      }
+
       if (conversationId) {
         onSend(question, conversationId, uploadedFile)
       } else {
@@ -39,7 +66,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       if (clearOnSend) {
         setQuestion('')
         setSelectedFile(null)
-        setFileError('')
+        setInputError('')
         if (fileInputRef?.current?.value) {
           fileInputRef.current.value = ''
         }
@@ -51,17 +78,19 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         pdfToText(selectedFile)
           .then(extractedText => {
             if (extractedText.length === 0) {
-              setFileError('Could not read text from PDF. Please try uploading a different file.')
+              setInputError('Could not read text from PDF. Please try uploading a different file.')
             } else {
               send({
                 name: selectedFile.name,
                 type: FileType.Pdf,
-                contents: extractedText
+                contents: extractedText,
+                extension: selectedFile.type,
+                size: selectedFile.size
               })
             }
           })
           .catch(_error => {
-            setFileError('Failed to upload PDF. Please try uploading a different file.')
+            setInputError('Failed to upload PDF. Please try uploading a different file.')
           })
       } else {
         const reader = new FileReader()
@@ -69,7 +98,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
           send({
             name: selectedFile.name,
             type: FileType.Image,
-            contents: reader.result as string
+            contents: reader.result as string,
+            extension: selectedFile.type,
+            size: selectedFile.size
           })
         }
         reader.readAsDataURL(selectedFile)
@@ -95,14 +126,14 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        setFileError(`File size of attachments cannot exceed 5 MB. Please try a smaller file.`)
+        setInputError('File size of attachments cannot exceed 5 MB. Please try a smaller file.')
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {
           fileInputRef.current.value = ''
         }
-        logEvent('[Error] File exceeded limit', { object_size: file.size, object_type: file.type })
+        logEvent('submit_prompt_client_error_file_size', { object_size: file.size, object_type: file.type })
       } else {
-        setFileError('')
+        setInputError('')
         setSelectedFile(file)
       }
     }
@@ -112,10 +143,10 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
   return (
     <Stack horizontal className={styles.questionInputContainer}>
-      {fileError && (
+      {inputError && (
         <div className={styles.errorText}>
           <img src={InfoIcon} alt="" />
-          {fileError}
+          {inputError}
         </div>
       )}
       <input

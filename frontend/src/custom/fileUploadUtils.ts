@@ -6,6 +6,8 @@ export interface UploadedFile {
   name: string
   type: FileType
   contents: string
+  size: number
+  extension: string
 }
 
 export enum FileType {

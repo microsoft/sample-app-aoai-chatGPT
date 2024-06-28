@@ -39,6 +39,7 @@ import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
 import { AppStateContext } from '../../state/AppProvider'
 import { useBoolean } from '@fluentui/react-hooks'
 import { FileType, UploadedFile } from '../../custom/fileUploadUtils'
+import { logEvent } from '../../custom/logEvent'
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -261,6 +262,12 @@ const Chat = () => {
         conversation.messages.push(toolMessage, assistantMessage)
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation })
         setMessages([...messages, toolMessage, assistantMessage])
+        logEvent('submit_prompt_success', {
+          input_length: question.length,
+          object_length: uploadedFile?.contents?.length ?? '',
+          object_type: uploadedFile?.extension ?? '',
+          object_size: uploadedFile?.size ?? ''
+        })
       }
     } catch (e) {
       if (!abortController.signal.aborted) {
@@ -283,6 +290,13 @@ const Chat = () => {
         conversation.messages.push(errorChatMsg)
         appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: conversation })
         setMessages([...messages, errorChatMsg])
+        logEvent('submit_prompt_server_error', {
+          input_length: question.length,
+          object_length: uploadedFile?.contents?.length ?? '',
+          object_type: uploadedFile?.extension ?? '',
+          object_size: uploadedFile?.size ?? '',
+          object_description: errorMessage
+        })
       } else {
         setMessages([...messages, userMessage])
       }
@@ -611,6 +625,7 @@ const Chat = () => {
     setActiveCitation(undefined)
     appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null })
     setProcessMessages(messageStatus.Done)
+    logEvent('click_clear_chat', {})
   }
 
   const stopGenerating = () => {
