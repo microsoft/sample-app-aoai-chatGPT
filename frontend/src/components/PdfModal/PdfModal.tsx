@@ -14,8 +14,8 @@ const modalStyle: Styles = {
   content: {
     display: 'flex',
     flexDirection: 'column' as const,
-    maxWidth: '800px',
-    height: '600px',
+    maxWidth: '740px',
+    height: '630px',
     top: '50%',
     left: '50%',
     marginRight: '-50%',
@@ -26,12 +26,6 @@ const modalStyle: Styles = {
     overflow: 'hidden'
   }
 }
-
-/*
-Arreglar caso titulos largos en sidebar y en modal (ver pdf no se salga del modal en caso mas de 3 renglones)
-Agregar spinner de carga al cargar sidebar 
-Agregar spinner de carga al cargar modal
-*/
 
 const PdfModal: FC<PdfModalProps> = ({ isOpen, closeModal, data }) => {
   return (

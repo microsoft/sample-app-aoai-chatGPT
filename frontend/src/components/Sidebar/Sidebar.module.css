@@ -17,3 +17,11 @@ css-dip3t8::-webkit-scrollbar-track {
 css-dip3t8::-webkit-scrollbar-thumb {
   border-radius: 3px;
 }
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 230px;
+  height: 100%;
+}

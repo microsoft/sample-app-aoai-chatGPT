@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
 import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash } from 'react-bootstrap-icons'
+import { MoonLoader } from 'react-spinners'
 import styles from '../Sidebar/Sidebar.module.css'
 import { pdfList } from '../../api'
 import PdfModal from '../PdfModal/PdfModal'
@@ -20,6 +21,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
   handleCollapsedChange,
   children
 }) => {
+  const [loading, setLoading] = useState<boolean>(true)
   const [pdfListJson, setPdfListJson] = useState<Object>({})
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false)
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null)
@@ -29,9 +31,11 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
   }
 
   useEffect(() => {
+    setLoading(true)
     const getPdfList = async () => {
       pdfList()
         .then(response => {
+          setLoading(false)
           if (response !== null) {
             setPdfListJson(response)
           } else {
@@ -39,6 +43,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
           }
         })
         .catch(_err => {
+          setLoading(false)
           console.error('There was an issue fetching your data.')
         })
     }
@@ -113,36 +118,44 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                   }
                 }}></MenuItem>
             )}
-            {Object.keys(pdfListJson).length > 0 ? (
-              Object.entries(pdfListJson).map(([key, value]) => (
-                <MenuItem
-                  style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
-                  rootStyles={{
-                    ['.' + menuClasses.label]: {
-                      whiteSpace: 'normal'
-                    },
-                    ['.' + menuClasses.button]: {
-                      height: '100% !important',
-                      paddingTop: '10px',
-                      paddingBottom: '10px'
-                    }
-                  }}
-                  onClick={() => {
-                    setSelectedPdf({ name: key.toString(), url: value.toString() })
-                    setShowPdfModal(true)
-                  }}>
-                  {key}
-                </MenuItem>
-              ))
-            ) : (
-              <div
-                style={
-                  collapsed && !toggled
-                    ? { visibility: 'hidden' }
-                    : { display: 'flex', alignItems: 'center', marginTop: '75%' }
-                }>
-                <DatabaseSlash color="#334768" size={35} style={{ marginLeft: '8px' }} />
-                <span style={{ fontSize: '24px', marginLeft: '5px' }}>No files available</span>
+            {Object.keys(pdfListJson).length > 0 && loading === false
+              ? Object.entries(pdfListJson).map(([key, value]) => (
+                  <MenuItem
+                    style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
+                    rootStyles={{
+                      ['.' + menuClasses.label]: {
+                        whiteSpace: 'normal',
+                        maxWidth: '100%',
+                        wordWrap: 'break-word',
+                        overflow: 'visible'
+                      },
+                      ['.' + menuClasses.button]: {
+                        height: '100% !important',
+                        paddingTop: '10px',
+                        paddingBottom: '10px'
+                      }
+                    }}
+                    onClick={() => {
+                      setSelectedPdf({ name: key.toString(), url: value.toString() })
+                      setShowPdfModal(true)
+                    }}>
+                    {key}
+                  </MenuItem>
+                ))
+              : loading === false && (
+                  <div
+                    style={
+                      collapsed && !toggled
+                        ? { visibility: 'hidden' }
+                        : { display: 'flex', alignItems: 'center', marginTop: '75%' }
+                    }>
+                    <DatabaseSlash color="#334768" size={35} style={{ marginLeft: '8px' }} />
+                    <span style={{ fontSize: '24px', marginLeft: '5px' }}>No files available</span>
+                  </div>
+                )}
+            {loading && (
+              <div className={styles.spinner}>
+                <MoonLoader size={45} color="#334768" loading={loading} speedMultiplier={0.8} />
               </div>
             )}
           </Menu>

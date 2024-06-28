@@ -30,6 +30,7 @@
     "react-plotly.js": "^2.6.0",
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^6.8.1",
+    "react-spinners": "^0.14.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-uuid": "^2.0.0",
     "rehype-raw": "^6.1.1",
