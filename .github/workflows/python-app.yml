@@ -48,7 +48,7 @@ jobs:
       run: |
         export PYTHONPATH=$(pwd)
         coverage run -m pytest -v --show-capture=stdout
-        coverage report -m
+        coverage report -m --include=app.py,backend/*,tests/*
         coverage xml
 
     - name: Code Coverage Report
