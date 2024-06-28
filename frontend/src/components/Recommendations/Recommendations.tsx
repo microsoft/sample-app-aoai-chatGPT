@@ -46,13 +46,28 @@ const boatImages: {[key:string]: string} = {
     "Regency LE3 Series": R250LE3,
     "Regency 250 DL3": R250DL3,
     "Regency 230 DL3": R230DL3,
+    "230 DL3": R230DL3,
     "Regency DL3 Series": R230DL3,
+    "DL3 Series": R230DL3,
+    "PONTOON ELITE": R250DL3,
+    "Elite": R250DL3,
+    "250 LE3 Sport": R250LE3,
+    "230 LE3 Sport": R250LE3,
+    "230 LE 3 Sport": R250LE3,
     "Tahoe 16": TAH16,
     "Tahoe 18": TAH18,
     "Tahoe 185": TAH185,
+    "TAH16": TAH16,
+    "TAH18": TAH18,
+    "TAH185": TAH185,
+    "185 S": TAH185,
+    "T21": TAH210,
     "Tahoe 200": TAH200,
     "Tahoe 210": TAH210,
+    "Tahoe 210 S": TAH210SI,
+    "210 S Limited": TAH210SI,
     "Tahoe 210 SI": TAH210SI,
+    "Tahoe 210 SI LIMITED": TAH210SI,
     "Tahoe 1950": TAH1950,
     "Tahoe 2150": TAH2150,
     "Tahoe 2150 CC": TAH2150CC,
@@ -61,6 +76,7 @@ const boatImages: {[key:string]: string} = {
     "SPB18": SPB18,
     "SPB20": SPB20,
     "SPB22": SPB22,
+    "SPB24": SF24XP3,
     "SPB22XP3": SPB22XP3,
     "SBB16XL": SBB16XL,
     "SBB18": SBB18,
@@ -71,15 +87,26 @@ const boatImages: {[key:string]: string} = {
     "SFB20": SFB20,
     "Sun Tracker Fishing Barge 22": SFB22,
     "Sun Tracker Fishin' Barge 22": SFB22,
+    "Sun Tracker Fishin' Barge 22 DLX": SFB22,
     "Sun Tracker Fishing Barge 18": SPB18,
     "Sun Tracker Fishin' Barge 18": SPB18,
     "Sun Tracker Party Barge 20": SPB20,
     "Sun Tracker Party Barge 20 DLX": SPB20,
+    "Party Barge 20 DLX": SPB20,
+    "Party Barge 24 DLX": SF24XP3,
+    "Party Barge 24": SF24XP3,
+    "Party Barge 24 XP3": SF24XP3,
+    "Party Barge 22": SPB22,
+    "Party Barge 18 DLX": SPB20,
+    "Party Barge 22XP3": SPB22XP3,
     "Sun Tracker Party Barge 22": SPB22,
     "Sun Tracker Party Barge 22XP3": SPB22XP3,
     "SportFish 20": SF20,
+    "SportFish 20 DLX": SF20,
     "SportFish 22": SF22,
     "SportFish 22 DLX": SF22,
+    "SportFish 22 XP3": SF22XP3,
+    "BASS BUGGY 16 XL SELECT":SF22,
     "SportFish 22XP3": SF22XP3,
     "SportFish 24XP3": SF24XP3,
     "SportFish 24 XP3": SF24XP3,
@@ -151,8 +178,8 @@ const About: React.FC = () => {
             }
             const response =await getRecommendations(promptValue || '',city[0].name || "")
             // const response = {
-            //     "messages": "{\"result\":[{\"brand\": \"Regency\", \"model\": \"SFB20\", \"summary\": \"Luxury pontoon boat with seating for 14, sleek design, Bluetooth stereo, spacious seat storage, and exhilarating performance for watersports.\"}, {\"brand\": \"Sun Tracker\", \"model\": \"250 LE3 Sport\", \"summary\": \"Luxury pontoon boat with seating for 14, STOW MORE seat storage system, powered Bimini top, and 350-horsepower rating for watersports.\"}, {\"brand\": \"Tahao\", \"model\": \"DL3 Series\", \"summary\": \"Luxurious tritoon with richly appointed interior, plush seating, STOW-MORE hidden storage, soft-touch woven flooring, and Wet Sounds Audio System.\"}]}"
-            // };
+            //     "messages": "{\"result\":[{\"brand\": \"Regency\", \"model\": \"Regency 250 LE3\", \"summary\": \"Summary for Regency 250 LE3\"}, {\"brand\": \"Regency\", \"model\": \"Regency LE3 Series\", \"summary\": \"Summary for Regency LE3 Series\"}, {\"brand\": \"Regency\", \"model\": \"Regency 250 DL3\", \"summary\": \"Summary for Regency 250 DL3\"}, {\"brand\": \"Regency\", \"model\": \"Regency 230 DL3\", \"summary\": \"Summary for Regency 230 DL3\"}, {\"brand\": \"Regency\", \"model\": \"230 DL3\", \"summary\": \"Summary for 230 DL3\"}, {\"brand\": \"Regency\", \"model\": \"Regency DL3 Series\", \"summary\": \"Summary for Regency DL3 Series\"}, {\"brand\": \"Regency\", \"model\": \"DL3 Series\", \"summary\": \"Summary for DL3 Series\"}, {\"brand\": \"Regency\", \"model\": \"PONTOON ELITE\", \"summary\": \"Summary for PONTOON ELITE\"}, {\"brand\": \"Regency\", \"model\": \"Elite\", \"summary\": \"Summary for Elite\"}, {\"brand\": \"Regency\", \"model\": \"250 LE3 Sport\", \"summary\": \"Summary for 250 LE3 Sport\"}, {\"brand\": \"Regency\", \"model\": \"230 LE3 Sport\", \"summary\": \"Summary for 230 LE3 Sport\"}, {\"brand\": \"Regency\", \"model\": \"230 LE 3 Sport\", \"summary\": \"Summary for 230 LE 3 Sport\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 16\", \"summary\": \"Summary for Tahoe 16\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 18\", \"summary\": \"Summary for Tahoe 18\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 185\", \"summary\": \"Summary for Tahoe 185\"}, {\"brand\": \"Tahoe\", \"model\": \"TAH16\", \"summary\": \"Summary for TAH16\"}, {\"brand\": \"Tahoe\", \"model\": \"TAH18\", \"summary\": \"Summary for TAH18\"}, {\"brand\": \"Tahoe\", \"model\": \"TAH185\", \"summary\": \"Summary for TAH185\"}, {\"brand\": \"Tahoe\", \"model\": \"185 S\", \"summary\": \"Summary for 185 S\"}, {\"brand\": \"Tahoe\", \"model\": \"T21\", \"summary\": \"Summary for T21\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 200\", \"summary\": \"Summary for Tahoe 200\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 210\", \"summary\": \"Summary for Tahoe 210\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 210 S\", \"summary\": \"Summary for Tahoe 210 S\"}, {\"brand\": \"Tahoe\", \"model\": \"210 S Limited\", \"summary\": \"Summary for 210 S Limited\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 210 SI\", \"summary\": \"Summary for Tahoe 210 SI\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 210 SI LIMITED\", \"summary\": \"Summary for Tahoe 210 SI LIMITED\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 1950\", \"summary\": \"Summary for Tahoe 1950\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 2150\", \"summary\": \"Summary for Tahoe 2150\"}, {\"brand\": \"Tahoe\", \"model\": \"Tahoe 2150 CC\", \"summary\": \"Summary for Tahoe 2150 CC\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SFB22\", \"summary\": \"Summary for SFB22\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SFB22XP3\", \"summary\": \"Summary for SFB22XP3\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SPB18\", \"summary\": \"Summary for SPB18\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SPB20\", \"summary\": \"Summary for SPB20\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SPB22\", \"summary\": \"Summary for SPB22\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SPB24\", \"summary\": \"Summary for SPB24\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SPB22XP3\", \"summary\": \"Summary for SPB22XP3\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SBB16XL\", \"summary\": \"Summary for SBB16XL\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SBB18\", \"summary\": \"Summary for SBB18\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SF20\", \"summary\": \"Summary for SF20\"}, {\"brand\": \"Sun Tracker\", \"model\": \"SF22\", \"summary\": \"Summary for SF22\"}, {\"brand\": \"SF22XP3\", \"model\": \"SF22XP3\", \"summary\": \"Summary for SF22XP3\"}, {\"brand\": \"SF24XP3\", \"model\": \"SF24XP3\", \"summary\": \"Summary for SF24XP3\"}, {\"brand\": \"SFB20\", \"model\": \"SFB20\", \"summary\": \"Summary for SFB20\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Fishing Barge 22\", \"summary\": \"Summary for Sun Tracker Fishing Barge 22\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Fishin' Barge 22\", \"summary\": \"Summary for Sun Tracker Fishin' Barge 22\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Fishin' Barge 22 DLX\", \"summary\": \"Summary for Sun Tracker Fishin' Barge 22 DLX\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Fishing Barge 18\", \"summary\": \"Summary for Sun Tracker Fishing Barge 18\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Fishin' Barge 18\", \"summary\": \"Summary for Sun Tracker Fishin' Barge 18\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Party Barge 20\", \"summary\": \"Summary for Sun Tracker Party Barge 20\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Party Barge 20 DLX\", \"summary\": \"Summary for Sun Tracker Party Barge 20 DLX\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 20 DLX\", \"summary\": \"Summary for Party Barge 20 DLX\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 24 DLX\", \"summary\": \"Summary for Party Barge 24 DLX\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 24\", \"summary\": \"Summary for Party Barge 24\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 24 XP3\", \"summary\": \"Summary for Party Barge 24 XP3\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 22\", \"summary\": \"Summary for Party Barge 22\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 18 DLX\", \"summary\": \"Summary for Party Barge 18 DLX\"}, {\"brand\": \"Party Barge\", \"model\": \"Party Barge 22XP3\", \"summary\": \"Summary for Party Barge 22XP3\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Party Barge 22\", \"summary\": \"Summary for Sun Tracker Party Barge 22\"}, {\"brand\": \"Sun Tracker\", \"model\": \"Sun Tracker Party Barge 22XP3\", \"summary\": \"Summary for Sun Tracker Party Barge 22XP3\"}, {\"brand\": \"SportFish\", \"model\": \"SportFish 20\", \"summary\": \"Summary for SportFish 20\"}, {\"brand\": \"SportFish\", \"model\": \"SportFish 20 DLX\", \"summary\": \"Summary for SportFish 20 DLX\"}, {\"brand\": \"SportFish\", \"model\": \"SportFish 22\", \"summary\": \"Summary for SportFish 22\"}, {\"brand\": \"SportFish\", \"model\": \"SportFish 22 DLX\", \"summary\": \"Summary for SportFish 22 DLX\"}, {\"brand\": \"SportFish\", \"model\": \"SportFish 22 XP3\", \"summary\": \"Summary for SportFish 22 XP3\"}]}"
+            // }
            
             const parsedData = JSON.parse(response?.messages);
             const actuallRecommendations = parsedData?.result
@@ -174,8 +201,8 @@ const About: React.FC = () => {
 
     const handleNextClick = (selectedItem: string, selectedProduct: string): void => {
         if (selectedItem) {
-            appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem })
-            appStateContext?.dispatch({ type: 'SET_SELECTED_BRAND', payload: selectedProduct })
+            appStateContext?.dispatch({ type: 'SET_SELECTED_BOAT', payload: selectedItem.toUpperCase() })
+            appStateContext?.dispatch({ type: 'SET_SELECTED_BRAND', payload: selectedProduct.toUpperCase() })
             navigate("/productInfo");
         }
     }
@@ -219,7 +246,7 @@ const About: React.FC = () => {
         for (const key in boatImages) {
             const normalizedKey = normalizeString(key);
             const matchScore = calculateMatchScore(normalizedKey, modelParts);
-            if (matchScore > bestMatchScore && bestMatchScore  > 2) {
+            if (matchScore > bestMatchScore && matchScore  > 2) {
                 bestMatchScore = matchScore;
                 bestMatchKey = key;
             }
@@ -245,11 +272,11 @@ const About: React.FC = () => {
         return boatImages[bestMatchKey];
     };
 
-    const getDisplayTitle = (title:string, brand:string) => {
+    const getDisplayTitle = (title: string, brand: string) => {
         if (title?.toLowerCase()?.includes(brand?.toLowerCase())) {
-            return title;
+            return title.toUpperCase();
         } else {
-            return `${brand} - ${title}`;
+            return `${brand.toUpperCase()} - ${title.toUpperCase()}`;
         }
     };
     
@@ -321,6 +348,7 @@ const About: React.FC = () => {
                                                 '@media (max-width: 1000px)': {
                                                 },
                                                 '@media (max-width: 2500px) and (min-width: 1000px)': {
+                                                   padding:"15px 0px 15px 25px !important"
                                                 },
                                             }
                                         }}>
@@ -364,10 +392,10 @@ const About: React.FC = () => {
                         ))}
                     </Stack>
                     {dummyData && dummyData.length === 0 && (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center",height: "calc(100vh - 100px)" ,flexDirection:"column"}}>
-                        <img src={NoDataGif} alt="Logo"  style={{opacity:"0.3",width:"100px",marginBottom:10}} />
-                        <Text className={commonStyle.noDataText} style={{textAlign:'center',padding:"0px 20px",marginBottom:10}}>We couldn't find any boats that meet your needs.</Text>
-                        <Text className={commonStyle.noDataText} style={{textAlign:'center',padding:"0px 20px",marginBottom:20}}>Please try different inputs.</Text>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center",gap:10,height: "calc(100vh - 100px)" ,flexDirection:"column"}}>
+                        <img src={NoDataGif} alt="Logo"  style={{opacity:"0.3",width:"100px",marginBottom:20}} />
+                        <Text className={commonStyle.noDataText} style={{textAlign:'center',padding:"0px 20px"}}>We couldn't find any boats that meet your needs.</Text>
+                        <Text className={commonStyle.noDataText} style={{textAlign:'center',padding:"0px 20px",marginBottom:14}}>Please try different inputs.</Text>
                         <PrimaryButtonComponent label="Go Back" onClick={()=>navigate("/")} disabled={false} width='fit-content'/>
                     </div>
                     )}

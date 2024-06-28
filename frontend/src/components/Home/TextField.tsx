@@ -86,7 +86,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
   };
  
   return (
-      <div className={isTextFieldFocused ? style.focusInputField : style.mainInputField}>
+      <div className={isTextFieldFocused ? style.focusInputField : style.mainInputField} style={{backgroundColor:disabled?"#37474F":"#909B97"}}>
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
@@ -95,11 +95,11 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
             value={text}
             resizable={false}
             multiline
-            rows={isTextFieldFocused ? 2 : 1}
+            rows={isTextFieldFocused ? 3 : 1}
             styles={{
               root: {
                 color: "#151B1E",
-                textOverflow: !isTextFieldFocused ? 'ellipsis' : 'initial',
+                textOverflow: 'ellipsis',
                 overflow: 'hidden',
               },
               fieldGroup: {
@@ -110,20 +110,24 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
                 overflow: 'hidden',
                 lineHeight: isTextFieldFocused ? "1.6em" : "1,5em",
                 border: 'none',
+                paddingRight: 10
               },
               field: {
+                whiteSpace: isTextFieldFocused ? 'normal' : 'nowrap',
                 backgroundColor: 'inherit',
-                textOverflow: 'ellipsis',
                 fontSize:"22px",
-                fontWeight:isTextFieldFocused ? 400:600,
-                padding:!isTextFieldFocused ?"15px 15px 15px 25px" :"10px 15px",
-                overflow: 'hidden',
+                fontWeight:400,
+                padding:!isTextFieldFocused ?"15px 15px 15px 25px" :"0px 10px",
+                overflow: isTextFieldFocused?"auto": 'hidden',
                 lineHeight:"30px",
-                color:"#3A4146",
+                color:"#151B1E",
+                '@media (max-width: 600px)': {
+                  fontSize:"18px",
+                },
                 '::placeholder': {
-                  color:"#3A4146",
+                  color:disabled ?"#536F7D": "#3A4146" ,
                     fontWeight: "400",
-                    fontSize:"20px",
+                    fontSize:"18px",
                     lineHeight:"28px"
                 },
               },

@@ -13,7 +13,7 @@ import DesktopTextField from './DesktopTextField';
 
 const Home: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const appendedQuestion=". What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
+  const appendedQuestion=" What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
 
   useEffect(() => {
     const handleResize = () => {
@@ -153,7 +153,7 @@ const Home: React.FC = () => {
   }, [selectedKeys, inputValue,textFieldValue])
 
   const handleSubmit = () => {
-    const inputPayload = inputValue + ` ${textFieldValue}` + appendedQuestion;
+    const inputPayload = inputValue + ` ${textFieldValue && textFieldValue+"."}` + appendedQuestion;
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("/recommendations");
 };
