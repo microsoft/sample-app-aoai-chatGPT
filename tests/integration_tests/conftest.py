@@ -17,7 +17,7 @@ def secret_client() -> SecretClient:
 
 
 @pytest.fixture(scope="module")
-def dotenv_template_params(secret_client: SecretClient) -> dict[str, str]:
+def dotenv_template_params_from_kv(secret_client: SecretClient) -> dict[str, str]:
     secrets_properties_list = secret_client.list_properties_of_secrets()
     secrets = {}
     for secret in secrets_properties_list:
@@ -25,4 +25,28 @@ def dotenv_template_params(secret_client: SecretClient) -> dict[str, str]:
         
     return secrets
 
+
+@pytest.fixture(scope="module")
+def dotenv_template_params_from_env() -> dict[str, str]:
+    env_secrets = [
+        "azureCosmosdbAccount",
+        "azureCosmosdbAccountKey",
+        "azureCosmosdbConversationsContainer",
+        "azureCosmosdbDatabase",
+        "azureOpenaiEmbeddingName"
+        "azureOpenaiEndpoint",
+        "azureOpenaiModel",
+        "azureOpenaiKey",
+        "azureSearchIndex",
+        "azureSearchKey",
+        "azureSearchQuery",
+        "azureSearchService",
+        "elasticsearchEmbeddingModelId",
+        "elasticsearchEncodedApiKey",
+        "elasticsearchEndpoint",
+        "elasticsearchIndex",
+        "elasticsearchQuery"
+    ]
+    
+    return {s: os.getenv(s.upper()) for s in env_secrets}
 
