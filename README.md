@@ -16,7 +16,7 @@ TODO: Deploy through Copilot instead.
     These variables are required:
     - `AZURE_OPENAI_RESOURCE`
     - `AZURE_OPENAI_MODEL`
-    - `AZURE_OPENAI_KEY`
+    - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_OPENAI_TEMPERATURE`
@@ -40,7 +40,7 @@ TODO: Deploy through Copilot instead.
     These variables are required when adding your data with Azure AI Search:
     - `AZURE_SEARCH_SERVICE`
     - `AZURE_SEARCH_INDEX`
-    - `AZURE_SEARCH_KEY`
+    - `AZURE_SEARCH_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`
@@ -60,6 +60,8 @@ TODO: Deploy through Copilot instead.
 3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 4. You can see the local running app at http://127.0.0.1:50505.
 
+NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
+
 #### Local Setup: Enable Chat History
 To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. Then specify these additional environment variables: 
 - `AZURE_COSMOSDB_ACCOUNT`
@@ -74,6 +76,12 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 
 /.env
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
+
+#### Local Setup: Enable SQL Server
+To enable SQL Server, you will need to set up SQL Server resources. Then specify these additional environment variables:
+- `DATASOURCE_TYPE` (Should be set to `AzureSqlServer`)
+- `AZURE_SQL_SERVER_CONNECTION_STRING`
+- `AZURE_SQL_SERVER_TABLE_SCHEMA`
 
 #### Deploy with the Azure CLI
 **NOTE**: If you've made code changes, be sure to **build the app code** with `start.cmd` or `start.sh` before you deploy, otherwise your changes will not be picked up. If you've updated any files in the `frontend` folder, make sure you see updates to the files in the `static` folder before you deploy.
@@ -148,6 +156,20 @@ The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. 
 
 ```
 
+### Using Entra ID
+
+The app uses Azure OpenAI on your data [(see documentation)](https://learn.microsoft.com/en-us/azure/ai-services/openai/references/on-your-data). To enable Entra ID for intra-service authentication
+
+1. Enable managed identity on Azure OpenAI
+2. Configure AI search to allow access from Azure OpenAI
+   1. Enable Role Based Access control on the used AI search instance [(see documentation)](https://learn.microsoft.com/en-us/azure/search/search-security-enable-roles)
+   2. Assign `Search Index Data Reader` and `Search Service Contributor` to the identity of the Azure OpenAI instance
+3. Do not configure `AZURE_SEARCH_KEY` and `AZURE_OPENAI_KEY` to use Entra ID authentication.
+4. Configure the webapp identity
+   1. Enable managed identity in the app service that hosts the webapp
+   2. Go to the Azure OpenAI instance and assign the role `Cognitive Services OpenAI User` to the identity of the webapp
+
+Note: RBAC assignments can take a few minutes before becoming effective.
 
 ### Best Practices
 We recommend keeping these best practices in mind:
