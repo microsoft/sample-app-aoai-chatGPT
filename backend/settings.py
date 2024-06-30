@@ -44,8 +44,8 @@ class _UiSettings(BaseSettings):
     title: str = "Contoso"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
-    chat_description: str = "This chatbot is configured to answer your questions"
+    chat_title: str = "Start chatting with the Talassaemia chatbot"
+    chat_description: str = "Our vision is to ensure equal access to quality health care for every patient with thalassaemia and other haemoglobin disorders across the world"
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
 
