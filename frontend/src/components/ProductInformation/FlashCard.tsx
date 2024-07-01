@@ -47,9 +47,9 @@ const FlashCard: React.FC = () => {
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '700',
                         fontSize: "18px",
-                        lineHeight: "22px",
+                        lineHeight: "26px",
                         marginBottom: "8px",
-                        display:'block'
+                        display:'block',
                       },
                       '@media (max-width: 1000px) and (min-width: 600px)': {
                         fontWeight: '700',
@@ -81,7 +81,7 @@ const FlashCard: React.FC = () => {
                       '@media (max-width: 2500px) and (min-width: 1000px)': {
                         fontWeight: '500',
                         fontSize: "16px",
-                        lineHeight: "22px"
+                        lineHeight: "24px"
                       },
                     }
                   }}>{item.detail}</Text>

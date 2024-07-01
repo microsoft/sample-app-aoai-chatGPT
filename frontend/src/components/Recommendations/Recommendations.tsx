@@ -304,9 +304,14 @@ const About: React.FC = () => {
                             <DefaultButton key={index} styles={{
                                 root: {
                                     width: '100%',
-                                    // '@media (max-width: 600px)': {
-                                    //     maxHeight: 150
-                                    // },
+                                    '@media (max-width: 376px)': {
+                                        minHeight: 150,
+                                        padding:"0px 0px 0px 20px"
+                                    },
+                                    '@media (max-width: 599px) and (min-width: 377px)': {
+                                        minHeight: 150,
+                                        padding:"10px 10px 10px 18px"
+                                    },
                                     '@media (max-width: 1000px) and (min-width: 600px)': {
                                         // minHeight: 200
                                         height:180,
@@ -357,7 +362,11 @@ const About: React.FC = () => {
                                                 root: {
                                                     marginBottom: 10,
                                                     fontWeight: "bold",
-                                                    '@media (max-width: 600px)': {
+                                                    '@media (max-width: 376px)': {
+                                                        marginBottom: 5,
+                                                        fontSize: "12px", lineHeight: "16px",
+                                                    },
+                                                    '@media (max-width: 599px) and (min-width: 377px)': {
                                                         fontSize: "14px", lineHeight: "18px"
                                                     },
                                                     '@media (max-width: 1000px) and (min-width: 600px)': {

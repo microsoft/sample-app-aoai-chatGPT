@@ -7,10 +7,11 @@ import { Send24Filled, Send28Filled } from '@fluentui/react-icons';
 interface CityAutocompleteInputProps {
   suggestions: string[];
   setSelectedValue: (selected: string) => void;
+  selectedValue: boolean;
   handleSave: () => void;
 }
  
-const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({ suggestions, setSelectedValue, handleSave }) => {
+const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({ suggestions, setSelectedValue,selectedValue, handleSave }) => {
   const [value, setValue] = useState<string>('');
   const [suggestionsList, setSuggestionsList] = useState<string[]>([]);
  
@@ -40,7 +41,7 @@ const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({ suggestio
   };
  
   const inputProps: Autosuggest.InputProps<string> = {
-    placeholder: 'Enter City, ST (e.g., Miami, FL)',
+    placeholder: 'Enter City',
     value,
     onChange: handleChange,
   };
@@ -62,6 +63,7 @@ const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({ suggestio
       />
       <PrimaryButton
         onClick={handleSave}
+        disabled={selectedValue}
         styles={{
           root: {
             backgroundColor: 'transparent',

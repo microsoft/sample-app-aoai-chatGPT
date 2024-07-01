@@ -42,7 +42,7 @@
     flex-direction: row;
     gap: 20px;
     flex-wrap: wrap;
-    margin-bottom: 28px;
+    margin-bottom: 33px;
 }
 .mainStackTags:last-of-type{
     margin-bottom: 0;
