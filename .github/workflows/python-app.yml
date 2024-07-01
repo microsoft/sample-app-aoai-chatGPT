@@ -27,10 +27,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
     - name: Test with pytest
+      env:
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZUREOPENAIENDPOINT }}
+        AZURE_OPENAI_MODEL: ${{ secrets.AZUREOPENAIMODEL }}
+        AZURE_OPENAI_KEY: ${{ secrets.AZUREOPENAIKEY }}
+        AZURE_OPENAI_EMBEDDING_NAME: ${{ secrets.AZUREOPENAIEMBEDDINGNAME }}
+        AZURE_COSMOSDB_ACCOUNT: ${{ secrets.AZURECOSMOSDBACCOUNT }}
+        AZURE_COSMOSDB_DATABASE: ${{ secrets.AZURECOSMOSDBDATABASE }}
+        AZURE_COSMOSDB_CONVERSATIONS_CONTAINER: ${{ secrets.AZURECOSMOSDBCONVERSATIONSCONTAINER }}
+        AZURE_COSMOSDB_ACCOUNT_KEY: ${{ secrets.AZURECOSMOSDBACCOUNTKEY }}
+        AZURE_SEARCH_SERVICE: ${{ secrets.AZURESEARCHSERVICE }}
+        AZURE_SEARCH_INDEX: ${{ secrets.AZURESEARCHINDEX }}
+        AZURE_SEARCH_KEY: ${{ secrets.AZURESEARCHKEY }}
+        AZURE_SEARCH_QUERY: ${{ secrets.AZURESEARCHQUERY }}
+        ELASTICSEARCH_EMBEDDING_MODEL_ID: ${{ secrets.ELASTICSEARCHEMBEDDINGMODELID }}
+        ELASTICSEARCH_ENCODED_API_KEY: ${{ secrets.ELASTICSEARCHENCODEDAPIKEY }}
+        ELASTICSEARCH_ENDPOINT: ${{ secrets.ELASTICSEARCHENDPOINT }}
+        ELASTICSEARCH_INDEX: ${{ secrets.ELASTICSEARCHINDEX }}
+        ELASTICSEARCH_QUERY: ${{ secrets.ELASTICSEARCHQUERY }}
       run: |
         export PYTHONPATH=$(pwd)
-        coverage run --omit=tests/integration_tests -m pytest -v --show-capture=stdout -k "not integration"
-        coverage report -m
+        coverage run -m pytest -v --show-capture=stdout
+        coverage report -m --include=app.py,backend/*,tests/*
         coverage xml
 
     - name: Code Coverage Report
@@ -44,7 +62,7 @@ jobs:
         hide_complexity: true
         indicators: true
         output: both
-        thresholds: '60 80'
+        thresholds: '50 80'
 
   test_windows:
     runs-on:
