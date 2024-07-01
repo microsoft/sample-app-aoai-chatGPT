@@ -266,7 +266,23 @@ console.log({inputValue})
                           color: '#819188',
                           border: '1px solid black',
                           borderRadius: 10
+                        },
+                        rootHovered: {
+                          backgroundColor: '#313e44ff', 
+                          color: '#819188', 
+                          border: '1px solid black',
+                        },
+                        rootFocused: {
+                          backgroundColor: 'transparent',
+                          color: '#819188', 
+                          border: '1px solid black', 
+                        },
+                        rootPressed: {
+                          backgroundColor: 'transparent',
+                          color: '#819188', 
+                          border: '1px solid black', 
                         }
+
                       }}
                       onClick={() => toggleShowMore(key)}>
                       {showMore[key] ? 'Less' : 'More'}

@@ -41,8 +41,8 @@ const UserInfo: React.FC = () => {
   const handleSave = () => {
     const dataToSave = { name: inputValue, id: uuid() };
     localStorage.setItem('userInfo', JSON.stringify([dataToSave]));
-    if(inputValue){
-    window.location.reload();
+    if (inputValue !== "") {
+      window.location.reload();
     }
   };
 
@@ -79,7 +79,6 @@ const UserInfo: React.FC = () => {
     "BRADENTON, FL",
     "FORT MYERS, FL",
     "MIAMI, FL",
-    "BRADENTON, FL",
     "PORT ST. LUCIE, FL",
     "TALLAHASSEE, FL",
     "PALM BAY, FL",
@@ -133,7 +132,7 @@ const UserInfo: React.FC = () => {
             />
           </div>
         </div> */}
-        <CityAutocompleteInput suggestions={suggestions} setSelectedValue={setInputValue} handleSave={handleSave}/>
+        <CityAutocompleteInput suggestions={suggestions} setSelectedValue={setInputValue} selectedValue={inputValue===""} handleSave={handleSave}/>
         {/* <PrimaryButtonComponent onClick={handleSave} label='Submit' disabled={inputValue===""} width='300px'/> */}
         {/* <div className={style.userinputField}>
           <div style={textFieldWrapperStyle}>
