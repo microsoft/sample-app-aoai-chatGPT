@@ -1,17 +1,20 @@
-import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react';
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react';
-import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import uuid from 'react-uuid';
-import { isEmpty } from 'lodash';
-import DOMPurify from 'dompurify';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import styles from './Chat.module.css';
+import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import uuid from 'react-uuid'
+import { isEmpty } from 'lodash'
+import DOMPurify from 'dompurify'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
+
+import styles from './Chat.module.css'
 import Contoso from '../../assets/bored.gif';
-import { XSSAllowTags } from '../../constants/xssAllowTags';
+import { XSSAllowTags } from '../../constants/sanatizeAllowables'
+
 
 import {
   ChatMessage,
@@ -30,7 +33,6 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
-  AzureSqlServerCodeExecResult
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -823,7 +825,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && (
+              {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
