@@ -3,7 +3,7 @@ import Plotly from 'react-plotly.js'
 export type AskResponse = {
   answer: string
   citations: Citation[]
-  plotly_data: AzureSqlServerCodeExecResult | null
+  generated_chart: string | null
   error?: string
   message_id?: string
   feedback?: Feedback

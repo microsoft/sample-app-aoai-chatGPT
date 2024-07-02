@@ -291,10 +291,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         </Stack.Item>
-        {parsedAnswer.plotly_data !== null && (
+        {parsedAnswer.generated_chart !== null && (
           <Stack className={styles.answerContainer}>
             <Stack.Item grow>
-              <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
+              <img src={`data:image/png;base64, ${parsedAnswer.generated_chart}`} />
             </Stack.Item>
           </Stack>
         )}
