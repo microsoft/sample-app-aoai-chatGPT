@@ -78,9 +78,13 @@ const ProductInformation: React.FC = () => {
       const walkaroundResponse = await getWalkthroughData(templete3(selectedboat || "", selectedbrand || ""), conversationId || "")
 
       if (walkaroundResponse) {
-        const parsedDataWalkThrough = JSON.parse(walkaroundResponse?.messages);
-        const walkThrough = parsedDataWalkThrough?.result
-        appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_STATE', payload: walkThrough })
+        try {
+          const parsedData = JSON.parse(walkaroundResponse.messages);
+          const walkThrough = JSON.parse(parsedData.result);
+          appStateContext?.dispatch({ type: 'SET_WALKTHROUGH_STATE', payload: walkThrough });
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+        }
       }
 
     } catch (error) {
@@ -136,7 +140,7 @@ const ProductInformation: React.FC = () => {
               <BackButton onClick={() => navigate('/recommendations')}></BackButton>
               </div>
               <Text
-                className={style.headingText}>{(valuesProps && valuesProps?.length > 0 || walkthroughData && walkthroughData?.length > 0) || isLoading ? `${selectedbrand}-${selectedboat}` : "No data found please try again"}</Text>
+                className={style.headingText}>{`${selectedbrand}-${selectedboat}`}</Text>
             </div>
             <Stack
               horizontal
@@ -238,7 +242,7 @@ const ProductInformation: React.FC = () => {
         </Stack>
         <Stack
           className={selectedOption === 'WalkAround' ? style.contentStackContainerWalkthrough :style.contentMainStackContainer} 
-          style={{ justifyContent: isLoading && selectedOption !== 'WalkAround' ? "center" : "" }}
+          style={{ justifyContent:  valuesProps?.length===0 || isLoading || selectedOption !== 'WalkAround' ? "center" : "" }}
           >
           <Stack
             className={selectedOption !== 'WalkAround' ? style.contentStackContainer : style.walkThroughStackContainer}

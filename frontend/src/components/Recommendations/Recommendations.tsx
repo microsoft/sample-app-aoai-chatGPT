@@ -170,6 +170,7 @@ const About: React.FC = () => {
 
     const fetch = async () => {
         try {
+            if ((dummyData && dummyData.length === 0)) {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: true })
             const userCityStored=localStorage.getItem("userInfo");
             let city;
@@ -186,6 +187,7 @@ const About: React.FC = () => {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: actuallRecommendations })
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
             appStateContext?.dispatch({ type: 'SET_CONVERSATION_ID', payload: response?.id })
+        }
         } catch (error) {
             appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_LOADING', payload: false })
         }
@@ -294,7 +296,8 @@ const About: React.FC = () => {
                         {dummyData && dummyData.length > 0 && (
                             <div className={style.headingMainDiv}>
                             <div className={commonStyle.headingDiv}>
-                                <BackButton onClick={() => navigate("/")}></BackButton>
+                                <BackButton onClick={() => {appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: []})
+                                 navigate("/")}}></BackButton>
                                 <Text
                                     className={commonStyle.headingText}>Top Recommendations</Text>
                             </div>
