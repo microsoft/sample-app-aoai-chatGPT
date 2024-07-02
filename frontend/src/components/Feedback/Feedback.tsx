@@ -55,6 +55,7 @@ const Feedback: React.FC = () => {
     };
 
     const handleNaviagte = () => {
+        appStateContext?.dispatch({ type: 'SET_RECOMMENDATIONS_STATE', payload: []})
         navigate("/");
     }
 
