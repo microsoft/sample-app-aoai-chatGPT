@@ -716,9 +716,7 @@ const Chat = () => {
       try {
         const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
         const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
-        console.log('execResults :', execResults);
-        console.log("codeExecResult: ", codeExecResult && atob(codeExecResult.toString()))
-        // codeExecResult && setChart(atob(codeExecResult.toString()))
+
         if (codeExecResult === undefined) {
           return null;
         }
