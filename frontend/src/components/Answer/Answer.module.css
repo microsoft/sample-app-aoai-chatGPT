@@ -24,7 +24,8 @@
   margin: 11px;
   white-space: normal;
   word-wrap: break-word;
-  max-width: 800px;
+  /* max-width: 800px; */
+  max-width: 100%;
   overflow-x: auto;
 }
 
@@ -42,8 +43,10 @@
 }
 
 .answerDisclaimerContainer {
-  justify-content: center;
+  justify-content: flex-end;
   display: flex;
+  /* width: 100%;
+  box-sizing: border-box; */
 }
 
 .answerDisclaimer {
@@ -53,12 +56,14 @@
   line-height: 16px;
 
   display: flex;
-  align-items: center;
-  text-align: center;
+  /* align-items: center; */
+  text-align: right;
   color: #707070;
   flex: none;
   order: 1;
   flex-grow: 0;
+  white-space: nowrap; /* Prevent text from wrapping to the next line */
+  overflow: hidden; /* Hide overflowing text */
 }
 
 .citationWrapper {
@@ -195,6 +200,7 @@ sup {
 
   .citationContainer {
     margin-left: 0;
+    font-size: 10px;
   }
 
   .answerDisclaimer {

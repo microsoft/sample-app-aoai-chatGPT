@@ -1,8 +1,15 @@
-.container {
+/* .container {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
+} */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Take full viewport height */
+  overflow: hidden; /* Prevent inner scrolling */
 }
 
 .chatRoot {
@@ -68,7 +75,8 @@
 
 .chatMessageStream {
   flex-grow: 1;
-  max-width: 1028px;
+  /* max-width: 1028px; */
+  max-width: 2056px;
   width: 100%;
   overflow-y: auto;
   padding-left: 24px;
@@ -101,13 +109,14 @@
   flex-grow: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-width: 80%;
+
+  max-width: 100%;
 }
 
 .chatMessageGpt {
   margin-bottom: 12px;
-  max-width: 80%;
-  display: flex;
+  max-width: 100%;
+  display: flex-grow;
 }
 
 .chatMessageError {
@@ -144,7 +153,8 @@
   padding-left: 24px;
   padding-right: 24px;
   width: calc(100% - 100px);
-  max-width: 1028px;
+  /* max-width: 1028px; */
+  max-width: 2056px;
   margin-bottom: 50px;
   margin-top: 8px;
 }
@@ -158,11 +168,11 @@
   position: absolute;
   width: 40px;
   height: 40px;
-  left: 7px;
+  left: -5px;
   top: 13px;
   color: #ffffff;
   border-radius: 4px;
-  z-index: 1;
+  z-index: 10;
 }
 
 .clearChatBroomNoCosmos {
@@ -174,11 +184,11 @@
   position: absolute;
   width: 40px;
   height: 40px;
-  left: 7px;
+  left: -5px;
   top: 66px;
   color: #ffffff;
   border-radius: 4px;
-  z-index: 1;
+  z-index: 10;
 }
 
 .newChatIcon {
@@ -215,8 +225,8 @@
 }
 
 .stopGeneratingIcon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   color: #424242;
 }
 
@@ -229,6 +239,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
+  justify-content: center; /* Centers content horizontally */
   color: #242424;
   flex: none;
   order: 0;
@@ -360,7 +371,7 @@ a {
   cursor: pointer;
 }
 
-@media (max-width: 480px) {
+/* @media (max-width: 480px) {
   .chatInput {
     width: 90%;
     max-width: 90%;
@@ -384,5 +395,63 @@ a {
 
   .citationPanel {
     max-width: 100%;
+  }
+} */
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .chatRoot {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  .chatEmptyStateTitle {
+    font-size: 24px; /* Smaller font size */
+    margin-top: 20px;
+    line-height: 1.2; /* Adjust line height for smaller font */
+  }
+
+  .chatContainer {
+    max-height: calc(100vh - 60px); /* Adjust height */
+  }
+
+  .chatInput {
+    width: 90%; /* Adjusted width to leave room on the right */
+    max-width: 90%; /* Ensure it doesn't exceed 85% */
+    box-sizing: border-box; /* Ensure padding and borders are included in the width */
+  }
+
+
+  .newChatIcon, .clearChatBroom, .clearChatBroomNoCosmos {
+    left: 0;
+  }
+
+  .citationPanel {
+    max-width: 100%;
+  }
+
+  /* Additional adjustments for smaller screens */
+  .chatHeader {
+    font-size: 20px; /* Adjust font size for header */
+    padding: 10px; /* Add padding for better spacing */
+  }
+
+  .chatMessage {
+    font-size: 16px; /* Adjust font size for chat messages */
+    padding: 10px; /* Add padding for messages */
+  }
+
+  .chatFooter {
+    padding: 10px; /* Add padding to footer */
+  }
+
+  .submitButton {
+    width: 50px; /* Adjust width for submit button */
+    height: 50px; /* Adjust height for submit button */
+  }
+
+  .chatBox {
+    padding: 10px; /* Add padding to chat box */
+    margin-bottom: 10px; /* Adjust margin at bottom */
   }
 }
