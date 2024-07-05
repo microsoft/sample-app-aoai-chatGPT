@@ -10,7 +10,7 @@ import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
 import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
-import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
+import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanitizeAllowables'
 import { AppStateContext } from '../../state/AppProvider'
 
 import { parseAnswer } from './AnswerParser'
