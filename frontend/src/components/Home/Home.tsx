@@ -191,7 +191,7 @@ console.log({inputValue})
 
   const memoizedInputPlaceholder = (view: 'desktop' | 'mobile') => useMemo(() => {
     if(selectedKeys && selectedKeys.length > 0) {
-      return 'Anything else?';
+      return 'Add more details here.';
     } else {
       if(view === 'desktop') {
         return 'Please select an option before adding more details.';
