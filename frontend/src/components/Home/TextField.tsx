@@ -86,7 +86,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
   };
  
   return (
-      <div className={isTextFieldFocused ? style.focusInputField : style.mainInputField} style={{backgroundColor:disabled?"#37474F":"#909B97"}}>
+      <div className={isTextFieldFocused ? style.focusInputField : style.mainInputField} style={{backgroundColor:disabled?"#37474F":"#3e4f57"}}>
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
@@ -125,7 +125,7 @@ const TextFieldComponent: React.FC<Props> = ({ placeholder, onButtonClick, text,
                   fontSize:"18px",
                 },
                 '::placeholder': {
-                  color:disabled ?"#536F7D": "#3A4146" ,
+                  color:disabled ?"#8FA5B0": "#8FA5B0" ,
                     fontWeight: "400",
                     fontSize:"18px",
                     lineHeight:"28px"

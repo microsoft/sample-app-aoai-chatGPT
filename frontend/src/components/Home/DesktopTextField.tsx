@@ -91,7 +91,7 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
 
   return (
     <div className={style.inputFieldContainer}>
-      <div className={style.mainInputField} style={{backgroundColor:!isButtonEnabled?"#37474F":"#909B97"}}>
+      <div className={style.mainInputField} style={{backgroundColor:!isButtonEnabled?"#37474F":"#3e4f57"}}>
         <div style={textFieldWrapperStyle}>
           <TextField
             placeholder={placeholder}
@@ -124,10 +124,11 @@ const DesktopTextField: React.FC<Props> = ({ placeholder, onButtonClick, text,se
                 lineHeight: "1.2em",
                 color:"#151B1E",
                 '::placeholder': {
-                  color:!isButtonEnabled ? "#536F7D": "#151B1E",
+                  color:!isButtonEnabled ? "#8FA5B0": "#8FA5B0",
                     fontWeight: "400",
                     fontSize:"16px",
                 },
+                padding: '8px 12px'
               },
             }}
             style={textFieldStyle}

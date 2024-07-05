@@ -158,6 +158,7 @@ const Home: React.FC = () => {
     navigate("/recommendations");
 };
 console.log({inputValue})
+
   const handleRemove = (selectedKey: string) => {
     setSelectedKeys(selectedKeys.filter(item => item.key !== selectedKey))
     setTags(prevTags => {
@@ -187,6 +188,18 @@ console.log({inputValue})
     setInputValue("");
     setTextFieldValue("");
   }
+
+  const memoizedInputPlaceholder = (view: 'desktop' | 'mobile') => useMemo(() => {
+    if(selectedKeys && selectedKeys.length > 0) {
+      return 'Anything else?';
+    } else {
+      if(view === 'desktop') {
+        return 'Please select an option before adding more details.';
+      } else {
+        return 'Please select an option first.';
+      }
+    }
+  }, [selectedKeys])
 
   return (
     <>
@@ -299,7 +312,7 @@ console.log({inputValue})
             {/* ) : ( */}
         <div className={style.desktopTextField}>
         <DesktopTextField 
-                      placeholder="Anything else?"
+                      placeholder={memoizedInputPlaceholder('desktop')}
                       allowBorder={false}
                       text={textFieldValue}
                       setText={setTextFieldValue}
@@ -323,7 +336,7 @@ console.log({inputValue})
           <Stack tokens={{ childrenGap: 20 }} horizontalAlign="center" className={style.footerMainStack}>
             <div className={style.inputContainer}>
               <TextFieldComponent
-                placeholder="Anything else?"
+                placeholder={memoizedInputPlaceholder('mobile')}
                 allowBorder={false}
                 text={textFieldValue}
                 setText={setTextFieldValue}
