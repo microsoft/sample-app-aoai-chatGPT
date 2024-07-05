@@ -16,7 +16,7 @@ const FlashCard: React.FC = () => {
         </div>
       ) : (
         <>
-          {valuesProps && valuesProps?.length > 0 && valuesProps.map((item, index) => (
+          {valuesProps && valuesProps?.length > 0 ? valuesProps.map((item, index) => (
             <DocumentCard
               key={index}
               styles={{
@@ -88,7 +88,12 @@ const FlashCard: React.FC = () => {
                 </Stack.Item>
               </Stack>
             </DocumentCard>
-          ))}
+          )) : (
+            <Text style={{
+              color: "#FFFFFF",
+              fontSize: "26px"
+            }}>No Data found</Text>
+          )}
         </>)}
     </>
   );
