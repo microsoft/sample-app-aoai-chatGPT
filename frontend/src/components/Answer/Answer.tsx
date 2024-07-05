@@ -67,10 +67,13 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     setFeedbackState(currentFeedbackState)
   }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id])
 
+  
+
   const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
     let citationFilename = ''
 
     if (citation.filepath) {
+
       const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '')
       if (truncate && citation.filepath.length > filePathTruncationLimit) {
         const citationLength = citation.filepath.length
@@ -83,6 +86,11 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     } else {
       citationFilename = `Sitering ${index}`
     }
+
+    if (truncate && citation.filepath) {
+      return citation.filepath
+    }
+
     return citationFilename
   }
 
@@ -306,8 +314,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   <Text
                     className={styles.accordionTitle}
                     onClick={toggleIsRefAccordionOpen}
-                    aria-label="Åpne referanser"
-                    // aria-label="Open references" 
+                    // aria-label="Åpne referanser"
+                    aria-label="Open references" 
                     tabIndex={0}
                     role="button">
                     <span>
@@ -364,9 +372,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   onClick={() => onCitationClicked(citation)}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? onCitationClicked(citation) : null)}
                   className={styles.citationContainer}
-                  aria-label={createCitationFilepath(citation, idx)}>
+                  aria-label={createCitationFilepath(citation, idx)}> 
                   <div className={styles.citation}>{idx}</div>
-                  {createCitationFilepath(citation, idx, true)}
+                  <a href={citation.url || ''} target='_blank'> {citation.title}</a>
+                  {/* {createCitationFilepath(citation, idx, true)} */}
                 </span>
               )
             })}

@@ -30,6 +30,13 @@ if "%errorlevel%" neq "0" (
     exit /B %errorlevel%
 )
 
+
+@REM echo.
+@REM echo Building frontend
+@REM echo.
+@REM call npm run dev
+
+
 echo.    
 echo Starting backend    
 echo.    

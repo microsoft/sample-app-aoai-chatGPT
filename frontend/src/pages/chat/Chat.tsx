@@ -678,7 +678,7 @@ const Chat = () => {
 
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
-    setIsCitationPanelOpen(true)
+    // setIsCitationPanelOpen(true)
   }
 
   const onShowExecResult = () => {
