@@ -7,6 +7,10 @@ on:
       - develop
   release:
     types: [published]
+    
+permissions:
+      id-token: write
+      contents: read
 
 jobs:
   deploy:
