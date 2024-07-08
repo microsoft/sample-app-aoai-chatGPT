@@ -46,10 +46,15 @@ def create_app():
 
 @bp.route("/")
 async def index():
+    identity_provider_enabled = "false"
+    if request.headers.get("X-Ms-Client-Principal"):
+        identity_provider_enabled = "true"
+        
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
-        favicon=app_settings.ui.favicon
+        favicon=app_settings.ui.favicon,
+        identity_provider_enabled=identity_provider_enabled
     )
 
 
