@@ -21,9 +21,9 @@ jobs:
       with:
         python-version: '3.11'
 
-    # - name: Install Azure CLI
-    #   run: |
-    #     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    - name: Install Azure CLI
+      run: |
+        curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
     - name: Azure Login
       uses: azure/login@v1
@@ -43,3 +43,7 @@ jobs:
           AZURE_OPENAI_EMBEDDING_NAME="${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}" \
           AZURE_OPENAI_ENDPOINT="${{ vars.AZURE_OPENAI_ENDPOINT }}" \
           AZURE_OPENAI_MODEL="${{ vars.AZURE_OPENAI_MODEL }}"
+
+    - name: logout
+      run: |
+        az logout
