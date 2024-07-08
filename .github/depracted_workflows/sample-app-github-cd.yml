@@ -70,6 +70,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'ml-107-hrchatbot-fe-app-p' #'sample-app-github-cd'
+          app-name: 'sample-app-github-cd' 
           slot-name: 'test'
           
