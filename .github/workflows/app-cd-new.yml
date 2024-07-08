@@ -34,11 +34,9 @@ jobs:
       env:
         WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
         RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
-        LOCATION: ${{ vars.LOCATION }}
-        SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
       run: |
         az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
-        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME 
+        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
 
     - name: Set Web App Environment Variables
       env:
