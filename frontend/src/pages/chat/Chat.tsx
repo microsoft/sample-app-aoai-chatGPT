@@ -113,11 +113,16 @@ const Chat = () => {
       setShowAuthMessage(false)
       return
     }
-    const userInfoList = await getUserInfo()
-    if (userInfoList.length === 0 && window.location.hostname !== '127.0.0.1') {
-      setShowAuthMessage(true)
-    } else {
+    if (document.currentScript?.getAttribute("identityProviderEnabled") == "true"){
       setShowAuthMessage(false)
+    }
+    else {
+      const userInfoList = await getUserInfo()
+      if (userInfoList.length === 0 && window.location.hostname !== '127.0.0.1') {
+        setShowAuthMessage(true)
+      } else {
+        setShowAuthMessage(false)
+      }
     }
   }
 
