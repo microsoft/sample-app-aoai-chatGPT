@@ -14,32 +14,31 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # environment: ${{ github.event_name == 'release' && 'prod' || 'test' }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.11'
 
     - name: Azure Login
       uses: azure/login@v1
       with:
-        client-id: ${{ github.event_name == 'release' && secrets.AZURE_CLIENT_ID_PROD || secrets.AZURE_CLIENT_ID_TEST }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ github.event_name == 'release' && secrets.AZURE_SUBSCRIPTION_ID_PROD || secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-    # - name: Deploy to Azure Web App
-    #   env:
-    #     WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
-    #     RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
-    #     LOCATION: ${{ vars.LOCATION }}
-    #     SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
-    #   run: |
-    #     az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --subscription $SUBSCRIPTION
-    #     az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME
+    - name: Deploy to Azure Web App
+      env:
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+        LOCATION: ${{ vars.LOCATION }}
+        SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+      run: |
+        az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --subscription $SUBSCRIPTION
+        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
 
     # - name: Set Web App Environment Variables
     #   env:
