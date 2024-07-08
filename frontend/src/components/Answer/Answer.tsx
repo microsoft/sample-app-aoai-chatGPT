@@ -375,7 +375,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   aria-label={createCitationFilepath(citation, idx)}> 
                   <div className={styles.citation}>{idx}</div>
                   <a href={citation.url || ''} target='_blank'> {citation.title}</a>
-                  {/* {createCitationFilepath(citation, idx, true)} */}
+                  {/* (Del: {citation.filepath?.split("pages_")[1]}) */}
+                  {/* TODO: custom component to show multiple chunks from the same url */}
                 </span>
               )
             })}
