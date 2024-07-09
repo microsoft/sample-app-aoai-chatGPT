@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-import logging
+#import logging
 import uuid
 import httpx
 from quart import (
@@ -76,14 +76,21 @@ async def assets(path):
 DEBUG = os.environ.get("DEBUG", "false")
 app_insight_conn_key = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING", "")
 
-if DEBUG.lower() == "true":
-    #logging.basicConfig(level=logging.DEBUG)
-    configure_azure_monitor(
-    connection_string=app_insight_conn_key,
-    logger_name="azure_application_logger",)
-    logging = getLogger("azure_application_logger")
-    logging.setLevel(INFO)
 
+global logging_initialized 
+logging_initialized = False
+
+if DEBUG.lower() == "true":
+    if not logging_initialized:
+        #logging.basicConfig(level=logging.DEBUG)
+        configure_azure_monitor(
+        connection_string=app_insight_conn_key,
+        logger_name="azure_application_logger",)
+        logging = getLogger("azure_application_logger")
+        logging.setLevel(INFO)
+        
+        logging_initialized = True
+    
 tracer = trace.get_tracer(__name__,tracer_provider=get_tracer_provider())
 
 
