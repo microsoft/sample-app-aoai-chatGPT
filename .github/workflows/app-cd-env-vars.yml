@@ -14,6 +14,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'release' && 'prod' || 'test' }}
 
     steps:
     - uses: actions/checkout@v4
@@ -23,38 +24,28 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Set deployment type
-    #TODO, just to check if prod setup works
-      id: deployment_type
-      run: |
-        if [[ ${{ github.event_name }} != 'release' ]]; then
-          echo "type=prod" >> $GITHUB_OUTPUT
-        else
-          echo "type=test" >> $GITHUB_OUTPUT
-        fi
-
     - name: Azure Login
       uses: azure/login@v1
       with:
-        client-id: ${{ steps.deployment_type.outputs.type == 'prod' && secrets.AZURE_CLIENT_ID_PROD || secrets.AZURE_CLIENT_ID_TEST }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ steps.deployment_type.outputs.type == 'prod' && secrets.AZURE_SUBSCRIPTION_ID_PROD || secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
     - name: Deploy to Azure Web App
       env:
-        WEBAPP_NAME: ${{ steps.deployment_type.outputs.type == 'prod' && vars.WEBAPP_NAME_PROD || vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP: ${{ steps.deployment_type.outputs.type == 'prod' && vars.RESOURCE_GROUP_PROD || vars.RESOURCE_GROUP_TEST }}
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
       run: |
         az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
         az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME 
 
     - name: Set Web App Environment Variables
       env:
-        WEBAPP_NAME: ${{ steps.deployment_type.outputs.type == 'prod' && vars.WEBAPP_NAME_PROD || vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP: ${{ steps.deployment_type.outputs.type == 'prod' && vars.RESOURCE_GROUP_PROD || vars.RESOURCE_GROUP_TEST }}
-        AZURE_OPENAI_EMBEDDING_NAME: ${{ steps.deployment_type.outputs.type == 'prod' && vars.AZURE_OPENAI_EMBEDDING_NAME_PROD || vars.AZURE_OPENAI_EMBEDDING_NAME_TEST }}
-        AZURE_OPENAI_ENDPOINT: ${{ steps.deployment_type.outputs.type == 'prod' && vars.AZURE_OPENAI_ENDPOINT_PROD || vars.AZURE_OPENAI_ENDPOINT_TEST }}
-        AZURE_OPENAI_MODEL: ${{ steps.deployment_type.outputs.type == 'prod' && vars.AZURE_OPENAI_MODEL_PROD || vars.AZURE_OPENAI_MODEL_TEST }}
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
+        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
       run: |
         az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --settings \
           AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
