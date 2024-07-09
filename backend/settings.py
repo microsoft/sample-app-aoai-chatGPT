@@ -630,7 +630,7 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
     )
     _type: Literal["azure_sql_server"] = PrivateAttr(default="azure_sql_server")
     
-    connection_string: Optional[str] = None
+    connection_string: Optional[str] = Field(default=None, exclude=True)
     table_schema: Optional[str] = None
     schema_max_row: Optional[int] = None
     top_n_results: Optional[int] = None
