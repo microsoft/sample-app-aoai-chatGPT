@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-#import logging
+import logging
 import uuid
 import httpx
 from quart import (
@@ -76,20 +76,47 @@ async def assets(path):
 DEBUG = os.environ.get("DEBUG", "false")
 app_insight_conn_key = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING", "")
 
-
-global logging_initialized 
+# Global variable to track logging initialization
 logging_initialized = False
 
-if DEBUG.lower() == "true":
+def initialize_logging():
+    global logging_initialized
     if not logging_initialized:
-        #logging.basicConfig(level=logging.DEBUG)
-        configure_azure_monitor(
-        connection_string=app_insight_conn_key,
-        logger_name="azure_application_logger",)
-        logging = getLogger("azure_application_logger")
-        logging.setLevel(INFO)
+        if DEBUG.lower() == "true":
+            # Configure Azure Monitor
+            configure_azure_monitor(
+                connection_string=app_insight_conn_key,
+                logger_name="azure_application_logger",
+            )
+            # Get and configure logger
+            logger = getLogger("azure_application_logger")
+            logger.setLevel(INFO)
+            logging_initialized = True
+            return logger
+        else:
+            return None
+            # # Default logger if not in debug mode
+            # logger = logging.getLogger()
+            # logger.setLevel(logging.INFO)
+            # return logger
+
+# Initialize logging once
+logger = initialize_logging()
+
+
+# global logging_initialized 
+# logging_initialized = False
+
+# if DEBUG.lower() == "true":
+#     if not logging_initialized:
+#         #logging.basicConfig(level=logging.DEBUG)
+#         configure_azure_monitor(
+#         connection_string=app_insight_conn_key,
+#         logger_name="azure_application_logger",)
+#         logging = getLogger("azure_application_logger")
+#         logging.setLevel(INFO)
         
-        logging_initialized = True
+#         logging_initialized = True
     
 tracer = trace.get_tracer(__name__,tracer_provider=get_tracer_provider())
 
@@ -483,7 +510,7 @@ async def update_conversation():
 
     with tracer.start_as_current_span("/history/update",context=extract(request.headers),kind=SpanKind.SERVER):
         try:
-            logging.info("Calling initiating - /history/update") 
+            logger.info("Calling initiating - /history/update") 
 
             # make sure cosmos is configured
             cosmos_conversation_client = init_cosmosdb_client()
@@ -519,12 +546,12 @@ async def update_conversation():
             # Submit request to Chat Completions for response
             await cosmos_conversation_client.cosmosdb_client.close()
             response = {"success": True}
-            logging.info("Calling Completed - /history/update") 
+            logger.info("Calling Completed - /history/update") 
             return jsonify(response), 200
 
         except Exception as e:
             #logging.exception("Exception in /history/update")
-            logging.error(f"An error occurred in /history/update : {e}")
+            logger.error(f"An error occurred in /history/update : {e}")
             return jsonify({"error": str(e)}), 500
 
 
@@ -1314,7 +1341,7 @@ async def add_conversation_v3():
 
     with tracer.start_as_current_span("/v3/history/generate",context=extract(request.headers),kind=SpanKind.SERVER):
         try:
-            logging.info("Calling initiating - /v3/history/generate") 
+            logger.info("Calling initiating - /v3/history/generate") 
 
             # make sure cosmos is configured
             cosmos_conversation_client = init_cosmosdb_client()
@@ -1364,12 +1391,12 @@ async def add_conversation_v3():
             #request_body["history_metadata"] = history_metadata
             request_body["id"] = conversation_id
 
-            logging.info("Calling Completing - /v3/history/generate")
+            logger.info("Calling Completing - /v3/history/generate")
             return await conversation_internal_v3(request_body, request.headers)
 
         except Exception as e:
             #logging.exception("Exception in /v3/history/generate")
-            logging.error(f"An error occurred in /v3/history/generate : {e}")
+            logger.error(f"An error occurred in /v3/history/generate : {e}")
             return jsonify({"error": str(e)}), 500
 
 @bp.route("/v3/conversation", methods=["POST"])
@@ -1396,7 +1423,7 @@ async def conversation_internal_v3(request_body, request_headers):
 
     except Exception as e:
         #logging.exception(ex)
-        logging.error(f"An error occurred in conversation_internal_v3 : {e}")
+        logger.error(f"An error occurred in conversation_internal_v3 : {e}")
         if hasattr(e, "status_code"):
             return jsonify({"error": str(e)}), e.status_code
         else:
@@ -1408,12 +1435,12 @@ async def complete_chat_request_v3(request_body, request_headers):
         prompt_type = get_prompt_type(request_body)
         history_metadata = request_body.get("history_metadata", {})
         
-        logging.info(f"Prompt Type: {prompt_type}")
+        logger.info(f"Prompt Type: {prompt_type}")
 
         endpoint = get_promptflow_endpoint(prompt_type)
         key = get_promptflow_endpoint_key(prompt_type)
 
-        logging.info(f"Promptflow Endpoint: {endpoint}")
+        logger.info(f"Promptflow Endpoint: {endpoint}")
 
         response = await promptflow_request_v3(request_body, endpoint, key)
         
@@ -1444,7 +1471,7 @@ def get_prompt_type(request_body):
 
     except Exception as e:
         #logging.exception("Exception in get_prompt_type")
-        logging.error(f"Exception in get_prompt_type : {e}")
+        logger.error(f"Exception in get_prompt_type : {e}")
 
         
 async def promptflow_request_v3(request, endpoint, key):
@@ -1477,7 +1504,7 @@ async def promptflow_request_v3(request, endpoint, key):
         #resp["id"] = request["messages"][-1]["id"]
         return resp
     except Exception as e:
-        logging.error(f"An error occurred while making promptflow_request_v3: {e}")
+        logger.error(f"An error occurred while making promptflow_request_v3: {e}")
 
 async def send_chat_request_v3(request_body, request_headers):
     filtered_messages = []
@@ -1495,7 +1522,7 @@ async def send_chat_request_v3(request_body, request_headers):
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
-        logging.error(f"Exception in send_chat_request : {e}")
+        logger.error(f"Exception in send_chat_request : {e}")
         #logging.exception("Exception in send_chat_request")
         raise e
 
@@ -1550,7 +1577,7 @@ async def add_conversation_feedback_v3():
             )
 
     except Exception as e:
-        logging.error(f"Exception in send_chat_request : {e}")
+        logger.error(f"Exception in send_chat_request : {e}")
         #logging.exception("Exception in /history/conversation_feedback")
         return jsonify({"error": str(e)}), 500
 
