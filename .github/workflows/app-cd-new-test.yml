@@ -37,7 +37,7 @@ jobs:
         RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST}}
         SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST}}
       run: |
-        az webapp up --runtime PYTHON:3.11 --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --subscription $SUBSCRIPTION
+        az webapp up --runtime PYTHON:3.11 --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --plan $SUBSCRIPTION
         az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME
 
     - name: Set Web App Environment Variables
