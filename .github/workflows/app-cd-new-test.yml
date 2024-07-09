@@ -38,6 +38,7 @@ jobs:
         SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST}}
         SERVICE_PLAN: ${{ vars.SERVICE_PLAN_TEST}}
       run: |
+        az webapp config appsettings set -g $RESOURCE_GROUP -n  $WEBAPP_NAME --settings WEBSITE_WEBDEPLOY_USE_SCM=false
         az webapp up --runtime PYTHON:3.11 --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --subscription $SUBSCRIPTION --plan $SERVICE_PLAN
         az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME
 
