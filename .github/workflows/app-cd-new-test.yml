@@ -30,32 +30,27 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-    - name: Check Azure Permissions
-      run: |
-        echo "Checking permissions for App Service Plan"
-        az role assignment list --assignee ${{ secrets.AZURE_CLIENT_ID_TEST }} --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}/resourceGroups/${{ vars.RESOURCE_GROUP_TEST }}/providers/Microsoft.Web/serverfarms/ml-108-shared-asp-t"
-        
-        echo "Checking permissions for Resource Group"
-        az role assignment list --assignee ${{ secrets.AZURE_CLIENT_ID_TEST }} --resource-group "${{ vars.RESOURCE_GROUP_TEST }}"
 
     - name: Deploy to Azure Web App
       env:
         WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
-        SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST }}
+        RESOURCE_GROUP_APP: ${{ vars.RESOURCE_GROUP_APP_TEST }}
+        RESOURCE_GROUP_ASP: ${{ vars.RESOURCE_GROUP_ASP_TEST }}
+        APP_SERVICE_PLAN: ${{ vars.APP_SERVICE_PLAN_NAME_TEST }}  # Make sure to set this variable
       run: |
-        az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
-        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME 
+        echo "Deploying to Web App $WEBAPP_NAME in Resource Group $RESOURCE_GROUP_APP using App Service Plan in $RESOURCE_GROUP_ASP"
+        az webapp create --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --plan $APP_SERVICE_PLAN --runtime "PYTHON:3.11"
+        az webapp config set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --startup-file "python3 -m gunicorn app:app"
 
     - name: Set Web App Environment Variables
       env:
         WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
+        RESOURCE_GROUP_APP: ${{ vars.RESOURCE_GROUP_APP }}
         AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
         AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}
         AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
       run: |
-        az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --settings \
+        az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --settings \
           AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
           AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT \
           AZURE_OPENAI_MODEL=$AZURE_OPENAI_MODEL
