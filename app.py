@@ -89,7 +89,7 @@ def initialize_logging():
                 logger_name="azure_application_logger",
             )
             # Get and configure logger
-            logger = getLogger("azure_application_logger")
+            logger = logging.getLogger("azure_application_logger")
             logger.setLevel(INFO)
             logging_initialized = True
             return logger
