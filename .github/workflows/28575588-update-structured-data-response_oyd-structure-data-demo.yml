@@ -66,4 +66,4 @@ jobs:
         with:
           app-name: 'oyd-structure-data-demo'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7AE77199A3774270AD4D2303A8021815 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FBCDF56373804A7ABEE36671256C395E }}
