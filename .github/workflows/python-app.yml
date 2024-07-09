@@ -33,14 +33,14 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Test with pytest
       env:
-        AZURE_OPENAI_ENDPOINT: ${{ vars.AZUREOPENAIENDPOINT }}
-        AZURE_OPENAI_MODEL: ${{ vars.AZUREOPENAIMODEL }}
-        AZURE_OPENAI_KEY: ${{ secrets.AZUREOPENAIKEY }}
-        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZUREOPENAIEMBEDDINGNAME }}
-        AZURE_SEARCH_SERVICE: ${{ vars.AZURESEARCHSERVICE }}
-        AZURE_SEARCH_INDEX: ${{ vars.AZURESEARCHINDEX }}
-        AZURE_SEARCH_KEY: ${{ secrets.AZURESEARCHKEY }}
-        AZURE_SEARCH_QUERY_TYPE: ${{ vars.AZURESEARCHQUERY }}
+        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
+        # AZURE_OPENAI_KEY: ${{ secrets.AZUREOPENAIKEY }}
+        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
+        # AZURE_SEARCH_SERVICE: ${{ vars.AZURESEARCHSERVICE }}
+        # AZURE_SEARCH_INDEX: ${{ vars.AZURESEARCHINDEX }}
+        # AZURE_SEARCH_KEY: ${{ secrets.AZURESEARCHKEY }}
+        # AZURE_SEARCH_QUERY_TYPE: ${{ vars.AZURESEARCHQUERY }}
       run: |
         export PYTHONPATH=$(pwd)
         coverage run -m pytest -v --show-capture=stdout

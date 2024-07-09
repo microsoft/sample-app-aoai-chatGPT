@@ -30,30 +30,30 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-    - name: Deploy to Azure Web App
-      env:
-        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
-        LOCATION: ${{ vars.LOCATION }}
-        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST}}
-        SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST}}
-        SERVICE_PLAN: ${{ vars.SERVICE_PLAN_TEST}}
-      run: |
-        az webapp config appsettings set -g $RESOURCE_GROUP -n  $WEBAPP_NAME --settings WEBSITE_WEBDEPLOY_USE_SCM=false
-        az webapp up --runtime PYTHON:3.11 --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --subscription $SUBSCRIPTION --plan $SERVICE_PLAN
-        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME
+    # - name: Deploy to Azure Web App
+    #   env:
+    #     WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
+    #     LOCATION: ${{ vars.LOCATION }}
+    #     RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST}}
+    #     SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST}}
+    #     SERVICE_PLAN: ${{ vars.SERVICE_PLAN_TEST}}
+    #   run: |
+    #     az webapp config appsettings set -g $RESOURCE_GROUP -n  $WEBAPP_NAME --settings WEBSITE_WEBDEPLOY_USE_SCM=false
+    #     az webapp up --runtime PYTHON:3.11 --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --subscription $SUBSCRIPTION --plan $SERVICE_PLAN
+    #     az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME
 
-    - name: Set Web App Environment Variables
-      env:
-        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP_APP: ${{ vars.RESOURCE_GROUP_APP }}
-        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
-        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}
-        AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
-      run: |
-        az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --settings \
-          AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
-          AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT \
-          AZURE_OPENAI_MODEL=$AZURE_OPENAI_MODEL
+    # - name: Set Web App Environment Variables
+    #   env:
+    #     WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
+    #     RESOURCE_GROUP_APP: ${{ vars.RESOURCE_GROUP_APP }}
+    #     AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
+    #     AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}
+    #     AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
+    #   run: |
+    #     az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --settings \
+    #       AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
+    #       AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT \
+    #       AZURE_OPENAI_MODEL=$AZURE_OPENAI_MODEL
 
     - name: Azure Logout
       run: |
