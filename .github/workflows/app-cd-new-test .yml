@@ -47,12 +47,6 @@ jobs:
       - name: Update file timestamps
         run: find . -exec touch {} +
 
-      # Uncomment and configure this step if you have tests
-      # - name: Run tests
-      #   run: |
-      #     # Add your test commands here
-      #     # npm test
-
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -62,7 +56,7 @@ jobs:
 
       - name: Set Web App Configuration
         run: |
-          az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false
+          az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false SCM_COMMAND_IDLE_TIMEOUT=3600
 
       - name: Deploy to Azure Web App
         run: |

@@ -31,18 +31,26 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
     - name: Deploy to Azure Web App
+      env:
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
+        SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST }}
       run: |
-        chmod +x deploy_to_azure.sh
-        ./deploy_to_azure.sh \
-          ${{ vars.WEBAPP_NAME_TEST }} \
-          "${{ vars.LOCATION }}" \
-          ${{ vars.RESOURCE_GROUP_TEST }} \
-          ${{ vars.SUBSCRIPTION_TEST }} \
-          ${{ vars.SERVICE_PLAN_TEST }} \
-          ${{ vars.RESOURCE_GROUP_APP }} \
-          ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }} \
-          ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }} \
-          ${{ vars.AZURE_OPENAI_MODEL }}
+        az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
+        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME 
+
+    - name: Set Web App Environment Variables
+      env:
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
+        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
+      run: |
+        az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --settings \
+          AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
+          AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT \
+          AZURE_OPENAI_MODEL=$AZURE_OPENAI_MODEL
 
     - name: Azure Logout
       run: |
