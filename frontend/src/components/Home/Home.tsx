@@ -14,7 +14,6 @@ import DesktopTextField from './DesktopTextField';
 const Home: React.FC = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const appendedQuestion=" What are the top 3 boat models you would recommend, phrase your response as [Brand] [Model] and limit responses to specific brand and models, not series.";
-
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -137,9 +136,46 @@ const Home: React.FC = () => {
 
     return result.trim()
   }
-
+  interface DataItem {
+    key: string;
+    value: string;
+    type: 'parent' | 'child';
+    promptValue?: string;
+  }
+  
+  const transformData = (data: DataItem[]): Record<string, string[]> => {
+    const result: Record<string, string[]> = {};
+  
+    data.forEach(item => {
+      const { key, value, type } = item;
+  
+      if (type === 'parent') {
+        if (key === 'prioritize') {
+          if (!result[key]) {
+            result[key] = [];
+          }
+          result[key].push(value);
+        } else {
+          if (!result[value]) {
+            result[value] = [];
+          }
+        }
+      } else if (type === 'child') {
+        const parent = data.find(d => d.key === key && d.type === 'parent');
+        if (parent && key !== 'prioritize') {
+          if (result[parent.value]) {
+            result[parent.value].push(value);
+          }
+        }
+      }
+    });
+  
+    return result;
+  };
   useEffect(() => {
     const processedTemplate = processTemplate()
+    const transformedData=transformData(selectedKeys)
+    appStateContext?.dispatch({ type: 'SET_SELECTED_TAGS', payload: transformedData})
     if (processedTemplate.trim() !== '' && selectedKeys?.length > 0) {
       setInputValue(processedTemplate)
     } else {
@@ -147,7 +183,6 @@ const Home: React.FC = () => {
       setTextFieldValue("")
     }
   }, [selectedKeys])
-
   const buttonDisabled = useMemo(() => {
     return selectedKeys?.length === 0 
   }, [selectedKeys, inputValue,textFieldValue])
@@ -157,7 +192,6 @@ const Home: React.FC = () => {
     appStateContext?.dispatch({ type: 'SET_PROMPT_VALUE', payload: inputPayload })
     navigate("/recommendations");
 };
-console.log({inputValue})
 
   const handleRemove = (selectedKey: string) => {
     setSelectedKeys(selectedKeys.filter(item => item.key !== selectedKey))

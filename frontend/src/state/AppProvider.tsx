@@ -37,6 +37,7 @@ export interface AppState {
   promptvalue:string | null
   selectedBoat:string
   selectedBrand:string
+  selectedTags:any
 }
 
 export type Action =
@@ -67,6 +68,8 @@ export type Action =
   | { type: 'SET_PROMPT_VALUE'; payload: string }
   | { type: 'SET_SELECTED_BOAT'; payload: string }
   | { type: 'SET_SELECTED_BRAND'; payload: string }
+  | { type: 'SET_SELECTED_TAGS'; payload: any }
+
   
 
 const initialState: AppState = {
@@ -90,7 +93,8 @@ const initialState: AppState = {
   conversationId: null,
   promptvalue:null,
   selectedBoat:'',
-  selectedBrand:''
+  selectedBrand:'',
+  selectedTags:[]
 }
 
 export const AppStateContext = createContext<
