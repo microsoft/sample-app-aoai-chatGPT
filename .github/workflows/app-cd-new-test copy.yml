@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -36,10 +40,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # - name: Run tests
-    #   run: |
-    #     # Add your test commands here
-    #     npm test
+    - name: Run tests
+      run: |
+        # Add your test commands here
+        npm test
 
     - name: Azure Login
       uses: azure/login@v1
