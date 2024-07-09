@@ -35,7 +35,7 @@ jobs:
         chmod +x deploy_to_azure.sh
         ./deploy_to_azure.sh \
           ${{ vars.WEBAPP_NAME_TEST }} \
-          ${{ vars.LOCATION }} \
+          "${{ vars.LOCATION }}" \
           ${{ vars.RESOURCE_GROUP_TEST }} \
           ${{ vars.SUBSCRIPTION_TEST }} \
           ${{ vars.SERVICE_PLAN_TEST }} \
