@@ -1,0 +1,57 @@
+name: Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+
+    - name: Deploy to Azure Web App
+      env:
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
+        SUBSCRIPTION: ${{ vars.SUBSCRIPTION_TEST }}
+      run: |
+        az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP
+        az webapp config set --startup-file "python3 -m gunicorn app:app" --name $WEBAPP_NAME 
+
+    - name: Set Web App Environment Variables
+      env:
+        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
+        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
+        AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
+        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}
+        AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
+      run: |
+        az webapp config appsettings set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --settings \
+          AZURE_OPENAI_EMBEDDING_NAME=$AZURE_OPENAI_EMBEDDING_NAME \
+          AZURE_OPENAI_ENDPOINT=$AZURE_OPENAI_ENDPOINT \
+          AZURE_OPENAI_MODEL=$AZURE_OPENAI_MODEL
+
+    - name: Azure Logout
+      run: |
+        az logout
