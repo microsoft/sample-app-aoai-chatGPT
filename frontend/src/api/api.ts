@@ -355,7 +355,7 @@ export const historyMessageFeedback = async (messageId: string, feedback: string
   return response
 }
 
-export async function getRecommendations(payload: string,city:string): Promise<any> {
+export async function getRecommendations(payload: string,city:string,selectedTags:any): Promise<any> {
   const prevId=uuid().toString();
 
   const data = {
@@ -365,6 +365,7 @@ export async function getRecommendations(payload: string,city:string): Promise<a
         role: 'user',
         content: payload,
         city:city,
+        tags:selectedTags,
         prompt_type: 1,
       },
     ],

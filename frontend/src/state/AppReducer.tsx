@@ -19,6 +19,8 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
       return { ...state, walkthorugh: action.payload, isLoadingWalkThrough: false }
     case 'SET_WALKTHROUGH_LOADING':
       return { ...state, isLoadingWalkThrough: action.payload };
+    case 'SET_SELECTED_TAGS':
+      return { ...state, selectedTags: action.payload };
     case 'SET_CONVERSATION_ID':
       return { ...state, conversationId: action.payload };
     case 'SET_PROMPT_VALUE':
