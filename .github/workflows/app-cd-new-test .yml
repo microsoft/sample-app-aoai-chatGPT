@@ -15,16 +15,16 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
-        node-version: '14'
+        node-version: '18'
 
     - name: Install frontend dependencies
       working-directory: frontend
-      run: npm install
+      run: npm ci
 
     - name: Build frontend
       working-directory: frontend
@@ -35,19 +35,17 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Create and start virtual environment
+    - name: Create and activate virtual environment
       run: |
         python -m venv venv
-        source venv/bin/activate
+        echo "source venv/bin/activate" >> $GITHUB_ENV
 
     - name: Install dependencies
-      run: |
-        source venv/bin/activate
-        pip install -r requirements.txt
-      
+      run: pip install -r requirements.txt
+
     - name: Zip artifact for deployment
       run: |
-        zip -r release.zip . -x "venv/*"
+        zip -r release.zip . -x "venv/*" "node_modules/*" ".git/*"
 
     - name: Upload artifact for deployment jobs
       uses: actions/upload-artifact@v3
@@ -55,10 +53,11 @@ jobs:
         name: python-app
         path: release.zip      
 
+    # Uncomment and configure this step if you have tests
     # - name: Run tests
     #   run: |
     #     # Add your test commands here
-    #     npm test
+    #     # npm test
 
     - name: Azure Login
       uses: azure/login@v1
@@ -67,10 +66,9 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-    - name: Deploy to Azure
-      env:
-        WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
-        RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP_TEST }}
-        SERVICE_PLAN: ${{ vars.SERVICE_PLAN_TEST }}    
-      run: |
-        az webapp up --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP --plan $SERVICE_PLAN
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ vars.WEBAPP_NAME_TEST }}
+        resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
+        package: release.zip
