@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Update file timestamps
+        run: find . -exec touch {} +
+
       # Uncomment and configure this step if you have tests
       # - name: Run tests
       #   run: |
