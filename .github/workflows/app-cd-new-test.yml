@@ -30,12 +30,13 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-    - name: Verify Azure CLI session
+    - name: Check Azure Permissions
       run: |
-        echo "Current account:"
-        az account show
-        echo "Available subscriptions:"
-        az account list --query "[?isDefault].{Name:name, ID:id, TenantID:tenantId}"
+        echo "Checking permissions for App Service Plan"
+        az role assignment list --assignee ${{ secrets.AZURE_CLIENT_ID_TEST }} --scope "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}/resourceGroups/${{ vars.RESOURCE_GROUP_TEST }}/providers/Microsoft.Web/serverfarms/ml-108-shared-asp-t"
+        
+        echo "Checking permissions for Resource Group"
+        az role assignment list --assignee ${{ secrets.AZURE_CLIENT_ID_TEST }} --resource-group "${{ vars.RESOURCE_GROUP_TEST }}"
 
     - name: Deploy to Azure Web App
       env:
