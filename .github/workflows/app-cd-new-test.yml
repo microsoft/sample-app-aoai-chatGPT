@@ -30,6 +30,13 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
+    - name: Verify Azure CLI session
+      run: |
+        echo "Current account:"
+        az account show
+        echo "Available subscriptions:"
+        az account list --query "[?isDefault].{Name:name, ID:id, TenantID:tenantId}"
+
     - name: Deploy to Azure Web App
       env:
         WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
