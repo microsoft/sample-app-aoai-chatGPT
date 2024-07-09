@@ -30,16 +30,14 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-
     - name: Deploy to Azure Web App
       env:
         WEBAPP_NAME: ${{ vars.WEBAPP_NAME_TEST }}
         RESOURCE_GROUP_APP: ${{ vars.RESOURCE_GROUP_APP_TEST }}
         RESOURCE_GROUP_ASP: ${{ vars.RESOURCE_GROUP_ASP_TEST }}
-        APP_SERVICE_PLAN: ${{ vars.APP_SERVICE_PLAN_NAME_TEST }}  # Make sure to set this variable
+        APP_SERVICE_PLAN: ${{ vars.APP_SERVICE_PLAN_NAME_TEST }}  # Make sure to define this variable
       run: |
-        echo "Deploying to Web App $WEBAPP_NAME in Resource Group $RESOURCE_GROUP_APP using App Service Plan in $RESOURCE_GROUP_ASP"
-        az webapp create --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --plan $APP_SERVICE_PLAN --runtime "PYTHON:3.11"
+        az webapp up --runtime "PYTHON:3.11" --sku B1 --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --plan $APP_SERVICE_PLAN
         az webapp config set --name $WEBAPP_NAME --resource-group $RESOURCE_GROUP_APP --startup-file "python3 -m gunicorn app:app"
 
     - name: Set Web App Environment Variables
