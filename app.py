@@ -36,6 +36,7 @@ from backend.utils import (
 from backend.prompt_type import PromptType
 
 from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry import trace
 from opentelemetry.trace import (
     SpanKind,
@@ -90,18 +91,50 @@ def initialize_logging():
             )
             # Get and configure logger
             logger = logging.getLogger("azure_application_logger")
-            logger.setLevel(INFO)
+            logger.setLevel(logging.INFO)
+            
+            # Prevent multiple handlers
+            if not logger.hasHandlers():
+                handler = logging.StreamHandler()  # or another handler suitable for your needs
+                formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+            
+            # Instrument logging with OpenTelemetry
+            LoggingInstrumentor().instrument(set_logging_format=True)
+
             logging_initialized = True
             return logger
         else:
             return None
-            # # Default logger if not in debug mode
-            # logger = logging.getLogger()
-            # logger.setLevel(logging.INFO)
-            # return logger
 
 # Initialize logging once
 logger = initialize_logging()
+
+
+# def initialize_logging():
+#     global logging_initialized
+#     if not logging_initialized:
+#         if DEBUG.lower() == "true":
+#             # Configure Azure Monitor
+#             configure_azure_monitor(
+#                 connection_string=app_insight_conn_key,
+#                 logger_name="azure_application_logger",
+#             )
+#             # Get and configure logger
+#             logger = logging.getLogger("azure_application_logger")
+#             logger.setLevel(INFO)
+#             logging_initialized = True
+#             return logger
+#         else:
+#             return None
+#             # # Default logger if not in debug mode
+#             # logger = logging.getLogger()
+#             # logger.setLevel(logging.INFO)
+#             # return logger
+
+# # Initialize logging once
+# logger = initialize_logging()
 
 
 # global logging_initialized 
