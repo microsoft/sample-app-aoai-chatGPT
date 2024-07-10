@@ -63,6 +63,7 @@
 #           az webapp up --runtime PYTHON:3.11 --sku B1 --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }} --location "${{ vars.LOCATION }}" --subscription ${{ vars.SUBSCRIPTION_TEST }}
 #           az webapp config set --startup-file "python3 -m gunicorn app:app" --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }}
 
+#Green, but noting gets deployed.
 # name: CI/CD Pipeline
 
 # on:
@@ -79,21 +80,21 @@
 #     runs-on: ubuntu-latest
 
 #     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v2
+#       # - name: Checkout repository
+#       #   uses: actions/checkout@v2
 
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v2
-#         with:
-#           node-version: '14'
+#       # - name: Set up Node.js
+#       #   uses: actions/setup-node@v2
+#       #   with:
+#       #     node-version: '14'
 
-#       - name: Install frontend dependencies
-#         working-directory: frontend
-#         run: npm install
+#       # - name: Install frontend dependencies
+#       #   working-directory: frontend
+#       #   run: npm install
 
-#       - name: Build frontend
-#         working-directory: frontend
-#         run: npm run build
+#       # - name: Build frontend
+#       #   working-directory: frontend
+#       #   run: npm run build
 
 #       - name: Set up Python
 #         uses: actions/setup-python@v4
@@ -120,11 +121,6 @@
 #           name: python-app
 #           path: release.zip      
 
-#       # Uncomment and configure this step if you have tests
-#       # - name: Run tests
-#       #   run: |
-#       #     # Add your test commands here
-#       #     # npm test
 
 #       - name: Azure Login
 #         uses: azure/login@v1
@@ -138,39 +134,5 @@
 #         with:
 #           app-name: ${{ vars.WEBAPP_NAME_TEST }}
 #           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
-#           package: release.zip
-
-
-
-#           deploy:
-#             runs-on: ubuntu-latest
-#             needs: build
-#             environment:
-#               name: 'test'
-#               url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-#             permissions:
-#               id-token: write #This is required for requesting the JWT
-        
-#             steps:
-#               - name: Download artifact from build job
-#                 uses: actions/download-artifact@v3
-#                 with:
-#                   name: python-app
-        
-#               - name: Unzip artifact for deployment
-#                 run: unzip release.zip
-        
-#               - name: Login to Azure
-#                 uses: azure/login@v1
-#                 with:
-#                   client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#                   tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#                   subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
-#               - name: 'Deploy to Azure Web App'
-#                 uses: azure/webapps-deploy@v2
-#                 id: deploy-to-webapp
-#                 with:
-#                   app-name: 'sample-app-github-cd' 
-#                   slot-name: 'test'
-                  
+#           slot-name: production
+#          # package: release.zip
