@@ -5,20 +5,6 @@ on:
     branches:
       - main
 
-env:
-  AZURE_OPENAI_MODEL_NAME: "${{ vars.AZURE_OPENAI_MODEL }}"
-  AZURE_OPENAI_KEY: "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
-  AZURE_OPENAI_RESOURCE: "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
-  AZURE_OPENAI_MODEL: "${{ vars.AZURE_OPENAI_MODEL }}"
-  AZURE_OPENAI_SYSTEM_MESSAGE: "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
-  AZURE_OPENAI_ENDPOINT: "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
-  AZURE_OPENAI_EMBEDDING_NAME: "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
-  AZURE_OPENAI_EMBEDDING_ENDPOINT: "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
-  AZURE_OPENAI_EMBEDDING_KEY: "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
-  AZURE_SEARCH_SERVICE: "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
-  AZURE_SEARCH_SERVICE_ENDPOINT: "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
-  AZURE_SEARCH_INDEX: "${{ vars.AZURE_SEARCH_INDEX }}"
-  AZURE_SEARCH_KEY: "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
 
 jobs:
   build:
@@ -88,8 +74,9 @@ jobs:
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
 
-      - name: Set environment variable
-        run: echo "MODEL_NAME=${{ vars.AZURE_OPENAI_MODEL }}" >> $GITHUB_ENV
+      - name: Set environment variables
+        run: |
+          echo "MODEL_NAME=${{ vars.AZURE_OPENAI_MODEL }}" >> $GITHUB_ENV
 
       - name: Set App Settings
         uses: azure/appservice-settings@v1
@@ -221,10 +208,15 @@ jobs:
                 "name": "PROMPTFLOW_RESPONSE_FIELD_NAME",
                 "value": "answer"
               },
-              {
+                            {
                 "name": "AZURE_OPENAI_MODEL_NAME",
-                "value": "${{ env.AZURE_OPENAI_MODEL }}"
-              # },
+                "value": "${{ env.MODEL_NAME }}"
+              } 
+            ]
+            
+              
+
+  #,
               # {
               #   "name": "AZURE_OPENAI_KEY",
               #   "value": "${{ env.AZURE_OPENAI_KEY_TEST }}"
@@ -273,8 +265,3 @@ jobs:
               #   "name": "AZURE_SEARCH_KEY",
               #   "value": "${{ env.AZURE_SEARCH_KEY_TEST }}"
               # }
-            ]
-            
-              
-
-  
