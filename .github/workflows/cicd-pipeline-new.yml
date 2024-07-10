@@ -78,7 +78,13 @@ jobs:
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           app-settings-json: |
-          {
-            "MY_ENV_VAR1": "value1",
-            "MY_ENV_VAR2": "value2"
-          }
+            [
+              {
+                "name": "MY_ENV_VAR1",
+                "value": "${{ 2 }}"
+              },
+              {
+                "name": "MY_ENV_VAR2",
+                "value": "${{ 4 }}"
+              }
+            ]
