@@ -97,7 +97,7 @@ jobs:
               },
               {
                 "name": "AZURE_OPENAI_MAX_TOKENS",
-                "value": "800"
+                "value": ${{ 800 }}"
               },
               {
                 "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
@@ -105,7 +105,7 @@ jobs:
               },
               {
                 "name": "AZURE_OPENAI_STREAM",
-                "value": "True"
+                "value": "${{ True }}"
               },
               {
                 "name": "UI_FAVICON",
@@ -125,19 +125,19 @@ jobs:
               },
               {
                 "name": "SEARCH_TOP_K",
-                "value": "5"
+                "value": ${{ 5 }}"
               },
               {
                 "name": "SEARCH_STRICTNESS",
-                "value": "3"
+                "value": ${{ 3 }}"
               },
               {
                 "name": "SEARCH_ENABLE_IN_DOMAIN",
-                "value": "True"
+                "value": ${{ True }}"
               },
               {
                 "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
-                "value": "True"
+                "value":  ${{ True }}"
               },
               {
                 "name": "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG",
@@ -145,15 +145,15 @@ jobs:
               },
               {
                 "name": "AZURE_SEARCH_INDEX_IS_PRECHUNKED",
-                "value": "True"
+                "value":  ${{ True }}"
               },
               {
                 "name": "AZURE_SEARCH_TOP_K",
-                "value": "5"
+                "value":  ${{ 5 }}"
               },
               {
                 "name": "AZURE_SEARCH_ENABLE_IN_DOMAIN",
-                "value": "True"
+                "value":  ${{ True }}"
               },
               {
                 "name": "AZURE_SEARCH_CONTENT_COLUMNS",
@@ -177,27 +177,27 @@ jobs:
               },
               {
                 "name": "AZURE_SEARCH_STRICTNESS",
-                "value": "3"
+                "value":  ${{ 3 }}"
               },
               {
                 "name": "ELASTICSEARCH_TOP_K",
-                "value": "5"
+                "value":  ${{ 5 }}"
               },
               {
                 "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
-                "value": "True"
+                "value":  ${{ True }}"
               },
               {
                 "name": "ELASTICSEARCH_STRICTNESS",
-                "value": "3"
+                "value": ${{ 3 }}"
               },
               {
                 "name": "USE_PROMPTFLOW",
-                "value": "False"
+                "value": ${{ False }}"
               },
               {
                 "name": "PROMPTFLOW_RESPONSE_TIMEOUT",
-                "value": "120"
+                "value": ${{ 120 }}"
               },
               {
                 "name": "PROMPTFLOW_REQUEST_FIELD_NAME",
