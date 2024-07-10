@@ -136,13 +136,16 @@ const Chat = () => {
     if (resultMessage.content.includes('all_exec_results')) {
       const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
       setExecResults(parsedExecResults.all_exec_results)
+      assistantMessage.context = JSON.stringify({
+        all_exec_results: parsedExecResults.all_exec_results
+      })
     }
 
     if (resultMessage.role === ASSISTANT) {
       assistantContent += resultMessage.content
-      assistantMessage = resultMessage
+      assistantMessage = {...assistantMessage, ...resultMessage}
       assistantMessage.content = assistantContent
-
+      
       if (resultMessage.context) {
         toolMessage = {
           id: uuid(),
