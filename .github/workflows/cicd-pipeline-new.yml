@@ -42,10 +42,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'test'
-      url: https://ml-108-hrchatbot-fe-app-t.azurewebsites.net
-      #${{ steps.deploy-to-webapp.outputs.webapp-url }} 
+    # environment:
+    #   name: 'test'
+    #   url: https://ml-108-hrchatbot-fe-app-t.azurewebsites.net
+    #   #${{ steps.deploy-to-webapp.outputs.webapp-url }} 
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read
@@ -73,7 +73,7 @@ jobs:
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
-          slot-name: production
+          slot-name: test
          # package: release.zip
 
                   
