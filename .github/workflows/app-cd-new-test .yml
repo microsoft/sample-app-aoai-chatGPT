@@ -56,7 +56,7 @@ jobs:
 
       - name: Set Web App Configuration
         run: |
-          az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false SCM_COMMAND_IDLE_TIMEOUT=3600
+          az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false SCM_COMMAND_IDLE_TIMEOUT=3600 WEBSITES_CONTAINER_START_TIME_LIMIT=3600
 
       - name: Deploy to Azure Web App
         run: |
