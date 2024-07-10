@@ -1,67 +1,67 @@
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: '14'
 
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm install
+#       - name: Install frontend dependencies
+#         working-directory: frontend
+#         run: npm install
 
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
+#       - name: Build frontend
+#         working-directory: frontend
+#         run: npm run build
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.11'
 
-      - name: Create and activate virtual environment
-        run: |
-          python -m venv venv
-          echo "VIRTUAL_ENV=${{ github.workspace }}/venv" >> $GITHUB_ENV
-          echo "${{ github.workspace }}/venv/bin" >> $GITHUB_PATH
+#       - name: Create and activate virtual environment
+#         run: |
+#           python -m venv venv
+#           echo "VIRTUAL_ENV=${{ github.workspace }}/venv" >> $GITHUB_ENV
+#           echo "${{ github.workspace }}/venv/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+#       - name: Install dependencies
+#         run: pip install -r requirements.txt
 
-      - name: Update file timestamps
-        run: find . -exec touch {} +
+#       - name: Update file timestamps
+#         run: find . -exec touch {} +
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+#       - name: Azure Login
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
+#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
-      - name: Set Web App Configuration
-        run: |
-          az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false NEW_VARIABLE=1
+#       - name: Set Web App Configuration
+#         run: |
+#           az webapp config appsettings set -g ${{ vars.RESOURCE_GROUP_TEST }} -n ${{ vars.WEBAPP_NAME_TEST }} --settings WEBSITE_WEBDEPLOY_USE_SCM=false NEW_VARIABLE=1
 
-      - name: Deploy to Azure Web App
-        run: |
-          az webapp up --runtime PYTHON:3.11 --sku B1 --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }} --location "${{ vars.LOCATION }}" --subscription ${{ vars.SUBSCRIPTION_TEST }}
-          az webapp config set --startup-file "python3 -m gunicorn app:app" --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }}
+#       - name: Deploy to Azure Web App
+#         run: |
+#           az webapp up --runtime PYTHON:3.11 --sku B1 --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }} --location "${{ vars.LOCATION }}" --subscription ${{ vars.SUBSCRIPTION_TEST }}
+#           az webapp config set --startup-file "python3 -m gunicorn app:app" --name ${{ vars.WEBAPP_NAME_TEST }} --resource-group ${{ vars.RESOURCE_GROUP_TEST }}
 
 # name: CI/CD Pipeline
 
@@ -139,3 +139,38 @@ jobs:
 #           app-name: ${{ vars.WEBAPP_NAME_TEST }}
 #           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
 #           package: release.zip
+
+
+
+#           deploy:
+#             runs-on: ubuntu-latest
+#             needs: build
+#             environment:
+#               name: 'test'
+#               url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+#             permissions:
+#               id-token: write #This is required for requesting the JWT
+        
+#             steps:
+#               - name: Download artifact from build job
+#                 uses: actions/download-artifact@v3
+#                 with:
+#                   name: python-app
+        
+#               - name: Unzip artifact for deployment
+#                 run: unzip release.zip
+        
+#               - name: Login to Azure
+#                 uses: azure/login@v1
+#                 with:
+#                   client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#                   tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+#                   subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        
+#               - name: 'Deploy to Azure Web App'
+#                 uses: azure/webapps-deploy@v2
+#                 id: deploy-to-webapp
+#                 with:
+#                   app-name: 'sample-app-github-cd' 
+#                   slot-name: 'test'
+                  
