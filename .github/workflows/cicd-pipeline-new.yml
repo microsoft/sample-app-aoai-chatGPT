@@ -42,10 +42,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # environment:
-    #   name: 'test'
-    #   url: https://ml-108-hrchatbot-fe-app-t.azurewebsites.net
-    #   #${{ steps.deploy-to-webapp.outputs.webapp-url }} 
+
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read
@@ -74,6 +71,20 @@ jobs:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
-         # package: release.zip
 
-                  
+
+      - name: Set App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ vars.WEBAPP_NAME_TEST }}
+          app-settings-json: |
+            [
+              {
+                "name": "MY_ENV_VAR1",
+                "value": "${{ 1 }}"
+              },
+              {
+                "name": "MY_ENV_VAR2",
+                "value": "${{ 2 }}"
+              }
+            ]
