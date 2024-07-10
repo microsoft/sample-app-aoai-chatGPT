@@ -74,11 +74,10 @@ jobs:
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
 
-      - name: Set environment variables
-        run: |
-          echo "MODEL_NAME=${{ vars.AZURE_OPENAI_MODEL }}" >> $GITHUB_ENV
-
       - name: Set App Settings
+        env:
+          AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
+        
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
@@ -210,7 +209,7 @@ jobs:
               },
               {
                 "name": "AZURE_OPENAI_MODEL",
-                "value": "${{ env.MODEL_NAME }}"
+                "value": "${{ env.AZURE_OPENAI_MODEL }}"
               }
             ]
             
