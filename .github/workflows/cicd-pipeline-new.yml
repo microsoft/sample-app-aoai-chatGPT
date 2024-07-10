@@ -92,6 +92,10 @@ jobs:
                 "value": "${{ 0 }}"
               },            
               {
+              "name": "AZURE_OPENAI_MODEL_NAME",
+              "value": ${{ vars.AZURE_OPENAI_MODEL }}              
+              },
+              {
                 "name": "AZURE_SEARCH_KEY",
                 "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
               }
