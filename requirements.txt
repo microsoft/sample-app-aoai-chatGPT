@@ -10,3 +10,7 @@ uvicorn==0.24.0
 aiohttp==3.9.2
 gunicorn==20.1.0
 pydantic-settings==2.2.1
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+opentelemetry-exporter-otlp==1.25.0
+opentelemetry-instrumentation-logging==0.46b0
