@@ -251,6 +251,8 @@ def prepare_model_args(request_body, request_headers):
             ]
         }
 
+    model_args["extra_headers"] = {"is_external": "false", "chatgpt_key": app_settings.azure_openai.chatgpt_key, "chatgpt_url": "https://wed-aiq-aoai-ncus.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-05-01-preview"}
+
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
         secret_params = [

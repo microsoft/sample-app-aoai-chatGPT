@@ -123,6 +123,7 @@ class _AzureOpenAISettings(BaseSettings):
     embedding_endpoint: Optional[str] = None
     embedding_key: Optional[str] = None
     embedding_name: Optional[str] = None
+    chatgpt_key: Optional[str] = None
     
     @field_validator('tools', mode='before')
     @classmethod
