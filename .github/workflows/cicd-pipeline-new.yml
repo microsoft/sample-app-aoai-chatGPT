@@ -208,10 +208,10 @@ jobs:
                 "name": "PROMPTFLOW_RESPONSE_FIELD_NAME",
                 "value": "answer"
               },
-                            {
-                "name": "AZURE_OPENAI_MODEL_NAME",
+              {
+                "name": "AZURE_OPENAI_MODEL",
                 "value": "${{ env.MODEL_NAME }}"
-              } 
+              }
             ]
             
               
