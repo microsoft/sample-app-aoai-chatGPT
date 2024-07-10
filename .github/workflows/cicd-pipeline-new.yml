@@ -81,7 +81,7 @@ jobs:
             [
               {
                 "name": "DEBUG",
-                "value": "${{ True }}"
+                "value": "True"
               },
               {
                 "name": "AZURE_OPENAI_MODEL_NAME",
@@ -105,7 +105,7 @@ jobs:
               },
               {
                 "name": "AZURE_OPENAI_STREAM",
-                "value": "${{ True }}"
+                "value": "True"
               },
               {
                 "name": "UI_FAVICON",
@@ -133,11 +133,11 @@ jobs:
               },
               {
                 "name": "SEARCH_ENABLE_IN_DOMAIN",
-                "value": ${{ True }}"
+                "value": "True"
               },
               {
                 "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
-                "value":  ${{ True }}"
+                "value":  "True"
               },
               {
                 "name": "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG",
@@ -145,7 +145,7 @@ jobs:
               },
               {
                 "name": "AZURE_SEARCH_INDEX_IS_PRECHUNKED",
-                "value":  ${{ True }}"
+                "value":  "True"
               },
               {
                 "name": "AZURE_SEARCH_TOP_K",
@@ -153,7 +153,7 @@ jobs:
               },
               {
                 "name": "AZURE_SEARCH_ENABLE_IN_DOMAIN",
-                "value":  ${{ True }}"
+                "value":  "True"
               },
               {
                 "name": "AZURE_SEARCH_CONTENT_COLUMNS",
@@ -185,7 +185,7 @@ jobs:
               },
               {
                 "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
-                "value":  ${{ True }}"
+                "value":  "True"
               },
               {
                 "name": "ELASTICSEARCH_STRICTNESS",
@@ -193,7 +193,7 @@ jobs:
               },
               {
                 "name": "USE_PROMPTFLOW",
-                "value": ${{ False }}"
+                "value": "False"
               },
               {
                 "name": "PROMPTFLOW_RESPONSE_TIMEOUT",
