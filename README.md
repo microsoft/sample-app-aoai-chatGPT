@@ -29,7 +29,7 @@ Please see the [section below](#add-an-identity-provider) for important informat
 1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
     
     These variables are required:
-    - `AZURE_OPENAI_RESOURCE`
+    - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
     - `AZURE_OPENAI_MODEL`
     - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
@@ -245,7 +245,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_STOP_SEQUENCE||Up to 4 sequences where the API will stop generating further tokens. Represent these as a string joined with "|", e.g. `"stop1|stop2|stop3"`|
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
-|AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
+|AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 |UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
 |UI_LOGO|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
@@ -262,6 +262,8 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |PROMPTFLOW_REQUEST_FIELD_NAME|query|Default field name to construct Promptflow request. Note: chat_history is auto constucted based on the interaction, if your API expects other mandatory field you will need to change the request parameters under `promptflow_request` function.|
 |PROMPTFLOW_RESPONSE_FIELD_NAME|reply|Default field name to process the response from Promptflow request.|
 |PROMPTFLOW_CITATIONS_FIELD_NAME|documents|Default field name to process the citations output from Promptflow request.|
+|DATASOURCE_TYPE||Type of data source to use for using the 'on-your-data' api. Can be `AzureCognitiveSearch`, `AzureCosmosDB`, `Elasticsearch`, `Pinecone`, `AzureMLIndex`, `AzureSqlServer` or `None` |
+
 
 ## Contributing
 
