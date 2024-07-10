@@ -73,7 +73,7 @@ jobs:
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
-          slot-name: test
+          slot-name: production
          # package: release.zip
 
                   
