@@ -91,4 +91,8 @@ jobs:
                 "name": "AZURE_OPENAI_TOP_P",
                 "value": "${{ 0 }}"
               }            
+              {
+              "name": "AZURE_OPENAI_MODEL_NAME",
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
+              }
             ]
