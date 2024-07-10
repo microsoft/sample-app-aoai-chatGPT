@@ -1615,4 +1615,6 @@ async def add_conversation_feedback_v3():
         return jsonify({"error": str(e)}), 500
 
 
-app = create_app()
+if __name__ == "__main__":
+    app = create_app()
+    #app.run()
