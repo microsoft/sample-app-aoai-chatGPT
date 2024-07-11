@@ -4,9 +4,52 @@ on:
   push:
     branches:
       - main
-
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
+    - name: Clear npm cache
+      run: npm cache clean --force
+
+    - name: Install dependencies
+      run: |
+        npm install --save-dev @fluentui/react
+        npm install --verbose
+
+    - name: Build project
+      run: npm run build --if-present
+      env:
+        NODE_OPTIONS: --max_old_space_size=8192
+
+    - name: Run tests
+      run: npm test --if-present
+
+    - name: Zip frontend artifact
+      run: zip -r frontend-release.zip build
+
+    - name: Upload frontend artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-app
+        path: frontend-release.zip
+
   build-backend:
     runs-on: ubuntu-latest
 
@@ -28,74 +71,38 @@ jobs:
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Zip backend artifact
+        run: zip -r backend-release.zip ./* -x "venv/*"
 
-      - name: Upload artifact for deployment jobs
+      - name: Upload backend artifact
         uses: actions/upload-artifact@v3
         with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
-
-  build-frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
-      - name: Clear npm cache
-        run: npm cache clean --force
-      - name: Install dependencies
-        run: |
-          npm install --save-dev @fluentui/react
-          npm install --verbose
-      - name: Build project
-        run: npm run build --if-present
-        env:
-          NODE_OPTIONS: --max_old_space_size=8192
-      - name: Run tests
-        run: npm test --if-present
-      - name: Upload frontend artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: frontend-artifact
-          path: build       
-
+          name: backend-app
+          path: backend-release.zip
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [build-frontend, build-backend]
 
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write
       contents: read
 
     steps:
-      - name: Download backend artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: python-app
-
       - name: Download frontend artifact
         uses: actions/download-artifact@v3
         with:
-          name: frontend-artifact
-          path: frontend-build
+          name: frontend-app
 
-      - name: Unzip artifact for deployment
+      - name: Download backend artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-app
+
+      - name: Unzip artifacts
         run: |
-          unzip release.zip
-          mkdir -p frontend
-          mv frontend-build frontend/build
+          unzip frontend-release.zip -d frontend
+          unzip backend-release.zip -d backend
 
       - name: Azure Login
         uses: azure/login@v1
@@ -111,12 +118,8 @@ jobs:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
+          package: .
 
-
-      - name: Copy frontend files
-        run: |
-          cp -R frontend/build/* ${{ vars.WEBAPP_NAME_TEST }}/wwwroot/
-                
       - name: Set App Settings
         uses: azure/appservice-settings@v1
         with:
@@ -259,49 +262,43 @@ jobs:
               "value": "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_ENDPOINT",
-            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_EMBEDDING_NAME",
-            "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
+              "name": "AZURE_OPENAI_EMBEDDING_NAME",
+              "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
             },
             {
-            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+              "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_EMBEDDING_KEY",
-            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+              "name": "AZURE_OPENAI_EMBEDDING_KEY",
+              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             },
             {
-            "name": "AZURE_SEARCH_SERVICE",
-            "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
+              "name": "AZURE_SEARCH_SERVICE",
+              "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-            "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+              "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+              "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
             },
             {
-            "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
-            "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+              "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
+              "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
             },
             {
-            "name": "AZURE_SEARCH_INDEX",
-            "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+              "name": "AZURE_SEARCH_INDEX",
+              "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
             },
             {
-            "name": "AZURE_SEARCH_KEY",
-            "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+              "name": "AZURE_SEARCH_KEY",
+              "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_KEY",
-            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+              "name": "AZURE_OPENAI_KEY",
+              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
-      # - name: Run tests and generate coverage report
-      #   run: |
-      #     export PYTHONPATH=$(pwd)
-      #     coverage run -m pytest -v --show-capture=stdout
-      #     coverage report -m --include=app.py,backend/*,tests/*
-      #     coverage xml
