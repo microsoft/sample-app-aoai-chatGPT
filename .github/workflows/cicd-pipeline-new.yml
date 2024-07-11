@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'production'
+      name: 'test'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     permissions:
@@ -66,23 +66,23 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: ${{ vars.WEBAPP_NAME_TEST }}
-          resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
-          slot-name: production
+          app-name: ${{ vars.WEBAPP_NAME }}
+          resource-group-name: ${{ vars.RESOURCE_GROUP }}
+          # slot-name: production
 
       - name: Set App Settings
 
         uses: azure/appservice-settings@v1
         with:
-          app-name: ${{ vars.WEBAPP_NAME_TEST }}
+          app-name: ${{ vars.WEBAPP_NAME }}
           app-settings-json: '[
             {
               "name": "DEBUG",
@@ -218,11 +218,11 @@ jobs:
             },
             {
               "name": "AZURE_OPENAI_RESOURCE",
-              "value": "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
+              "value": "${{ vars.AZURE_OPENAI_RESOURCE }}"
             },
             {
             "name": "AZURE_OPENAI_ENDPOINT",
-            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT }}"
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_NAME",
@@ -230,15 +230,15 @@ jobs:
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT }}"
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_KEY",
-            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            "value": "${{ secrets.AZURE_OPENAI_KEY }}"
             },
             {
             "name": "AZURE_SEARCH_SERVICE",
-            "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
+            "value": "${{ vars.AZURE_SEARCH_SERVICE }}"
             },
             {
             "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
@@ -246,7 +246,7 @@ jobs:
             },
             {
             "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
-            "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+            "value": "https://${{ vars.AZURE_SEARCH_SERVICE }}.search.windows.net"
             },
             {
             "name": "AZURE_SEARCH_INDEX",
@@ -254,11 +254,11 @@ jobs:
             },
             {
             "name": "AZURE_SEARCH_KEY",
-            "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+            "value": "${{ secrets.AZURE_SEARCH_KEY }}"
             },
             {
             "name": "AZURE_OPENAI_KEY",
-            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            "value": "${{ secrets.AZURE_OPENAI_KEY }}"
             }
           ]'
       # - name: Run tests and generate coverage report
