@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { initializeIcons } from '@fluentui/react'
 
 import Chat from './pages/chat/Chat'
@@ -14,7 +14,8 @@ import Recommendations from './components/Recommendations/Recommendations'
 import ProductInformation from './components/ProductInformation/ProductInformation'
 import Feedback from './components/Feedback/Feedback'
 import PreventBackNavigation from './components/common/PreventBackNavigation'
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
+
 initializeIcons()
 
 export default function App() {
@@ -22,9 +23,20 @@ export default function App() {
   const GA_TRACKING_ID = 'G-L0S6VRT5BT'; // Replace with your Google Analytics tracking ID
   ReactGA.initialize(GA_TRACKING_ID);
 
-  useEffect(() => {
-    ReactGA.pageview(window.location.pathname + window.location.search);
-  }, []);
+  // Send pageview with a custom path
+  ReactGA.send({ hitType: "pageview", page: "/home", title: "home" });
+
+
+  //const ga4react = new GA4React('G-XXXXXXXXXX');
+  // // Initialize Google Analytics 4 with your measurement ID
+  // const ga4react = new GA4React('G-L0S6VRT5BT');
+
+  // ga4react.initialize();
+  // const location = useLocation();
+  
+  // useEffect(() => {
+  //   ReactGA.send('pageview', { page_path: location.pathname,page_title: document.title,}); 
+  // }, [location]);
 
   return (
     
