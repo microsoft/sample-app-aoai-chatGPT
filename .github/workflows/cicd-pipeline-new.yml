@@ -74,11 +74,12 @@ jobs:
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
 
+      - name: Debug Print
+        run: echo ${{ vars.AZURE_OPENAI_MODEL }}
+
       - name: Set App Settings
         env:
           AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
-      - name: Debug Print
-        run: echo ${{ vars.AZURE_OPENAI_MODEL }}
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
