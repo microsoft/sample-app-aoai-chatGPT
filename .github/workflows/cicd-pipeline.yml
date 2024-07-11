@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Combined CI/CD Pipeline
 
 on:
   push:
@@ -9,100 +9,62 @@ on:
       - main
 
 jobs:
-  build-frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-        cache: 'npm'
-        cache-dependency-path: 'frontend/package-lock.json'
-
-    - name: Clear npm cache
-      run: npm cache clean --force
-
-    - name: Install dependencies
-      run: |
-        npm install --save-dev @fluentui/react
-        npm install --verbose
-
-    - name: Build project
-      run: npm run build --if-present
-      env:
-        NODE_OPTIONS: --max_old_space_size=8192
-
-    - name: Run tests
-      run: npm test --if-present
-
-    - name: Zip frontend artifact
-      run: zip -r frontend-release.zip build
-
-    - name: Upload frontend artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: frontend-app
-        path: frontend-release.zip
-
-  build-backend:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v1
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
           python-version: '3.11'
 
-      - name: Create and start virtual environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install backend dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-      
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+          python -m pip install -r requirements.txt
 
-      - name: Zip backend artifact
-        run: zip -r backend-release.zip ./* -x "venv/*"
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm install
 
-      - name: Upload backend artifact
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192
+        run: |
+          npm run build
+
+      - name: Zip artifact for deployment
+        run: |
+          Compress-Archive -Path * -DestinationPath release.zip -Force
+
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with:
-          name: backend-app
-          path: backend-release.zip
+          name: app-artifact
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [build-frontend, build-backend]
-
+    needs: build
     permissions:
       id-token: write
       contents: read
 
     steps:
-      - name: Download frontend artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: frontend-app
+          name: app-artifact
 
-      - name: Download backend artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: backend-app
-
-      - name: Unzip artifacts
-        run: |
-          unzip frontend-release.zip -d frontend
-          unzip backend-release.zip -d backend
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
 
       - name: Azure Login
         uses: azure/login@v1
@@ -118,7 +80,6 @@ jobs:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
-          package: .
 
       - name: Set App Settings
         uses: azure/appservice-settings@v1
@@ -262,43 +223,43 @@ jobs:
               "value": "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
             },
             {
-              "name": "AZURE_OPENAI_ENDPOINT",
-              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "name": "AZURE_OPENAI_ENDPOINT",
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
-              "name": "AZURE_OPENAI_EMBEDDING_NAME",
-              "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
+            "name": "AZURE_OPENAI_EMBEDDING_NAME",
+            "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
             },
             {
-              "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
-              "name": "AZURE_OPENAI_EMBEDDING_KEY",
-              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            "name": "AZURE_OPENAI_EMBEDDING_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             },
             {
-              "name": "AZURE_SEARCH_SERVICE",
-              "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
+            "name": "AZURE_SEARCH_SERVICE",
+            "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
             },
             {
-              "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-              "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+            "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
             },
             {
-              "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
-              "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+            "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
+            "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
             },
             {
-              "name": "AZURE_SEARCH_INDEX",
-              "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+            "name": "AZURE_SEARCH_INDEX",
+            "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
             },
             {
-              "name": "AZURE_SEARCH_KEY",
-              "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+            "name": "AZURE_SEARCH_KEY",
+            "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
             },
             {
-              "name": "AZURE_OPENAI_KEY",
-              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            "name": "AZURE_OPENAI_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
