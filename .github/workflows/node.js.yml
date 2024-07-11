@@ -18,8 +18,7 @@ jobs:
         working-directory: frontend
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x, 21.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [14, 16]
 
     steps:
     - uses: actions/checkout@v3
