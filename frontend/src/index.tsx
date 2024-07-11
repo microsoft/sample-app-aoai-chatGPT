@@ -14,13 +14,18 @@ import Recommendations from './components/Recommendations/Recommendations'
 import ProductInformation from './components/ProductInformation/ProductInformation'
 import Feedback from './components/Feedback/Feedback'
 import PreventBackNavigation from './components/common/PreventBackNavigation'
+import GoogleAnalytics from './ga'
 
 initializeIcons()
 
 export default function App() {
   
+  const GA_TRACKING_ID = 'G-L0S6VRT5BT'; // Replace with your Google Analytics tracking ID
+
   return (
+    
     <AppStateProvider>
+      <GoogleAnalytics trackingId={GA_TRACKING_ID} />
       <HashRouter>
       <PreventBackNavigation />
         <Routes>
