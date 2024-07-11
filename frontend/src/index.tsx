@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { initializeIcons } from '@fluentui/react'
 
 import Chat from './pages/chat/Chat'
@@ -48,7 +48,7 @@ export default function App() {
   return (
     
     <AppStateProvider>
-      <HashRouter>
+      <BrowserRouter>
       <PreventBackNavigation />
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -62,7 +62,7 @@ export default function App() {
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>
-      </HashRouter>
+      </BrowserRouter>
     </AppStateProvider>
   )
 }
