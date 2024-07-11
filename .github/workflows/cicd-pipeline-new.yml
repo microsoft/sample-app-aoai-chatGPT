@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'test'
+      name: 'prod'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     permissions:
