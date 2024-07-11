@@ -226,11 +226,6 @@ jobs:
               "value": "${{ env.AZURE_OPENAI_RESOURCE_TEST }}"
             },
             {
-            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-            "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
-            
-            },
-            {
             "name": "AZURE_OPENAI_ENDPOINT",
             "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
