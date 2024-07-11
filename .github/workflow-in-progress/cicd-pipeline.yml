@@ -28,6 +28,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install httpx
 
       - name: Install frontend dependencies
         working-directory: frontend
