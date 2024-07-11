@@ -256,8 +256,9 @@ jobs:
             "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
+      - name: Run tests and generate coverage report
         run: |
-        export PYTHONPATH=$(pwd)
-        coverage run -m pytest -v --show-capture=stdout
-        coverage report -m --include=app.py,backend/*,tests/*
-        coverage xml
+          export PYTHONPATH=$(pwd)
+          coverage run -m pytest -v --show-capture=stdout
+          coverage report -m --include=app.py,backend/*,tests/*
+          coverage xml
