@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { initializeIcons } from '@fluentui/react'
@@ -14,18 +14,21 @@ import Recommendations from './components/Recommendations/Recommendations'
 import ProductInformation from './components/ProductInformation/ProductInformation'
 import Feedback from './components/Feedback/Feedback'
 import PreventBackNavigation from './components/common/PreventBackNavigation'
-import GoogleAnalytics from './ga'
-
+import ReactGA from 'react-ga';
 initializeIcons()
 
 export default function App() {
   
   const GA_TRACKING_ID = 'G-L0S6VRT5BT'; // Replace with your Google Analytics tracking ID
+  ReactGA.initialize(GA_TRACKING_ID);
+
+  useEffect(() => {
+    ReactGA.pageview(window.location.pathname + window.location.search);
+  }, []);
 
   return (
     
     <AppStateProvider>
-      <GoogleAnalytics trackingId={GA_TRACKING_ID} />
       <HashRouter>
       <PreventBackNavigation />
         <Routes>
