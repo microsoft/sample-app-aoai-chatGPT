@@ -231,46 +231,46 @@ jobs:
             
             },
             {
-            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-            "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            "name": "AZURE_OPENAI_ENDPOINT",
+            "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_NAME",
+            "value": "${{ env.AZURE_OPENAI_EMBEDDING_NAME }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+            "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            },
+            {
+            "name": "AZURE_SEARCH_SERVICE",
+            "value": "${{ env.AZURE_SEARCH_SERVICE_TEST }}"
+            },
+            {
+            "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
+            "value": "https://${{ env.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+            },
+            {
+            "name": "AZURE_SEARCH_INDEX",
+            "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+            },
+            {
+            "name": "AZURE_SEARCH_KEY",
+            "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+            },
+            {
+            "name": "AZURE_OPENAI_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
-    
-          # ,
+          #TODO: might cause issue with the following values
           # {
-          #   "name": "AZURE_OPENAI_ENDPOINT",
-          #   "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
-          # },
-          # {
-          #   "name": "AZURE_OPENAI_EMBEDDING_NAME",
-          #   "value": "${{ env.AZURE_OPENAI_EMBEDDING_NAME }}"
-          # },
-          # {
-          #   "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-          #   "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
-          # },
-          # {
-          #   "name": "AZURE_OPENAI_EMBEDDING_KEY",
-          #   "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
-          # },
-          # {
-          #   "name": "AZURE_SEARCH_SERVICE",
-          #   "value": "${{ env.AZURE_SEARCH_SERVICE_TEST }}"
-          # },
-          # {
-          #   "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
-          #   "value": "https://${{ env.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
-          # },
-          # {
-          #   "name": "AZURE_SEARCH_INDEX",
-          #   "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
-          # },
-          # {
-          #   "name": "AZURE_SEARCH_KEY",
-          #   "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+          #   "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+          #   "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+          #   }
 
-          # {
-          #   "name": "AZURE_OPENAI_KEY",
-          #   "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
-          # },
-          # }
+
