@@ -74,39 +74,34 @@ jobs:
           resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
           slot-name: production
 
-      - name: Debug Print
-        run: echo ${{ vars.AZURE_OPENAI_MODEL }}
-
       - name: Set App Settings
         env:
           AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
-          app-settings-json: |
-            [
-              {
-                "name": "DEBUG",
-                "value": "True"
-              },
-              {
-                "name": "AZURE_OPENAI_TEMPERATURE",
-                "value": "${{ 0 }}"
-              },
-              {
-                "name": "AZURE_OPENAI_TOP_P",
-                "value": "${{ 0 }}"
-              },
-              {
-                "name": "AZURE_OPENAI_MAX_TOKENS",
-                "value": ${{ 800 }}"
-              }
-              #   ,
-              # {
-              #   "name": "AZURE_OPENAI_MODEL",
-              #   "value": "${{ env.AZURE_OPENAI_MODEL }}"
-              # }
-            ]
+          app-settings-json: '[
+            {
+              "name": "DEBUG",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_OPENAI_TEMPERATURE",
+              "value": "0"
+            },
+            {
+              "name": "AZURE_OPENAI_TOP_P",
+              "value": "0"
+            },
+            {
+              "name": "AZURE_OPENAI_MAX_TOKENS",
+              "value": "800"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL",
+              "value": "${{ env.AZURE_OPENAI_MODEL }}"
+            }
+          ]'
             
               
 
