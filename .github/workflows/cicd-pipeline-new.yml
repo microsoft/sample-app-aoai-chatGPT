@@ -100,11 +100,12 @@ jobs:
               {
                 "name": "AZURE_OPENAI_MAX_TOKENS",
                 "value": ${{ 800 }}"
-              },
-              {
-                "name": "AZURE_OPENAI_MODEL",
-                "value": "${{ env.AZURE_OPENAI_MODEL }}"
               }
+              #   ,
+              # {
+              #   "name": "AZURE_OPENAI_MODEL",
+              #   "value": "${{ env.AZURE_OPENAI_MODEL }}"
+              # }
             ]
             
               
