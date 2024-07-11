@@ -26,7 +26,8 @@ jobs:
 
       - name: Install backend dependencies
         run: |
-          python -m pip install -r requirements.txt
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Install frontend dependencies
         working-directory: frontend
