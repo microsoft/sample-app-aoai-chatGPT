@@ -77,7 +77,8 @@ jobs:
       - name: Set App Settings
         env:
           AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
-        
+      - name: Debug Print
+        run: echo ${{ vars.AZURE_OPENAI_MODEL }}
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ vars.WEBAPP_NAME_TEST }}
@@ -98,114 +99,6 @@ jobs:
               {
                 "name": "AZURE_OPENAI_MAX_TOKENS",
                 "value": ${{ 800 }}"
-              },
-              {
-                "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
-                "value": "2024-05-01-preview"
-              },
-              {
-                "name": "AZURE_OPENAI_STREAM",
-                "value": "True"
-              },
-              {
-                "name": "UI_FAVICON",
-                "value": "https://raw.githubusercontent.com/leroy-seafood/lsg-ml-hr-chat/5df64c36ce997073cef0f772e8f4ebd155f48025/frontend/src/assets/Leroy.svg"
-              },
-              {
-                "name": "AZURE_COSMOSDB_DATABASE",
-                "value": "db_conversation_history"
-              },
-              {
-                "name": "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER",
-                "value": "conversations"
-              },
-              {
-                "name": "DATASOURCE_TYPE",
-                "value": "AzureCognitiveSearch"
-              },
-              {
-                "name": "SEARCH_TOP_K",
-                "value": ${{ 5 }}"
-              },
-              {
-                "name": "SEARCH_STRICTNESS",
-                "value": ${{ 3 }}"
-              },
-              {
-                "name": "SEARCH_ENABLE_IN_DOMAIN",
-                "value": "True"
-              },
-              {
-                "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
-                "value":  "True"
-              },
-              {
-                "name": "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG",
-                "value": "my-semantic-config"
-              },
-              {
-                "name": "AZURE_SEARCH_INDEX_IS_PRECHUNKED",
-                "value":  "True"
-              },
-              {
-                "name": "AZURE_SEARCH_TOP_K",
-                "value":  ${{ 5 }}"
-              },
-              {
-                "name": "AZURE_SEARCH_ENABLE_IN_DOMAIN",
-                "value":  "True"
-              },
-              {
-                "name": "AZURE_SEARCH_CONTENT_COLUMNS",
-                "value": "chunk"
-              },
-              {
-                "name": "AZURE_SEARCH_FILENAME_COLUMN",
-                "value": "chunk_id"
-              },
-              {
-                "name": "AZURE_SEARCH_TITLE_COLUMN",
-                "value": "title"
-              },
-              {
-                "name": "AZURE_SEARCH_VECTOR_COLUMNS",
-                "value": "vector"
-              },
-              {
-                "name": "AZURE_SEARCH_QUERY_TYPE",
-                "value": "vectorSemanticHybrid"
-              },
-              {
-                "name": "AZURE_SEARCH_STRICTNESS",
-                "value":  ${{ 3 }}"
-              },
-              {
-                "name": "ELASTICSEARCH_TOP_K",
-                "value":  ${{ 5 }}"
-              },
-              {
-                "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
-                "value":  "True"
-              },
-              {
-                "name": "ELASTICSEARCH_STRICTNESS",
-                "value": ${{ 3 }}"
-              },
-              {
-                "name": "USE_PROMPTFLOW",
-                "value": "False"
-              },
-              {
-                "name": "PROMPTFLOW_RESPONSE_TIMEOUT",
-                "value": ${{ 120 }}"
-              },
-              {
-                "name": "PROMPTFLOW_REQUEST_FIELD_NAME",
-                "value": "question"
-              },
-              {
-                "name": "PROMPTFLOW_RESPONSE_FIELD_NAME",
-                "value": "answer"
               },
               {
                 "name": "AZURE_OPENAI_MODEL",
