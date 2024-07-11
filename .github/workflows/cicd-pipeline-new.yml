@@ -220,7 +220,6 @@ jobs:
               "name": "AZURE_OPENAI_MODEL_NAME",
               "value": "${{ env.AZURE_OPENAI_MODEL }}"
             },
-
             {
               "name": "AZURE_OPENAI_RESOURCE",
               "value": "${{ env.AZURE_OPENAI_RESOURCE_TEST }}"
@@ -246,6 +245,10 @@ jobs:
             "value": "${{ env.AZURE_SEARCH_SERVICE_TEST }}"
             },
             {
+            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+            "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            },
+            {
             "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
             "value": "https://${{ env.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
             },
@@ -262,10 +265,4 @@ jobs:
             "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
-          #TODO: might cause issue with the following values
-          # {
-          #   "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-          #   "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
-          #   }
-
 
