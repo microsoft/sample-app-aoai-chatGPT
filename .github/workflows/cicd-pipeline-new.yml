@@ -75,14 +75,6 @@ jobs:
           slot-name: production
 
       - name: Set App Settings
-        env:
-          AZURE_OPENAI_MODEL: ${{ vars.AZURE_OPENAI_MODEL }}
-          AZURE_OPENAI_RESOURCE_TEST: ${{ vars.AZURE_OPENAI_RESOURCE_TEST }}
-          AZURE_OPENAI_SYSTEM_MESSAGE: ${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}
-          AZURE_OPENAI_ENDPOINT_TEST: ${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}
-          AZURE_OPENAI_EMBEDDING_NAME: ${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}
-          AZURE_SEARCH_SERVICE_TEST: ${{ vars.AZURE_SEARCH_SERVICE_TEST }}
-          AZURE_SEARCH_INDEX: ${{ vars.AZURE_SEARCH_INDEX }}
 
         uses: azure/appservice-settings@v1
         with:
@@ -214,27 +206,27 @@ jobs:
             },
             {
               "name": "AZURE_OPENAI_MODEL",
-              "value": "${{ env.AZURE_OPENAI_MODEL }}"
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
             },
             {
               "name": "AZURE_OPENAI_MODEL_NAME",
-              "value": "${{ env.AZURE_OPENAI_MODEL }}"
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
             },
             {
               "name": "AZURE_OPENAI_RESOURCE",
-              "value": "${{ env.AZURE_OPENAI_RESOURCE_TEST }}"
+              "value": "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
             },
             {
             "name": "AZURE_OPENAI_ENDPOINT",
-            "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_NAME",
-            "value": "${{ env.AZURE_OPENAI_EMBEDDING_NAME }}"
+            "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
-            "value": "${{ env.AZURE_OPENAI_ENDPOINT_TEST }}"
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
             },
             {
             "name": "AZURE_OPENAI_EMBEDDING_KEY",
@@ -242,15 +234,15 @@ jobs:
             },
             {
             "name": "AZURE_SEARCH_SERVICE",
-            "value": "${{ env.AZURE_SEARCH_SERVICE_TEST }}"
+            "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
             },
             {
             "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-            "value": "${{ env.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
             },
             {
             "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
-            "value": "https://${{ env.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+            "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
             },
             {
             "name": "AZURE_SEARCH_INDEX",
@@ -265,4 +257,8 @@ jobs:
             "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
             }
           ]'
-
+        # run: |
+        # export PYTHONPATH=$(pwd)
+        # coverage run -m pytest -v --show-capture=stdout
+        # coverage report -m --include=app.py,backend/*,tests/*
+        # coverage xml
