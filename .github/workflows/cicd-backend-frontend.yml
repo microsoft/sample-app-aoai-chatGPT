@@ -1,0 +1,312 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
+    - name: Clear npm cache
+      run: npm cache clean --force
+
+    - name: Install dependencies
+      run: |
+        npm install --save-dev @fluentui/react
+        npm install --verbose
+
+    - name: Build project
+      run: npm run build --if-present
+      env:
+        NODE_OPTIONS: --max_old_space_size=8192
+
+    - name: Run tests
+      run: npm test --if-present
+
+    - name: Zip frontend artifact
+      run: zip -r frontend-build.zip build
+
+    - name: Upload frontend build
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend-build.zip
+
+  build-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.11'
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+        
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-frontend, build-backend]
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: python-app
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-build
+
+      - name: Unzip artifacts
+        run: |
+          unzip release.zip -d backend
+          unzip frontend-build.zip -d frontend
+
+      - name: Combine frontend and backend
+        run: |
+          mkdir -p backend/static
+          cp -R frontend/build/* backend/static/
+
+      - name: Zip combined artifact
+        run: |
+          cd backend
+          zip -r ../combined-release.zip .
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        id: deploy-to-webapp
+        with:
+          app-name: ${{ vars.WEBAPP_NAME_TEST }}
+          resource-group-name: ${{ vars.RESOURCE_GROUP_TEST }}
+          package: combined-release.zip
+
+      - name: Set App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ vars.WEBAPP_NAME_TEST }}
+          app-settings-json: '[
+            {
+              "name": "DEBUG",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_OPENAI_TEMPERATURE",
+              "value": "0"
+            },
+            {
+              "name": "AZURE_OPENAI_TOP_P",
+              "value": "0"
+            },
+            {
+              "name": "AZURE_OPENAI_MAX_TOKENS",
+              "value": "800"
+            },
+            {
+              "name": "AZURE_OPENAI_PREVIEW_API_VERSION",
+              "value": "2024-05-01-preview"
+            },
+            {
+              "name": "AZURE_OPENAI_STREAM",
+              "value": "True"
+            },
+            {
+              "name": "UI_FAVICON",
+              "value": "https://raw.githubusercontent.com/leroy-seafood/lsg-ml-hr-chat/5df64c36ce997073cef0f772e8f4ebd155f48025/frontend/src/assets/Leroy.svg"
+            },
+            {
+              "name": "AZURE_COSMOSDB_DATABASE",
+              "value": "db_conversation_history"
+            },
+            {
+              "name": "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER",
+              "value": "conversations"
+            },
+            {
+              "name": "DATASOURCE_TYPE",
+              "value": "AzureCognitiveSearch"
+            },
+            {
+              "name": "SEARCH_TOP_K",
+              "value": "5"
+            },
+            {
+              "name": "SEARCH_STRICTNESS",
+              "value": "3"
+            },
+            {
+              "name": "SEARCH_ENABLE_IN_DOMAIN",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG",
+              "value": "my-semantic-config"
+            },
+            {
+              "name": "AZURE_SEARCH_INDEX_IS_PRECHUNKED",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_SEARCH_TOP_K",
+              "value": "5"
+            },
+            {
+              "name": "AZURE_SEARCH_ENABLE_IN_DOMAIN",
+              "value": "True"
+            },
+            {
+              "name": "AZURE_SEARCH_CONTENT_COLUMNS",
+              "value": "chunk"
+            },
+            {
+              "name": "AZURE_SEARCH_FILENAME_COLUMN",
+              "value": "chunk_id"
+            },
+            {
+              "name": "AZURE_SEARCH_TITLE_COLUMN",
+              "value": "title"
+            },
+            {
+              "name": "AZURE_SEARCH_VECTOR_COLUMNS",
+              "value": "vector"
+            },
+            {
+              "name": "AZURE_SEARCH_QUERY_TYPE",
+              "value": "vectorSemanticHybrid"
+            },
+            {
+              "name": "AZURE_SEARCH_STRICTNESS",
+              "value": "3"
+            },
+            {
+              "name": "ELASTICSEARCH_TOP_K",
+              "value": "5"
+            },
+            {
+              "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
+              "value": "True"
+            },
+            {
+              "name": "ELASTICSEARCH_STRICTNESS",
+              "value": "3"
+            },
+            {
+              "name": "USE_PROMPTFLOW",
+              "value": "False"
+            },
+            {
+              "name": "PROMPTFLOW_RESPONSE_TIMEOUT",
+              "value": "120"
+            },
+            {
+              "name": "PROMPTFLOW_REQUEST_FIELD_NAME",
+              "value": "question"
+            },
+            {
+              "name": "PROMPTFLOW_RESPONSE_FIELD_NAME",
+              "value": "answer"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL",
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL_NAME",
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
+            },
+            {
+              "name": "AZURE_OPENAI_RESOURCE",
+              "value": "${{ vars.AZURE_OPENAI_RESOURCE_TEST }}"
+            },
+            {
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            },
+            {
+              "name": "AZURE_OPENAI_EMBEDDING_NAME",
+              "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
+            },
+            {
+              "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+              "value": "${{ vars.AZURE_OPENAI_ENDPOINT_TEST }}"
+            },
+            {
+              "name": "AZURE_OPENAI_EMBEDDING_KEY",
+              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            },
+            {
+              "name": "AZURE_SEARCH_SERVICE",
+              "value": "${{ vars.AZURE_SEARCH_SERVICE_TEST }}"
+            },
+            {
+              "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+              "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            },
+            {
+              "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
+              "value": "https://${{ vars.AZURE_SEARCH_SERVICE_TEST }}.search.windows.net"
+            },
+            {
+              "name": "AZURE_SEARCH_INDEX",
+              "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+            },
+            {
+              "name": "AZURE_SEARCH_KEY",
+              "value": "${{ secrets.AZURE_SEARCH_KEY_TEST }}"
+            },
+            {
+              "name": "AZURE_OPENAI_KEY",
+              "value": "${{ secrets.AZURE_OPENAI_KEY_TEST }}"
+            }
+          ]'
