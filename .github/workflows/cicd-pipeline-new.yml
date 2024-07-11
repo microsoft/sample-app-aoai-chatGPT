@@ -27,6 +27,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip list
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -261,9 +262,3 @@ jobs:
             "value": "${{ secrets.AZURE_OPENAI_KEY }}"
             }
           ]'
-      # - name: Run tests and generate coverage report
-      #   run: |
-      #     export PYTHONPATH=$(pwd)
-      #     coverage run -m pytest -v --show-capture=stdout
-      #     coverage report -m --include=app.py,backend/*,tests/*
-      #     coverage xml
