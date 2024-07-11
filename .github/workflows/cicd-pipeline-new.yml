@@ -66,10 +66,21 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_TEST }}
 
+
+      - name: Set environment
+        env:
+          environment_name: 'test'
+        run: echo "Setting environment to $environment_name"
+    
+      environment:
+        name: 'test'
+        url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+          
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
