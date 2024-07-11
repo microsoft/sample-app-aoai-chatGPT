@@ -21,11 +21,18 @@ initializeIcons()
 export default function App() {
   
   const GA_TRACKING_ID = 'G-L0S6VRT5BT'; // Replace with your Google Analytics tracking ID
-  ReactGA.initialize(GA_TRACKING_ID);
+  
+  useEffect(() => {
+    ReactGA.initialize(GA_TRACKING_ID);
+    // Send pageview with a custom path
+    ReactGA.send({ hitType: "pageview", page: window.location.pathname });
+  }, [])
+
+
+  
 
   // Send pageview with a custom path
-  ReactGA.send({ hitType: "pageview", page: "/home", title: "home" });
-
+  
 
   //const ga4react = new GA4React('G-XXXXXXXXXX');
   // // Initialize Google Analytics 4 with your measurement ID
