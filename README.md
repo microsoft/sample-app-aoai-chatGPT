@@ -29,9 +29,9 @@ Please see the [section below](#add-an-identity-provider) for important informat
 1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
     
     These variables are required:
-    - `AZURE_OPENAI_RESOURCE`
+    - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
     - `AZURE_OPENAI_MODEL`
-    - `AZURE_OPENAI_KEY`
+    - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_OPENAI_TEMPERATURE`
@@ -58,7 +58,7 @@ NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space
     - `DATASOURCE_TYPE` (should be set to `AzureCognitiveSearch`)
     - `AZURE_SEARCH_SERVICE`
     - `AZURE_SEARCH_INDEX`
-    - `AZURE_SEARCH_KEY`
+    - `AZURE_SEARCH_KEY` (optional if using Entra ID)
 
     These variables are optional:
     - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`
@@ -148,6 +148,7 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 - `UI_CHAT_DESCRIPTION`
 - `UI_FAVICON`
 - `UI_SHOW_SHARE_BUTTON`
+- `UI_SHOW_CHAT_HISTORY_BUTTON`
 
 Feel free to fork this repository and make your own modifications to the UX or backend logic. You can modify the source (`frontend/src`). For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
@@ -188,6 +189,20 @@ The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. 
 
 ```
 
+### Using Entra ID
+
+The app uses Azure OpenAI on your data [(see documentation)](https://learn.microsoft.com/en-us/azure/ai-services/openai/references/on-your-data). To enable Entra ID for intra-service authentication
+
+1. Enable managed identity on Azure OpenAI
+2. Configure AI search to allow access from Azure OpenAI
+   1. Enable Role Based Access control on the used AI search instance [(see documentation)](https://learn.microsoft.com/en-us/azure/search/search-security-enable-roles)
+   2. Assign `Search Index Data Reader` and `Search Service Contributor` to the identity of the Azure OpenAI instance
+3. Do not configure `AZURE_SEARCH_KEY` and `AZURE_OPENAI_KEY` to use Entra ID authentication.
+4. Configure the webapp identity
+   1. Enable managed identity in the app service that hosts the webapp
+   2. Go to the Azure OpenAI instance and assign the role `Cognitive Services OpenAI User` to the identity of the webapp
+
+Note: RBAC assignments can take a few minutes before becoming effective.
 
 ### Best Practices
 We recommend keeping these best practices in mind:
@@ -207,31 +222,31 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 | --- | --- | ------------- |
 |AZURE_SEARCH_SERVICE||The name of your Azure AI Search resource|
 |AZURE_SEARCH_INDEX||The name of your Azure AI Search Index|
-|AZURE_SEARCH_KEY||An **admin key** for your Azure AI Search resource|
+|AZURE_SEARCH_KEY||An **admin key** for your Azure AI Search resource.|
 |AZURE_SEARCH_USE_SEMANTIC_SEARCH|False|Whether or not to use semantic search|
 |AZURE_SEARCH_QUERY_TYPE|simple|Query type: simple, semantic, vector, vectorSimpleHybrid, or vectorSemanticHybrid. Takes precedence over AZURE_SEARCH_USE_SEMANTIC_SEARCH|
 |AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG||The name of the semantic search configuration to use if using semantic search.|
 |AZURE_SEARCH_TOP_K|5|The number of documents to retrieve from Azure AI Search.|
 |AZURE_SEARCH_ENABLE_IN_DOMAIN|True|Limits responses to only queries relating to your data.|
 |AZURE_SEARCH_CONTENT_COLUMNS||List of fields in your Azure AI Search index that contains the text content of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
-|AZURE_SEARCH_FILENAME_COLUMN|| Field from your Azure AI Search index that gives a unique idenitfier of the source of your data to display in the UI.|
+|AZURE_SEARCH_FILENAME_COLUMN|| Field from your Azure AI Search index that gives a unique identifier of the source of your data to display in the UI.|
 |AZURE_SEARCH_TITLE_COLUMN||Field from your Azure AI Search index that gives a relevant title or header for your data content to display in the UI.|
 |AZURE_SEARCH_URL_COLUMN||Field from your Azure AI Search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
 |AZURE_SEARCH_VECTOR_COLUMNS||List of fields in your Azure AI Search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
 |AZURE_SEARCH_PERMITTED_GROUPS_COLUMN||Field from your Azure AI Search index that contains AAD group IDs that determine document-level access control.|
 |AZURE_SEARCH_STRICTNESS|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
-|AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource|
+|AZURE_OPENAI_RESOURCE||the name of your Azure OpenAI resource (only one of AZURE_OPENAI_RESOURCE/AZURE_OPENAI_ENDPOINT is required)|
 |AZURE_OPENAI_MODEL||The name of your model deployment|
-|AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource.|
+|AZURE_OPENAI_ENDPOINT||The endpoint of your Azure OpenAI resource (only one of AZURE_OPENAI_RESOURCE/AZURE_OPENAI_ENDPOINT is required)|
 |AZURE_OPENAI_MODEL_NAME|gpt-35-turbo-16k|The name of the model|
-|AZURE_OPENAI_KEY||One of the API keys of your Azure OpenAI resource|
+|AZURE_OPENAI_KEY||One of the API keys of your Azure OpenAI resource (optional if using Entra ID)|
 |AZURE_OPENAI_TEMPERATURE|0|What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. A value of 0 is recommended when using your data.|
 |AZURE_OPENAI_TOP_P|1.0|An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. We recommend setting this to 1.0 when using your data.|
 |AZURE_OPENAI_MAX_TOKENS|1000|The maximum number of tokens allowed for the generated answer.|
 |AZURE_OPENAI_STOP_SEQUENCE||Up to 4 sequences where the API will stop generating further tokens. Represent these as a string joined with "|", e.g. `"stop1|stop2|stop3"`|
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
-|AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response|
+|AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 |UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
 |UI_LOGO|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
@@ -240,6 +255,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
 |UI_FAVICON|| Defaults to Contoso favicon. Configure the URL to your favicon to modify.
 |UI_SHOW_SHARE_BUTTON|True|Share button (right-top)
+|UI_SHOW_CHAT_HISTORY_BUTTON|True|Show chat history button (right-top)
 |SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 |USE_PROMPTFLOW|False|Use existing Promptflow deployed endpoint. If set to `True` then both `PROMPTFLOW_ENDPOINT` and `PROMPTFLOW_API_KEY` also need to be set.|
 |PROMPTFLOW_ENDPOINT||URL of the deployed Promptflow endpoint e.g. https://pf-deployment-name.region.inference.ml.azure.com/score|
@@ -248,6 +264,8 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |PROMPTFLOW_REQUEST_FIELD_NAME|query|Default field name to construct Promptflow request. Note: chat_history is auto constucted based on the interaction, if your API expects other mandatory field you will need to change the request parameters under `promptflow_request` function.|
 |PROMPTFLOW_RESPONSE_FIELD_NAME|reply|Default field name to process the response from Promptflow request.|
 |PROMPTFLOW_CITATIONS_FIELD_NAME|documents|Default field name to process the citations output from Promptflow request.|
+|DATASOURCE_TYPE||Type of data source to use for using the 'on-your-data' api. Can be `AzureCognitiveSearch`, `AzureCosmosDB`, `Elasticsearch`, `Pinecone`, `AzureMLIndex`, `AzureSqlServer` or `None` |
+
 
 ## Contributing
 
