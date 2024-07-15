@@ -49,7 +49,7 @@ async def index():
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
-       # favicon=app_settings.ui.favicon
+       favicon=app_settings.ui.favicon
     )
 
 
@@ -861,6 +861,3 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
-
-if __name__ == "__main__":
-    app.run()
