@@ -14,7 +14,7 @@ TODO: Deploy through Copilot instead.
 1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
     
     These variables are required:
-    - `AZURE_OPENAI_RESOURCE`
+    - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
     - `AZURE_OPENAI_MODEL`
     - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
