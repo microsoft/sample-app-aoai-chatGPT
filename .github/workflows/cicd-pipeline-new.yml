@@ -109,10 +109,10 @@ jobs:
               "name": "AZURE_OPENAI_STREAM",
               "value": "True"
             },
-            {
-              "name": "UI_FAVICON",
-              "value": "https://raw.githubusercontent.com/leroy-seafood/lsg-ml-hr-chat/5df64c36ce997073cef0f772e8f4ebd155f48025/frontend/src/assets/Leroy.svg"
-            },
+            # {
+            #   "name": "UI_FAVICON",
+            #   "value": "https://raw.githubusercontent.com/leroy-seafood/lsg-ml-hr-chat/5df64c36ce997073cef0f772e8f4ebd155f48025/frontend/src/assets/Leroy.svg"
+            # },
             {
               "name": "AZURE_COSMOSDB_DATABASE",
               "value": "db_conversation_history"

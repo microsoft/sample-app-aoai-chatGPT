@@ -49,13 +49,13 @@ async def index():
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
-        # favicon=app_settings.ui.favicon
+        favicon=app_settings.ui.favicon
     )
 
 
-# @bp.route("/favicon.ico")
-# async def favicon():
-#     return await bp.send_static_file("favicon.ico")
+@bp.route("/favicon.ico")
+async def favicon():
+    return await bp.send_static_file("favicon.ico")
 
 
 @bp.route("/assets/<path:path>")
