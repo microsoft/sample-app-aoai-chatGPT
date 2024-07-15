@@ -46,7 +46,7 @@ class _UiSettings(BaseSettings):
     chat_logo: Optional[str] = None
     chat_title: str = "Start samtale"
     chat_description: str = "Denne assistenten er utviklet for å hjelpe deg med å finne svar på dine HR og lønnsrelaterte spørsmål"
-    favicon: str = "favicon.ico" # Leroy logo
+    #favicon: str = #"favicon.ico" # Leroy logo
     show_share_button: bool = False
     show_chat_history_button: bool = False
 
