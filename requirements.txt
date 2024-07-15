@@ -6,6 +6,7 @@ azure-storage-blob==12.17.0
 python-dotenv==1.0.0
 azure-cosmos==4.5.0
 Quart==0.19.6
+Hypercorn==0.17.3
 uvicorn==0.24.0
 aiohttp==3.9.2
 gunicorn==22.0.0
