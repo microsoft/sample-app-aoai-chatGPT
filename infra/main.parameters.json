@@ -11,6 +11,21 @@
     "principalId": {
       "value": "${AZURE_PRINCIPAL_ID}"
     },
+    "appServicePlanName": {
+      "value": "${AZURE_APPSERVICE_PLAN}"
+    },
+    "cosmosAccountName": {
+      "value": "${AZURE_COSMOS_ACCOUNT}"
+    },
+    "backendServiceName": {
+      "value": "${AZURE_BACKEND_SERVICE}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP}"
+    },
+    "storageAccountName": {
+      "value": "${AZURE_STORAGE_ACCOUNT}"
+    },
     "openAiResourceName": {
       "value": "${AZURE_OPENAI_RESOURCE}"
     },
