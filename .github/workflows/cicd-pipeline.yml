@@ -254,7 +254,7 @@ jobs:
             },
             {
             "name": "AZURE_SEARCH_INDEX",
-            "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+            "value": "${{ vars.AZURE_SEARCH_INDEX }}"
             },
             {
             "name": "AZURE_SEARCH_KEY",
