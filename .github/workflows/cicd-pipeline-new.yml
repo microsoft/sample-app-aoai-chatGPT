@@ -211,5 +211,37 @@ jobs:
             {
               "name": "PROMPTFLOW_RESPONSE_FIELD_NAME",
               "value": "answer"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL",
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
+            },
+            {
+              "name": "AZURE_OPENAI_MODEL_NAME",
+              "value": "${{ vars.AZURE_OPENAI_MODEL }}"
+            },
+            {
+              "name": "AZURE_OPENAI_RESOURCE",
+              "value": "${{ vars.AZURE_OPENAI_RESOURCE }}"
+            },
+            {
+            "name": "AZURE_OPENAI_ENDPOINT",
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_NAME",
+            "value": "${{ vars.AZURE_OPENAI_EMBEDDING_NAME }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_ENDPOINT",
+            "value": "${{ vars.AZURE_OPENAI_ENDPOINT }}"
+            },
+            {
+            "name": "AZURE_OPENAI_EMBEDDING_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY }}"
+            },
+            {
+            "name": "AZURE_SEARCH_SERVICE",
+            "value": "${{ vars.AZURE_SEARCH_SERVICE }}"
             }
           ]'
