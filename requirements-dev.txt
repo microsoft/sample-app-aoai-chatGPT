@@ -12,3 +12,4 @@ pytest-asyncio==0.23.2
 azure-storage-blob
 chardet
 azure-keyvault-secrets
+coverage

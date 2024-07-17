@@ -85,6 +85,7 @@ frontend_settings = {
         "chat_title": app_settings.ui.chat_title,
         "chat_description": app_settings.ui.chat_description,
         "show_share_button": app_settings.ui.show_share_button,
+        "show_chat_history_button": app_settings.ui.show_chat_history_button,
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
 }
@@ -126,7 +127,7 @@ def init_openai_client():
         aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
-            logging.debug("No AZURE_OPENAI_KEY found, using Azure AD auth")
+            logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
             ad_token_provider = get_bearer_token_provider(
                 DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
@@ -207,7 +208,8 @@ def prepare_model_args(request_body, request_headers):
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        user_json = get_msdefender_user_json(authenticated_user_details, request_headers)
+        conversation_id = request_body.get("conversation_id", None)        
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id)
 
     model_args = {
         "messages": messages,
@@ -352,7 +354,7 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream:
+        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
@@ -835,9 +837,9 @@ async def ensure_cosmos():
             return jsonify({"error": "CosmosDB is not working"}), 500
 
 
-async def generate_title(conversation_messages):
+async def generate_title(conversation_messages) -> str:
     ## make sure the messages are sorted by _ts descending
-    title_prompt = 'Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Respond with a json object in the format {{"title": string}}. Do not include any other commentary or description.'
+    title_prompt = "Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Do not include any other commentary or description."
 
     messages = [
         {"role": msg["role"], "content": msg["content"]}
@@ -846,14 +848,15 @@ async def generate_title(conversation_messages):
     messages.append({"role": "user", "content": title_prompt})
 
     try:
-        azure_openai_client = init_openai_client(use_data=False)
+        azure_openai_client = init_openai_client()
         response = await azure_openai_client.chat.completions.create(
             model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
-        title = json.loads(response.choices[0].message.content)["title"]
+        title = response.choices[0].message.content
         return title
     except Exception as e:
+        logging.exception("Exception while generating title", e)
         return messages[-2]["content"]
 
 

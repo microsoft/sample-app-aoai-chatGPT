@@ -27,6 +27,22 @@ If applicable, add screenshots to help explain your problem.
  - Azure OpenAI model name and version (e.g. 'gpt-35-turbo-16k, version 0613')
  - Is chat history enabled?
  - Are you using data? If so, what data source? (e.g. Azure AI Search, Azure CosmosDB Mongo vCore, etc)
+- Verify the startup command and runtime configuration by showing the output of the following az CLI command:
+```
+az webapp show --name <app name> --resource-group <resource group name> --query "{startupCommand: siteConfig.appCommandLine, runtime: siteConfig.linuxFxVersion}"
+```
+
+**Logs**
+
+1. If the application deployment is failing, please share the deployment logs using the following az CLI command:
+```
+az webapp log deployment show --name <app name> --resource-group <rg name>
+```
+
+2. If the application is crashing after deployment, please share the application logs using the following az CLI command:
+```
+az webapp log tail --name <app name> --resource-group <resource group name>
+```
 
 **Additional context**
 Add any other context about the problem here.
