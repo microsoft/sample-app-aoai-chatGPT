@@ -245,10 +245,6 @@ jobs:
             "value": "${{ vars.AZURE_SEARCH_SERVICE }}"
             },
             {
-            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
-            "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
-            },
-            {
             "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
             "value": "https://${{ vars.AZURE_SEARCH_SERVICE }}.search.windows.net"
             },
