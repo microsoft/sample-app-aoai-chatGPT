@@ -243,5 +243,25 @@ jobs:
             {
             "name": "AZURE_SEARCH_SERVICE",
             "value": "${{ vars.AZURE_SEARCH_SERVICE }}"
+            },
+            {
+            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+            "value": "${{ vars.AZURE_OPENAI_SYSTEM_MESSAGE }}"
+            },
+            {
+            "name": "AZURE_SEARCH_SERVICE_ENDPOINT",
+            "value": "https://${{ vars.AZURE_SEARCH_SERVICE }}.search.windows.net"
+            },
+            {
+            "name": "AZURE_SEARCH_INDEX",
+            "value": "${{ secrets.AZURE_SEARCH_INDEX }}"
+            },
+            {
+            "name": "AZURE_SEARCH_KEY",
+            "value": "${{ secrets.AZURE_SEARCH_KEY }}"
+            },
+            {
+            "name": "AZURE_OPENAI_KEY",
+            "value": "${{ secrets.AZURE_OPENAI_KEY }}"
             }
           ]'
