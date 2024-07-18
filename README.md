@@ -3,7 +3,7 @@
 Welcome to the Lerøy HR Assistant repository! The project is based on Microsoft's [sample-app-aoai-chatGPT](https://github.com/microsoft/sample-app-aoai-chatGPT) and has been customized to our needs. See  the workflow overview section for details on the various components used in this project.
 
 Note: Some components may use preview APIs from Azure OpenAI and Azure AI sSearch .
-![HR Assistant Screenshot](figures/hr_assistant.png)
+![HR Assistant Screenshot](figures/chat_animation.gif)
 
 ## Workflow overview
 
@@ -80,7 +80,7 @@ For a detailed description, se [sample-app-aoai-chatGPT](https://github.com/micr
 
 ## Deployment
 
-Our application is deployed using GitHub Actions. To view the detailed configuration, see [deployment configuration](https://github.com/leroy-seafood/lsg-ml-hr-chat/blob/main/.github/workflows/cd-pipeline.yml.)
+Our application is deployed using GitHub Actions. When code is pushed or merged to the main branch, it is automatically deployed to the `test` environment. Upon creating a release, the code is deployed to the `prod` environment. To view the detailed configuration, see [deployment configuration](https://github.com/leroy-seafood/lsg-ml-hr-chat/blob/main/.github/workflows/cd-pipeline.yml.)
 
 ### Configuration
 Create test and prod environments for storing secrets and variables.
