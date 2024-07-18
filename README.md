@@ -1,20 +1,19 @@
 # Lerøy HR assistant
 
-This repository contains the code for Lerøy's HR Assistant chat web application, which integrates with Azure OpenAI. Please note that some portions of the app use preview APIs.
+Welcome to the Lerøy HR Assistant repository! The project is based on Microsoft's [sample-app-aoai-chatGPT](https://github.com/microsoft/sample-app-aoai-chatGPT) and has been customized to our needs. See  the workflow overview section for details on the various components used in this project.
 
-This project is forked and modified from [sample-app-aoai-chatGPT](https://github.com/microsoft/sample-app-aoai-chatGPT).
-
+Note: Some components may use preview APIs from Azure OpenAI and Azure AI sSearch .
 ![HR Assistant Screenshot](figures/hr_assistant.png)
 
-## Workflow
+## Workflow overview
 
 ![Workflow Diagram](figures/workflow.png)
 
 ## 1. Data acquisition and processing
 
-- **Data extraction:** Utilize Power Apps to extract .aspx files from SharePoint pages, streamlining data collection.
-- **Data processing:** Employ Azure Functions with Python to process data, converting documents to HTML format for improved accessibility.
-- **Data storage:** Store processed data in Azure Blob Storage, ensuring efficient access and management.
+- **Data extraction:** Utilize Power Automate to extract .aspx files from SharePoint pages.
+- **Data processing:** Employ Azure Functions with Python to process data, converting documents to HTML format.
+- **Data storage:** Store processed data in Azure Blob Storage.
 
 ## 2. Azure AI Search index creation
 
@@ -48,9 +47,6 @@ You are an AI assistant specializing in HR-related tasks for employees. Adhere t
 ## Information Presentation
 - Structure responses with clear headings, subheadings, and bullet points
 
-## Additional Resources
-- Provide links to relevant sections of the employee handbook
-
 ## Continuous Improvement
 - Ask if the response was helpful
 
@@ -58,14 +54,14 @@ You are an AI assistant specializing in HR-related tasks for employees. Adhere t
 - Clearly state that you are an AI Assistant and cannot approve requests
 ```
 
-## Important note on formatting for environment variables
+### Important note on formatting for environment variables
 
-When using this template as an environment variable (e.g., AZURE_OPENAI_SYSTEM_MESSAGE), it must be formatted as a single line of text with escaped characters. Follow these steps:
+When using this system message as a value for the environment variable `AZURE_OPENAI_SYSTEM_MESSAGE`, it must be formatted as a single line of text with escaped characters. Follow these steps:
 
 1. Replace all newline characters with `\\n`.
 2. Escape all double quotes with a backslash (`\"`).
 
-⚠️ **Note**: Do not enclose the final value in double quotes when setting the environment variable.
+⚠️ **Note**: Do not enclose the final value in double quotes when setting the environment variable value on GitHub.
 
 ```python
 def print_formatted_system_message(input_text: str):
@@ -80,11 +76,11 @@ def print_formatted_system_message(input_text: str):
 1. Create a `.env` file based on the `.env.sample` provided.
 2. Execute `start.cmd` to run the application.
 
-For a detailed description, please refer to the [original repository](https://github.com/microsoft/sample-app-aoai-chatGPT).
+For a detailed description, se [sample-app-aoai-chatGPT](https://github.com/microsoft/sample-app-aoai-chatGPT).
 
 ## Deployment
 
-Our application is deployed using GitHub Actions, see file ().
+Our application is deployed using GitHub Actions. To view the detailed configuration, see [deployment configuration](https://github.com/leroy-seafood/lsg-ml-hr-chat/blob/main/.github/workflows/cicd-pipeline.yml.)
 
 ### Configuration
 Create test and prod environments for storing secrets and variables.
