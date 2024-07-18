@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import { useLocation } from 'react-router-dom'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -45,6 +46,11 @@ const enum messageStatus {
   Done = 'Done'
 }
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
+
 const Chat = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
@@ -71,6 +77,24 @@ const Chat = () => {
     closeButtonAriaLabel: 'Close',
     subText: errorMsg?.subtitle
   }
+
+  // Function to send a message to the chat server
+  const sendMessage = async (message: string) => {
+    try {
+      // Replace with your actual API call
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      const data = await response.json();
+      setMessages((prevMessages) => [...prevMessages, data]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
 
   const modalProps = {
     titleAriaId: 'labelId',
@@ -738,6 +762,11 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading
     )
   }
+
+  // useEffect to send a message when the component mounts
+  useEffect(() => {
+    sendMessage('Feedback details: ' + URLSearchParams.toString());
+  }, []);
 
   return (
     <div className={styles.container} role="main">
