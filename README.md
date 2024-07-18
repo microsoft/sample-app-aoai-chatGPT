@@ -80,7 +80,7 @@ For a detailed description, se [sample-app-aoai-chatGPT](https://github.com/micr
 
 ## Deployment
 
-Our application is deployed using GitHub Actions. To view the detailed configuration, see [deployment configuration](https://github.com/leroy-seafood/lsg-ml-hr-chat/blob/main/.github/workflows/cicd-pipeline.yml.)
+Our application is deployed using GitHub Actions. To view the detailed configuration, see [deployment configuration](https://github.com/leroy-seafood/lsg-ml-hr-chat/blob/main/.github/workflows/cd-pipeline.yml.)
 
 ### Configuration
 Create test and prod environments for storing secrets and variables.
