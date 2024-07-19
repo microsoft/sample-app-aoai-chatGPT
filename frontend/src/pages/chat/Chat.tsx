@@ -78,24 +78,6 @@ const Chat = () => {
     subText: errorMsg?.subtitle
   }
 
-  // Function to send a message to the chat server
-  const sendMessage = async (message: string) => {
-    try {
-      // Replace with your actual API call
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message }),
-      });
-      const data = await response.json();
-      setMessages((prevMessages) => [...prevMessages, data]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
-
   const modalProps = {
     titleAriaId: 'labelId',
     subtitleAriaId: 'subTextId',
@@ -763,12 +745,14 @@ const Chat = () => {
     )
   }
 
-  // useEffect to send a message when the component mounts
-  useEffect(() => {
-    sendMessage('Feedback details: ' + URLSearchParams.toString());
-  }, []);
-
   return (
+    <script>
+      window.onload => {
+                  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+                    ? makeApiRequestWithCosmosDB('Feedback details: ' + URLSearchParams.toString(), id)
+                    : makeApiRequestWithoutCosmosDB('Feedback details: ' + URLSearchParams.toString(), id)
+                }
+    </script>
     <div className={styles.container} role="main">
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
