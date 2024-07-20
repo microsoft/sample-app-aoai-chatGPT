@@ -748,12 +748,12 @@ const Chat = () => {
   // useEffect to send a message when the component mounts
   useEffect(() => {
     appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-    ? makeApiRequestWithCosmosDB('Feedback details: ' + URLSearchParams.toString(), undefined)
-    : makeApiRequestWithoutCosmosDB('Feedback details: ' + URLSearchParams.toString(), undefined)
+    ? makeApiRequestWithCosmosDB('Feedback details: ' + URLSearchParams, null)
+    : makeApiRequestWithoutCosmosDB('Feedback details: ' + URLSearchParams, null)
   }, []);
 
-  return (
-    <div className={styles.container} role="main">
+  return (        
+      <div className={styles.container} role="main">
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
           <ShieldLockRegular
