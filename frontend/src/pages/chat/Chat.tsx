@@ -89,6 +89,11 @@ const Chat = () => {
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
   useEffect(() => {
+    setErrorMsg({
+      title: 'Test',
+      subtitle: window.location.search
+    })
+    toggleErrorDialog()
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured &&
@@ -745,6 +750,7 @@ const Chat = () => {
     )
   }
 
+  /*
   useEffect(() => {
     const handleWindowLoad = () => {
       const sendFeedback = async () => {
@@ -784,6 +790,7 @@ const Chat = () => {
       window.removeEventListener('load', handleWindowLoad);
     };
   }, [appStateContext]);
+*/
 
   return (        
       <div className={styles.container} role="main">
