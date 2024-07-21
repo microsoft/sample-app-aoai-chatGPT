@@ -89,11 +89,6 @@ const Chat = () => {
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
   useEffect(() => {
-    setErrorMsg({
-      title: 'Test',
-      subtitle: window.location.search
-    })
-    toggleErrorDialog()
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured &&
