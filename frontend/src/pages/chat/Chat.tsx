@@ -745,48 +745,6 @@ const Chat = () => {
     )
   }
 
-  /*
-  useEffect(() => {
-    const handleWindowLoad = () => {
-      const sendFeedback = async () => {
-        try {
-          const urlParams = new URLSearchParams(window.location.search).toString();
-          const feedbackDetails = 'Feedback details: ' + urlParams;
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-          const response = appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-            ? await makeApiRequestWithCosmosDB(feedbackDetails, { signal: controller.signal })
-            : await makeApiRequestWithoutCosmosDB(feedbackDetails, { signal: controller.signal });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          // Handle the response as needed
-        } catch (error) {
-          if (error.name === 'AbortError') {
-            console.error('Request timed out');
-          } else {
-            console.error('An error occurred:', error);
-          }
-        }
-      };
-
-      sendFeedback();
-    };
-
-    window.addEventListener('load', handleWindowLoad);
-
-    return () => {
-      window.removeEventListener('load', handleWindowLoad);
-    };
-  }, [appStateContext]);
-*/
-
   return (        
       <div className={styles.container} role="main">
       {showAuthMessage ? (
