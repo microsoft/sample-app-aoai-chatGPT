@@ -746,11 +746,11 @@ const Chat = () => {
   }
 
   // useEffect to send a message when the component mounts
-  useEffect(() => {
+  /* useEffect(() => {
     appStateContext?.state.isCosmosDBAvailable?.cosmosDB
     ? makeApiRequestWithCosmosDB('Feedback details: ' + URLSearchParams, null)
     : makeApiRequestWithoutCosmosDB('Feedback details: ' + URLSearchParams, null)
-  }, []);
+  }, []); */
 
   return (        
       <div className={styles.container} role="main">
