@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - AddQueryStringForInitialPrompting
   workflow_dispatch:
 
 jobs:
@@ -60,7 +59,6 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-
       
       - name: Login to Azure
         uses: azure/login@v1
