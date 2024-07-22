@@ -94,7 +94,7 @@ const Chat = () => {
   const [queryParams, setQueryParams] = useState<string>("");
 
   useEffect(() => {
-    const params = [];
+    const params = string[];
     query.forEach((value, key) => {
       params.push(`${key}: ${value}`);
     });
