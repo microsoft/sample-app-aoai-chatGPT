@@ -47,7 +47,7 @@ const enum messageStatus {
 }
 
 function useQuery() {
-  return new URLSearchParams('test');
+  return new URLSearchParams(useLocation().search);
 }
 
 
@@ -113,12 +113,12 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
+      //setLogo(ui?.chat_logo || ui?.logo || Contoso)
       setErrorMsg({
-        title: 'Looks like we made it!',
-        subtitle: 'This is a test.'
+        title: 'test',
+        subtitle: 'test'
       })
       toggleErrorDialog()
-      //setLogo(ui?.chat_logo || ui?.logo || Contoso)
     }
   }, [appStateContext?.state.isLoading])
 
