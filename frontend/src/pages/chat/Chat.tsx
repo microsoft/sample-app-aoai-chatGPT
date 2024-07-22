@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
+import { useQuery } from 'react-query'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -47,9 +48,9 @@ const enum messageStatus {
 }
 
 function useQuery() {
+  console.log("URL Search Params: ", useLocation().search);
   return new URLSearchParams(useLocation().search);
 }
-
 
 const Chat = () => {
   const appStateContext = useContext(AppStateContext)
@@ -98,6 +99,9 @@ const Chat = () => {
       params.push(`${key}: ${value}`);
     });
     setQueryParams(params.join("\n"));
+
+    console.log("Query Params: ", params);
+    console.log("Dialog Visible: ", dialogVisible);
   }, [query]);
 
   const hideDialog = () => {
