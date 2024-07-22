@@ -88,6 +88,22 @@ const Chat = () => {
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
+  const query = useQuery();
+  const [dialogVisible, setDialogVisible] = useState<boolean>(true);
+  const [queryParams, setQueryParams] = useState<string>("");
+
+  useEffect(() => {
+    const params = [];
+    query.forEach((value, key) => {
+      params.push(`${key}: ${value}`);
+    });
+    setQueryParams(params.join("\n"));
+  }, [query]);
+
+  const hideDialog = () => {
+    setDialogVisible(false);
+  };
+
   useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
@@ -113,12 +129,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      //setLogo(ui?.chat_logo || ui?.logo || Contoso)
-      setErrorMsg({
-        title: 'test',
-        subtitle: 'test'
-      })
-      toggleErrorDialog()
+      setLogo(ui?.chat_logo || ui?.logo || Contoso)
     }
   }, [appStateContext?.state.isLoading])
 
@@ -1029,6 +1040,19 @@ const Chat = () => {
             appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
         </Stack>
       )}
+      <Dialog
+        hidden={!dialogVisible}
+        onDismiss={hideDialog}
+        dialogContentProps={{
+          type: DialogType.largeHeader,
+          title: 'Query Parameters',
+          subText: queryParams
+        }}
+      >
+        <Dialog.Footer>
+          <CommandBarButton text="Close" onClick={hideDialog} />
+        </Dialog.Footer>
+      </Dialog>
     </div>
   )
 }
