@@ -46,7 +46,6 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@types/react-plotly.js": "^2.6.3",
-    "@types/react-query": "^3.0.0",
     "@types/react-syntax-highlighter": "^15.5.11",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
