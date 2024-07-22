@@ -97,6 +97,7 @@ const Chat = () => {
     const params: string[] = [];
     query.forEach((value, key) => {
       params.push(`${key}: ${value}`);
+      console.log(`${key}: ${value}`);
     });
     setQueryParams(params.join("\n"));
 
