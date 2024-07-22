@@ -53,6 +53,7 @@ function useQuery() {
 }
 
 const Chat = () => {
+  console.log('testing')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
