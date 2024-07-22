@@ -113,12 +113,12 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      setLogo(ui?.chat_logo || ui?.logo || Contoso)
       setErrorMsg({
         title: 'Looks like we made it!',
         subtitle: 'This is a test.'
       })
       toggleErrorDialog()
+      setLogo(ui?.chat_logo || ui?.logo || Contoso)
     }
   }, [appStateContext?.state.isLoading])
 
