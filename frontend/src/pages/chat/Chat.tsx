@@ -47,7 +47,7 @@ const enum messageStatus {
 }
 
 function useQuery() {
-  return new URLSearchParams(useLocation());
+  return new URLSearchParams('test');
 }
 
 
