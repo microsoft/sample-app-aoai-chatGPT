@@ -29,8 +29,18 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: '**/package-lock.json'
+
+
+    - name: Remove node_modules and package-lock.json
+      run: |
+          rm -rf node_modules
+          rm -f package-lock.json
+
+    - name: Install dependencies and generate package-lock.json
+      run: npm install
+    
     - run: npm ci
-    - run: npm install react-query mapbox-gl eslint-plugin-import@^2.25.2    
+ 
     - run: npm audit fix
     - run: npm audit fix --force # Force fix remaining vulnerabilities if possible
     - run: NODE_OPTIONS=--max_old_space_size=8192 npm run build --if-present
