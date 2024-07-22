@@ -103,8 +103,9 @@ class PdfTextSplitter(TextSplitter):
             caption +=  text.split(f"<{PDF_HEADERS['title']}>")[-1].split(f"</{PDF_HEADERS['title']}>")[0]
         if len(text.split(f"<{PDF_HEADERS['sectionHeading']}>"))>1:
             caption +=  text.split(f"<{PDF_HEADERS['sectionHeading']}>")[-1].split(f"</{PDF_HEADERS['sectionHeading']}>")[0]
-        
-        caption += "\n"+ lines[-1].strip()
+
+        if line:
+            caption += "\n"+ lines[-1].strip()
 
         return caption
     
