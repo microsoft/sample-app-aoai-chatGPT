@@ -32,15 +32,6 @@ jobs:
         run: pip install -r requirements.txt   
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
-      - name: Install npm dependencies
-        run: npm install
-
-      - name: Install react-query
-        run: npm install react-query @types/react-query
-
-      - name: Build project
-        run: npm run build
-
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
 
