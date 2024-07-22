@@ -156,6 +156,7 @@ def format_pf_non_streaming_response(
         return {"error": chatCompletion["error"]}
 
     logging.debug(f"chatCompletion: {chatCompletion}")
+    
     try:
         response_obj = {
             "id": chatCompletion["id"],

@@ -20,19 +20,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+
   overflow-y: auto;
   max-height: calc(100vh - 100px);
 }
-
 .chatEmptyState {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+.chatEmptyStateMessageContainer {
+  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 3rem;
 }
 
 .chatEmptyStateTitle {
@@ -85,14 +88,15 @@
 .chatMessageUserMessage {
     display: flex;
     padding: 20px;
-    background: #EDF5FD;
+    color: #EDF5FD;
+    background: var(--brand-green);
     border-radius: 8px;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
     line-height: 22px;
-    color: #242424;
+    /* color: #242424; */
     order: 0;
     flex-grow: 0;
     white-space: pre-wrap;
@@ -111,6 +115,7 @@
   border-radius: 8px;
   box-shadow: rgba(182, 52, 67, 1) 1px 1px 2px, rgba(182, 52, 67, 1) 0px 0px 1px;
   color: #242424;
+  background-color: #FFFFFF;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -119,7 +124,7 @@
 }
 
 .chatMessageErrorContent {
-  font-family: 'Segoe UI';
+  font-family: 'Montserrat';
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
@@ -143,6 +148,8 @@
   margin-top: 8px;
 }
 
+
+
 .clearChatBroom {
     box-sizing: border-box;
     display: flex;
@@ -159,17 +166,32 @@
     z-index: 1;
 }
 
+.clearChatContainer {
+  position: absolute;
+  width: 40px;
+  /* height: 40px; */
+  left: 7px;
+  top: 40px;
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    text-align: center;
+    font-weight: 600;
+    color: #00000080
+  }
+}
+
 .clearChatBroomNoCosmos {
     box-sizing: border-box;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    position: absolute;
+    /* position: absolute; */
     width: 40px;
     height: 40px;
-    left: 7px;
-    top: 66px;
+    /* left: 7px; */
+    /* top: 66px; */
     color: #FFFFFF;
     border-radius: 4px;
     z-index: 1;
@@ -206,6 +228,7 @@
   bottom: 116px;
   border: 1px solid #d1d1d1;
   border-radius: 16px;
+  background-color: #FFFFFF;
 }
 
 .stopGeneratingIcon {
@@ -215,7 +238,7 @@
 }
 
 .stopGeneratingText {
-  width: 103px;
+  /* width: 103px; */
   height: 20px;
   font-style: normal;
   font-weight: 600;

@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
 * {
     box-sizing: border-box;
 }
@@ -11,11 +13,65 @@ body {
 
 html {
     background: #f2f2f2;
-    font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-family: "Montserrat", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
     height: 100%;
+    --brand-green: #44984A;
+    --brand-green-dark: #306d34;
 }
+
+a {
+    color: var(--brand-green);
+}
+a:visited {
+    color: var(--brand-green-dark);
+}
+
+.background-image {
+    width: 100%;
+    height: 100vh; /* Adjust as needed */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  @media (max-width: 400px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_400.jpg');
+    }
+  }
+  
+  @media (min-width: 401px) and (max-width: 679px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_679.jpg');
+    }
+  }
+  
+  @media (min-width: 680px) and (max-width: 945px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_945.jpg');
+    }
+  }
+  
+  @media (min-width: 946px) and (max-width: 1200px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_1200.jpg');
+    }
+  }
+  
+  @media (min-width: 1201px) and (max-width: 1500px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_1500.jpg');
+    }
+  }
+  
+  @media (min-width: 1501px) {
+    .background-image {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)),url('./assets/images/HuGo-banner-light/w_1600.jpg');
+    }
+  }
+  

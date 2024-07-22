@@ -14,5 +14,6 @@ export default defineConfig({
             "/ask": "http://localhost:5000",
             "/chat": "http://localhost:5000"
         }
-    }
+    },
+    assetsInclude: ['./src/assets/images/HuGo-banner-light/**.jpg']
 });
