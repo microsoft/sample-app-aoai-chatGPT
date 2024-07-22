@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - AddQueryStringForInitialPrompting
 
 jobs:
   changed_files:

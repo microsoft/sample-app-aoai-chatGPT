@@ -5,9 +5,9 @@ name: Build Frontend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "AddQueryStringForInitialPrompting" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "AddQueryStringForInitialPrompting"]
     
 
 jobs:
