@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - AddQueryStringForInitialPrompting
   workflow_dispatch:
 
 jobs:
