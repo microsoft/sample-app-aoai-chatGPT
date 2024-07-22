@@ -30,6 +30,7 @@ jobs:
         cache: 'npm'
         cache-dependency-path: '**/package-lock.json'
     - run: npm ci
+    - run: npm install mapbox-gl eslint-plugin-import@^2.25.2    
     - run: npm audit fix
     - run: npm audit fix --force # Force fix remaining vulnerabilities if possible
     - run: NODE_OPTIONS=--max_old_space_size=8192 npm run build --if-present
