@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "AddQueryStringForInitialPrompting" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "AddQueryStringForInitialPrompting" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
