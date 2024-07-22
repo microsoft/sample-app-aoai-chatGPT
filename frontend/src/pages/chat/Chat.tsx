@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
-import { useQuery } from 'react-query'
+import { QueryClient, QueryClientProvider } from 'react-query'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
