@@ -1053,9 +1053,6 @@ const Chat = () => {
           subText: queryParams
         }}
       >
-        <Dialog.Footer>
-          <CommandBarButton text="Close" onClick={hideDialog} />
-        </Dialog.Footer>
       </Dialog>
     </div>
   )
