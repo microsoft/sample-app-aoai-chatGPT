@@ -745,6 +745,11 @@ const Chat = () => {
 
   return (
     <div className={styles.container} role="main">
+      <DefaultButton
+        text="Show Query Params"
+        onClick={() => setIsDialogOpen(true)}
+        styles={{ root: { margin: '10px' } }}
+      />
       <Dialog
         hidden={!isDialogOpen}
         onDismiss={() => setIsDialogOpen(false)}
@@ -769,11 +774,6 @@ const Chat = () => {
           <DefaultButton onClick={() => setIsDialogOpen(false)} text="Close" />
         </DialogFooter>
       </Dialog>
-      <DefaultButton
-        text="Show Query Params"
-        onClick={() => setIsDialogOpen(true)}
-        styles={{ root: { margin: '10px' } }}
-      />
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
           <ShieldLockRegular
