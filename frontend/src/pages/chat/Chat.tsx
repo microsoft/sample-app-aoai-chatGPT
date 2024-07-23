@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, DialogFooter, DefaultButton, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
@@ -46,6 +46,10 @@ const enum messageStatus {
 }
 
 const Chat = () => {
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [queryParams, setQueryParams] = useState(new URLSearchParams(window.location.search));
+
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
@@ -740,7 +744,36 @@ const Chat = () => {
   }
 
   return (
+    <Dialog
+      hidden={!isDialogOpen}
+      onDismiss={() => setIsDialogOpen(false)}
+      dialogContentProps={{
+        type: DialogType.largeHeader,
+        title: 'Query String Parameters',
+        subText: 'The current query string parameters are:',
+      }}
+      modalProps={{
+        isBlocking: false,
+        styles: { main: { maxWidth: 450 } },
+      }}
+    >
+      <div>
+        {Array.from(queryParams.entries()).map(([key, value]) => (
+          <p key={key}>
+            <strong>{key}:</strong> {value}
+          </p>
+        ))}
+      </div>
+      <DialogFooter>
+        <DefaultButton onClick={() => setIsDialogOpen(false)} text="Close" />
+      </DialogFooter>
+    </Dialog>
     <div className={styles.container} role="main">
+      <DefaultButton
+        text="Show Query Params"
+        onClick={() => setIsDialogOpen(true)}
+        styles={{ root: { margin: '10px' } }}
+      />
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
           <ShieldLockRegular
