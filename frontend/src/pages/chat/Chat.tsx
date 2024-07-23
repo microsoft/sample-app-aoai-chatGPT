@@ -744,31 +744,31 @@ const Chat = () => {
   }
 
   return (
-    <Dialog
-      hidden={!isDialogOpen}
-      onDismiss={() => setIsDialogOpen(false)}
-      dialogContentProps={{
-        type: DialogType.largeHeader,
-        title: 'Query String Parameters',
-        subText: 'The current query string parameters are:',
-      }}
-      modalProps={{
-        isBlocking: false,
-        styles: { main: { maxWidth: 450 } },
-      }}
-    >
-      <div>
-        {Array.from(queryParams.entries()).map(([key, value]) => (
-          <p key={key}>
-            <strong>{key}:</strong> {value}
-          </p>
-        ))}
-      </div>
-      <DialogFooter>
-        <DefaultButton onClick={() => setIsDialogOpen(false)} text="Close" />
-      </DialogFooter>
-    </Dialog>
     <div className={styles.container} role="main">
+      <Dialog
+        hidden={!isDialogOpen}
+        onDismiss={() => setIsDialogOpen(false)}
+        dialogContentProps={{
+          type: DialogType.largeHeader,
+          title: 'Query String Parameters',
+          subText: 'The current query string parameters are:',
+        }}
+        modalProps={{
+          isBlocking: false,
+          styles: { main: { maxWidth: 450 } },
+        }}
+      >
+        <div>
+          {Array.from(queryParams.entries()).map(([key, value]) => (
+            <p key={key}>
+              <strong>{key}:</strong> {value}
+            </p>
+          ))}
+        </div>
+        <DialogFooter>
+          <DefaultButton onClick={() => setIsDialogOpen(false)} text="Close" />
+        </DialogFooter>
+      </Dialog>
       <DefaultButton
         text="Show Query Params"
         onClick={() => setIsDialogOpen(true)}
