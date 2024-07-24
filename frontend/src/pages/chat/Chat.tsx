@@ -757,8 +757,10 @@ const Chat = () => {
     if (!isInitialSearchMessagePosted.current && !appStateContext?.state.isLoading) {
       isInitialSearchMessagePosted.current = true;
       const queryParams = new URLSearchParams(location.search);
-      if (queryParams.get('Article') != null && queryParams.get('Feedback') != null) {
-        const message = "Article: " + queryParams.get('Article') + "\nFeedback: " + queryParams.get('Feedback');
+      const entries = Array.from(queryParams.entries());
+    
+      if (entries.length >= 2) {
+        const message = entries.map(([key, value]) => `${key}: ${value}`).join('\n');
         const id = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
         sendMessage(message, id);
       }
