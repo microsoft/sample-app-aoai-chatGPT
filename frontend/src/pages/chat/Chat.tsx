@@ -743,37 +743,30 @@ const Chat = () => {
     )
   }
 
+  const sendMessage = (question: string, id: string | undefined) => {
+    if (question.trim()) {
+      appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+        ? makeApiRequestWithCosmosDB(question, id)
+        : makeApiRequestWithoutCosmosDB(question, id);
+    }
+  };
+
+  let isInitialSearchMessagePosted = useRef(false);
+
+  useEffect(() => {
+    if (!isInitialSearchMessagePosted.current && !appStateContext?.state.isLoading) {
+      isInitialSearchMessagePosted.current = true;
+      const queryParams = new URLSearchParams(location.search);
+      if (queryParams.get('Article') != null && queryParams.get('Feedback') != null) {
+        const message = "Article: (" + queryParams.get('Article') + ")\nFeedback: " + queryParams.get('Feedback');
+        const id = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
+        sendMessage(message, id);
+      }
+    }
+  }, [location.search, appStateContext]);
+
   return (
     <div className={styles.container} role="main">
-      <DefaultButton
-        text="Show Query Params"
-        onClick={() => setIsDialogOpen(true)}
-        styles={{ root: { margin: '10px' } }}
-      />
-      <Dialog
-        hidden={!isDialogOpen}
-        onDismiss={() => setIsDialogOpen(false)}
-        dialogContentProps={{
-          type: DialogType.largeHeader,
-          title: 'Query String Parameters',
-          subText: 'The current query string parameters are:',
-        }}
-        modalProps={{
-          isBlocking: false,
-          styles: { main: { maxWidth: 450 } },
-        }}
-      >
-        <div>
-          {Array.from(queryParams.entries()).map(([key, value]) => (
-            <p key={key}>
-              <strong>{key}:</strong> {value}
-            </p>
-          ))}
-        </div>
-        <DialogFooter>
-          <DefaultButton onClick={() => setIsDialogOpen(false)} text="Close" />
-        </DialogFooter>
-      </Dialog>
       {showAuthMessage ? (
         <Stack className={styles.chatEmptyState}>
           <ShieldLockRegular
