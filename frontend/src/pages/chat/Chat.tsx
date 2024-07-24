@@ -754,7 +754,7 @@ const Chat = () => {
   let isInitialSearchMessagePosted = useRef(false);
 
   useEffect(() => {
-    if (!isInitialSearchMessagePosted.current && !appStateContext?.state.isLoading) {
+    if (!isInitialSearchMessagePosted.current && appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success) {
       isInitialSearchMessagePosted.current = true;
       const queryParams = new URLSearchParams(location.search);
       const entries = Array.from(queryParams.entries());
