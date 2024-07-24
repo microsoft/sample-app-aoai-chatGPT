@@ -758,7 +758,7 @@ const Chat = () => {
       isInitialSearchMessagePosted.current = true;
       const queryParams = new URLSearchParams(location.search);
       if (queryParams.get('Article') != null && queryParams.get('Feedback') != null) {
-        const message = "Article: (" + queryParams.get('Article') + ")\nFeedback: " + queryParams.get('Feedback');
+        const message = "Article: " + queryParams.get('Article') + "\nFeedback: " + queryParams.get('Feedback');
         const id = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
         sendMessage(message, id);
       }
