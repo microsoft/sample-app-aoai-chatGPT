@@ -1,6 +1,8 @@
-# [Preview] Sample Chat App with AOAI
+# [Preview] UUFSolver
 
-This repo contains sample code for a simple chat webapp that integrates with Azure OpenAI. Note: some portions of the app use preview APIs.
+This app is built on the Sample Chat App with AOAI GitHub project from which it is forked. It modifies Chat.tsx to add URL parsing, so it will automatically start the conversation with **Article** and **Feedback** parameters that represent the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback. It then gives its best suggestion to resolve/address the feedback, with reference links to validate ground truth on its claims. It will also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them.
+
+Note: some portions of the app use preview APIs.
 
 ## Prerequisites
 - An existing Azure OpenAI resource and model deployment of a chat model (e.g. `gpt-35-turbo-16k`, `gpt-4`)
