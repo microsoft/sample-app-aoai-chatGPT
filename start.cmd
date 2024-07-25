@@ -8,6 +8,7 @@ echo.
 call python -m pip install -r requirements.txt
 if "%errorlevel%" neq "0" (
     echo Failed to restore backend python packages
+    TIMEOUT /T 100
     exit /B %errorlevel%
 )
 
@@ -18,6 +19,7 @@ cd frontend
 call npm install
 if "%errorlevel%" neq "0" (
     echo Failed to restore frontend npm packages
+    TIMEOUT /T 100
     exit /B %errorlevel%
 )
 
@@ -27,6 +29,7 @@ echo.
 call npm run build
 if "%errorlevel%" neq "0" (
     echo Failed to build frontend
+    TIMEOUT /T 100
     exit /B %errorlevel%
 )
 
@@ -37,6 +40,7 @@ cd ..
 start http://127.0.0.1:50505
 call python -m uvicorn app:app  --port 50505 --reload
 if "%errorlevel%" neq "0" (    
-    echo Failed to start backend    
+    echo Failed to start backend  
+    TIMEOUT /T 100
     exit /B %errorlevel%    
 ) 
