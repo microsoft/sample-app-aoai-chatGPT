@@ -31,6 +31,7 @@ load_dotenv()
 
 # UI configuration (optional)
 UI_TITLE = os.environ.get("UI_TITLE") or "Contoso"
+UI_HUGO_URL = os.environ.get("UI_HUGO_URL") or "localhost:4200"
 UI_LOGO = os.environ.get("UI_LOGO")
 UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")
 UI_CHAT_TITLE = os.environ.get("UI_CHAT_TITLE") or "Start chatting"
@@ -274,6 +275,7 @@ frontend_settings = {
     "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
     "ui": {
         "title": UI_TITLE,
+        "hugo_url": UI_HUGO_URL,
         "logo": UI_LOGO,
         "chat_logo": UI_CHAT_LOGO or UI_LOGO,
         "chat_title": UI_CHAT_TITLE,

@@ -1,0 +1,34 @@
+.navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0 2.5%;
+  max-width: 1400px;
+  background-color: white;
+  margin: 0 auto;
+}
+
+.homeLink {
+  width: 10em;
+  padding-top: 1.1em;
+  padding-bottom: 1.1em;
+  margin-right: auto;
+  img {
+    transform: translateY(10%);
+    width: 80%;
+    height: auto;
+    transition: transform 0.5s;
+    transform-origin: center;
+
+  }
+}
+
+.link {
+  font-weight: 600;
+  position: relative;
+  z-index: 10;
+  color: #000;
+  margin-right: 1em;
+  text-decoration: none;
+}

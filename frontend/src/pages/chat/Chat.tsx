@@ -997,7 +997,7 @@ const Chat = () => {
                       },
                       iconDisabled: {
                         color: "#BDBDBD !important",
-                      },
+                        },
                       root: {
                         color: "#FFFFFF",
                         background:
@@ -1013,7 +1013,7 @@ const Chat = () => {
                         ? styles.clearChatBroom
                         : styles.clearChatBroomNoCosmos
                     }
-                    iconProps={{ iconName: "Broom" }}
+                    iconProps={{ iconName: "Refresh" }}
                     onClick={
                       appStateContext?.state.isCosmosDBAvailable?.status !==
                       CosmosDBStatus.NotConfigured

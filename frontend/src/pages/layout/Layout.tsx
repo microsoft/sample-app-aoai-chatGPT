@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
+import { Header } from "./Header/Header";
 
 const Layout = () => {
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
@@ -65,8 +66,9 @@ const Layout = () => {
       }, []);
 
     return (
-        <div className={styles.layout}>
-            <header className={styles.header} role={"banner"}>
+      <div className={styles.layout}>
+        <Header></Header>
+            {/* <header className={styles.header} role={"banner"}>
                 <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
                     <Stack horizontal verticalAlign="center">
                         <img
@@ -85,7 +87,7 @@ const Layout = () => {
                         {ui?.show_share_button &&<ShareButton onClick={handleShareClick} text={shareLabel} />}
                     </Stack>
                 </Stack>
-            </header>
+            </header> */}
             <Outlet />
             <Dialog
                 onDismiss={handleSharePanelDismiss}

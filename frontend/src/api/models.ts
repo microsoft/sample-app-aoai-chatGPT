@@ -104,6 +104,7 @@ export type ErrorMessage = {
 
 export type UI = {
     title: string;
+    hugo_url: string;
     chat_title: string;
     chat_description: string;
     logo?: string;
