@@ -333,7 +333,7 @@ async def send_chat_request(request_body, request_headers):
                 model_args["messages"][-1]["content"],
                 response
             )
-            app_settings.tracer.span_processor.shutdown()
+            # app_settings.tracer.span_processor.force_flush()
             end_time = time.perf_counter_ns()
             print ()
             print (f"time taken to call emit traces in ns: {end_time - start_time}")

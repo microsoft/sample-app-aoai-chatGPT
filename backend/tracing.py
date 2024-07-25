@@ -1,24 +1,12 @@
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider, Tracer
+from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 import json
 import time
 
-
-'''def get_tracer_provider(app_insights_connection_string: str) -> TracerProvider:
-    tracer_provider = TracerProvider(
-        resource=Resource.create({"app_name": "test_app"})
-    )
-    trace_exporter = AzureMonitorTraceExporter.from_connection_string(app_insights_connection_string)
-    bsp = BatchSpanProcessor(trace_exporter)
-    tracer_provider.add_span_processor(bsp)
-    
-    return tracer_provider '''
 APPLICATION_NAME = "ProductInfo_Contoso_Bot"
  
-def set_exporter(app_insights_connection_string: str, instrumenting_module_name: str, tracer: Tracer) -> None:
+def set_exporter(app_insights_connection_string: str, tracer: Tracer) -> None:
     start_time = time.perf_counter_ns()
     exporter = AzureMonitorTraceExporter.from_connection_string(
         app_insights_connection_string,
@@ -27,10 +15,9 @@ def set_exporter(app_insights_connection_string: str, instrumenting_module_name:
     tracer.span_processor.add_span_processor(span_processor=span_processor)
     end_time = time.perf_counter_ns()
     print ()
-    print (f"time taken to create exporter in ns: {end_time - start_time}")
-    print (f"time taken to create exporter in ms: {(end_time - start_time)//1000000}")
+    print (f"time taken to attach exporter in ns: {end_time - start_time}")
+    print (f"time taken to attach exporter in ms: {(end_time - start_time)//1000000}")
     print ()
-
 
 def emit_traces(
     tracer: Tracer,
@@ -38,11 +25,16 @@ def emit_traces(
     query: str,
     response_json: dict
 ):
-    # tracer_provider = get_tracer_provider(app_insights_connection_string)
-    set_exporter(app_insights_connection_string, "backend.emit_traces", tracer)
-    
     start_time = time.perf_counter_ns()
-    with tracer.start_as_current_span("OYD_Request") as span:
+    set_exporter(app_insights_connection_string, tracer)
+    end_time = time.perf_counter_ns()
+    print ()
+    print (f"overall time taken to get tracer in ns: {end_time - start_time}")
+    print (f"overall time taken to get tracer in ms: {(end_time - start_time)/1000000}")
+    print ()
+
+    start_time = time.perf_counter_ns()
+    with tracer.start_as_current_span("OYD_Overall_Request") as span:
         span.set_attribute(key="span_type", value="Function")
         span_context = span.get_span_context()
         span.set_attribute(key="traceId", value=span_context.trace_id)
@@ -72,7 +64,7 @@ def emit_traces(
         end_time_ret_trace = time.perf_counter_ns()
         print ()
         print (f"time taken to create retrieval trace in ns: {end_time_ret_trace - ret_start_time}")
-        print (f"time taken to create retrieval trace in ms: {(end_time_ret_trace - ret_start_time)//1000000}")
+        print (f"time taken to create retrieval trace in ms: {(end_time_ret_trace - ret_start_time)/1000000}")
         print ()
                 
         with tracer.start_as_current_span("OYD Request - LLM") as llm_span:
@@ -87,8 +79,16 @@ def emit_traces(
     end_time = time.perf_counter_ns()
     print ()
     print (f"time taken to parent trace in ns: {end_time - start_time}")
-    print (f"time taken to parent trace in ms: {(end_time - start_time)//1000000}")
+    print (f"time taken to parent trace in ms: {(end_time - start_time)/1000000}")
     print ()
+
+    print (tracer.span_processor._span_processors)
+    print (len(tracer.span_processor._span_processors))
+    tracer.span_processor._span_processors = ()
+    print ()
+    """ force_flushed = tracer.span_processor.force_flush()
+    if force_flushed:
+        tracer.span_processor.shutdown() """
 
 def extract_LLM_attributes(response) -> dict:
     return {
