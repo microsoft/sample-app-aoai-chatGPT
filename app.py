@@ -315,8 +315,8 @@ async def send_chat_request(request_body, request_headers):
     model_args = prepare_model_args(request_body, request_headers)
 
     try:
-        azure_openai_client = init_openai_client()
         oai_chat_start_time = time.perf_counter_ns()
+        azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         oai_chat_end_time = time.perf_counter_ns()
@@ -324,19 +324,22 @@ async def send_chat_request(request_body, request_headers):
         print (f"time taken to call oai chat and parse response in ns: {oai_chat_end_time - oai_chat_start_time}")
         print (f"time taken to call oai chat and parse response in ms: {(oai_chat_end_time - oai_chat_start_time)//1000000}")
         print ()
-        # print (response)
-        if app_settings.base_settings.application_insights_connection_string is not None:
+
+        if app_settings.base_settings.application_insights_connection_string:
             start_time = time.perf_counter_ns()
             emit_traces(
+                app_settings.tracer,
                 app_settings.base_settings.application_insights_connection_string,
                 model_args["messages"][-1]["content"],
                 response
             )
+            app_settings.tracer.span_processor.shutdown()
             end_time = time.perf_counter_ns()
             print ()
             print (f"time taken to call emit traces in ns: {end_time - start_time}")
             print (f"time taken to call emit traces in ms: {(end_time - start_time)//1000000}")
             print ()
+
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")

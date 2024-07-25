@@ -18,31 +18,29 @@ import time
     return tracer_provider '''
 APPLICATION_NAME = "ProductInfo_Contoso_Bot"
  
-def get_tracer(app_insights_connection_string: str, instrumenting_module_name: str) -> Tracer:
+def set_exporter(app_insights_connection_string: str, instrumenting_module_name: str, tracer: Tracer) -> None:
     start_time = time.perf_counter_ns()
     exporter = AzureMonitorTraceExporter.from_connection_string(
         app_insights_connection_string,
     )
-    trace.set_tracer_provider(TracerProvider())
-    tracer = trace.get_tracer(instrumenting_module_name)
     span_processor = BatchSpanProcessor(exporter)
-    trace.get_tracer_provider().add_span_processor(span_processor)
-    
+    tracer.span_processor.add_span_processor(span_processor=span_processor)
     end_time = time.perf_counter_ns()
     print ()
-    print (f"time taken to create tracer in ns: {end_time - start_time}")
-    print (f"time taken to create tracer in ms: {(end_time - start_time)//1000000}")
+    print (f"time taken to create exporter in ns: {end_time - start_time}")
+    print (f"time taken to create exporter in ms: {(end_time - start_time)//1000000}")
     print ()
-    return tracer
 
 
 def emit_traces(
+    tracer: Tracer,
     app_insights_connection_string: str,
     query: str,
     response_json: dict
 ):
     # tracer_provider = get_tracer_provider(app_insights_connection_string)
-    tracer = get_tracer(app_insights_connection_string, "backend.emit_traces")
+    set_exporter(app_insights_connection_string, "backend.emit_traces", tracer)
+    
     start_time = time.perf_counter_ns()
     with tracer.start_as_current_span("OYD_Request") as span:
         span.set_attribute(key="span_type", value="Function")

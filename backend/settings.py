@@ -21,6 +21,10 @@ from typing_extensions import Self
 from quart import Request
 from backend.utils import parse_multi_columns, generateFilterString
 
+import time
+from opentelemetry.sdk.trace import TracerProvider, Tracer
+from opentelemetry import trace
+
 DOTENV_PATH = os.environ.get(
     "DOTENV_PATH",
     os.path.join(
@@ -670,10 +674,31 @@ class _AppSettings(BaseModel):
     search: _SearchCommonSettings = _SearchCommonSettings()
     ui: Optional[_UiSettings] = _UiSettings()
     
+    model_config = SettingsConfigDict(
+        env_file=DOTENV_PATH,
+        extra="ignore",
+        arbitrary_types_allowed=True,
+        env_ignore_empty=True
+    )
+
     # Constructed properties
     chat_history: Optional[_ChatHistorySettings] = None
     datasource: Optional[DatasourcePayloadConstructor] = None
     promptflow: Optional[_PromptflowSettings] = None
+    tracer: Optional[Tracer] = None
+
+    @model_validator(mode="after")
+    def set_tracer(self) -> Self:
+        if self.base_settings.application_insights_connection_string:
+            start_time = time.perf_counter_ns()
+            provider = TracerProvider()
+            trace.set_tracer_provider(tracer_provider= provider)
+            self.tracer = trace.get_tracer("bla_python_app")
+            end_time = time.perf_counter_ns()
+            print (f"plain tracer creation in ns: {end_time-start_time}")
+            print (f"plain tracer creation in ms: {(end_time-start_time) / 1000000}")
+            print ()
+        return self
 
     @model_validator(mode="after")
     def set_promptflow_settings(self) -> Self:
