@@ -610,14 +610,20 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
             roles_end[para_end] = paragraph.role
 
     for page_num, page in enumerate(form_recognizer_results.pages):
+        page_offset = page.spans[0].offset
+        page_length = page.spans[0].length
+
         if use_layout:
-            tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
+            tables_on_page = []
+            for table in form_recognizer_results.tables:
+                table_offset = table.spans[0].offset
+                table_length = table.spans[0].length
+                if page_offset <= table_offset and table_offset + table_length < page_offset + page_length:
+                    tables_on_page.append(table)
         else:
             tables_on_page = []
 
         # (if using layout) mark all positions of the table spans in the page
-        page_offset = page.spans[0].offset
-        page_length = page.spans[0].length
         table_chars = [-1]*page_length
         for table_id, table in enumerate(tables_on_page):
             for span in table.spans:
@@ -654,14 +660,14 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
 
     full_text = "".join([page_text for _, _, page_text in page_map])
 
-    # If the images are preserved, add image tags to the full text
-    document = fitz.open(file_path)
-
+    # Extract any images
     image_mapping = {}
 
     if "figures" in form_recognizer_results.keys() and file_path.endswith(".pdf"):
+        document = fitz.open(file_path)
+
         for figure in form_recognizer_results["figures"]:
-            bounding_box = figure["boundingRegions"][0]
+            bounding_box = figure.bounding_regions[0]
 
             page_number = bounding_box['pageNumber'] - 1  # Page numbers in PyMuPDF start from 0
             x0, y0, x1, y1 = polygon_to_bbox(bounding_box['polygon'])
