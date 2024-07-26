@@ -188,14 +188,18 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def prepare_model_args(request_body, request_headers, custom_system_message = None):
+def prepare_model_args(request_body, request_headers, system_preamble = None, system_prompt = None):
     request_messages = request_body.get("messages", [])
     messages = []
+    system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
+    
+    print(f"System message:\n{system_message}")
+
     if not app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": custom_system_message or app_settings.azure_openai.system_message
+                "content": system_message
             }
         ]
 
@@ -306,7 +310,7 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request_body, request_headers, system_message = None):
+async def send_chat_request(request_body, request_headers, system_preamble = None, system_prompt = None):
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -314,7 +318,7 @@ async def send_chat_request(request_body, request_headers, system_message = None
             filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers, system_message)
+    model_args = prepare_model_args(request_body, request_headers, system_preamble, system_prompt)
 
     try:
         azure_openai_client = init_openai_client()
@@ -345,8 +349,8 @@ async def complete_chat_request(request_body, request_headers):
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-async def stream_chat_request(request_body, request_headers, system_message = None):
-    response, apim_request_id = await send_chat_request(request_body, request_headers, system_message)
+async def stream_chat_request(request_body, request_headers, system_preamble = None, system_message = None):
+    response, apim_request_id = await send_chat_request(request_body, request_headers, system_preamble, system_message)
     history_metadata = request_body.get("history_metadata", {})
     
     async def generate():
@@ -404,24 +408,28 @@ def process_raw_response(raw_content):
     
     return final_json
 
-async def conversation_internal(request_body, request_headers):
-    try:
-
+async def search_and_add_background_references(request_body, request_headers):
         # Background conversation with custom system message
         updated_request_body = copy.deepcopy(request_body)
         updated_request_body["messages"][0]["content"] = "Forsooth, I am the herald of the Lady Ruthylin P. Chamberlain, Duchess of Dade, Marchioness of Miami. She would like to make your acquaintance, good sir."
         updated_request_body["history_metadata"] = None
-        print(f"Updated Request:\n{updated_request_body}\n")
-        result = await stream_chat_request(updated_request_body, request_headers, "Respond to everything I say as if you are confused and triggered Gen-Zer.")
+        print(f"Private Request:\n{updated_request_body}\n")
+        result = await stream_chat_request(updated_request_body, request_headers, None, "Be an avid artsy theater fan, but who reviles Shakespearean English.")
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
         response_raw = await response.get_data()
         combined_json = process_raw_response(response_raw)     
-        print(f"Updated Response:\n{combined_json}\n")
+        print(f"Private Response:\n{combined_json}\n")
+
+        return "Be sure to slip in a reference to https://www.foo.bar in your response!"
+
+async def conversation_internal(request_body, request_headers):
+    try:
+        system_preamble = await search_and_add_background_references(request_body, request_headers)
 
         # Execute the original chat request, altering the system message
-        result = await stream_chat_request(request_body, request_headers, "Be natural. But find a way to include a link to https://foo.bar in your response.")
+        result = await stream_chat_request(request_body, request_headers, system_preamble)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
