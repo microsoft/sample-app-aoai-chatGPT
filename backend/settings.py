@@ -657,7 +657,7 @@ class _BingSettings(BaseSettings):
         extra="ignore",
         env_ignore_empty=True
     )
-    key: str
+    key: str = ""
     endpoint: str = "https://api.bing.microsoft.com"
     
 class _BaseSettings(BaseSettings):
@@ -671,7 +671,6 @@ class _BaseSettings(BaseSettings):
     auth_enabled: bool = False
     sanitize_answer: bool = False
     use_promptflow: bool = False
-
 
 class _AppSettings(BaseModel):
     base_settings: _BaseSettings = _BaseSettings()
