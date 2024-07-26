@@ -150,6 +150,8 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 - `UI_SHOW_SHARE_BUTTON`
 - `UI_SHOW_CHAT_HISTORY_BUTTON`
 
+Any custom images assigned to variables `UI_LOGO`, `UI_CHAT_LOGO` or `UI_FAVICON` should be added to the [public](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/frontend/public) folder before building the project.  The Vite build process will automatically copy theses files to the [static](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/static) folder on each build of the frontend.  The corresponding environment variables should then be set using a relative path such as `static/<my image filename>` to ensure that the frontend code can find them.
+
 Feel free to fork this repository and make your own modifications to the UX or backend logic. You can modify the source (`frontend/src`). For example, you may want to change aspects of the chat display, or expose some of the settings in `app.py` in the UI for users to try out different behaviors. After your code changes, you will need to rebuild the front-end via `start.sh` or `start.cmd`.
 
 ### Scalability
