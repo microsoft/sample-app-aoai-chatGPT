@@ -657,7 +657,7 @@ class _BingSettings(BaseSettings):
         extra="ignore",
         env_ignore_empty=True
     )
-    key: str = None
+    key: str
     endpoint: str = "https://api.bing.microsoft.com"
     
 class _BaseSettings(BaseSettings):
