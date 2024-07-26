@@ -649,7 +649,16 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
             "type": self._type,
             "parameters": parameters
         }
-    
+
+class _BingSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="BING_SEARCH_",
+        env_file=DOTENV_PATH,
+        extra="ignore",
+        env_ignore_empty=True
+    )
+    key: str = None
+    endpoint: str = "https://api.bing.microsoft.com"
     
 class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -668,6 +677,7 @@ class _AppSettings(BaseModel):
     base_settings: _BaseSettings = _BaseSettings()
     azure_openai: _AzureOpenAISettings = _AzureOpenAISettings()
     search: _SearchCommonSettings = _SearchCommonSettings()
+    bing: _BingSettings = _BingSettings()
     ui: Optional[_UiSettings] = _UiSettings()
     
     # Constructed properties

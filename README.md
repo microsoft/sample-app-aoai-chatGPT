@@ -87,6 +87,13 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 /.env
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
 
+#### Local Setup: Enable Bing searching for chat
+To enable Bing searching in chats, provide your Bing search key and API endpoint with these environment variables:
+
+/.env
+- `BING_SEARCH_KEY=<your-bing-search-key>`
+- `BING_SEARCH_ENDPOINT=<your-bing-search-endpoint>`
+
 ## Environment variables
 
 Note: settings starting with `AZURE_SEARCH` are only needed when using Azure OpenAI on your data with Azure AI Search. If not connecting to your data, you only need to specify `AZURE_OPENAI` settings.
@@ -121,6 +128,8 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
+|BING_SEARCH_KEY||The key for your Bing Search resource.|
+|BING_SEARCH_ENDPOINT||The endpoint for your Bing Search resource.|
 |UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
 |UI_LOGO|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
 |UI_CHAT_LOGO|| Logo (chat window). Defaults to Contoso logo. Configure the URL to your logo image to modify.

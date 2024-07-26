@@ -1,6 +1,5 @@
 import copy
 import json
-import re
 import os
 import logging
 import uuid
@@ -15,7 +14,8 @@ from quart import (
     send_from_directory,
     render_template,
 )
-
+from pprint import pprint
+import requests
 from openai.types.chat import chat_completion
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -193,8 +193,6 @@ def prepare_model_args(request_body, request_headers, system_preamble = None, sy
     messages = []
     system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
     
-    print(f"System message:\n{system_message}")
-
     if not app_settings.datasource:
         messages = [
             {
@@ -373,15 +371,14 @@ def process_raw_response(raw_content):
         "history_metadata": None,
     }
     
-    chatid = ""
-
+    chat_id = ""
     for obj in json_response:
         try:                    
             # Extract and set top-level properties once
             if final_json["model"] == None:
                 final_json["model"] = obj.get("model")
                 final_json["history_metadata"] = obj.get("history_metadata")
-                chatid = obj.get("id")
+                chat_id = obj.get("id")
             
             # Extract message contents
             choices = obj.get("choices", [])
@@ -400,7 +397,7 @@ def process_raw_response(raw_content):
         
     # Add combined content to the final JSON structure
     final_json["messages"].append({
-        "id": chatid,
+        "id": chat_id,
         "role": "assistant",
         "content": combined_content,
         "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
@@ -408,20 +405,79 @@ def process_raw_response(raw_content):
     
     return final_json
 
-async def search_and_add_background_references(request_body, request_headers):
-        # Background conversation with custom system message
-        updated_request_body = copy.deepcopy(request_body)
-        updated_request_body["messages"][0]["content"] = "Forsooth, I am the herald of the Lady Ruthylin P. Chamberlain, Duchess of Dade, Marchioness of Miami. She would like to make your acquaintance, good sir."
-        updated_request_body["history_metadata"] = None
-        print(f"Private Request:\n{updated_request_body}\n")
-        result = await stream_chat_request(updated_request_body, request_headers, None, "Be an avid artsy theater fan, but who reviles Shakespearean English.")
+def concatenate_json_arrays(json_array1, json_array2):
+    json_array1 = json_array1.rstrip(']\n\r ')
+    json_array2 = json_array2.lstrip('[\n\r ')
+    concatenated_json = f"{json_array1}, {json_array2}"
+    return concatenated_json
+
+async def search_bing(search):
+        # Add your Bing Search V7 subscription key and endpoint to your environment variables.
+        subscription_key = app_settings.bing.key
+        endpoint = app_settings.bing.endpoint + "/v7.0/search"
+        mkt = "en-US"
+        params = { 'q' : search, 'mkt' : mkt }
+        headers = { 'Ocp-Apim-Subscription-Key' : subscription_key }
+        ## Call the API
+        try:
+            response = requests.get(endpoint, headers=headers, params=params)
+            response.raise_for_status()
+            search_results = response.json().get("webPages", {}).get("value", [])
+            return search_results
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+        
+async def send_private_chat(bg_request_body, request_headers, system_preamble = None, system_message = None):
+        result = await stream_chat_request(bg_request_body, request_headers, system_preamble, None)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
         response_raw = await response.get_data()
-        combined_json = process_raw_response(response_raw)     
-        print(f"Private Response:\n{combined_json}\n")
+        combined_json = process_raw_response(response_raw)  
+        return json.loads(combined_json["messages"][0]["content"])
 
+async def get_search_results(searches):
+        allresults = None
+        for search in searches:
+            results = await search_bing(search);
+            if allresults == None:
+                allresults = results
+            else:
+                allresults += results
+        # Remove extraneous fields
+        proparray = ["isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
+        for obj in allresults:
+            for prop in proparray:
+                if prop in obj:
+                    del obj[prop]
+        return allresults
+        
+async def search_and_add_background_references(request_body, request_headers):
+        
+        # Prepare background conversation
+        bg_request_body = copy.deepcopy(request_body)
+        bg_request_body["history_metadata"] = None
+
+        system_preamble = "The Original System Prompt that follows is your primary objective, but right now for this subchat we've created on the back-end, you just need to provide a simple list of searches you will need me to perform in order to fully research and document your suggestion for the feedback and URL provided, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
+        searches = await send_private_chat(bg_request_body, request_headers, system_preamble)
+        searchresults = await get_search_results(searches)
+
+        print(f"Search results: {searchresults}")
+
+        #system_preamble = "The Original System Prompt that follows is your primary objective, but right now for this subchat we've created on the back-end, we are searching to find relevant background references for you to answer well. I obtained the following search results. Please identify a list of URLs from the results that you need to browse to research in order to fully answer the question. Then I will provide their details. Return a comma delimited array of strings with the URLs you need to see. Here are the search results:\n\n" + searchresults + "\n\nOriginal System Prompt:\n"
+        #print(f"system_preamble: {system_preamble}")
+        #webPagesToBrowse = await send_private_chat(bg_request_body, request_headers, system_preamble)
+        #print(f"Web pages to browse: {webPagesToBrowse}")
+
+
+        
+
+        # And so on, back and forth as much as necessary, calling search API as necessary,
+        # in a loop, until chat is confident it has all the necessary background details 
+        # compiled to fully answer and document ground truth for its responses.
+
+        # Return injected relevant summaries, quotes, and source URLs for background information to the user question, if chat deems search background is necessary.
         return "Be sure to slip in a reference to https://www.foo.bar in your response!"
 
 async def conversation_internal(request_body, request_headers):
