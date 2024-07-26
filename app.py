@@ -193,6 +193,8 @@ def prepare_model_args(request_body, request_headers, system_preamble = None, sy
     messages = []
     system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
     
+    #print(f"System message in: {system_message}")
+
     if not app_settings.datasource:
         messages = [
             {
@@ -428,47 +430,65 @@ async def search_bing(search):
             print(f"Error: {e}")
             return None
         
-async def send_private_chat(bg_request_body, request_headers, system_preamble = None, system_message = None):
-        result = await stream_chat_request(bg_request_body, request_headers, system_preamble, None)
+async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
+        bg_request_body = copy.deepcopy(request_body)
+        bg_request_body["history_metadata"] = None
+        result = await stream_chat_request(bg_request_body, request_headers, system_preamble, system_message)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
         response_raw = await response.get_data()
-        combined_json = process_raw_response(response_raw)  
-        return json.loads(combined_json["messages"][0]["content"])
+        combined_json = process_raw_response(response_raw) 
+        return combined_json["messages"][0]["content"]
 
 async def get_search_results(searches):
         allresults = None
+        # Get the top 3 results from each search
         for search in searches:
             results = await search_bing(search);
-            if allresults == None:
-                allresults = results
+            if results == None:
+                return "Search error."
             else:
-                allresults += results
+                if allresults == None:
+                    allresults = results[:3]
+                else:
+                    allresults += results[:3]
         # Remove extraneous fields
-        proparray = ["isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
-        for obj in allresults:
-            for prop in proparray:
-                if prop in obj:
-                    del obj[prop]
-        return allresults
+                proparray = ["richFacts", "isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
+                for obj in allresults:
+                    for prop in proparray:
+                        if prop in obj:
+                            del obj[prop]
+                return allresults
+
+async def identify_searches(request_body, request_headers):
+        system_preamble = "The Original System Prompt that follows is your primary objective, but right now for this chat, you just need to provide a simple list of a few searches you need me to perform in order to fully research and document your suggestion for the feedback and URL provided, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
+        searches = await send_private_chat(request_body, request_headers, system_preamble)
+        if isinstance(searches, str):
+            if searches == "No searches required.": 
+                return ""
+            else:
+                if searches[0] != "[":
+                    searches = "[" + searches
+                if searches[-1] != "]":
+                    searches = searches + "]"
+                searches = json.loads(searches)
+        return searches
+
+async def get_urls_to_browse(request_body, request_headers, searches):
+        searchresults = await get_search_results(searches)
+        if searchresults == "Search error.":
+            return "Search error."
+        else:
+            strsearchresults = json.dumps(searchresults, indent=4)
+            system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've searched and identified the following list of potential URLs for further research. Return nothing except an array of strings, with each string being a URL we should browse to research further, so we can fully address the feedback and document our sources. Here is the list of possible sites we can browse:\n\n" + strsearchresults
+            URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_prompt)
+            return URLsToBrowse
         
 async def search_and_add_background_references(request_body, request_headers):
-        
-        # Prepare background conversation
-        bg_request_body = copy.deepcopy(request_body)
-        bg_request_body["history_metadata"] = None
-
-        system_preamble = "The Original System Prompt that follows is your primary objective, but right now for this subchat we've created on the back-end, you just need to provide a simple list of searches you will need me to perform in order to fully research and document your suggestion for the feedback and URL provided, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
-        searches = await send_private_chat(bg_request_body, request_headers, system_preamble)
-        searchresults = await get_search_results(searches)
-
-        print(f"Search results: {searchresults}")
-
-        #system_preamble = "The Original System Prompt that follows is your primary objective, but right now for this subchat we've created on the back-end, we are searching to find relevant background references for you to answer well. I obtained the following search results. Please identify a list of URLs from the results that you need to browse to research in order to fully answer the question. Then I will provide their details. Return a comma delimited array of strings with the URLs you need to see. Here are the search results:\n\n" + searchresults + "\n\nOriginal System Prompt:\n"
-        #print(f"system_preamble: {system_preamble}")
-        #webPagesToBrowse = await send_private_chat(bg_request_body, request_headers, system_preamble)
-        #print(f"Web pages to browse: {webPagesToBrowse}")
+        searches = await identify_searches(request_body, request_headers)
+        URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
+        print(f"Web pages to browse: {URLsToBrowse}")
 
 
         
