@@ -1,6 +1,6 @@
 # [Preview] UUFSolver
 
-This app is built on the Sample Chat App with AOAI GitHub project from which it is forked. It modifies Chat.tsx to add URL parsing, so it will automatically start the conversation with **Article** and **Feedback** parameters that represent the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback. It then gives its best suggestion to resolve/address the feedback, with reference links to validate ground truth on its claims. It will also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them.
+This app is built on the Sample Chat App with AOAI GitHub project from which it is forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat. It will automatically start the conversation with **Article** and **Feedback** (or any similarly named) parameters that represent the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback. It then gives its best suggestion to resolve/address the feedback, with reference links to validate ground truth on its claims. It will also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them.
 
 Note: some portions of the app use preview APIs.
 
@@ -52,6 +52,10 @@ NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space
     - `AZURE_SEARCH_INDEX`
     - `AZURE_SEARCH_KEY` (optional if using Entra ID)
 
+    These variables are required for Bing searching to work:
+    - `BING_SEARCH_KEY=<your-bing-search-key>`
+    - `BING_SEARCH_ENDPOINT=<your-bing-search-endpoint>`
+
     These variables are optional:
     - `AZURE_SEARCH_USE_SEMANTIC_SEARCH`
     - `AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG`
@@ -67,8 +71,8 @@ NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space
     - `AZURE_SEARCH_STRICTNESS`
     - `AZURE_OPENAI_EMBEDDING_NAME`
 
-3. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-4. You can see the local running app at http://127.0.0.1:50505.
+4. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
+5. You can see the local running app at http://127.0.0.1:50505.
 
 NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
 
@@ -86,13 +90,6 @@ To enable message feedback, you will need to set up CosmosDB resources. Then spe
 
 /.env
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
-
-#### Local Setup: Enable Bing searching for chat
-To enable Bing searching in chats, provide your Bing search key and API endpoint with these environment variables:
-
-/.env
-- `BING_SEARCH_KEY=<your-bing-search-key>`
-- `BING_SEARCH_ENDPOINT=<your-bing-search-endpoint>`
 
 ## Environment variables
 
