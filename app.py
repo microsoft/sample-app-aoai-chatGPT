@@ -1,9 +1,11 @@
 import copy
 import json
+import re
 import os
 import logging
 import uuid
 import httpx
+from datetime import datetime, timezone
 from quart import (
     Blueprint,
     Quart,
@@ -14,6 +16,7 @@ from quart import (
     render_template,
 )
 
+from openai.types.chat import chat_completion
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
     DefaultAzureCredential,
@@ -185,14 +188,14 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def prepare_model_args(request_body, request_headers):
+def prepare_model_args(request_body, request_headers, custom_system_message = None):
     request_messages = request_body.get("messages", [])
     messages = []
     if not app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": app_settings.azure_openai.system_message
+                "content": custom_system_message or app_settings.azure_openai.system_message
             }
         ]
 
@@ -208,7 +211,7 @@ def prepare_model_args(request_body, request_headers):
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        conversation_id = request_body.get("conversation_id", None)        
+        conversation_id = request_body.get("conversation_id", None)      
         user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id)
 
     model_args = {
@@ -303,7 +306,7 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request_body, request_headers):
+async def send_chat_request(request_body, request_headers, system_message = None):
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -311,12 +314,13 @@ async def send_chat_request(request_body, request_headers):
             filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers)
+    model_args = prepare_model_args(request_body, request_headers, system_message)
 
     try:
         azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
+        
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
@@ -341,8 +345,8 @@ async def complete_chat_request(request_body, request_headers):
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-async def stream_chat_request(request_body, request_headers):
-    response, apim_request_id = await send_chat_request(request_body, request_headers)
+async def stream_chat_request(request_body, request_headers, system_message = None):
+    response, apim_request_id = await send_chat_request(request_body, request_headers, system_message)
     history_metadata = request_body.get("history_metadata", {})
     
     async def generate():
@@ -351,18 +355,77 @@ async def stream_chat_request(request_body, request_headers):
 
     return generate()
 
+def process_raw_response(raw_content):
+    # Decode the raw content
+    decoded_content = raw_content.decode('utf-8')
+    lines = decoded_content.split('\n')
+    json_response = [json.loads(line) for line in lines if line.strip()]
+    
+    # Initialize variables to hold properties and message contents
+    combined_content = ""
+    final_json = {
+        "messages": [],
+        "model": None,
+        "history_metadata": None,
+    }
+    
+    chatid = ""
+
+    for obj in json_response:
+        try:                    
+            # Extract and set top-level properties once
+            if final_json["model"] == None:
+                final_json["model"] = obj.get("model")
+                final_json["history_metadata"] = obj.get("history_metadata")
+                chatid = obj.get("id")
+            
+            # Extract message contents
+            choices = obj.get("choices", [])
+            for choice in choices:
+                messages = choice.get("messages", [])
+                for message in messages:
+                    content = message.get("content", "")
+                    combined_content += content
+        
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            continue
+        except Exception as e:
+            print(f"Error processing object: {e}")
+            continue
+        
+    # Add combined content to the final JSON structure
+    final_json["messages"].append({
+        "id": chatid,
+        "role": "assistant",
+        "content": combined_content,
+        "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    })
+    
+    return final_json
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
-            result = await stream_chat_request(request_body, request_headers)
-            response = await make_response(format_as_ndjson(result))
-            response.timeout = None
-            response.mimetype = "application/json-lines"
-            return response
-        else:
-            result = await complete_chat_request(request_body, request_headers)
-            return jsonify(result)
+
+        # Background conversation with custom system message
+        updated_request_body = copy.deepcopy(request_body)
+        updated_request_body["messages"][0]["content"] = "Forsooth, I am the herald of the Lady Ruthylin P. Chamberlain, Duchess of Dade, Marchioness of Miami. She would like to make your acquaintance, good sir."
+        updated_request_body["history_metadata"] = None
+        print(f"Updated Request:\n{updated_request_body}\n")
+        result = await stream_chat_request(updated_request_body, request_headers, "Respond to everything I say as if you are confused and triggered Gen-Zer.")
+        response = await make_response(format_as_ndjson(result))
+        response.timeout = None
+        response.mimetype = "application/json-lines"
+        response_raw = await response.get_data()
+        combined_json = process_raw_response(response_raw)     
+        print(f"Updated Response:\n{combined_json}\n")
+
+        # Execute the original chat request, altering the system message
+        result = await stream_chat_request(request_body, request_headers, "Be natural. But find a way to include a link to https://foo.bar in your response.")
+        response = await make_response(format_as_ndjson(result))
+        response.timeout = None
+        response.mimetype = "application/json-lines"
+        return response
 
     except Exception as ex:
         logging.exception(ex)
