@@ -476,11 +476,11 @@ async def identify_searches(request_body, request_headers, Summaries = None):
             else:
                 system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
         searches = await send_private_chat(request_body, request_headers, system_preamble)
+        print(f"system_preamble: {system_preamble}")
         if isinstance(searches, str):
             if searches == "No searches required.": 
                 return None
             else:
-                print(f"Searches: {searches}")
                 if searches[0] != "[":
                     searches = "[" + searches
                 if searches[-1] != "]":
