@@ -30,5 +30,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'frontend/package-lock.json'
     - run: npm ci
-    - run: NODE_OPTIONS=--max_old_space_size=8192 npm run build --if-present
+    - run: npm run tsc
+    - run: npm run vite:build
     - run: npm run test --if-present

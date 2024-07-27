@@ -1,12 +1,12 @@
 {
   "name": "frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "watch": "tsc && vite build --watch",
+    "tsc": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc",
+    "vite:build": "cross-env NODE_OPTIONS=--max_old_space_size=16384 vite build",
+    "build": "npm run tsc && npm run vite:build",
+    "watch": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc --watch",
     "test": "jest",
     "lint": "npx eslint src",
     "lint:fix": "npx eslint --fix",
@@ -15,10 +15,10 @@
     "format": "npm run prettier:fix && npm run lint:fix"
   },
   "dependencies": {
-    "axios": "^1.7.2",
     "@fluentui/react": "^8.105.3",
     "@fluentui/react-hooks": "^8.6.29",
     "@fluentui/react-icons": "^2.0.195",
+    "axios": "^1.7.2",
     "dompurify": "^3.0.8",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
@@ -35,9 +35,9 @@
     "remark-supersub": "^1.0.0"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@eslint/eslintrc": "^3.0.2",
     "@eslint/js": "^9.1.1",
+    "@types/axios": "^0.14.0",
     "@types/dompurify": "^3.0.5",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/jest": "^29.5.12",
@@ -51,6 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^3.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-config-standard-with-typescript": "^43.0.1",

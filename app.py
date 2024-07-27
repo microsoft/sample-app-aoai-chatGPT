@@ -70,6 +70,10 @@ async def index():
 async def favicon():
     return await bp.send_static_file("favicon.ico")
 
+@bp.route("/mslearnguy.png")
+async def mslearnguy():
+    return await bp.send_static_file("mslearnguy.png")
+
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
