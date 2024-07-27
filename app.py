@@ -5,6 +5,7 @@ import logging
 import uuid
 import httpx
 from datetime import datetime, timezone
+from prompts import prompts
 from quart import (
     Blueprint,
     Quart,
@@ -464,15 +465,16 @@ async def get_search_results(searches):
 
 async def identify_searches(request_body, request_headers, Summaries = None):
         if (len(request_body.get("messages")) > 2):
+            print(f"request_body: {request_body}")
             # for now only search on the first message until I can figure this out - apparently we can't just replace the system prompt once the conversation is rolling...
             return None
             #print(f"on replies now..")
             #system_message = "Do you need to do any searching to answer the latest chat message? If so provide a comma delimited list of searches you would like me to perform for you to give you all the background data and links you need. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'.\n\n"
         else:
             if Summaries is None:
-                system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few searches you might need me to perform in order to respond to the current user message, while documenting reference links to any claims you make, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need to respond. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
+                system_preamble = prompts["identify_searches"];
             else:
-                system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few additional searches you need me to perform in order to fully research and document your response to the user message. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array with one or several new searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message. Existing gathered background data that you determined was insufficient so far to answer follows.\n\nExisting Background Data:\n\n" + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
+                system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
         searches = await send_private_chat(request_body, request_headers, system_preamble)
         if isinstance(searches, str):
             if searches == "No searches required.": 
@@ -492,7 +494,7 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             return "Search error."
         else:
             strsearchresults = json.dumps(searchresults, indent=4)
-            system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've searched and identified the following list of potential URLs for further research. Return nothing except an array of strings, with each string being a URL we should browse to research further, so we can fully answer and document sources if necessary. Here is the summary of the possible sites we can browse:\n\n" + strsearchresults
+            system_prompt = prompts["get_urls_to_browse"] + strsearchresults
             URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_prompt)
             return URLsToBrowse
         
@@ -511,7 +513,7 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):
         strSummaries = json.dumps(Summaries, indent=4)
-        system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've summarized the content of the URLs you've identified for further research. Review the summaries below and determine if you have enough background information to fully address the feedback on the URL provided by the user and document current sources. If you need more information, reply with 'More information needed.' If you have enough information, reply with 'Sufficient information.'\n\n" + strSummaries
+        system_prompt = prompts["is_background_info_sufficient"] + strSummaries
         response = await send_private_chat(request_body, request_headers, None, system_prompt)
         if response == "More information needed.": 
             return False
@@ -546,7 +548,7 @@ async def search_and_add_background_references(request_body, request_headers):
             if AreWeDone:
                 NeedsMoreSummaries = False
 
-        return "Use the following background references to thoroughly document your answer for the customer in the Primary System Message at the end.\n\nBackground References:\n\n" + json.dumps(Summaries, indent=4) + "\n\nPrimary System Message:"
+        return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nPrimary System Message:"
 
 async def conversation_internal(request_body, request_headers):
     try:
@@ -554,7 +556,7 @@ async def conversation_internal(request_body, request_headers):
         if system_preamble != "Search error.":
             result = await stream_chat_request(request_body, request_headers, system_preamble)
         else:
-            result = await stream_chat_request(request_body, request_headers, "NOTE: An error occurred while searching for background information. Please inform the user that you were unable to search to validate results, but do your best to answer regardless.\n\nPrimary System Message:\n\n")
+            result = await stream_chat_request(request_body, request_headers, prompts["search_error_preamble"])
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
