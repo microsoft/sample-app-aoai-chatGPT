@@ -15,6 +15,8 @@ from quart import (
     send_from_directory,
     render_template,
 )
+from bs4 import BeautifulSoup
+from status_blueprint import bp as status_bp, set_status_message
 from pprint import pprint
 import requests
 from openai.types.chat import chat_completion
@@ -40,13 +42,21 @@ from backend.utils import (
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
-
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
+    app.register_blueprint(status_bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    return app
 
+    # Manually add CORS headers to each response
+    @app.after_request
+    async def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+
+    return app
 
 @bp.route("/")
 async def index():
@@ -56,16 +66,13 @@ async def index():
         favicon=app_settings.ui.favicon
     )
 
-
 @bp.route("/favicon.ico")
 async def favicon():
     return await bp.send_static_file("favicon.ico")
 
-
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
-
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
@@ -464,8 +471,8 @@ async def get_search_results(searches):
                 return allresults
 
 async def identify_searches(request_body, request_headers, Summaries = None):
+        
         if (len(request_body.get("messages")) > 2):
-            print(f"request_body: {request_body}")
             # for now only search on the first message until I can figure this out - apparently we can't just replace the system prompt once the conversation is rolling...
             return None
             #print(f"on replies now..")
@@ -475,8 +482,8 @@ async def identify_searches(request_body, request_headers, Summaries = None):
                 system_preamble = prompts["identify_searches"];
             else:
                 system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
+
         searches = await send_private_chat(request_body, request_headers, system_preamble)
-        print(f"system_preamble: {system_preamble}")
         if isinstance(searches, str):
             if searches == "No searches required.": 
                 return None
@@ -497,19 +504,38 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             system_prompt = prompts["get_urls_to_browse"] + strsearchresults
             URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_prompt)
             return URLsToBrowse
-        
+
+async def fetch_and_parse_url(url):
+    set_status_message("Browsing...")
+    response = requests.get(url)
+    if response.status_code == 200:  # Raise an error for bad status codes
+        # Parse the web page
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # Extract the main content
+        paragraphs = soup.find_all('p')
+        # Combine the text from the paragraphs
+        content = ' '.join(paragraph.get_text() for paragraph in paragraphs)
+        return content
+    else:
+        return None
+
 async def get_article_summaries(request_body, request_headers, URLsToBrowse):
         Summaries = None
         URLsToBrowse = json.loads(URLsToBrowse)
         for URL in URLsToBrowse:
-            system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've identified the following URL for further research: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\n"
-            summary = await send_private_chat(request_body, request_headers, None, system_prompt)
-            summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
-            if Summaries is None:
-                Summaries = [summary]
-            else:
-                Summaries.append(summary)
-        return Summaries
+            page_content = await fetch_and_parse_url(URL)
+            if page_content != None: 
+                system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've identified the following URL for further research: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\nPage Content:\n\n" + page_content + "\n\nOriginal System Message:\n\n"
+           
+                set_status_message("Analyzing...")
+                summary = await send_private_chat(request_body, request_headers, None, system_prompt)
+                summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
+
+                if Summaries is None:
+                    Summaries = [summary]
+                else:
+                    Summaries.append(summary)
+            return Summaries
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):
         strSummaries = json.dumps(Summaries, indent=4)
@@ -525,6 +551,7 @@ async def search_and_add_background_references(request_body, request_headers):
         Summaries = None
         while NeedsMoreSummaries:
             
+            set_status_message("Searching...")
             if Summaries is None:
                 searches = await identify_searches(request_body, request_headers)
             else:
@@ -534,10 +561,11 @@ async def search_and_add_background_references(request_body, request_headers):
             if searches == None:
                 return None
             
+            set_status_message("Gathering search results...")
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
-            
+
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
@@ -548,6 +576,7 @@ async def search_and_add_background_references(request_body, request_headers):
             if AreWeDone:
                 NeedsMoreSummaries = False
 
+        set_status_message("Generating answer...")
         return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nPrimary System Message:"
 
 async def conversation_internal(request_body, request_headers):
@@ -1059,3 +1088,6 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)

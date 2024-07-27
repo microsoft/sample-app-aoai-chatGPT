@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, DialogFooter, DefaultButton, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import axios from 'axios'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -46,10 +47,7 @@ const enum messageStatus {
 }
 
 const Chat = () => {
-
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [queryParams, setQueryParams] = useState(new URLSearchParams(window.location.search));
-
+  const [statusMessage, setStatusMessage] = useState('Generating answer...');
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
@@ -85,6 +83,23 @@ const Chat = () => {
 
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        if (showLoadingMessage)
+          {
+              const response = await axios.get('/get_status');
+                setStatusMessage(response.data.status_message);
+          }
+        } catch (error) {
+          console.error('Error fetching status:', error);
+        }
+      }
+      const intervalId = setInterval(fetchStatus, 1800);
+
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [showLoadingMessage]);
 
   useEffect(() => {
     if (
@@ -844,7 +859,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: statusMessage,
                           citations: [],
                           plotly_data: null
                         }}
