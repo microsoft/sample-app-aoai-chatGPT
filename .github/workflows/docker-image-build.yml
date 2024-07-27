@@ -13,18 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build the project
-      run: npm run build
-      
     - name: Build the Docker image
       run:         
         docker build . --file WebApp.Dockerfile --tag sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER

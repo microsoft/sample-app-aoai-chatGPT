@@ -2,7 +2,7 @@
   "name": "your-project-name",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "axios": "^1.7.2"
