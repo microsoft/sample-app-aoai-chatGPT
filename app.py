@@ -469,7 +469,7 @@ async def identify_searches(request_body, request_headers, Summaries = None):
             # for now only search on the first message until I can figure this out - apparently we can't just replace the system prompt once the conversation is rolling...
             return None
             #print(f"on replies now..")
-            #system_message = "Do you need to do any searching to answer the latest chat message? If so provide a comma delimited list of searches you would like me to perform for you to give you all the background data and links you need. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'.\n\n"
+            #system_preamble = "Do you need to do any searching to answer the latest chat message? If so provide a comma delimited list of searches you would like me to perform for you to give you all the background data and links you need. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'.\n\nPrimary System Message:\n\n" 
         else:
             if Summaries is None:
                 system_preamble = prompts["identify_searches"];
