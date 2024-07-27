@@ -433,6 +433,7 @@ async def search_bing(search):
 async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
         bg_request_body = copy.deepcopy(request_body)
         bg_request_body["history_metadata"] = None
+        bg_request_body["conversation_id"] = str(uuid.uuid4())
         result = await stream_chat_request(bg_request_body, request_headers, system_preamble, system_message)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
@@ -462,15 +463,22 @@ async def get_search_results(searches):
                 return allresults
 
 async def identify_searches(request_body, request_headers, Summaries = None):
-        if Summaries is None:
-            system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few searches you need me to perform in order to fully research and document your suggestion for the feedback and URL provided, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
+        if (len(request_body.get("messages")) > 2):
+            # for now only search on the first message until I can figure this out - apparently we can't just replace the system prompt once the conversation is rolling...
+            return None
+            #print(f"on replies now..")
+            #system_message = "Do you need to do any searching to answer the latest chat message? If so provide a comma delimited list of searches you would like me to perform for you to give you all the background data and links you need. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'.\n\n"
         else:
-            system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few additional searches you need me to perform in order to fully research and document your suggestion for the feedback and URL provided, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array with one or several new searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message. Existing gathered background data that you determined was insufficient so far to answer follows.\n\nExisting Background Data:\n\n" + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
+            if Summaries is None:
+                system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few searches you might need me to perform in order to respond to the current user message, while documenting reference links to any claims you make, as specified in the Original System Prompt. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array of searches with one or several searches you would like me to perform for you to give you all the background data and links you need to respond. Do nothing else but provide the array of search strings or the 'No searches required.' message.\nOriginal System Prompt:\n"
+            else:
+                system_preamble = "The Original System Prompt that follows is your primary objective, but for this chat, you just need to provide a list of a few additional searches you need me to perform in order to fully research and document your response to the user message. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'. Otherwise, send a comma delimited array with one or several new searches you would like me to perform for you to give you all the background data and links you need. Do nothing else but provide the array of search strings or the 'No searches required.' message. Existing gathered background data that you determined was insufficient so far to answer follows.\n\nExisting Background Data:\n\n" + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
         searches = await send_private_chat(request_body, request_headers, system_preamble)
         if isinstance(searches, str):
             if searches == "No searches required.": 
                 return None
             else:
+                print(f"Searches: {searches}")
                 if searches[0] != "[":
                     searches = "[" + searches
                 if searches[-1] != "]":
@@ -484,7 +492,7 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             return "Search error."
         else:
             strsearchresults = json.dumps(searchresults, indent=4)
-            system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've searched and identified the following list of potential URLs for further research. Return nothing except an array of strings, with each string being a URL we should browse to research further, so we can fully address the feedback and document our sources. Prefer Microsoft sources but use external sources too if necessary to answer well and provide references for everything you state. Here is the list of possible sites we can browse:\n\n" + strsearchresults
+            system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've searched and identified the following list of potential URLs for further research. Return nothing except an array of strings, with each string being a URL we should browse to research further, so we can fully answer and document sources if necessary. Here is the summary of the possible sites we can browse:\n\n" + strsearchresults
             URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_prompt)
             return URLsToBrowse
         
@@ -520,7 +528,8 @@ async def search_and_add_background_references(request_body, request_headers):
             else:
                 searches = await identify_searches(request_body, request_headers, Summaries)
             
-            if searches is None:
+            print(f"Searches: {searches}")
+            if searches == None:
                 return None
             
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
