@@ -10,6 +10,7 @@ fi
 
 export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
+
 # Install Rust compiler if needed
 if ! command -v rustc &> /dev/null
 then
@@ -20,11 +21,22 @@ fi
 # Activate the virtual environment
 source venv/scripts/activate
 
-# Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+# Install Node.js if not already installed
+if ! command -v node &> /dev/null; then
+  curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+  apt-get install -y nodejs
+fi
 
+# Restore frontend npm packages
+cd frontend
+npm install
+cd ..
+
+# Change to the directory where start.sh is located
+cd /home/site/wwwroot || exit
+
+# Ensure start.sh has execute permissions
+chmod +x start.sh
+
+# Start the application using the start.sh script
 ./start.sh
-
-# Restart services if necessary
-# service apache2 restart
