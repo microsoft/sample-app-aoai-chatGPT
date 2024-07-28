@@ -549,7 +549,7 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                 if (currentPage + 1) == len(URLsToBrowse) - 1:
                     set_status_message("Analyzing...")
                 else:
-                    if currentPage % 2 == 1:
+                    if currentPage % 2 == 0:
                         set_status_message("Browsing...")
 
                 currentPage += 1
