@@ -3,6 +3,12 @@
 # Unpack the pre-built virtual environment
 tar -xzf venv.tar.gz
 
+# Ensure the venv directory exists and contains the expected files
+if [ ! -d "venv" ]; then
+  echo "Error: venv directory not found after unpacking"
+  exit 1
+fi
+
 export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
 # Activate the virtual environment

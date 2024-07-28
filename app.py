@@ -81,7 +81,15 @@ async def assets(path):
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING) # Make logging.DEBUG to see heavy debugging...
+else:
+    logging.basicConfig(level=logging.INFO)
+
+logging.getLogger('openai._base_client').setLevel(logging.WARNING)
+logging.getLogger('httpcore.connection').setLevel(logging.WARNING)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('root').setLevel(logging.WARNING)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
@@ -546,16 +554,22 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                     Summaries = [summary]
                 else:
                     Summaries.append(summary)
-                if (currentPage + 1) == len(URLsToBrowse) - 1:
-                    set_status_message("Analyzing...")
-                else:
-                    if currentPage % 2 == 0:
-                        set_status_message("Browsing...")
-
             currentPage += 1
-            print(f"currentPage: {currentPage}\nSummary: {summary}")
 
-        print(f"Summaries: {Summaries}")
+            print(f"Current Page: {currentPage}")
+            # Following is a lie, a trick to make it seem like we are spending time browsing than analyzing, when in fact almost all the time is actually in analysis...
+            # It's just to give the user a sense of progress...
+            if currentPage == len(URLsToBrowse) - 1:
+                set_status_message("Analyzing...")
+                print("Analyzing...")
+            else:
+                if currentPage % 2 == 0:
+                    set_status_message("Browsing...")
+                    print("Browsing...")
+                else:
+                    set_status_message("Analyzing...")
+                    print("Analyzing...")
+
         return Summaries
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):
