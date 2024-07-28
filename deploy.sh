@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-# Ensure the correct Python version is used
-export PATH="/opt/python/3.12.0/bin:$PATH"
-
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
-  python3 -m venv venv
+  python3.12 -m venv venv
   if [ $? -ne 0 ]; then
     echo "Failed to create virtual environment"
     exit 1
@@ -67,9 +64,11 @@ fi
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
 
-# Set up the environment to use Python 3.12
-echo "Setting up environment for Python 3.12..."
-export LD_LIBRARY_PATH="/opt/python/3.12.0/lib:$LD_LIBRARY_PATH"
-export PYTHONPATH="/opt/startup/app_logs:/home/site/wwwroot/venv/lib/python3.12/site-packages"
+# Clean up old virtual environment artifacts
+rm -rf /tmp/antenv
 
-echo "Deployment script finished."
+# Copy current virtual environment to the appropriate directory
+cp -r venv /tmp/antenv
+
+# Start the application (assuming it is configured in Azure Web App settings)
+echo "Deployment completed successfully."
