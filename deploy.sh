@@ -9,7 +9,7 @@ if [ ! -d "venv" ]; then
   exit 1
 fi
 
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 
 # Activate the virtual environment
 source venv/bin/activate
@@ -39,8 +39,10 @@ then
 fi
 
 # Install dependencies
+python.exe -m pip install --upgrade pip
 pip install --upgrade pip
 pip install -r requirements.txt
+#pip install -r requirements-dev.txt
 
 # Restart services if necessary
 # service apache2 restart
