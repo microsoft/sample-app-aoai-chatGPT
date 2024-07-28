@@ -552,8 +552,8 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                     if currentPage % 2 == 0:
                         set_status_message("Browsing...")
 
-                currentPage += 1
-                print(f"currentPage: {currentPage}\nSummary: {summary}")
+            currentPage += 1
+            print(f"currentPage: {currentPage}\nSummary: {summary}")
 
         print(f"Summaries: {Summaries}")
         return Summaries
