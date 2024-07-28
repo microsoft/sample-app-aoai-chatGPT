@@ -28,10 +28,14 @@ source venv/scripts/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Install Node.js 18 LTS directly using NodeSource setup script
-curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get update || (sleep 5 && sudo apt-get update)
-sudo apt-get install -y nodejs
+# Install Node.js directly if not available
+if ! command -v node &> /dev/null; then
+  echo "Node.js not found, installing Node.js"
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm install 18
+fi
 
 # Debugging: Print Node.js version
 node -v
