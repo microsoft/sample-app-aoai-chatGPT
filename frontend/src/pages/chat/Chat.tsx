@@ -103,31 +103,25 @@ const Chat = () => {
     }, [showLoadingMessage]);
 
   useEffect(() => {
-    console.log("useEffect for updateStatusDotsToLookAlive triggered");
     const updateStatusDotsToLookAlive = async () => {
       try {
         console.log("showLoadingMessage: " + showLoadingMessage);
-        if (showLoadingMessage) 
-          {
+        if (showLoadingMessage) {
               console.log("index of ... : " + statusMessage.indexOf("...."));
-              if (statusMessage.indexOf("....") !== -1) 
-                {
+              if (statusMessage.indexOf("....") !== -1) {
                   setStatusMessage(statusMessage.replace("....", "."));
-                }
-          }
-          else 
-          {
-            setStatusMessage(statusMessage + ".");
-          } 
+              }
+        }
+        else {
+          setStatusMessage(statusMessage + ".");
+        } 
       }
-      catch (error) 
-      {
+      catch (error) {
         console.error('Error fetching status:', error);
       }
-    
-      const intervalId = setInterval(updateStatusDotsToLookAlive, 500);
-      return () => clearInterval(intervalId); // Cleanup on unmount
     }
+    const intervalId = setInterval(updateStatusDotsToLookAlive, 500);
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, [showLoadingMessage]);
 
   useEffect(() => {
