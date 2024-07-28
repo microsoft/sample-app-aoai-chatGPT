@@ -39,10 +39,9 @@ then
 fi
 
 # Install dependencies
-python.exe -m pip install --upgrade pip
 pip install --upgrade pip
 pip install -r requirements.txt
-#pip install -r requirements-dev.txt
+pip install -r requirements-dev.txt
 
 # Restart services if necessary
 # service apache2 restart
