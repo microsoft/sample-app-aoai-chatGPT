@@ -31,7 +31,6 @@ jobs:
         python-version: '3.x'
 
     - name: Install Python dependencies
-      working-directory: backend
       run: |
         pip install -r requirements.txt       
         
