@@ -24,11 +24,20 @@ echo "Cargo path: $PATH"
 # Activate the virtual environment
 source venv/scripts/activate
 
-# Install Node.js if not already installed
-if ! command -v node &> /dev/null; then
-  curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-  apt-get install -y nodejs
+# Upgrade pip and install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Install NVM (Node Version Manager)
+if ! command -v nvm &> /dev/null; then
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 fi
+
+# Use Node.js v14.19.2 with NVM
+nvm install 14.19.2
+nvm use 14.19.2
 
 # Debugging: Print Node.js version
 node -v
