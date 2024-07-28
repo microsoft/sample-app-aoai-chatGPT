@@ -29,9 +29,9 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Install Node.js 18 LTS directly using NodeSource setup script
-curl -sL https://deb.nodesource.com/setup_18.x | bash -
-apt-get update || (sleep 5 && apt-get update)
-apt-get install -y nodejs
+curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get update || (sleep 5 && sudo apt-get update)
+sudo apt-get install -y nodejs
 
 # Debugging: Print Node.js version
 node -v
