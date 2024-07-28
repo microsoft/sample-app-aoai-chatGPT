@@ -41,8 +41,5 @@ fi
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Start gunicorn with the virtual environment's Python interpreter
-venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
-
 # Restart services if necessary
 # service apache2 restart
