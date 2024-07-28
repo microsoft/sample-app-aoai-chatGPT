@@ -2,28 +2,12 @@
 
 # Clean up any previous installations or environments
 echo "Cleaning up previous installations..."
-rm -rf venv /tmp/antenv ~/.local/lib/python3.11 ~/.local/lib/python3.12 ~/.local/bin
-
-# Find the correct Python version
-PYTHON_CMD=$(command -v python3.12 || command -v python3.11 || command -v python3.10 || command -v python3)
-
-if [ -z "$PYTHON_CMD" ]; then
-  echo "No suitable Python version found."
-  exit 1
-fi
-
-echo "Using Python interpreter at: $PYTHON_CMD"
-
-# Check if venv is available, if not install it
-if ! $PYTHON_CMD -m ensurepip --version &> /dev/null; then
-  echo "Installing python3-venv..."
-  apt-get update && apt-get install -y python3-venv
-fi
+rm -rf venv /tmp/antenv ~/.local/lib/python3.12 ~/.local/bin
 
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
-  $PYTHON_CMD -m venv venv
+  python3.11 -m venv venv
   if [ $? -ne 0 ]; then
     echo "Failed to create virtual environment"
     exit 1
