@@ -18,6 +18,9 @@ then
     source $HOME/.cargo/env
 fi
 
+# Debugging: Print Cargo path
+echo "Cargo path: $PATH"
+
 # Activate the virtual environment
 source venv/scripts/activate
 
@@ -27,16 +30,32 @@ if ! command -v node &> /dev/null; then
   apt-get install -y nodejs
 fi
 
+# Debugging: Print Node.js version
+node -v
+
 # Restore frontend npm packages
 cd frontend
 npm install
 cd ..
 
+# Debugging: Print current directory and list files
+echo "Current directory: $(pwd)"
+echo "Listing files:"
+ls -la
+
 # Change to the directory where start.sh is located
 cd /home/site/wwwroot || exit
 
+# Debugging: Print current directory and list files again
+echo "Current directory after cd: $(pwd)"
+echo "Listing files after cd:"
+ls -la
+
 # Ensure start.sh has execute permissions
 chmod +x start.sh
+
+# Debugging: Verify start.sh permissions
+ls -la start.sh
 
 # Start the application using the start.sh script
 ./start.sh
