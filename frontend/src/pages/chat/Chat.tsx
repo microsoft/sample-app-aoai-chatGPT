@@ -97,9 +97,29 @@ const Chat = () => {
         }
       }
       const intervalId = setInterval(fetchStatus, 800);
-
       return () => clearInterval(intervalId); // Cleanup on unmount
     }, [showLoadingMessage]);
+
+  useEffect(() => {
+    const updateStatusDotsToLookAlive = async () => {
+      try {
+        if (showLoadingMessage) {
+          console.log("index of ... : " + statusMessage.indexOf("...."));
+          if (statusMessage.indexOf("....") !== -1) {
+            setStatusMessage(statusMessage.replace("....", "."));
+          }
+          else {
+            setStatusMessage(statusMessage + ".");
+          } 
+        }
+      } catch (error) {
+          console.error('Error fetching status:', error);
+      }
+      
+      const intervalId = setInterval(updateStatusDotsToLookAlive, 333);
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    }
+  }, [showLoadingMessage]);
 
   useEffect(() => {
     if (
