@@ -102,28 +102,7 @@ const Chat = () => {
       return () => clearInterval(intervalId); // Cleanup on unmount
     }, [showLoadingMessage]);
 
-  useEffect(() => {
-    const updateStatusDotsToLookAlive = async () => {
-      try {
-        console.log("showLoadingMessage: " + showLoadingMessage);
-        if (showLoadingMessage) {
-              console.log("index of ... : " + statusMessage.indexOf("...."));
-              if (statusMessage.indexOf("....") !== -1) {
-                  setStatusMessage(statusMessage.replace("....", "."));
-              }
-        }
-        else {
-          setStatusMessage(statusMessage + ".");
-        } 
-      }
-      catch (error) {
-        console.error('Error fetching status:', error);
-      }
-    }
-    const intervalId = setInterval(updateStatusDotsToLookAlive, 500);
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [showLoadingMessage]);
-
+ /*
   useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
@@ -139,6 +118,7 @@ const Chat = () => {
       toggleErrorDialog()
     }
   }, [appStateContext?.state.isCosmosDBAvailable])
+  */
 
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
