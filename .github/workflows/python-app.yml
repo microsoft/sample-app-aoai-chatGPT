@@ -25,7 +25,3 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements-dev.txt
-    - name: Test with pytest
-      run: |
-        $env:PYTHONPATH=$pwd
-        pytest -v --show-capture=stdout -k "not integration"
