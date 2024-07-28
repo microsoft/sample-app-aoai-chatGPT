@@ -3,10 +3,10 @@
 # Unpack the pre-built virtual environment
 tar -xzf venv.tar.gz
 
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+
 # Activate the virtual environment
 source venv/bin/activate
-
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
 # Check if python3 is available
 if ! command -v python3 &> /dev/null

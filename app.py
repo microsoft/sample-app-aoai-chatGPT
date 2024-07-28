@@ -553,7 +553,9 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                         set_status_message("Browsing...")
 
                 currentPage += 1
+                print(f"currentPage: {currentPage}\nSummary: {summary}")
 
+        print(f"Summaries: {Summaries}")
         return Summaries
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):
@@ -1108,4 +1110,4 @@ async def generate_title(conversation_messages) -> str:
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
