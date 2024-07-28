@@ -7,6 +7,9 @@ if [ -z "$PYTHON" ]; then
     exit 1
 fi
 
+# Ensure pip is available
+$PYTHON -m ensurepip --upgrade
+
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
@@ -78,6 +81,4 @@ fi
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
 
-# Start the application using the startup command set in Azure portal
-#echo "Starting the application using gunicorn..."
-#python3 -m gunicorn -k uvicorn.workers.UvicornWorker app:app
+echo "Setup complete. The application will be started by Azure Web App settings."
