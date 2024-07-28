@@ -24,9 +24,6 @@ then
     apt-get install -y python3-venv
 fi
 
-# Create and activate a virtual environment
-python3 -m venv venv
-source venv/bin/activate
 
 # Ensure pip is available
 if ! command -v pip &> /dev/null
