@@ -58,7 +58,7 @@ jobs:
         pip install -r requirements.txt
         python app.py &
         sleep 10  # Give the app some time to start
-        curl -f http://localhost:8000  # Adjust the URL to match your app's expected response
+        curl -f http://localhost:50505 
         pkill -f python  # Kill the app after validation
 
   deploy:
