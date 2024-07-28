@@ -29,7 +29,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Install Node.js directly using NodeSource setup script
-curl -sL https://deb.nodesource.com/setup_14.x | bash -
+curl -sL https://deb.nodesource.com/setup_18.x | bash -
 apt-get install -y nodejs
 
 # Debugging: Print Node.js version
