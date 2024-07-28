@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 
-# Extract the virtual environment
-echo "Extracting virtual environment..."
-tar -xzf venv.tar.gz
+# Ensure the venv directory exists and create it if it doesn't
+if [ ! -d "venv" ]; then
+  echo "Creating virtual environment..."
+  python3 -m venv venv
+  if [ $? -ne 0 ]; then
+    echo "Failed to create virtual environment"
+    exit 1
+  fi
+fi
 
 # Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/Scripts
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
 # Activate the virtual environment
 echo "Activating virtual environment..."
-if [ -f "venv/Scripts/activate" ]; then
+if [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+elif [ -f "venv/Scripts/activate" ]; then
   source venv/Scripts/activate
 else
   echo "Error: venv activation script not found."
@@ -28,6 +36,11 @@ if ! command -v rustc &> /dev/null; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   . "$HOME/.cargo/env"
 fi
+
+# Upgrade pip and install dependencies
+echo "Upgrading pip and installing dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
