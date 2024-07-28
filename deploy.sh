@@ -35,8 +35,12 @@ node -v
 
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
+  echo "Current directory: $(pwd)"
+  echo "Listing files in frontend directory:"
+  ls -la frontend
   cd frontend
-  npm install
+  echo "Restoring npm packages in frontend directory..."
+  npm install || echo "Failed to restore frontend npm packages"
   cd ..
 else
   echo "Frontend directory not found"
