@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Clean up any previous installations or environments
+echo "Cleaning up previous installations..."
+rm -rf venv /tmp/antenv ~/.local/lib/python3.11 ~/.local/lib/python3.12 ~/.local/bin
+
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
@@ -63,9 +67,6 @@ fi
 
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
-
-# Clean up old virtual environment artifacts
-rm -rf /tmp/antenv
 
 # Copy current virtual environment to the appropriate directory
 cp -r venv /tmp/antenv
