@@ -510,7 +510,6 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             return URLsToBrowse
 
 async def fetch_and_parse_url(url):
-    set_status_message("Browsing...")
     response = requests.get(url)
     if response.status_code == 200:  # Raise an error for bad status codes
         # Parse the web page
@@ -526,20 +525,29 @@ async def fetch_and_parse_url(url):
 async def get_article_summaries(request_body, request_headers, URLsToBrowse):
         Summaries = None
         URLsToBrowse = json.loads(URLsToBrowse)
+        Pages = None
+
+        set_status_message("Browsing...")
         for URL in URLsToBrowse:
             page_content = await fetch_and_parse_url(URL)
-            if page_content != None: 
-                system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've identified the following URL for further research: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\nPage Content:\n\n" + page_content + "\n\nOriginal System Message:\n\n"
-           
-                set_status_message("Analyzing...")
-                summary = await send_private_chat(request_body, request_headers, None, system_prompt)
+            if Pages is None:
+                Pages = [page_content]
+            else:
+                Pages.append(page_content)
+        
+        set_status_message("Analyzing...")
+        currentPage = 0
+        for URL in URLsToBrowse:
+            if Pages[currentPage] != None: 
+                system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've identified the following URL for further research: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\nPage Content:\n\n" + Pages[currentPage] + "\n\nOriginal System Message:\n\n"
+                summary = await send_private_chat(request_body, request_headers, None, system_prompt) # Get summary of page content
                 summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
-
                 if Summaries is None:
                     Summaries = [summary]
                 else:
                     Summaries.append(summary)
-            return Summaries
+
+        return Summaries
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):
         strSummaries = json.dumps(Summaries, indent=4)
@@ -561,11 +569,10 @@ async def search_and_add_background_references(request_body, request_headers):
             else:
                 searches = await identify_searches(request_body, request_headers, Summaries)
             
-            print(f"Searches: {searches}")
             if searches == None:
                 return None
             
-            set_status_message("Gathering search results...")
+            set_status_message("Browsing...")
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       

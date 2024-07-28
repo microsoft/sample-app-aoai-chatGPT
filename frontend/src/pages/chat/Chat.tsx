@@ -96,7 +96,7 @@ const Chat = () => {
           console.error('Error fetching status:', error);
         }
       }
-      const intervalId = setInterval(fetchStatus, 1800);
+      const intervalId = setInterval(fetchStatus, 800);
 
       return () => clearInterval(intervalId); // Cleanup on unmount
     }, [showLoadingMessage]);
