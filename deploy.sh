@@ -14,6 +14,12 @@ fi
 
 echo "Using Python interpreter at: $PYTHON_CMD"
 
+# Check if venv is available, if not install it
+if ! $PYTHON_CMD -m ensurepip --version &> /dev/null; then
+  echo "Installing python3-venv..."
+  apt-get update && apt-get install -y python3-venv
+fi
+
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
