@@ -6,6 +6,9 @@ tar -xzf venv.tar.gz
 # Activate the virtual environment
 source venv/bin/activate
 
+# Ensure pip is in the PATH
+export PATH=$PATH:/home/.local/bin
+
 # Check if python3 is available
 if ! command -v python3 &> /dev/null
 then
