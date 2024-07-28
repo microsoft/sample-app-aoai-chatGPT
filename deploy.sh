@@ -40,7 +40,13 @@ if [ -d "frontend" ]; then
   ls -la frontend
   cd frontend
   echo "Restoring npm packages in frontend directory..."
-  npm install || echo "Failed to restore frontend npm packages"
+  npm install > npm_install.log 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Failed to restore frontend npm packages. Here are the logs:"
+    cat npm_install.log
+  else
+    echo "NPM packages restored successfully."
+  fi
   cd ..
 else
   echo "Frontend directory not found"
