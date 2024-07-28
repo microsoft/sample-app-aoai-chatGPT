@@ -7,7 +7,7 @@
 if [ ! -d "venv" ]; then
    python3.12 -m venv venv
    export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
-fi; else
+else
     export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 fi
 
