@@ -43,6 +43,9 @@ echo "Current directory: $(pwd)"
 echo "Listing files:"
 ls -la
 
+# Copy start.sh to the correct directory
+cp start.sh /home/site/wwwroot/
+
 # Change to the directory where start.sh is located
 cd /home/site/wwwroot || exit
 
