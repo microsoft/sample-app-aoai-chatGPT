@@ -55,10 +55,6 @@ fi
 # Ensure Node.js version is set correctly
 export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
 
-# Debugging: Print Node.js version
-echo "Node.js version:"
-node -v
-
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
   echo "Restoring npm packages in frontend directory..."
@@ -72,11 +68,5 @@ else
   echo "Frontend directory not found"
 fi
 
-# Ensure start.sh is executable and move to the correct directory
-chmod +x start.sh
-cp start.sh /home/site/wwwroot/
+# Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
-
-# Start the application using the start.sh script
-echo "Starting the application..."
-./start.sh
