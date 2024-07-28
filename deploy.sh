@@ -6,10 +6,10 @@
 # Ensure the venv directory exists and contains the expected files
 if [ ! -d "venv" ]; then
    python3.12 -m venv venv
-   export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
-else
-    export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 fi
+
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+
 
 # Install Rust compiler if needed
 if ! command -v rustc &> /dev/null
@@ -49,7 +49,7 @@ fi
 pip install --upgrade pip
 pip install -r requirements.txt
 
-start.sh
+./start.sh
 
 # Restart services if necessary
 # service apache2 restart
