@@ -23,7 +23,6 @@ then
     apt-get install -y python3-venv
 fi
 
-
 # Ensure pip is available
 if ! command -v pip &> /dev/null
 then

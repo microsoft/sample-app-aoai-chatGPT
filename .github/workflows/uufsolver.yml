@@ -42,9 +42,28 @@ jobs:
             release.zip
             !venv/
 
+  validate-deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Unpack and validate virtual environment
+      run: |
+        tar -xzf venv.tar.gz
+        source venv/bin/activate
+        export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        python app.py &
+        sleep 10  # Give the app some time to start
+        curl -f http://localhost:8000  # Adjust the URL to match your app's expected response
+        pkill -f python  # Kill the app after validation
+
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: validate-deploy
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
