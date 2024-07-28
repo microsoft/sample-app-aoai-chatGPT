@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Navigate to the backend directory if it's separate
-cd backend  # Adjust this if your requirements.txt is in the root
-
 # Ensure pip is up to date
 python3 -m ensurepip --upgrade
 
