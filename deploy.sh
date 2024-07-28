@@ -7,7 +7,7 @@ rm -rf venv /tmp/antenv ~/.local/lib/python3.12 ~/.local/bin
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
-  python3.11 -m venv venv
+  python3 -m venv venv
   if [ $? -ne 0 ]; then
     echo "Failed to create virtual environment"
     exit 1
