@@ -33,10 +33,14 @@ fi
 # Debugging: Print Node.js version
 node -v
 
-# Restore frontend npm packages
-cd frontend
-npm install
-cd ..
+# Ensure frontend directory exists and restore npm packages
+if [ -d "frontend" ]; then
+  cd frontend
+  npm install
+  cd ..
+else
+  echo "Frontend directory not found"
+fi
 
 # Debugging: Print current directory and list files
 echo "Current directory: $(pwd)"
