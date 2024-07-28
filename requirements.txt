@@ -11,7 +11,7 @@ uvicorn==0.24.0
 aiohttp==3.9.2
 gunicorn==20.1.0
 pydantic-settings==2.2.1
-beautifulsoup4
+beautifulsoup4==4.9.3
 Markdown==3.4.4
 requests==2.31.0
 tqdm==4.66.1
