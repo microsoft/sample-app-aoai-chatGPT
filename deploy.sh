@@ -21,9 +21,6 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Remove any existing Node.js installation
-rm -rf ~/.nvm ~/.npm ~/.node-gyp ~/.node_repl_history ~/.nvmrc
-
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
   echo "Node.js not found, installing Node.js"
@@ -34,6 +31,9 @@ if ! command -v node &> /dev/null; then
   nvm use 18
 fi
 
+# Ensure Node.js version is set correctly
+export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
+
 # Debugging: Print Node.js version
 node -v
 
@@ -43,17 +43,16 @@ if [ -d "frontend" ]; then
   npm install
   if [ $? -ne 0 ]; then
     echo "Failed to restore frontend npm packages. Here are the logs:"
-    cat npm_install.log
   fi
   cd ..
 else
   echo "Frontend directory not found"
 fi
 
-# Copy start.sh to the correct directory and change to it
+# Ensure start.sh is executable and move to the correct directory
+chmod +x start.sh
 cp start.sh /home/site/wwwroot/
 cd /home/site/wwwroot || exit
-chmod +x start.sh
 
 # Start the application using the start.sh script
 ./start.sh
