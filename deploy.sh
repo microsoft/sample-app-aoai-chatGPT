@@ -4,10 +4,10 @@
 cd backend  # Adjust this if your requirements.txt is in the root
 
 # Ensure pip is up to date
-python -m ensurepip --upgrade
+python3 -m ensurepip --upgrade
 
 # Create and activate a virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
