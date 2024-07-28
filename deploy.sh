@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Unpack the pre-built virtual environment
+tar -xzf venv.tar.gz
+
+# Activate the virtual environment
+source venv/bin/activate
+
 # Check if python3 is available
 if ! command -v python3 &> /dev/null
 then
