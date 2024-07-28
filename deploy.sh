@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 # Unpack the pre-built virtual environment
-tar -xzf venv.tar.gz
+#tar -xzf venv.tar.gz
 
 # Ensure the venv directory exists and contains the expected files
 if [ ! -d "venv" ]; then
-  echo "Error: venv directory not found after unpacking"
-  exit 1
+   python3.12 -m venv venv
+   export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+fi; else
+    export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 fi
-
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 
 # Install Rust compiler if needed
 if ! command -v rustc &> /dev/null
@@ -48,6 +48,8 @@ fi
 # Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
+
+start.sh
 
 # Restart services if necessary
 # service apache2 restart
