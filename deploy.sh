@@ -40,7 +40,7 @@ node -v
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
   cd frontend
-  npm install > npm_install.log 2>&1
+  npm install
   if [ $? -ne 0 ]; then
     echo "Failed to restore frontend npm packages. Here are the logs:"
     cat npm_install.log
