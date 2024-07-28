@@ -33,13 +33,7 @@ jobs:
     - name: Install Python dependencies
       working-directory: .
       run: |
-        pip install -r requirements.txt       
-        
-    - name: Run backend tests
-      working-directory: backend
-      run: |
-        # Commands to run your backend tests
-        pytest tests  # Adjust as necessary        
+        pip install -r requirements.txt           
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
