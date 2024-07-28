@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 
+# Detect the available Python version and set it to use
+PYTHON=$(command -v python3.12 || command -v python3 || command -v python)
+if [ -z "$PYTHON" ]; then
+    echo "Python is not installed."
+    exit 1
+fi
+
 # Ensure the venv directory exists and create it if it doesn't
 if [ ! -d "venv" ]; then
   echo "Creating virtual environment..."
-  python3.12 -m venv venv
+  $PYTHON -m venv venv
   if [ $? -ne 0 ]; then
     echo "Failed to create virtual environment"
     exit 1
@@ -70,3 +77,7 @@ fi
 
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
+
+# Start the application using the startup command set in Azure portal
+#echo "Starting the application using gunicorn..."
+#python3 -m gunicorn -k uvicorn.workers.UvicornWorker app:app
