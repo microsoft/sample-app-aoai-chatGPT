@@ -11,6 +11,13 @@ fi
 
 export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/scripts
 
+# Install Rust compiler if needed
+if ! command -v rustc &> /dev/null
+then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source $HOME/.cargo/env
+fi
+
 # Activate the virtual environment
 source venv/bin/activate
 
@@ -41,7 +48,6 @@ fi
 # Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
 
 # Restart services if necessary
 # service apache2 restart
