@@ -90,7 +90,9 @@ const Chat = () => {
         if (showLoadingMessage)
           {
               const response = await axios.get('/get_status');
+              if (response.data.status_message.replaceAll(".", "") != statusMessage.replaceAll(".", "")) {
                 setStatusMessage(response.data.status_message);
+              }
           }
         } catch (error) {
           console.error('Error fetching status:', error);
@@ -101,22 +103,29 @@ const Chat = () => {
     }, [showLoadingMessage]);
 
   useEffect(() => {
+    console.log("useEffect for updateStatusDotsToLookAlive triggered");
     const updateStatusDotsToLookAlive = async () => {
       try {
-        if (showLoadingMessage) {
-          console.log("index of ... : " + statusMessage.indexOf("...."));
-          if (statusMessage.indexOf("....") !== -1) {
-            setStatusMessage(statusMessage.replace("....", "."));
+        console.log("showLoadingMessage: " + showLoadingMessage);
+        if (showLoadingMessage) 
+          {
+              console.log("index of ... : " + statusMessage.indexOf("...."));
+              if (statusMessage.indexOf("....") !== -1) 
+                {
+                  setStatusMessage(statusMessage.replace("....", "."));
+                }
           }
-          else {
+          else 
+          {
             setStatusMessage(statusMessage + ".");
           } 
-        }
-      } catch (error) {
-          console.error('Error fetching status:', error);
       }
-      
-      const intervalId = setInterval(updateStatusDotsToLookAlive, 333);
+      catch (error) 
+      {
+        console.error('Error fetching status:', error);
+      }
+    
+      const intervalId = setInterval(updateStatusDotsToLookAlive, 500);
       return () => clearInterval(intervalId); // Cleanup on unmount
     }
   }, [showLoadingMessage]);

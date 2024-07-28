@@ -19,7 +19,7 @@ then
 fi
 
 # Activate the virtual environment
-source venv/bin/activate
+source venv/scripts/activate
 
 # Check if python3 is available
 if ! command -v python3 &> /dev/null

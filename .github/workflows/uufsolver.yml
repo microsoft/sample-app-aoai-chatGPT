@@ -20,19 +20,12 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v1
         with:
-          python-version: '3.11'
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true          
+          python-version: '3.11'      
 
       - name: Create and start virtual environment
         run: |
           python -m venv venv
-          source venv/bin/activate
+          source venv/scripts/activate
           pip install --upgrade pip
           pip install -r requirements.txt
           deactivate
@@ -78,6 +71,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'sample-app-github-cd'
+          app-name: 'uufsolver'
           slot-name: 'Production'
           
