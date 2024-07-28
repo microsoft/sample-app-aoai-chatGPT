@@ -10,7 +10,6 @@ fi
 
 export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
-
 # Install Rust compiler if needed
 if ! command -v rustc &> /dev/null
 then
@@ -20,14 +19,6 @@ fi
 
 # Activate the virtual environment
 source venv/scripts/activate
-
-# Check if python3 is available
-if ! command -v python3.12 &> /dev/null
-then
-    echo "Python3 could not be found"
-    exit 1
-fi
-
 
 # Install dependencies
 pip install --upgrade pip
