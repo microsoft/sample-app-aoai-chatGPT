@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
+# Ensure the venv directory does not exist to start fresh
+if [ -d "venv" ]; then
+  echo "Removing existing virtual environment..."
+  rm -rf venv
+fi
+
 # Ensure the venv directory exists and create it if it doesn't
-if [ ! -d "venv" ]; then
-  echo "Creating virtual environment using python3..."
-  python3 -m venv venv
-  if [ $? -ne 0 ]; then
-    echo "Failed to create virtual environment"
-    exit 1
-  fi
+echo "Creating virtual environment using python3..."
+python3 -m venv venv
+if [ $? -ne 0 ]; then
+  echo "Failed to create virtual environment"
+  exit 1
 fi
 
 # Ensure pip is in the PATH
