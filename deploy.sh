@@ -9,7 +9,7 @@ rm -rf ~/.node_repl_history
 rm -rf ~/.nvmrc
 
 # Set the Python interpreter to use
-PYTHON_BIN=python3.11
+PYTHON_BIN=python3
 
 # Check if the Python interpreter is available
 if ! command -v $PYTHON_BIN &> /dev/null; then
@@ -68,4 +68,20 @@ if ! command -v node &> /dev/null; then
 fi
 
 # Ensure Node.js version is set correctly
-export PATH=$NVM_DIR/versions/node/v18.*/bin
+export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
+
+# Ensure frontend directory exists and restore npm packages
+if [ -d "frontend" ]; then
+  echo "Restoring npm packages in frontend directory..."
+  cd frontend
+  npm install
+  if [ $? -ne 0 ]; then
+    echo "Failed to restore frontend npm packages. See above for logs."
+  fi
+  cd ..
+else
+  echo "Frontend directory not found"
+fi
+
+# Ensure the application directory exists and change to it
+cd /home/site/wwwroot || exit
