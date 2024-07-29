@@ -1,48 +1,24 @@
 #!/usr/bin/env bash
 
-# Ensure the venv directory does not exist to start fresh
-if [ -d "venv" ]; then
-  echo "Removing existing virtual environment..."
-  rm -rf venv
-fi
+# Cleanup any previous installations
+echo "Cleaning up previous installations..."
+rm -rf venv
 
-# Ensure the venv directory exists and create it if it doesn't
-echo "Creating virtual environment using python3..."
-python3 -m venv venv
-if [ $? -ne 0 ]; then
-  echo "Failed to create virtual environment"
-  exit 1
+# Install pip locally if not available
+if ! command -v pip &> /dev/null; then
+  echo "Installing pip..."
+  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+  python3 get-pip.py --user
+  rm get-pip.py
 fi
 
 # Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+export PATH=$HOME/.local/bin:$PATH
 
-# Activate the virtual environment
-echo "Activating virtual environment..."
-if [ -f "venv/bin/activate" ]; then
-  echo "Activating from venv/bin/activate"
-  source venv/bin/activate
-elif [ -f "venv/Scripts/activate" ]; then
-  echo "Activating from venv/Scripts/activate"
-  source venv/Scripts/activate
-else
-  echo "Error: venv activation script not found. Listing directory contents for debugging:"
-  ls -al venv
-  echo "Listing contents of venv/bin directory:"
-  ls -al venv/bin
-  exit 1
-fi
-
-# Check if the virtual environment is activated
-if [ -z "$VIRTUAL_ENV" ]; then
-  echo "Virtual environment is not activated."
-  exit 1
-fi
-
-# Upgrade pip and install dependencies
-echo "Upgrading pip and installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+# Install dependencies directly without virtual environment
+echo "Installing dependencies..."
+pip install --upgrade pip --user
+pip install -r requirements.txt --user
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
@@ -72,3 +48,5 @@ fi
 
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
+
+# Run the application using the startup command configured in Azure Web App settings
