@@ -16,11 +16,14 @@ export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 # Activate the virtual environment
 echo "Activating virtual environment..."
 if [ -f "venv/bin/activate" ]; then
+  echo "Activating from venv/bin/activate"
   source venv/bin/activate
 elif [ -f "venv/Scripts/activate" ]; then
+  echo "Activating from venv/Scripts/activate"
   source venv/Scripts/activate
 else
-  echo "Error: venv activation script not found."
+  echo "Error: venv activation script not found. Listing directory contents for debugging:"
+  ls -al venv
   exit 1
 fi
 
