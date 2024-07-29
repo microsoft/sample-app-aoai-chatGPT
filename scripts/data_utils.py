@@ -22,7 +22,7 @@ import base64
 import markdown
 import requests
 import tiktoken
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
@@ -125,8 +125,8 @@ class PdfTextSplitter(TextSplitter):
             return [x[0] for x in urls]
         
         def find_imgs(string):
-            regex = r'<img\s+[^>]*src=["\'][^"\']+["\'][^>]*>'
-            imgs = re.findall(regex, string)
+            regex = r'(<img\s+src="[^"]+"[^>]*>.*?</img>)'
+            imgs = re.findall(regex, string, re.DOTALL)
             return imgs
         
         content_dict = {}
@@ -697,25 +697,25 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
 
             if original_text not in full_text:
                 continue
-            random_id = str(time.time()).replace(".", "")
-            img_tag = f'<img src="IMG_{random_id}.jpg" alt="{original_text}" >'  # alt text is the original text
+            random_id = str(time.time()).replace(".", "")[-4:]
+            img_tag = f'<img src="IMG_{random_id}.jpg">{original_text.replace("<img>", "&lt;img&gt;").replace("</img>", "&lt;/img&gt;")}</img>'  # alt text is the original text
             
             full_text = full_text.replace(original_text, img_tag)
             image_mapping[img_tag] = image_base64
 
     return full_text, image_mapping
 
-def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
-    def unmask_urls(text, url_dict={}):
-        if "##URL" in text or "##IMG":
-            for key, value in url_dict.items():
+def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, content_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
+    def unmask_urls_and_imgs(text, content_dict={}):
+        if "##URL" in text or "##IMG" in text:
+            for key, value in content_dict.items():
                 text = text.replace(key, value)
         return text
     # TODO: solve for token overlap
     current_chunk = ""
     total_size = 0
     for chunked_content in chunked_content_list:
-        chunked_content = unmask_urls(chunked_content, url_dict)
+        chunked_content = unmask_urls_and_imgs(chunked_content, content_dict)
         chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
         if total_size > 0:
             new_size = total_size + chunk_size
@@ -1078,40 +1078,40 @@ def process_file(
         form_recognizer_client = SingletonFormRecognizerClient()
 
     is_error = False
-    try:
-        url_path = None
-        rel_file_path = os.path.relpath(file_path, directory_path)
-        if url_prefix:
-            url_path = url_prefix + rel_file_path
-            url_path = convert_escaped_to_posix(url_path)
+    # try:
+    url_path = None
+    rel_file_path = os.path.relpath(file_path, directory_path)
+    if url_prefix:
+        url_path = url_prefix + rel_file_path
+        url_path = convert_escaped_to_posix(url_path)
 
-        result = chunk_file(
-            file_path,
-            ignore_errors=ignore_errors,
-            num_tokens=num_tokens,
-            min_chunk_size=min_chunk_size,
-            url=url_path,
-            token_overlap=token_overlap,
-            extensions_to_process=extensions_to_process,
-            form_recognizer_client=form_recognizer_client,
-            use_layout=use_layout,
-            add_embeddings=add_embeddings,
-            azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint,
-            captioning_model_endpoint=captioning_model_endpoint,
-            captioning_model_key=captioning_model_key
-        )
-        for chunk_idx, chunk_doc in enumerate(result.chunks):
-            chunk_doc.filepath = rel_file_path
-            chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
-            chunk_doc.image_mapping = json.dumps(chunk_doc.image_mapping) if chunk_doc.image_mapping else None
-    except Exception as e:
-        print(e)
-        if not ignore_errors:
-            raise
-        print(f"File ({file_path}) failed with ", e)
-        is_error = True
-        result =None
+    result = chunk_file(
+        file_path,
+        ignore_errors=ignore_errors,
+        num_tokens=num_tokens,
+        min_chunk_size=min_chunk_size,
+        url=url_path,
+        token_overlap=token_overlap,
+        extensions_to_process=extensions_to_process,
+        form_recognizer_client=form_recognizer_client,
+        use_layout=use_layout,
+        add_embeddings=add_embeddings,
+        azure_credential=azure_credential,
+        embedding_endpoint=embedding_endpoint,
+        captioning_model_endpoint=captioning_model_endpoint,
+        captioning_model_key=captioning_model_key
+    )
+    for chunk_idx, chunk_doc in enumerate(result.chunks):
+        chunk_doc.filepath = rel_file_path
+        chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
+        chunk_doc.image_mapping = json.dumps(chunk_doc.image_mapping) if chunk_doc.image_mapping else None
+    # except Exception as e:
+    #     print(e)
+    #     if not ignore_errors:
+    #         raise
+    #     print(f"File ({file_path}) failed with ", e)
+    #     is_error = True
+    #     result =None
     return result, is_error
 
 def chunk_blob_container(
@@ -1259,7 +1259,7 @@ class SingletonFormRecognizerClient:
             url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
             key = os.getenv("FORM_RECOGNIZER_KEY")
             if url and key:
-                cls.instance = DocumentAnalysisClient(
+                cls.instance = DocumentIntelligenceClient(
                         endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
             else:
                 print("SingletonFormRecognizerClient: Skipping since credentials not provided. Assuming NO form recognizer extensions(like .pdf) in directory")
@@ -1271,4 +1271,4 @@ class SingletonFormRecognizerClient:
 
     def __setstate__(self, state):
         url, key = state
-        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
+        self.instance = DocumentIntelligenceClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
