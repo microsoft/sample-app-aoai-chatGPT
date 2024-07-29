@@ -175,10 +175,10 @@ def format_pf_non_streaming_response(
             "model": "",
             "created": "",
             "object": "",
+            "history_metadata": history_metadata,
             "choices": [
                 {
                     "messages": messages,
-                    "history_metadata": history_metadata,
                 }
             ]
         }

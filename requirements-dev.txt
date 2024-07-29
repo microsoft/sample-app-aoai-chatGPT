@@ -13,3 +13,4 @@ PyMuPDF==1.24.5
 azure-storage-blob
 chardet
 azure-keyvault-secrets
+coverage
