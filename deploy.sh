@@ -1,32 +1,39 @@
 #!/usr/bin/env bash
 
-# Cleaning up previous installations if any
-rm -rf ~/.nvm
-rm -rf ~/.npm
-rm -rf ~/.node-gyp
-rm -rf ~/.node_repl_history
-rm -rf ~/.nvmrc
+# Ensure the venv directory exists and create it if it doesn't
+if [ ! -d "venv" ]; then
+  echo "Creating virtual environment using python3..."
+  python3 -m venv venv
+  if [ $? -ne 0 ]; then
+    echo "Failed to create virtual environment"
+    exit 1
+  fi
+fi
 
-# Set the Python interpreter to use
-PYTHON_BIN=python3
+# Ensure pip is in the PATH
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
-# Check if the Python interpreter is available
-if ! command -v $PYTHON_BIN &> /dev/null; then
-  echo "$PYTHON_BIN could not be found"
+# Activate the virtual environment
+echo "Activating virtual environment..."
+if [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+elif [ -f "venv/Scripts/activate" ]; then
+  source venv/Scripts/activate
+else
+  echo "Error: venv activation script not found."
   exit 1
 fi
 
-# Install Rust compiler if needed
-if ! command -v rustc &> /dev/null; then
-  echo "Installing Rust compiler..."
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  . "$HOME/.cargo/env"
+# Check if the virtual environment is activated
+if [ -z "$VIRTUAL_ENV" ]; then
+  echo "Virtual environment is not activated."
+  exit 1
 fi
 
 # Upgrade pip and install dependencies
 echo "Upgrading pip and installing dependencies..."
-$PYTHON_BIN -m pip install --upgrade pip
-$PYTHON_BIN -m pip install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
