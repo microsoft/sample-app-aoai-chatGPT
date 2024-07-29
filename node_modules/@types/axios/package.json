@@ -1,0 +1,14 @@
+{
+    "name": "@types/axios",
+    "version": "0.14.0",
+    "typings": null,
+    "description": "Stub TypeScript definitions entry for axios, which provides its own types definitions",
+    "main": "",
+    "scripts": {},
+    "author": "",
+    "repository": "https://github.com/mzabriskie/axios",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "*"
+    }
+}

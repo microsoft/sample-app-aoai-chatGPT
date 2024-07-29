@@ -4,6 +4,8 @@ import os
 import logging
 import uuid
 import httpx
+from datetime import datetime, timezone
+from prompts import prompts
 from quart import (
     Blueprint,
     Quart,
@@ -13,7 +15,11 @@ from quart import (
     send_from_directory,
     render_template,
 )
-
+from bs4 import BeautifulSoup
+from status_blueprint import bp as status_bp, set_status_message
+from pprint import pprint
+import requests
+from openai.types.chat import chat_completion
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
     DefaultAzureCredential,
@@ -36,13 +42,21 @@ from backend.utils import (
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
-
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
+    app.register_blueprint(status_bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    return app
 
+    # Manually add CORS headers to each response
+    @app.after_request
+    async def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+
+    return app
 
 @bp.route("/")
 async def index():
@@ -52,21 +66,30 @@ async def index():
         favicon=app_settings.ui.favicon
     )
 
-
 @bp.route("/favicon.ico")
 async def favicon():
     return await bp.send_static_file("favicon.ico")
 
+@bp.route("/mslearnguy.png")
+async def mslearnguy():
+    return await bp.send_static_file("mslearnguy.png")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING) # Make logging.DEBUG to see heavy debugging...
+else:
+    logging.basicConfig(level=logging.INFO)
+
+logging.getLogger('openai._base_client').setLevel(logging.WARNING)
+logging.getLogger('httpcore.connection').setLevel(logging.WARNING)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('root').setLevel(logging.WARNING)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
@@ -185,14 +208,18 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def prepare_model_args(request_body, request_headers):
+def prepare_model_args(request_body, request_headers, system_preamble = None, system_prompt = None):
     request_messages = request_body.get("messages", [])
     messages = []
+    system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
+    
+    #print(f"System message in: {system_message}")
+
     if not app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": app_settings.azure_openai.system_message
+                "content": system_message
             }
         ]
 
@@ -208,7 +235,7 @@ def prepare_model_args(request_body, request_headers):
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        conversation_id = request_body.get("conversation_id", None)        
+        conversation_id = request_body.get("conversation_id", None)      
         user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id)
 
     model_args = {
@@ -303,7 +330,7 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request_body, request_headers):
+async def send_chat_request(request_body, request_headers, system_preamble = None, system_prompt = None):
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -311,12 +338,13 @@ async def send_chat_request(request_body, request_headers):
             filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers)
+    model_args = prepare_model_args(request_body, request_headers, system_preamble, system_prompt)
 
     try:
         azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
+        
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
@@ -341,8 +369,8 @@ async def complete_chat_request(request_body, request_headers):
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-async def stream_chat_request(request_body, request_headers):
-    response, apim_request_id = await send_chat_request(request_body, request_headers)
+async def stream_chat_request(request_body, request_headers, system_preamble = None, system_message = None):
+    response, apim_request_id = await send_chat_request(request_body, request_headers, system_preamble, system_message)
     history_metadata = request_body.get("history_metadata", {})
     
     async def generate():
@@ -351,18 +379,247 @@ async def stream_chat_request(request_body, request_headers):
 
     return generate()
 
+def process_raw_response(raw_content):
+    # Decode the raw content
+    decoded_content = raw_content.decode('utf-8')
+    lines = decoded_content.split('\n')
+    json_response = [json.loads(line) for line in lines if line.strip()]
+    
+    # Initialize variables to hold properties and message contents
+    combined_content = ""
+    final_json = {
+        "messages": [],
+        "model": None,
+        "history_metadata": None,
+    }
+    
+    chat_id = ""
+    for obj in json_response:
+        try:                    
+            # Extract and set top-level properties once
+            if final_json["model"] == None:
+                final_json["model"] = obj.get("model")
+                final_json["history_metadata"] = obj.get("history_metadata")
+                chat_id = obj.get("id")
+            
+            # Extract message contents
+            choices = obj.get("choices", [])
+            for choice in choices:
+                messages = choice.get("messages", [])
+                for message in messages:
+                    content = message.get("content", "")
+                    combined_content += content
+        
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            continue
+        except Exception as e:
+            print(f"Error processing object: {e}")
+            continue
+        
+    # Add combined content to the final JSON structure
+    final_json["messages"].append({
+        "id": chat_id,
+        "role": "assistant",
+        "content": combined_content,
+        "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    })
+    
+    return final_json
+
+def concatenate_json_arrays(json_array1, json_array2):
+    json_array1 = json_array1.rstrip(']\n\r ')
+    json_array2 = json_array2.lstrip('[\n\r ')
+    concatenated_json = f"{json_array1}, {json_array2}"
+    return concatenated_json
+
+async def search_bing(search):
+        # Add your Bing Search V7 subscription key and endpoint to your environment variables.
+        subscription_key = app_settings.bing.key
+        endpoint = app_settings.bing.endpoint + "/v7.0/search"
+        mkt = "en-US"
+        params = { 'q' : search, 'mkt' : mkt }
+        headers = { 'Ocp-Apim-Subscription-Key' : subscription_key }
+        ## Call the API
+        try:
+            response = requests.get(endpoint, headers=headers, params=params)
+            response.raise_for_status()
+            search_results = response.json().get("webPages", {}).get("value", [])
+            return search_results
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+        
+async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
+        bg_request_body = copy.deepcopy(request_body)
+        bg_request_body["history_metadata"] = None
+        bg_request_body["conversation_id"] = str(uuid.uuid4())
+        result = await stream_chat_request(bg_request_body, request_headers, system_preamble, system_message)
+        response = await make_response(format_as_ndjson(result))
+        response.timeout = None
+        response.mimetype = "application/json-lines"
+        response_raw = await response.get_data()
+        combined_json = process_raw_response(response_raw) 
+        return combined_json["messages"][0]["content"]
+
+async def get_search_results(searches):
+        allresults = None
+        # Get the top 3 results from each search
+        for search in searches:
+            results = await search_bing(search);
+            if results == None:
+                return "Search error."
+            else:
+                if allresults == None:
+                    allresults = results[:3]
+                else:
+                    allresults += results[:3]
+        # Remove extraneous fields
+                proparray = ["dateLastCrawled", "language", "richFacts", "isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
+                for obj in allresults:
+                    for prop in proparray:
+                        if prop in obj:
+                            del obj[prop]
+                return allresults
+
+async def identify_searches(request_body, request_headers, Summaries = None):
+        
+        if (len(request_body.get("messages")) > 2):
+            # for now only search on the first message until I can figure this out - apparently we can't just replace the system prompt once the conversation is rolling...
+            return None
+            #print(f"on replies now..")
+            #system_preamble = "Do you need to do any searching to answer the latest chat message? If so provide a comma delimited list of searches you would like me to perform for you to give you all the background data and links you need. If you can answer with full confidence without any searches, then reply with simply 'No searches required.'.\n\nPrimary System Message:\n\n" 
+        else:
+            if Summaries is None:
+                system_preamble = prompts["identify_searches"];
+            else:
+                system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
+
+        searches = await send_private_chat(request_body, request_headers, system_preamble)
+        if isinstance(searches, str):
+            if searches == "No searches required.": 
+                return None
+            else:
+                if searches[0] != "[":
+                    searches = "[" + searches
+                if searches[-1] != "]":
+                    searches = searches + "]"
+                searches = json.loads(searches)
+        return searches
+
+async def get_urls_to_browse(request_body, request_headers, searches):
+        searchresults = await get_search_results(searches)
+        if searchresults == "Search error.":
+            return "Search error."
+        else:
+            strsearchresults = json.dumps(searchresults, indent=4)
+            system_prompt = prompts["get_urls_to_browse"] + strsearchresults
+            URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_prompt)
+            return URLsToBrowse
+
+async def fetch_and_parse_url(url):
+    response = requests.get(url)
+    if response.status_code == 200:  # Raise an error for bad status codes
+        # Parse the web page
+        soup = BeautifulSoup(response.content, 'html.parser')
+        # Extract the main content
+        paragraphs = soup.find_all('p')
+        # Combine the text from the paragraphs
+        content = ' '.join(paragraph.get_text() for paragraph in paragraphs)
+        return content
+    else:
+        return None
+
+async def get_article_summaries(request_body, request_headers, URLsToBrowse):
+        Summaries = None
+        URLsToBrowse = json.loads(URLsToBrowse)
+        Pages = None
+
+        set_status_message("Browsing...")
+        for URL in URLsToBrowse:
+            page_content = await fetch_and_parse_url(URL)
+            if Pages is None:
+                Pages = [page_content]
+            else:
+                Pages.append(page_content)
+        
+        set_status_message("Analyzing...")
+        currentPage = 0
+        for URL in URLsToBrowse:
+            if Pages[currentPage] != None: 
+                system_prompt = "You are tasked with helping content developers resolve customer feedback on their content on learn.microsoft.com. Right now, you've identified the following URL for further research: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\nPage Content:\n\n" + Pages[currentPage] + "\n\nOriginal System Message:\n\n"
+                summary = await send_private_chat(request_body, request_headers, None, system_prompt) # Get summary of page content
+                summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
+                if Summaries is None:
+                    Summaries = [summary]
+                else:
+                    Summaries.append(summary)
+            currentPage += 1
+
+            # Following is a lie, a trick to make it seem like we are spending time browsing than analyzing, when in fact almost all the time is actually in analysis...
+            # It's just to give the user a sense of progress...
+            if currentPage == len(URLsToBrowse):
+                set_status_message("Analyzing...")
+            else:
+                if currentPage % 2 == 1:
+                    set_status_message("Browsing...")
+                else:
+                    set_status_message("Analyzing...")
+
+        return Summaries
+
+async def is_background_info_sufficient(request_body, request_headers, Summaries):
+        strSummaries = json.dumps(Summaries, indent=4)
+        system_prompt = prompts["is_background_info_sufficient"] + strSummaries
+        response = await send_private_chat(request_body, request_headers, None, system_prompt)
+        if response == "More information needed.": 
+            return False
+        else:
+            return True
+        
+async def search_and_add_background_references(request_body, request_headers):
+        NeedsMoreSummaries = True
+        Summaries = None
+        while NeedsMoreSummaries:
+            
+            set_status_message("Searching...")
+            if Summaries is None:
+                searches = await identify_searches(request_body, request_headers)
+            else:
+                searches = await identify_searches(request_body, request_headers, Summaries)
+            
+            if searches == None:
+                return None
+            
+            set_status_message("Browsing...")
+            URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
+            if URLsToBrowse == "Search error.": 
+                return "Search error."       
+
+            if (Summaries is None):
+                Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
+            else:
+                newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
+                Summaries += newSummaries
+            
+            AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
+            if AreWeDone:
+                NeedsMoreSummaries = False
+
+        set_status_message("Generating answer...")
+        return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nPrimary System Message:"
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
-            result = await stream_chat_request(request_body, request_headers)
-            response = await make_response(format_as_ndjson(result))
-            response.timeout = None
-            response.mimetype = "application/json-lines"
-            return response
+        system_preamble = await search_and_add_background_references(request_body, request_headers)
+        if system_preamble != "Search error.":
+            result = await stream_chat_request(request_body, request_headers, system_preamble)
         else:
-            result = await complete_chat_request(request_body, request_headers)
-            return jsonify(result)
+            result = await stream_chat_request(request_body, request_headers, prompts["search_error_preamble"])
+        response = await make_response(format_as_ndjson(result))
+        response.timeout = None
+        response.mimetype = "application/json-lines"
+        return response
 
     except Exception as ex:
         logging.exception(ex)
@@ -861,3 +1118,6 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=False)

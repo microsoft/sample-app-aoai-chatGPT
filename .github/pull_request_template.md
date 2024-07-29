@@ -1,6 +1,6 @@
 ### Motivation and Context
 
-<!-- Thank you for your contribution to this repo!
+<!-- Thank you for your contribution to UUFSolver!
 Please help reviewers and future users, providing the following information:
   1. Why is this change required? 
   2. What problem does it solve?

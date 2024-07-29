@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: sample-app-aoai-chatgpt
+name: uufsolver
 metadata:
-  template: sample-app-aoai-chatgpt@0.0.1-beta
+  template: uufsolver@0.0.1-beta
 services:
   backend:
     project: .

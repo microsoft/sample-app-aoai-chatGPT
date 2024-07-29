@@ -16,7 +16,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "types": ["vite/client", "jest", "mocha"],
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "incremental": true,  // Enable incremental builds
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"  // Store incremental build infoEnable incremental builds
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

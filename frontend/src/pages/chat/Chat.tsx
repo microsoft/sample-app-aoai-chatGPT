@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, DialogFooter, DefaultButton, Stack } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import axios from 'axios'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -46,6 +47,7 @@ const enum messageStatus {
 }
 
 const Chat = () => {
+  const [statusMessage, setStatusMessage] = useState('Generating answer...');
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
@@ -83,6 +85,25 @@ const Chat = () => {
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
   useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        if (showLoadingMessage)
+          {
+              const response = await axios.get('/get_status');
+              if (response.data.status_message.replaceAll(".", "") != statusMessage.replaceAll(".", "")) {
+                setStatusMessage(response.data.status_message);
+              }
+          }
+        } catch (error) {
+          console.error('Error fetching status:', error);
+        }
+      }
+      const intervalId = setInterval(fetchStatus, 800);
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [showLoadingMessage]);
+
+ /*
+  useEffect(() => {
     if (
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
       appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured &&
@@ -97,6 +118,7 @@ const Chat = () => {
       toggleErrorDialog()
     }
   }, [appStateContext?.state.isCosmosDBAvailable])
+  */
 
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
@@ -739,6 +761,30 @@ const Chat = () => {
     )
   }
 
+  const sendMessage = (question: string, id: string | undefined) => {
+    if (question.trim()) {
+      appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+        ? makeApiRequestWithCosmosDB(question, id)
+        : makeApiRequestWithoutCosmosDB(question, id);
+    }
+  };
+
+  let isInitialSearchMessagePosted = useRef(false);
+
+  useEffect(() => {
+    if (!isInitialSearchMessagePosted.current && appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success) {
+      isInitialSearchMessagePosted.current = true;
+      const queryParams = new URLSearchParams(location.search);
+      const entries = Array.from(queryParams.entries());
+    
+      if (entries.length >= 2) {
+        const message = entries.map(([key, value]) => `${key}: ${value}`).join('\n');
+        const id = appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined;
+        sendMessage(message, id);
+      }
+    }
+  }, [location.search, appStateContext]);
+
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -816,7 +862,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: statusMessage,
                           citations: [],
                           plotly_data: null
                         }}
