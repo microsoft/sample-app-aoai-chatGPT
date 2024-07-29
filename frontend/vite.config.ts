@@ -7,7 +7,8 @@ export default defineConfig({
   build: {
     outDir: '../static',
     emptyOutDir: true,
-    sourcemap: false
+    sourcemap: false,
+    chunkSizeWarningLimit: 6000,
   },
   server: {
     proxy: {
