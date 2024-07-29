@@ -1,21 +1,29 @@
 #!/usr/bin/env bash
 
-# Clean up any previous installations or environments
-echo "Cleaning up previous installations..."
-rm -rf venv /tmp/antenv ~/.local/lib/python3.12 ~/.local/bin
+# Cleaning up previous installations if any
+rm -rf venv
+rm -rf ~/.nvm
+rm -rf ~/.npm
+rm -rf ~/.node-gyp
+rm -rf ~/.node_repl_history
+rm -rf ~/.nvmrc
 
-# Ensure the venv directory exists and create it if it doesn't
-if [ ! -d "venv" ]; then
-  echo "Creating virtual environment..."
-  python -m venv venv
-  if [ $? -ne 0 ]; then
-    echo "Failed to create virtual environment"
-    exit 1
-  fi
+# Set the Python interpreter to use
+PYTHON_BIN=python3.11
+
+# Check if the Python interpreter is available
+if ! command -v $PYTHON_BIN &> /dev/null; then
+  echo "$PYTHON_BIN could not be found"
+  exit 1
 fi
 
-# Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+# Creating the virtual environment
+echo "Creating virtual environment using $PYTHON_BIN..."
+$PYTHON_BIN -m venv venv
+if [ $? -ne 0 ]; then
+  echo "Failed to create virtual environment"
+  exit 1
+fi
 
 # Activate the virtual environment
 echo "Activating virtual environment..."
@@ -28,10 +36,20 @@ else
   exit 1
 fi
 
+# Ensure pip is in the PATH
+export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+
 # Check if the virtual environment is activated
 if [ -z "$VIRTUAL_ENV" ]; then
   echo "Virtual environment is not activated."
   exit 1
+fi
+
+# Install Rust compiler if needed
+if ! command -v rustc &> /dev/null; then
+  echo "Installing Rust compiler..."
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  . "$HOME/.cargo/env"
 fi
 
 # Upgrade pip and install dependencies
@@ -50,26 +68,4 @@ if ! command -v node &> /dev/null; then
 fi
 
 # Ensure Node.js version is set correctly
-export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
-
-# Ensure frontend directory exists and restore npm packages
-if [ -d "frontend" ]; then
-  echo "Restoring npm packages in frontend directory..."
-  cd frontend
-  npm install
-  if [ $? -ne 0 ]; then
-    echo "Failed to restore frontend npm packages. See above for logs."
-  fi
-  cd ..
-else
-  echo "Frontend directory not found"
-fi
-
-# Ensure the application directory exists and change to it
-cd /home/site/wwwroot || exit
-
-# Copy current virtual environment to the appropriate directory
-cp -r venv /tmp/antenv
-
-# Start the application (assuming it is configured in Azure Web App settings)
-echo "Deployment completed successfully."
+export PATH=$NVM_DIR/versions/node/v18.*/bin
