@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # Cleaning up previous installations if any
-rm -rf venv
 rm -rf ~/.nvm
 rm -rf ~/.npm
 rm -rf ~/.node-gyp
@@ -17,34 +16,6 @@ if ! command -v $PYTHON_BIN &> /dev/null; then
   exit 1
 fi
 
-# Creating the virtual environment
-echo "Creating virtual environment using $PYTHON_BIN..."
-$PYTHON_BIN -m venv venv
-if [ $? -ne 0 ]; then
-  echo "Failed to create virtual environment"
-  exit 1
-fi
-
-# Activate the virtual environment
-echo "Activating virtual environment..."
-if [ -f "venv/bin/activate" ]; then
-  source venv/bin/activate
-elif [ -f "venv/Scripts/activate" ]; then
-  source venv/Scripts/activate
-else
-  echo "Error: venv activation script not found."
-  exit 1
-fi
-
-# Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
-
-# Check if the virtual environment is activated
-if [ -z "$VIRTUAL_ENV" ]; then
-  echo "Virtual environment is not activated."
-  exit 1
-fi
-
 # Install Rust compiler if needed
 if ! command -v rustc &> /dev/null; then
   echo "Installing Rust compiler..."
@@ -54,8 +25,8 @@ fi
 
 # Upgrade pip and install dependencies
 echo "Upgrading pip and installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+$PYTHON_BIN -m pip install --upgrade pip
+$PYTHON_BIN -m pip install -r requirements.txt
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
