@@ -1078,40 +1078,40 @@ def process_file(
         form_recognizer_client = SingletonFormRecognizerClient()
 
     is_error = False
-    # try:
-    url_path = None
-    rel_file_path = os.path.relpath(file_path, directory_path)
-    if url_prefix:
-        url_path = url_prefix + rel_file_path
-        url_path = convert_escaped_to_posix(url_path)
+    try:
+        url_path = None
+        rel_file_path = os.path.relpath(file_path, directory_path)
+        if url_prefix:
+            url_path = url_prefix + rel_file_path
+            url_path = convert_escaped_to_posix(url_path)
 
-    result = chunk_file(
-        file_path,
-        ignore_errors=ignore_errors,
-        num_tokens=num_tokens,
-        min_chunk_size=min_chunk_size,
-        url=url_path,
-        token_overlap=token_overlap,
-        extensions_to_process=extensions_to_process,
-        form_recognizer_client=form_recognizer_client,
-        use_layout=use_layout,
-        add_embeddings=add_embeddings,
-        azure_credential=azure_credential,
-        embedding_endpoint=embedding_endpoint,
-        captioning_model_endpoint=captioning_model_endpoint,
-        captioning_model_key=captioning_model_key
-    )
-    for chunk_idx, chunk_doc in enumerate(result.chunks):
-        chunk_doc.filepath = rel_file_path
-        chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
-        chunk_doc.image_mapping = json.dumps(chunk_doc.image_mapping) if chunk_doc.image_mapping else None
-    # except Exception as e:
-    #     print(e)
-    #     if not ignore_errors:
-    #         raise
-    #     print(f"File ({file_path}) failed with ", e)
-    #     is_error = True
-    #     result =None
+        result = chunk_file(
+            file_path,
+            ignore_errors=ignore_errors,
+            num_tokens=num_tokens,
+            min_chunk_size=min_chunk_size,
+            url=url_path,
+            token_overlap=token_overlap,
+            extensions_to_process=extensions_to_process,
+            form_recognizer_client=form_recognizer_client,
+            use_layout=use_layout,
+            add_embeddings=add_embeddings,
+            azure_credential=azure_credential,
+            embedding_endpoint=embedding_endpoint,
+            captioning_model_endpoint=captioning_model_endpoint,
+            captioning_model_key=captioning_model_key
+        )
+        for chunk_idx, chunk_doc in enumerate(result.chunks):
+            chunk_doc.filepath = rel_file_path
+            chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
+            chunk_doc.image_mapping = json.dumps(chunk_doc.image_mapping) if chunk_doc.image_mapping else None
+    except Exception as e:
+        print(e)
+        if not ignore_errors:
+            raise
+        print(f"File ({file_path}) failed with ", e)
+        is_error = True
+        result =None
     return result, is_error
 
 def chunk_blob_container(
