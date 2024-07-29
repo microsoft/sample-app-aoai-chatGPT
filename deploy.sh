@@ -24,6 +24,8 @@ elif [ -f "venv/Scripts/activate" ]; then
 else
   echo "Error: venv activation script not found. Listing directory contents for debugging:"
   ls -al venv
+  echo "Listing contents of venv/bin directory:"
+  ls -al venv/bin
   exit 1
 fi
 
