@@ -7,6 +7,7 @@ export type AskResponse = {
   error?: string
   message_id?: string
   feedback?: Feedback
+  exec_results?: ExecResults[]
 }
 
 export type Citation = {
@@ -51,6 +52,13 @@ export type ChatMessage = {
   date: string
   feedback?: Feedback
   context?: string
+}
+
+export type ExecResults = {
+  intent: string
+  search_query: string | null
+  search_result: string | null
+  code_generated: string | null
 }
 
 export type Conversation = {
@@ -129,6 +137,7 @@ export type UI = {
   logo?: string
   chat_logo?: string
   show_share_button?: boolean
+  show_chat_history_button?: boolean
 }
 
 export type FrontendSettings = {
