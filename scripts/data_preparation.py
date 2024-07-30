@@ -7,7 +7,7 @@ import subprocess
 import time
 
 import requests
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
 from azure.search.documents import SearchClient
@@ -209,6 +209,14 @@ def create_or_update_search_index(
                 "type": "Edm.String",
                 "searchable": True,
             },
+            {
+                "name": "image_mapping",
+                "type": "Edm.String",
+                "searchable": False,
+                "sortable": False,
+                "facetable": False,
+                "filterable": False
+            }
         ],
         "suggesters": [],
         "scoringProfiles": [],
@@ -356,7 +364,7 @@ def validate_index(service_name, subscription_id, resource_group, index_name):
                 print(f"Request failed. Please investigate. Status code: {response.status_code}")
             break
 
-def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
+def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4, captioning_model_endpoint=None, captioning_model_key=None):
     service_name = config["search_service_name"]
     subscription_id = config["subscription_id"]
     resource_group = config["resource_group"]
@@ -410,7 +418,8 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         elif os.path.exists(data_config["path"]):
             result = chunk_directory(data_config["path"], num_tokens=config["chunk_size"], token_overlap=config.get("token_overlap",0),
                                     azure_credential=credential, form_recognizer_client=form_recognizer_client, use_layout=use_layout, njobs=njobs,
-                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"])
+                                    add_embeddings=add_embeddings, embedding_endpoint=embedding_model_endpoint, url_prefix=data_config["url_prefix"],
+                                    captioning_model_endpoint=captioning_model_endpoint, captioning_model_key=captioning_model_key)
         else:
             raise Exception(f"Path {data_config['path']} does not exist and is not a blob URL. Please check the path and try again.")
 
@@ -443,11 +452,13 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, help="Path to config file containing settings for data preparation")
     parser.add_argument("--form-rec-resource", type=str, help="Name of your Form Recognizer resource to use for PDF cracking.")
     parser.add_argument("--form-rec-key", type=str, help="Key for your Form Recognizer resource to use for PDF cracking.")
-    parser.add_argument("--form-rec-use-layout", default=False, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
+    parser.add_argument("--form-rec-use-layout", default=True, action='store_true', help="Whether to use Layout model for PDF cracking, if False will use Read model.")
     parser.add_argument("--njobs", type=valid_range, default=4, help="Number of jobs to run (between 1 and 32). Default=4")
     parser.add_argument("--embedding-model-endpoint", type=str, help="Endpoint for the embedding model to use for vector search. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<Ada deployment name>/embeddings?api-version=2024-03-01-Preview'")
     parser.add_argument("--embedding-model-key", type=str, help="Key for the embedding model to use for vector search.")
     parser.add_argument("--search-admin-key", type=str, help="Admin key for the search service. If not provided, will use Azure CLI to get the key.")
+    parser.add_argument("--azure-openai-endpoint", type=str, help="Endpoint for the (Azure) OpenAI API. Format: 'https://<AOAI resource name>.openai.azure.com/openai/deployments/<vision model name>/chat/completions?api-version=2024-04-01-preview'")
+    parser.add_argument("--azure-openai-key", type=str, help="Key for the (Azure) OpenAI API.")
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -464,7 +475,7 @@ if __name__ == "__main__":
         os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
         os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
         if args.njobs==1:
-            form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+            form_recognizer_client = DocumentIntelligenceClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
         print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
     for index_config in config:
@@ -472,7 +483,7 @@ if __name__ == "__main__":
         if index_config.get("vector_config_name") and not args.embedding_model_endpoint:
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
     
-        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
+        create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs, captioning_model_endpoint=args.azure_openai_endpoint, captioning_model_key=args.azure_openai_key)
         print("Data preparation for index", index_config["index_name"], "completed")
 
     print(f"Data preparation script completed. {len(config)} indexes updated.")
