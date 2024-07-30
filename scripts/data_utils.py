@@ -672,20 +672,15 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
             page_number = bounding_box['pageNumber'] - 1  # Page numbers in PyMuPDF start from 0
             x0, y0, x1, y1 = polygon_to_bbox(bounding_box['polygon'])
 
-            # Select the page
+            # Select the figure and upscale it by 200% for higher resolution
             page = document.load_page(page_number)
-
             bbox = fitz.Rect(x0, y0, x1, y1)
 
-            # Zoom 200%
             zoom = 2.0 
             mat = fitz.Matrix(zoom, zoom)
-
-            # Crop the image with higher resolution
             image = page.get_pixmap(matrix=mat, clip=bbox)
 
             # Save the extracted image to a base64 string
-
             image_data = image.tobytes(output='jpg')
             image_base64 = base64.b64encode(image_data).decode("utf-8")
             image_base64 = f"data:image/jpg;base64,{image_base64}"
@@ -697,8 +692,8 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
 
             if original_text not in full_text:
                 continue
-            random_id = str(time.time()).replace(".", "")[-4:]
-            img_tag = f'<img src="IMG_{random_id}.jpg">{original_text.replace("<img>", "&lt;img&gt;").replace("</img>", "&lt;/img&gt;")}</img>'  # alt text is the original text
+            
+            img_tag = image_content_to_tag(original_text)
             
             full_text = full_text.replace(original_text, img_tag)
             image_mapping[img_tag] = image_base64
@@ -927,6 +922,13 @@ def chunk_content(
         skipped_chunks=skipped_chunks,
     )
 
+def image_content_to_tag(image_content: str) -> str:
+    # We encode the images in an XML-like format to make the replacement very unlikely to conflict with other text
+    # This also lets us preserve the content with minimal escaping, just escaping the <img> tags
+    random_id = str(time.time()).replace(".", "")[-4:]
+    img_tag = f'<img src="IMG_{random_id}.jpg">{image_content.replace("<img>", "&lt;img&gt;").replace("</img>", "&lt;/img&gt;")}</img>'
+    return img_tag
+
 def get_caption(image_path, captioning_model_endpoint, captioning_model_key):
     encoded_image = base64.b64encode(open(image_path, 'rb').read()).decode('ascii')
     file_ext = image_path.split(".")[-1]
@@ -965,7 +967,6 @@ def get_caption(image_path, captioning_model_endpoint, captioning_model_key):
         "temperature": 0
     }
 
-    # Send request
     for i in range(RETRY_COUNT):
         try:
             response = requests.post(captioning_model_endpoint, headers=headers, json=payload)
@@ -979,9 +980,10 @@ def get_caption(image_path, captioning_model_endpoint, captioning_model_key):
         raise Exception(f"Error getting caption with status_code={response.status_code}")
     
     caption = response.json()["choices"][0]["message"]["content"]
-    mapping = {caption: f"data:image/{file_ext};base64,{encoded_image}"}
+    img_tag = image_content_to_tag(caption)
+    mapping = {img_tag: f"data:image/{file_ext};base64,{encoded_image}"}
 
-    return caption, mapping
+    return img_tag, mapping
 
 def chunk_file(
     file_path: str,
