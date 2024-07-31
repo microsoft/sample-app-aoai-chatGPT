@@ -212,3 +212,11 @@ def comma_separated_string_to_list(s: str) -> List[str]:
     '''
     return s.strip().replace(' ', '').split(',')
 
+
+def is_user_originated_request(request):
+    origin = request.headers.get("Sec-Fetch-Site")
+    if origin == "none":
+        return True
+    
+    return False
+

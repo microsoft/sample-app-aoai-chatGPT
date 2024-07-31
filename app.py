@@ -32,6 +32,7 @@ from backend.utils import (
     format_non_streaming_response,
     convert_to_pf_format,
     format_pf_non_streaming_response,
+    is_user_originated_request,
 )
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -393,6 +394,9 @@ def get_frontend_settings():
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -451,6 +455,9 @@ async def add_conversation():
 
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -502,6 +509,9 @@ async def update_conversation():
 
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
     cosmos_conversation_client = init_cosmosdb_client()
@@ -548,6 +558,9 @@ async def update_message():
 
 @bp.route("/history/delete", methods=["DELETE"])
 async def delete_conversation():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -593,6 +606,9 @@ async def delete_conversation():
 
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     offset = request.args.get("offset", 0)
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -617,6 +633,9 @@ async def list_conversations():
 
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -670,6 +689,9 @@ async def get_conversation():
 
 @bp.route("/history/rename", methods=["POST"])
 async def rename_conversation():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -714,6 +736,9 @@ async def rename_conversation():
 
 @bp.route("/history/delete_all", methods=["DELETE"])
 async def delete_all_conversations():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -759,6 +784,9 @@ async def delete_all_conversations():
 
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -797,6 +825,9 @@ async def clear_messages():
 
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
+    if is_user_originated_request(request):
+        return jsonify({"error": "Not found"}), 404
+    
     if not app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
