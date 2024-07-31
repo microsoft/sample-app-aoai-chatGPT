@@ -214,7 +214,7 @@ def comma_separated_string_to_list(s: str) -> List[str]:
 
 
 def is_user_originated_request(request):
-    origin = request.headers.get("Sec-Fetch-Site")
+    origin = request.headers.get("Sec-Fetch-Site", "none")
     if origin == "none":
         return True
     
