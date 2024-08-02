@@ -846,18 +846,18 @@ const Chat = () => {
                     role="button"
                     styles={{
                       icon: {
-                        color: '#FFFFFF'
+                        color: '#000000'
                       },
                       iconDisabled: {
-                        color: '#BDBDBD !important'
+                        color: '#babdab !important'
                       },
                       root: {
-                        color: '#FFFFFF',
+                        color: '#000000',
                         background:
-                          'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                          '#a1dc00'
                       },
                       rootDisabled: {
-                        background: '#F0F0F0'
+                        background: '#BDBDBD'
                       }
                     }}
                     className={styles.newChatIcon}
@@ -871,18 +871,18 @@ const Chat = () => {
                   role="button"
                   styles={{
                     icon: {
-                      color: '#FFFFFF'
+                      color: '#000000'
                     },
                     iconDisabled: {
-                      color: '#BDBDBD !important'
+                      color: '#babdab !important'
                     },
                     root: {
                       color: '#FFFFFF',
                       background:
-                        'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                        '#a1dc00'
                     },
                     rootDisabled: {
-                      background: '#F0F0F0'
+                      background: '#BDBDBD'
                     }
                   }}
                   className={

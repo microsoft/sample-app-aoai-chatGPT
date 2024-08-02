@@ -1,6 +1,7 @@
 .container {
   max-height: calc(100vh - 100px);
   width: 300px;
+  color:white;
 }
 
 .listContainer {
@@ -63,6 +64,7 @@
   font-weight: 600;
   margin-bottom: 5px;
   padding-left: 15px;
+  color:white;
 }
 
 .chatTitle {
@@ -70,6 +72,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color:white;
 }
 
 @media (max-width: 480px) {
