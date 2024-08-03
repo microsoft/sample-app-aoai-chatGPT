@@ -384,6 +384,9 @@
             "identity": {
                 "type": "SystemAssigned"
             },
+            "tags": {
+                "ProjectType": "aoai-your-data-service"
+            },
             "properties": {
                 "serverFarmId": "[parameters('HostingPlanName')]",
                 "siteConfig": {
