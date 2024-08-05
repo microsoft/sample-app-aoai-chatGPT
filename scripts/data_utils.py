@@ -616,10 +616,12 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
         if use_layout:
             tables_on_page = []
             for table in form_recognizer_results.tables:
-                table_offset = table.spans[0].offset
-                table_length = table.spans[0].length
-                if page_offset <= table_offset and table_offset + table_length < page_offset + page_length:
-                    tables_on_page.append(table)
+                # If the table is empty, the span is empty, so we skip it
+                if len(table.spans) > 0:
+                    table_offset = table.spans[0].offset
+                    table_length = table.spans[0].length
+                    if page_offset <= table_offset and table_offset + table_length < page_offset + page_length:
+                        tables_on_page.append(table)
         else:
             tables_on_page = []
 
