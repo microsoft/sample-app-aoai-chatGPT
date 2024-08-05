@@ -100,6 +100,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
     }, 2000)
   }
 
+  //Renders Chat History Panel and its items
   React.useEffect(() => {}, [appStateContext?.state.chatHistory, clearingError])
 
   return (
@@ -114,13 +115,16 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               fontWeight: '600',
               fontSize: '18px',
               marginRight: 'auto',
-              paddingLeft: '20px'
+              paddingLeft: '20px',
+              color: "white"
             }}>
             Chat history
           </Text>
         </StackItem>
         <Stack verticalAlign="start">
+          {/* Chat History Control buttons  */}
           <Stack horizontal styles={commandBarButtonStyle}>
+            {/* ... button  */}
             <CommandBarButton
               iconProps={{ iconName: 'More' }}
               title={'Clear all chat history'}
@@ -137,6 +141,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               onItemClick={toggleClearAllDialog}
               onDismiss={onHideContextualMenu}
             />
+            {/* X button */}
             <CommandBarButton
               iconProps={{ iconName: 'Cancel' }}
               title={'Hide'}
@@ -175,7 +180,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                 <Stack>
                   <Stack horizontalAlign="center" verticalAlign="center" style={{ width: '100%', marginTop: 10 }}>
                     <StackItem>
-                      <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 16 }}>
+                      <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 16, color: 'white' }}>
                         {appStateContext?.state.isCosmosDBAvailable?.status && (
                           <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>
                         )}
@@ -183,7 +188,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                       </Text>
                     </StackItem>
                     <StackItem>
-                      <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                      <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14, color: 'white' }}>
                         <span>Chat history can't be saved at this time</span>
                       </Text>
                     </StackItem>
@@ -206,7 +211,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                     />
                   </StackItem>
                   <StackItem>
-                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
+                    <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14, color: 'white' }}>
                       <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
                     </Text>
                   </StackItem>

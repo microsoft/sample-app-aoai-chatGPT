@@ -849,7 +849,7 @@ const Chat = () => {
                         color: '#000000'
                       },
                       iconDisabled: {
-                        color: '#babdab !important'
+                        color: '#808080 !important'
                       },
                       root: {
                         color: '#000000',
@@ -874,7 +874,7 @@ const Chat = () => {
                       color: '#000000'
                     },
                     iconDisabled: {
-                      color: '#babdab !important'
+                      color: '#808080 !important'
                     },
                     root: {
                       color: '#FFFFFF',
