@@ -125,6 +125,7 @@
   flex-grow: 0;
   max-width: 800px;
   margin-bottom: 12px;
+  background-color: white;
 }
 
 .chatMessageErrorContent {

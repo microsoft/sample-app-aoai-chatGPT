@@ -34,9 +34,10 @@
   height: 28px;
   border: 1px solid #d1d1d1;
   border-radius: 5px;
-  background-color: white;
+  background-color: #a1dc00;
   margin: auto 2.5px;
   cursor: pointer;
+  color:black !important;
 }
 
 .itemButton:hover {

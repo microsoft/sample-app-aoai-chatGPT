@@ -26,7 +26,6 @@
 
 .historyButtonRoot {
   width: 180px;
-  border: 1px solid #d1d1d1;
   border-radius: 4px;
   color:white;
   background-color: #070034;
@@ -38,7 +37,6 @@
 
 .historyButtonRoot:hover {
   background: rgb(57, 50, 102);
-  border: 1px solid #d1d1d1;
 }
 
 .historyButtonRoot:active {
