@@ -377,7 +377,7 @@ export const ChatHistoryListItemGroups: React.FC<ChatHistoryListItemGroupsProps>
                     width: '100%',
                     position: 'relative',
                     '::before': {
-                      backgroundColor: '#d6d6d6'
+                      backgroundColor: '#ee9200'
                     }
                   }
                 }}
