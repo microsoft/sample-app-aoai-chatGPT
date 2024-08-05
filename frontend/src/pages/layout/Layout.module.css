@@ -5,7 +5,8 @@
 }
 
 .header {
-  background-color: #f2f2f2;
+  /* background-color: #f2f2f2; */
+  background-color: rgb(152, 153, 169);
 }
 
 .headerContainer {

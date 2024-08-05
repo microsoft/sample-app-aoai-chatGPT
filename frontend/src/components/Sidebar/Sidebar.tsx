@@ -64,7 +64,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             collapsed && !toggled
               ? {
                   ['.' + sidebarClasses.container]: {
-                    backgroundColor: 'rgb(249, 249, 249, 0.8)',
+                    backgroundColor: 'rgb(202, 203, 219)',
                     '&::-webkit-scrollbar': {
                       display: 'none'
                     }
@@ -72,7 +72,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 }
               : {
                   ['.' + sidebarClasses.container]: {
-                    backgroundColor: 'rgb(249, 249, 249, 0.8)',
+                    backgroundColor: 'rgb(202, 203, 219)',
                     '&::-webkit-scrollbar': {
                       width: '5px',
                       height: '5px',

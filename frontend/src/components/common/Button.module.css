@@ -8,7 +8,8 @@
 }
 
 .shareButtonRoot:hover {
-  background: linear-gradient(135deg, #0f6cbd 0%, #2d87c3 51.04%, #8dddd8 100%);
+  /* background: linear-gradient(135deg, #0f6cbd 0%, #2d87c3 51.04%, #8dddd8 100%); */
+  background: rgb(57, 50, 102);
 }
 
 .shareButtonRoot span {
@@ -36,6 +37,7 @@
 }
 
 .historyButtonRoot:hover {
+  background: rgb(57, 50, 102);
   border: 1px solid #d1d1d1;
 }
 
