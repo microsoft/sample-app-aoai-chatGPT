@@ -15,7 +15,8 @@ const modalStyle: Styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     maxWidth: '740px',
-    height: '630px',
+    //height:'630px',
+    height: '700px',
     top: '50%',
     left: '50%',
     marginRight: '-50%',
@@ -36,7 +37,8 @@ const PdfModal: FC<PdfModalProps> = ({ isOpen, closeModal, data }) => {
       </div>
       <div className={styles.body}>
         {data?.url ? (
-          <iframe src={data?.url || ''} width="700" height="500" className={styles.pdf}></iframe>
+          <iframe src={data?.url || ''} width="700" height="600" className={styles.pdf}></iframe>
+          // width="700" height="500"
         ) : (
           <div className={styles.error}>
             <FileEarmarkExcel color="#334768" size={40} />
