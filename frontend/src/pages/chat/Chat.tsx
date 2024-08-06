@@ -797,8 +797,8 @@ const Chat = () => {
                     ) : answer.role === ERROR ? (
                       <div className={styles.chatMessageError}>
                         <Stack horizontal className={styles.chatMessageErrorContent}>
-                          <ErrorCircleRegular className={styles.errorIcon} style={{ color: 'rgba(182, 52, 67, 1)' }} />
-                          <span>Error</span>
+                          <ErrorCircleRegular className={styles.errorIcon} style={{ color: '#ff0000' }} />
+                          <div className={styles.chatMessageErrorTitle}><span >Error</span></div>
                         </Stack>
                         <span className={styles.chatMessageErrorContent}>{answer.content}</span>
                       </div>
@@ -826,6 +826,8 @@ const Chat = () => {
 
             <Stack horizontal className={styles.chatInput}>
               {isLoading && messages.length > 0 && (
+
+                // Stop Generating Button
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -853,6 +855,9 @@ const Chat = () => {
                       iconHovered: {
                         color: '#000000',
                       },
+                      iconPressed:{
+                        color: '#000000',
+                      },
                       iconDisabled: {
                         color: '#6e6c6b',
                       },
@@ -862,7 +867,10 @@ const Chat = () => {
                       },
                       rootHovered: {
                         backgroundColor: '#a9ff00',
-                        color: 'black',
+                        color: '#000000',
+                      },
+                      rootPressed:{
+                        backgroundColor: '#98ff00',
                       },
                       rootDisabled: {
                         background: '#BDBDBD',
@@ -886,8 +894,11 @@ const Chat = () => {
                     iconHovered: {
                       color: '#000000',
                     },
+                    iconPressed:{
+                      color: '#000000',
+                    },
                     iconDisabled: {
-                      color: '#6e6c6b ',
+                      color: '#6e6c6b',
                     },
                     root: {
                       color: '#FFFFFF',
@@ -895,6 +906,9 @@ const Chat = () => {
                     },
                     rootHovered: {
                       backgroundColor: '#a9ff00',
+                    },
+                    rootPressed:{
+                      backgroundColor: '#98ff00',
                     },
                     rootDisabled: {
                       backgroundColor: '#BDBDBD',

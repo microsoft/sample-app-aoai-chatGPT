@@ -26,7 +26,7 @@ import ChatHistoryList from './ChatHistoryList'
 
 import styles from './ChatHistoryPanel.module.css'
 
-interface ChatHistoryPanelProps {}
+interface ChatHistoryPanelProps { }
 
 export enum ChatHistoryPanelTabs {
   History = 'History'
@@ -101,7 +101,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
   }
 
   //Renders Chat History Panel and its items
-  React.useEffect(() => {}, [appStateContext?.state.chatHistory, clearingError])
+  React.useEffect(() => { }, [appStateContext?.state.chatHistory, clearingError])
 
   return (
     <section className={styles.container} data-is-scrollable aria-label={'chat history panel'}>
@@ -123,9 +123,10 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
         </StackItem>
         <Stack verticalAlign="start">
           {/* Chat History Control buttons  */}
-          <Stack horizontal styles={commandBarButtonStyle}>
+          <Stack horizontal styles={commandBarButtonStyle} >
+
             {/* ... button  */}
-            <CommandBarButton
+            {/* <CommandBarButton
               iconProps={{ iconName: 'More' }}
               title={'Clear all chat history'}
               onClick={onShowContextualMenu}
@@ -133,21 +134,34 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               styles={commandBarStyle}
               role="button"
               id="moreButton"
+            /> */}
+
+            <CommandBarButton
+              iconProps={{ iconName: 'More' }}
+              title={'Clear all chat history'}
+              onClick={onShowContextualMenu}
+              aria-label={'clear all chat history'}
+              styles={{root:{backgroundColor:"#313158"}, rootHovered:{backgroundColor:'#5a5aa3'},rootPressed:{backgroundColor:"#6f6fc9"}, icon:{color:'white'}, iconHovered:{color:'white'}, iconPressed:{color:'white'}} }
+              role="button"
+              id="moreButton"
             />
+
             <ContextualMenu
               items={menuItems}
               hidden={!showContextualMenu}
               target={'#moreButton'}
               onItemClick={toggleClearAllDialog}
               onDismiss={onHideContextualMenu}
+              styles={{root:{backgroundColor:"#5a5aa3", color: "white"}} }
             />
+
             {/* X button */}
             <CommandBarButton
               iconProps={{ iconName: 'Cancel' }}
               title={'Hide'}
               onClick={handleHistoryClick}
               aria-label={'hide button'}
-              styles={commandBarStyle}
+              styles={{root:{backgroundColor:"#313158"}, rootHovered:{backgroundColor:'#5a5aa3'},rootPressed:{backgroundColor:"#6f6fc9"}, icon:{color:'white'}, iconHovered:{color:'white'}, iconPressed:{color:'white'}} }
               role="button"
             />
           </Stack>
@@ -223,7 +237,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
       </Stack>
       <Dialog
         hidden={hideClearAllDialog}
-        onDismiss={clearing ? () => {} : onHideClearAllDialog}
+        onDismiss={clearing ? () => { } : onHideClearAllDialog}
         dialogContentProps={clearAllDialogContentProps}
         modalProps={modalProps}>
         <DialogFooter>

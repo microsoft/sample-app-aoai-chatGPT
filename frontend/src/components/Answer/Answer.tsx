@@ -263,6 +263,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">
+
+                  {/* Answer Like button */}
                   <ThumbLike20Filled
                     aria-hidden="false"
                     aria-label="Like this response"
@@ -274,6 +276,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                         : { color: 'slategray', cursor: 'pointer' }
                     }
                   />
+
+                  {/* Answer Dislike button */}
                   <ThumbDislike20Filled
                     aria-hidden="false"
                     aria-label="Dislike this response"
