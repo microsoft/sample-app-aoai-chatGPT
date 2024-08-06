@@ -13,6 +13,7 @@ param appServicePlanName string = ''
 param backendServiceName string = ''
 param resourceGroupName string = ''
 
+param datasourceType string = ''
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
 param searchServiceResourceGroupLocation string = location
@@ -78,7 +79,6 @@ resource searchServiceResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-
   name: !empty(searchServiceResourceGroupName) ? searchServiceResourceGroupName : resourceGroup.name
 }
 
-
 // Create an App Service Plan to group applications under the same payment plan and SKU
 module appServicePlan 'core/host/appserviceplan.bicep' = {
   name: 'appserviceplan'
@@ -96,7 +96,9 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
 }
 
 // The application frontend
-var appServiceName = !empty(backendServiceName) ? backendServiceName : '${abbrs.webSitesAppService}backend-${resourceToken}'
+var appServiceName = !empty(backendServiceName)
+  ? backendServiceName
+  : '${abbrs.webSitesAppService}backend-${resourceToken}'
 var authIssuerUri = '${environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0'
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
@@ -115,6 +117,7 @@ module backend 'core/host/appservice.bicep' = {
     authIssuerUri: authIssuerUri
     appSettings: {
       // search
+      DATASOURCE_TYPE: datasourceType
       AZURE_SEARCH_INDEX: searchIndexName
       AZURE_SEARCH_SERVICE: searchService.outputs.name
       AZURE_SEARCH_KEY: searchService.outputs.adminKey
@@ -140,7 +143,6 @@ module backend 'core/host/appservice.bicep' = {
     }
   }
 }
-
 
 module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
@@ -205,7 +207,6 @@ module cosmos 'db.bicep' = {
     principalIds: [principalId, backend.outputs.identityPrincipalId]
   }
 }
-
 
 // USER ROLES
 module openAiRoleUser 'core/security/role.bicep' = {
@@ -291,6 +292,7 @@ output AZURE_RESOURCE_GROUP string = resourceGroup.name
 output BACKEND_URI string = backend.outputs.uri
 
 // search
+output DATASOURCE_TYPE string = datasourceType
 output AZURE_SEARCH_INDEX string = searchIndexName
 output AZURE_SEARCH_SERVICE string = searchService.outputs.name
 output AZURE_SEARCH_SERVICE_RESOURCE_GROUP string = searchServiceResourceGroup.name
