@@ -14,9 +14,11 @@ const modalStyle: Styles = {
   content: {
     display: 'flex',
     flexDirection: 'column' as const,
-    maxWidth: '740px',
-    //height:'630px',
-    height: '700px',
+    // maxWidth: '740px',
+    minWidth: '40%',
+    minHeight: '40%',
+    width: '70%',
+    height: '80%',
     top: '50%',
     left: '50%',
     marginRight: '-50%',
@@ -24,7 +26,9 @@ const modalStyle: Styles = {
     borderRadius: '8px',
     borderColor: 'transparent',
     backgroundColor: '#FFFFFF',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    resize: 'both',
+    cursor: 
   }
 }
 
