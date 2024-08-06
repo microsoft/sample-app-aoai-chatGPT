@@ -851,10 +851,10 @@ const Chat = () => {
                         color: '#000000',
                       },
                       iconHovered: {
-                        backgroudColor: 'black',
+                        color: '#000000',
                       },
                       iconDisabled: {
-                        color: '#808080',
+                        color: '#6e6c6b',
                       },
                       root: {
                         color: '#000000',
@@ -884,10 +884,10 @@ const Chat = () => {
                       color: '#000000',
                     },
                     iconHovered: {
-                      backgroudColor: 'black',
+                      color: '#000000',
                     },
                     iconDisabled: {
-                      color: '#808080 ',
+                      color: '#6e6c6b ',
                     },
                     root: {
                       color: '#FFFFFF',
@@ -895,7 +895,6 @@ const Chat = () => {
                     },
                     rootHovered: {
                       backgroundColor: '#a9ff00',
-                      color: 'black',
                     },
                     rootDisabled: {
                       backgroundColor: '#BDBDBD',
