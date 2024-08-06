@@ -27,7 +27,7 @@ const modalStyle: Styles = {
     borderColor: 'transparent',
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
-    resize: 'both'
+    resize: 'both',
   }
 }
 

@@ -41,7 +41,7 @@
 }
 
 .historyButtonRoot:active {
-  border: 1px solid #d1d1d1;
+ background-color:#5a5aa3;
 }
 
 @media (max-width: 480px) {
