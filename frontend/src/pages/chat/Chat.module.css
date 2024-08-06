@@ -152,9 +152,7 @@
   margin-bottom: 50px;
   margin-top: 8px;
 }
-.icon-105 {
-  color:black !important;
-}
+
 .clearChatBroom {
   box-sizing: border-box;
   display: flex;
@@ -169,7 +167,6 @@
   color: black;
   border-radius: 4px;
   z-index: 1;
-  /* background-color: #a1dc00; */
 }
 
 .clearChatBroomNoCosmos {
@@ -203,7 +200,6 @@
   color: black;
   border-radius: 4px;
   z-index: 1;
-  /* background-color: #a1dc00; */
 }
 
 .stopGeneratingContainer {
@@ -219,14 +215,14 @@
   height: 32px;
   left: calc(50% - 161px / 2 + 25.8px);
   bottom: 116px;
-  border: 1px solid #d1d1d1;
   border-radius: 16px;
+  background-color: #a1dc00;
 }
 
 .stopGeneratingIcon {
   width: 14px;
   height: 14px;
-  color: #424242;
+  color: black;
 }
 
 .stopGeneratingText {
@@ -238,7 +234,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #242424;
+  color: black;
   flex: none;
   order: 0;
   flex-grow: 0;

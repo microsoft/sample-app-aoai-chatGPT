@@ -842,23 +842,31 @@ const Chat = () => {
               )}
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
+                  
+                  // + button to create a new chat
                   <CommandBarButton
                     role="button"
                     styles={{
                       icon: {
-                        color: '#000000'
+                        color: '#000000',
+                      },
+                      iconHovered: {
+                        backgroudColor: 'black',
                       },
                       iconDisabled: {
-                        color: '#808080 !important'
+                        color: '#808080',
                       },
                       root: {
                         color: '#000000',
-                        background:
-                          '#a1dc00'
+                        backgroundColor: '#a1dc00',
+                      },
+                      rootHovered: {
+                        backgroundColor: '#a9ff00',
+                        color: 'black',
                       },
                       rootDisabled: {
-                        background: '#BDBDBD'
-                      }
+                        background: '#BDBDBD',
+                      },
                     }}
                     className={styles.newChatIcon}
                     iconProps={{ iconName: 'Add' }}
@@ -867,23 +875,31 @@ const Chat = () => {
                     aria-label="start a new chat button"
                   />
                 )}
+
+                {/* Broom button to delete chat */}
                 <CommandBarButton
                   role="button"
                   styles={{
                     icon: {
-                      color: '#000000'
+                      color: '#000000',
+                    },
+                    iconHovered: {
+                      backgroudColor: 'black',
                     },
                     iconDisabled: {
-                      color: '#808080 !important'
+                      color: '#808080 ',
                     },
                     root: {
                       color: '#FFFFFF',
-                      background:
-                        '#a1dc00'
+                      backgroundColor: '#a1dc00',
+                    },
+                    rootHovered: {
+                      backgroundColor: '#a9ff00',
+                      color: 'black',
                     },
                     rootDisabled: {
-                      background: '#BDBDBD'
-                    }
+                      backgroundColor: '#BDBDBD',
+                    },
                   }}
                   className={
                     appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
