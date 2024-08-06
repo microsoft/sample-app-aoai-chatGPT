@@ -146,6 +146,7 @@ async def test_dotenv(test_app: Quart, dotenv_template_params: dict[str, str]):
             }
         ]
     }
+    
     test_client = test_app.test_client()
     response = await test_client.post(request_path, json=request_data)
     assert response.status_code == 200
