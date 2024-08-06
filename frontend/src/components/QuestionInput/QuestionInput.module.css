@@ -10,21 +10,30 @@
     0px 8px 16px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
   border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px;
 }
 
 .questionInputTextArea {
-  width: 100%;
+  flex-grow: 1;
+  width: calc(100% - 60px);
   line-height: 40px;
-  margin-top: 10px;
+  margin-right: 10px;
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  margin-top: 50px;
   margin-bottom: 10px;
-  margin-left: 12px;
-  margin-right: 12px;
 }
 
 .questionInputSendButtonContainer {
-  position: absolute;
-  right: 24px;
-  bottom: 20px;
+  margin-top: 2px;
 }
 
 .questionInputSendButton {
@@ -40,21 +49,70 @@
   color: #424242;
 }
 
+.imageInputSendButtonContainer {
+  margin-bottom: 10px;
+}
+
+.imageInputSendButton {
+  width: 24px;
+  height: 23px;
+  margin-right: 1px;
+}
+
+.imageInputSendButton:hover {
+  cursor: pointer;
+  color: #2782c2;
+  transform: scale(1.2);
+  transition: transform 0.3s ease-in-out;
+}
+
 .questionInputBottomBorder {
   position: absolute;
   width: 100%;
   height: 4px;
-  left: 0%;
-  bottom: 0%;
+  left: 0;
+  bottom: 0;
   background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%);
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
 
-.questionInputOptionsButton {
+.imageWrapper {
+  position: relative;
+  width: auto;
+  max-width: 100px;
+  max-height: 100px;
+  overflow: hidden;
+  /* background: #ffffff; */
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  margin-right: 10px;
+  margin-bottom: 0;
+  padding: 0px;
+}
+
+.fileDisplay {
+  width: 100%;
+  height: 100%; /* Ensure the image covers the entire container */
+  object-fit: contain;
+  display: block; /* Remove any inline spacing */
+  margin: 0; /* Remove any margin */
+  padding: 0; /* Remove any padding */
+}
+
+.clearIcon {
+  color: red;
+  position: absolute;
+  top: 2px;
+  right: 2px;
   cursor: pointer;
-  width: 27px;
-  height: 30px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 2;
+}
+
+.clearIcon:hover {
+  opacity: 1;
 }
 
 @media (max-width: 480px) {
