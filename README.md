@@ -17,7 +17,7 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
 
 ### Create a .env file for local development
 
-Follow instructions below in the [app configuration](#app-configuration) section to create a .env file for local development of your app.  This file can be used as a reference to populate the app settings for your deployed webapp.
+Follow instructions below in the [app configuration](#app-configuration) section to create a .env file for local development of your app.  This file can be used as a reference to populate the app settings for your Azure App Service deployed webapp.
 
 ### Create a JSON file for populating Azure App Service app settings
 
@@ -147,12 +147,6 @@ Next, enable logging on the app service. Go to "App Service logs" under Monitori
 
 Now, you should be able to see logs from your app by viewing "Log stream" under Monitoring.
 
-### Configuring vector search
-When using your own data with a vector index, ensure these settings are configured on your app:
-- `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
-- `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
-- `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
-
 ### Changing Citation Display
 The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. The citations returned from Azure OpenAI On Your Data will include `content`, `title`, `filepath`, and in some cases `url`. You can customize the Citation section to use and display these as you like. For example, the title element is a clickable hyperlink if `url` is not a blob URL.
 
@@ -172,9 +166,9 @@ The Citation panel is defined at the end of `frontend/src/pages/chat/Chat.tsx`. 
 
 ```
 
-### Using Entra ID
+### Using Microsoft Entra ID
 
-The app uses Azure OpenAI on your data [(see documentation)](https://learn.microsoft.com/en-us/azure/ai-services/openai/references/on-your-data). To enable Entra ID for intra-service authentication
+The app uses Azure OpenAI on your data [(see documentation)](https://learn.microsoft.com/en-us/azure/ai-services/openai/references/on-your-data). To enable Microsoft Entra ID for intra-service authentication
 
 1. Enable managed identity on Azure OpenAI
 2. Configure AI search to allow access from Azure OpenAI
@@ -248,7 +242,37 @@ We recommend keeping these best practices in mind:
     - `AZURE_SEARCH_STRICTNESS`
     - `AZURE_OPENAI_EMBEDDING_NAME`
 
+    When using your own data with a vector index, ensure these settings are configured on your app:
+    - `AZURE_SEARCH_QUERY_TYPE`: can be `vector`, `vectorSimpleHybrid`, or `vectorSemanticHybrid`,
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `AZURE_SEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+
 #### Chat with your data using Azure Cosmos DB
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To connect to your data, you need to specify an Azure Cosmos DB database configuration.  Learn more about [creating an Azure Cosmos DB resource](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/quickstart-portal).
+
+    These variables are required when adding your data with Azure Cosmos DB:
+    - `DATASOURCE_TYPE` (should be set to `AzureCosmosDB`)
+    - `AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING`
+    - `AZURE_COSMOSDB_MONGO_VCORE_INDEX`
+    - `AZURE_COSMOSDB_MONGO_VCORE_DATABASE`
+    - `AZURE_COSMOSDB_MONGO_VCORE_CONTAINER`
+
+    These variables are optional:
+    - `AZURE_COSMOSDB_MONGO_VCORE_TOP_K`
+    - `AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN`
+    - `AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS`
+    - `AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS`
+    - `AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS`
+    - `AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN`
+    - `AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN`
+    - `AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN`
+
+    Azure Cosmos DB uses vector search by default, so ensure these settings are configured on your app:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 #### Chat with your data using Azure SQL Server (Preview)
 
@@ -264,18 +288,101 @@ We recommend keeping these best practices in mind:
 
 #### Chat with your data using Elasticsearch (Preview)
 
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To connect to your data, you need to specify an Elasticsearch cluster configuration. Learn more about [Elasticsearch](https://www.elastic.co/).
+
+    These variables are required when adding your data with Elasticsearch:
+    - `ELASTICSEARCH_ENDPOINT`
+    - `ELASTICSEARCH_ENCODED_API_KEY`
+    - `ELASTICSEARCH_INDEX`
+
+    These variables are optional.
+    - `ELASTICSEARCH_TOP_K`
+    - `ELASTICSEARCH_STRICTNESS`
+    - `ELASTICSEARCH_ENABLE_IN_DOMAIN`
+    - `ELASTICSEARCH_QUERY_TYPE`
+    - `ELASTICSEARCH_CONTENT_COLUMNS`
+    - `ELASTICSEARCH_VECTOR_COLUMNS`
+    - `ELASTICSEARCH_TITLE_COLUMN`
+    - `ELASTICSEARCH_URL_COLUMN`
+    - `ELASTICSEARCH_FILENAME_COLUMN`
+    - `ELASTICSEARCH_EMBEDDING_MODEL_ID`
+
+    To use vector search with Elasticsearch, there are two options:
+
+    1. To use Azure OpenAI embeddings, ensure that your index contains Azure OpenAI embeddings, and that the following variables are set:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource, which was also used to create the embeddings in your index.
+    - `ELASTICSEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+
+    2. Use Elasticsearch embeddings, ensure that your index contains embeddings produced from a trained model on your Elasticsearch cluster, and that the following variables are set:
+    - `ELASTICSEARCH_EMBEDDING_MODEL_ID`: the ID of the trained model used to produce embeddings on your index.
+    - `ELASTICSEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 #### Chat with your data using Pinecone (Preview)
 
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
 
-#### Chat with your data using AzureMLIndex (Preview)
+2. To connect to your data, you need to specify an Pinecone vector database configuration. Learn more about [Pinecone](https://www.pinecone.io/).
 
+    These variables are required when adding your data with Pinecone:
+    - `PINECONE_ENVIRONMENT`
+    - `PINECONE_INDEX_NAME`
+    - `PINECONE_API_KEY`
+
+    These variables are optional:
+    - `PINECONE_TOP_K`
+    - `PINECONE_STRICTNESS`
+    - `PINECONE_ENABLE_IN_DOMAIN`
+    - `PINECONE_QUERY_TYPE`
+    - `PINECONE_CONTENT_COLUMNS`
+    - `PINECONE_VECTOR_COLUMNS`
+    - `PINECONE_TITLE_COLUMN`
+    - `PINECONE_URL_COLUMN`
+    - `PINECONE_FILENAME_COLUMN`
+
+    Pinecone uses vector search by default, so ensure these settings are configured on your app:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `PINECONE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 #### Chat with your data using Mongo DB (Preview)
 
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To connect to your data, you need to specify an Mongo DB database configuration.  Learn more about [MongoDB](https://www.mongodb.com/).
+
+    These variables are required when adding your data with Azure Cosmos DB:
+    - `DATASOURCE_TYPE` (should be set to `AzureCosmosDB`)
+    - `MONGODB_CONNECTION_STRING`
+    - `MONGODB_VECTOR_INDEX`
+    - `MONGODB_DATABASE_NAME`
+    - `MONGODB_CONTAINER_NAME`
+
+    These variables are optional:
+    - `MONGODB_TOP_K`
+    - `MONGODB_ENABLE_IN_DOMAIN`
+    - `MONGODB_STRICTNESS`
+    - `MONGODB_CONTENT_COLUMNS`
+    - `MONGODB_VECTOR_COLUMNS`
+    - `MONGODB_TITLE_COLUMN`
+    - `MONGODB_URL_COLUMN`
+    - `MONGODB_FILENAME_COLUMN`
+
+    MongoDB uses vector search by default, so ensure these settings are configured on your app:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `MONGODB_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
 #### Chat with your data using Promptflow
 
+The following variables are required for chatting with your Promptflow endpoint:
+- `PROMPTFLOW_ENDPOINT`
+- `PROMPTFLOW_API_KEY`
+
+These variables are optional:
+- `PROMPTFLOW_RESPONSE_TIMEOUT`
+- `PROMPTFLOW_REQUEST_FIELD_NAME`
+- `PROMPTFLOW_RESPONSE_FIELD_NAME`
+- `PROMPTFLOW_CITATIONS_FIELD_NAME`
 
 ### Enable Chat History
 To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured.  See 
