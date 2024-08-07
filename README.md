@@ -341,7 +341,7 @@ Configure your settings using the table below.
 |PROMPTFLOW_RESPONSE_FIELD_NAME|No|reply|Default field name to process the response from Promptflow request.|
 |PROMPTFLOW_CITATIONS_FIELD_NAME|No|documents|Default field name to process the citations output from Promptflow request.|
 
-### Enable Chat History
+#### Enable Chat History
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above.
 
@@ -360,7 +360,7 @@ Configure your settings using the table below.
     |AZURE_COSMOSDB_ENABLE_FEEDBACK|No|False|Whether or not to enable message feedback on chat history messages|
 
 
-### Common Customization Scenarios (e.g. updating the default chat logo and headers)
+#### Common Customization Scenarios (e.g. updating the default chat logo and headers)
 
 The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of the following environment variables.
 
