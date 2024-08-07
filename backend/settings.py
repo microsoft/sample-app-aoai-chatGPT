@@ -658,7 +658,57 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
             "parameters": parameters
         }
     
+
+class _MongoDbSettings(BaseSettings, DatasourcePayloadConstructor):
+    model_config = SettingsConfigDict(
+        env_prefix="MONGODB_",
+        env_file=DOTENV_PATH,
+        extra="ignore"
+    )
+    _type: Literal["mongo_db"] = PrivateAttr(default="mongo_db")
     
+    connection_string: str = Field(exclude=True)
+    database_name: str
+    container_name: str
+    vector_index: str
+    top_k: int = Field(default=5, serialization_alias="top_n_documents")
+    strictness: int = 3
+    enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
+    content_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    vector_columns: Optional[List[str]] = Field(default=None, exclude=True)
+    title_column: Optional[str] = Field(default=None, exclude=True)
+    url_column: Optional[str] = Field(default=None, exclude=True)
+    filename_column: Optional[str] = Field(default=None, exclude=True)
+    
+    
+    # Constructed fields
+    authentication: Optional[dict] = None
+    
+    @model_validator(mode="after")
+    def construct_authentication(self) -> Self:
+        self.authentication = {
+            "type": "connection_string",
+            "connection_string": self.connection_string
+        }
+        return self
+    
+    def construct_payload_configuration(
+        self,
+        *args,
+        **kwargs
+    ):
+        self.embedding_dependency = \
+            self._settings.azure_openai.extract_embedding_dependency()
+            
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
+        
+        return {
+            "type": self._type,
+            "parameters": parameters
+        }
+        
+        
 class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
@@ -729,6 +779,10 @@ class _AppSettings(BaseModel):
             elif self.base_settings.datasource_type == "AzureSqlServer":
                 self.datasource = _AzureSqlServerSettings(settings=self, _env_file=DOTENV_PATH)
                 logging.debug("Using SQL Server")
+            
+            elif self.base_settings.datasource_type == "MongoDB":
+                self.datasource = _MongoDbSettings(settings=self, _env_file=DOTENV_PATH)
+                logging.debug("Using Mongo DB")
                 
             else:
                 self.datasource = None
