@@ -19,7 +19,7 @@ import styles from './Answer.module.css'
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
-  onExectResultClicked: () => void
+  onExectResultClicked: (answerId: string) => void
 }
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
@@ -332,7 +332,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
                   <Text
                     className={styles.accordionTitle}
-                    onClick={() => onExectResultClicked()}
+                    onClick={() => onExectResultClicked(answer.message_id ?? '')}
                     aria-label="Open Intents"
                     tabIndex={0}
                     role="button">
