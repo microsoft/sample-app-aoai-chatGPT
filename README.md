@@ -310,7 +310,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     | App Setting | Required? | Default Value | Note |
     | --- | --- | --- | ------------- |
     |DATASOURCE_TYPE|Yes||Must be set to `MongoDB`|
-    |MONGODB_CONNECTION_STRING|Yes||The connection string used to connect to your Azure Cosmos DB instance|
+    |MONGODB_CONNECTION_STRING|Yes||The connection string used to connect to your Mongo DB instance|
     |MONGODB_VECTOR_INDEX|Yes||The name of your Mongo DB vector index|
     |MONGODB_DATABASE_NAME|Yes||The name of your Mongo DB database|
     |MONGODB_CONTAINER_NAME|Yes||The name of your Mongo DB container|
