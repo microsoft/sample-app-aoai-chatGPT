@@ -313,7 +313,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |MONGODB_CONNECTION_STRING|Yes||The connection string used to connect to your Azure Cosmos DB instance|
     |MONGODB_VECTOR_INDEX|Yes||The name of your Mongo DB vector index|
     |MONGODB_DATABASE_NAME|Yes||The name of your Mongo DB database|
-    |MONGODB_CONTAINER_NAME|Yes||The name of your Azure Cosmos DB container|
+    |MONGODB_CONTAINER_NAME|Yes||The name of your Mongo DB container|
     |MONGODB_TOP_K|No|5|The number of documents to retrieve when querying your search index.|
     |MONGODB_ENABLE_IN_DOMAIN|No|True|Limits responses to only queries relating to your data.|
     |MONGODB_STRICTNESS|No|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
