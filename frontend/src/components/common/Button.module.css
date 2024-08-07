@@ -12,6 +12,10 @@
   background: rgb(57, 50, 102);
 }
 
+.shareButtonRoot:active {
+  background-color:#5a5aa3;
+ }
+
 .shareButtonRoot span {
   font-weight: 600;
   font-size: 14px;

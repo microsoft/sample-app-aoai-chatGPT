@@ -125,17 +125,6 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
           {/* Chat History Control buttons  */}
           <Stack horizontal styles={commandBarButtonStyle} >
 
-            {/* ... button  */}
-            {/* <CommandBarButton
-              iconProps={{ iconName: 'More' }}
-              title={'Clear all chat history'}
-              onClick={onShowContextualMenu}
-              aria-label={'clear all chat history'}
-              styles={commandBarStyle}
-              role="button"
-              id="moreButton"
-            /> */}
-
             <CommandBarButton
               iconProps={{ iconName: 'More' }}
               title={'Clear all chat history'}
