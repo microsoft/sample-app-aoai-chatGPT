@@ -173,7 +173,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
 
     | App Setting | Required? | Default Value | Note |
     | --- | --- | --- | ------------- |
-    |DATASOURCE_TYPE|Yes||Must be set to `AzureCognitiveSearch`
+    |DATASOURCE_TYPE|Yes||Must be set to `AzureCognitiveSearch`|
     |AZURE_SEARCH_SERVICE|Yes||The name of your Azure AI Search resource|
     |AZURE_SEARCH_INDEX|Yes||The name of your Azure AI Search Index|
     |AZURE_SEARCH_KEY|Optional if using Microsoft Entra ID -- see our documentation on the required resource setup for identity-based authentication.||An **admin key** for your Azure AI Search resource.|
@@ -247,7 +247,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
 
     | App Setting | Required? | Default Value | Note |
     | --- | --- | --- | ------------- |
-    |DATASOURCE_TYPE|Yes||Must be set to `AzureCosmosDB`|
+    |DATASOURCE_TYPE|Yes||Must be set to `Elasticsearch`|
     |ELASTICSEARCH_ENDPOINT|Yes||The base URL of your Elasticsearch cluster API|
     |ELASTICSEARCH_ENCODED_API_KEY|Yes||The encoded API key for your user identity on your Elasticsearch cluster|
     |ELASTICSEARCH_INDEX|Yes||The name of your Elasticsearch index|
