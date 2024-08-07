@@ -365,6 +365,7 @@ Configure your settings using the table below.
 The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of the following environment variables.
 
 | App Setting | Required? | Default Value | Note |
+|---|---|---|---|
 |UI_TITLE|No|Contoso| Chat title (left-top) and page title (HTML)
 |UI_LOGO|No|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
 |UI_CHAT_LOGO|No|| Logo (chat window). Defaults to Contoso logo. Configure the URL to your logo image to modify.
