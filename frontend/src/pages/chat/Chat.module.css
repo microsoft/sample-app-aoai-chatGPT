@@ -259,7 +259,7 @@
   align-items: flex-start;
   padding: 16px 16px;
   gap: 8px;
-  background: #ffffff;
+  background: #5a5aa3;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
@@ -282,7 +282,7 @@
   font-weight: 600;
   font-size: 18px;
   line-height: 24px;
-  color: #000000;
+  color: #fff;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -304,7 +304,7 @@
   font-weight: 600;
   font-size: 16px;
   line-height: 22px;
-  color: #323130;
+  color: #fff;
   margin-top: 12px;
   margin-bottom: 12px;
 }
@@ -319,7 +319,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #000000;
+  color: #fff;
   flex: none;
   order: 1;
   align-self: stretch;

@@ -962,6 +962,20 @@ const Chat = () => {
                   Citations
                 </span>
                 <IconButton
+                styles={{
+                  icon: {
+                    color: '#fff',
+                  },
+                  iconHovered: {
+                    color: '#fff',
+                  },
+                  rootHovered: {
+                    backgroundColor: '#484492',
+                  },
+                  rootPressed:{
+                    backgroundColor: '#5C57BD',
+                  },
+                }}
                   iconProps={{ iconName: 'Cancel' }}
                   aria-label="Close citations panel"
                   onClick={() => setIsCitationPanelOpen(false)}
