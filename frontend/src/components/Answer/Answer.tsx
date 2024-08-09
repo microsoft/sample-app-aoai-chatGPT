@@ -4,7 +4,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Checkbox, DefaultButton, Dialog, FontIcon, Icon, IconButton, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
-import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular } from '@fluentui/react-icons'
+import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Copy20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
@@ -127,31 +127,37 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     })
   }
 
-// Copy AnswerResponse Function
-const handleCopyClick = async () => {
-  const answerTextContainer = document.querySelector('._answerText_kury7_14');
-  
-  if (answerTextContainer) {
-    // Collect the text content from all the <p> tags inside the container
-    const paragraphs = answerTextContainer.querySelectorAll('p');
-    const textToCopy = Array.from(paragraphs).map(p => p.textContent).join('\n');
-    
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      console.log('Text copied to clipboard:', textToCopy);
 
-      //Visual feedback to indicate the text has been copied
-      answerTextContainer.classList.add('highlight');
-      setTimeout(() => {
-        answerTextContainer.classList.remove('highlight');
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy text:', err);
+
+  const [isCopied, setIsCopied] = useState(false);
+  // Copy AnswerResponse
+  const handleCopyClick = async () => {
+
+    const answerTextContainer = document.querySelector('._answerText_kury7_14');
+
+    if (answerTextContainer) {
+      const paragraphs = answerTextContainer.querySelectorAll('p');
+      const textToCopy = Array.from(paragraphs).map(p => p.textContent).join('\n');
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        console.log('Text copied to clipboard:', textToCopy);
+
+        // Set the copied state to true
+        setIsCopied(true);
+
+        // Reset the copied state after 2 seconds
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000);
+
+      } catch (err) {
+        console.error('Failed to copy text:', err);
+      }
+    } else {
+      console.error('No element found with the specified selector');
     }
-  } else {
-    console.error('No element found with the specified selector');
-  }
-};
+  };
 
 
 
@@ -322,16 +328,27 @@ const handleCopyClick = async () => {
                   />
 
                   {/* Copy AnswerResponse Button */}
+                  {isCopied ? (
+                    <Copy20Filled
+                      aria-hidden="false"
+                      aria-label="Text copied"
+                      onClick={() => handleCopyClick()}
+                      style={{
+                        color: '68BE15', // Color for when the text is copied
+                        cursor: 'pointer'
+                      }}
+                    />
+                  ) : (
                     <Copy20Regular
-                    aria-hidden="false"
-                    aria-label="Copy this response"
-                    onClick={() => handleCopyClick()}
-                  style={
-                    {color: '68BE15',
-                      cursor: 'pointer'
-                    }
-                  }
-                  />
+                      aria-hidden="false"
+                      aria-label="Copy this response"
+                      onClick={() => handleCopyClick()}
+                      style={{
+                        color: '#68BE15', // Default color
+                        cursor: 'pointer'
+                      }}
+                    />
+                  )}
                 </Stack>
               )}
             </Stack.Item>
