@@ -60,6 +60,15 @@
   order: 1;
   flex-grow: 0;
 }
+/* test */
+/* .copyIcon {
+fill:white;
+width: 16px;
+height: 16px;
+} */
+.highlight {
+  background-color: yellow;
+}
 
 .citationWrapper {
   margin-top: 8;

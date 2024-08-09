@@ -2,9 +2,9 @@ import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
+import { Checkbox, DefaultButton, Dialog, FontIcon, Icon, IconButton, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
-import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
+import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
@@ -16,6 +16,7 @@ import { AppStateContext } from '../../state/AppProvider'
 import { parseAnswer } from './AnswerParser'
 
 import styles from './Answer.module.css'
+
 
 interface Props {
   answer: AskResponse
@@ -126,6 +127,34 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     })
   }
 
+// Copy AnswerResponse Function
+const handleCopyClick = async () => {
+  const answerTextContainer = document.querySelector('._answerText_kury7_14');
+  
+  if (answerTextContainer) {
+    // Collect the text content from all the <p> tags inside the container
+    const paragraphs = answerTextContainer.querySelectorAll('p');
+    const textToCopy = Array.from(paragraphs).map(p => p.textContent).join('\n');
+    
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      console.log('Text copied to clipboard:', textToCopy);
+
+      //Visual feedback to indicate the text has been copied
+      answerTextContainer.classList.add('highlight');
+      setTimeout(() => {
+        answerTextContainer.classList.remove('highlight');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  } else {
+    console.error('No element found with the specified selector');
+  }
+};
+
+
+
   const updateFeedbackList = (ev?: FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
     if (answer.message_id == undefined) return
     const selectedFeedback = (ev?.target as HTMLInputElement)?.id as Feedback
@@ -227,6 +256,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     )
   }
 
+
   const components = {
     code({ node, ...props }: { node: any;[key: string]: any }) {
       let language
@@ -290,6 +320,18 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                         : { color: 'slategray', cursor: 'pointer' }
                     }
                   />
+
+                  {/* Copy AnswerResponse Button */}
+                    <Copy20Regular
+                    aria-hidden="false"
+                    aria-label="Copy this response"
+                    onClick={() => handleCopyClick()}
+                  style={
+                    {color: '68BE15',
+                      cursor: 'pointer'
+                    }
+                  }
+                  />
                 </Stack>
               )}
             </Stack.Item>
@@ -302,6 +344,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         )}
+        {/* Quantity of PDF references */}
         <Stack horizontal className={styles.answerFooter}>
           {!!parsedAnswer.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
