@@ -110,6 +110,7 @@ module backend 'core/host/appservice.bicep' = {
     runtimeVersion: '3.10'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
+    appCommandLine: 'python3 -m gunicorn app:app'
     authClientSecret: authClientSecret
     authClientId: authClientId
     authIssuerUri: authIssuerUri
@@ -137,6 +138,7 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_STOP_SEQUENCE: openAIStopSequence
       AZURE_OPENAI_SYSTEM_MESSAGE: openAISystemMessage
       AZURE_OPENAI_STREAM: openAIStream
+      DATASOURCE_TYPE: 'AzureCognitiveSearch'
     }
   }
 }
