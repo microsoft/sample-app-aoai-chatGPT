@@ -265,7 +265,9 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |PROMPTFLOW_RESPONSE_FIELD_NAME|reply|Default field name to process the response from Promptflow request.|
 |PROMPTFLOW_CITATIONS_FIELD_NAME|documents|Default field name to process the citations output from Promptflow request.|
 |DATASOURCE_TYPE||Type of data source to use for using the 'on-your-data' api. Can be `AzureCognitiveSearch`, `AzureCosmosDB`, `Elasticsearch`, `Pinecone`, `AzureMLIndex`, `AzureSqlServer` or `None` |
-
+|AZURE_SQL_SERVER_PORT||Not publicly available at this time.|
+|AZURE_SQL_SERVER_DATABASE_NAME||Not publicly available at this time.|
+|AZURE_SQL_SERVER_DATABASE_SERVER||Not publicly available at this time.|
 
 ## Contributing
 

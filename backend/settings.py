@@ -629,20 +629,28 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
     )
     _type: Literal["azure_sql_server"] = PrivateAttr(default="azure_sql_server")
     
-    connection_string: str = Field(exclude=True)
-    table_schema: str
+    connection_string: Optional[str] = Field(default=None, exclude=True)
+    table_schema: Optional[str] = None
     schema_max_row: Optional[int] = None
     top_n_results: Optional[int] = None
+    database_server: Optional[str] = None
+    database_name: Optional[str] = None
+    port: Optional[int] = None
     
     # Constructed fields
     authentication: Optional[dict] = None
     
     @model_validator(mode="after")
     def construct_authentication(self) -> Self:
-        self.authentication = {
-            "type": "connection_string",
-            "connection_string": self.connection_string
-        }
+        if self.connection_string:
+            self.authentication = {
+                "type": "connection_string",
+                "connection_string": self.connection_string
+            }
+        elif self.database_server and self.database_name and self.port:
+            self.authentication = {
+                "type": "system_assigned_managed_identity"
+            }
         return self
     
     def construct_payload_configuration(
