@@ -4,7 +4,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Checkbox, DefaultButton, Dialog, FontIcon, Icon, IconButton, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
-import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Copy20Filled } from '@fluentui/react-icons'
+import { ThumbDislike20Filled, ThumbLike20Filled, Copy20Regular, Copy20Filled  } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
@@ -127,39 +127,22 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     })
   }
 
-
-
   const [isCopied, setIsCopied] = useState(false);
-  // Copy AnswerResponse
-  const handleCopyClick = async () => {
 
-    const answerTextContainer = document.querySelector('._answerText_kury7_14');
+  // Access the Props properties when copy button click and copy the text to clipboard
+  function clicked(){
+    navigator.clipboard.writeText(answer.answer);
+    // console.log("Answer " , answer.answer);
+    // console.log("MessageId: " , answer.message_id);
 
-    if (answerTextContainer) {
-      const paragraphs = answerTextContainer.querySelectorAll('p');
-      const textToCopy = Array.from(paragraphs).map(p => p.textContent).join('\n');
+    // Set the copied state to true
+    setIsCopied(true);
 
-      try {
-        await navigator.clipboard.writeText(textToCopy);
-        console.log('Text copied to clipboard:', textToCopy);
-
-        // Set the copied state to true
-        setIsCopied(true);
-
-        // Reset the copied state after 2 seconds
-        setTimeout(() => {
-          setIsCopied(false);
-        }, 2000);
-
-      } catch (err) {
-        console.error('Failed to copy text:', err);
-      }
-    } else {
-      console.error('No element found with the specified selector');
-    }
-  };
-
-
+    // Reset the copied state after 2 seconds
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 1000);
+  }
 
   const updateFeedbackList = (ev?: FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
     if (answer.message_id == undefined) return
@@ -326,13 +309,12 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                         : { color: 'slategray', cursor: 'pointer' }
                     }
                   />
-
                   {/* Copy AnswerResponse Button */}
-                  {isCopied ? (
+                    {isCopied ? (
                     <Copy20Filled
                       aria-hidden="false"
                       aria-label="Text copied"
-                      onClick={() => handleCopyClick()}
+                      onClick={clicked}
                       style={{
                         color: '68BE15', // Color for when the text is copied
                         cursor: 'pointer'
@@ -342,7 +324,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     <Copy20Regular
                       aria-hidden="false"
                       aria-label="Copy this response"
-                      onClick={() => handleCopyClick()}
+                      onClick={clicked}
                       style={{
                         color: '#68BE15', // Default color
                         cursor: 'pointer'
@@ -355,9 +337,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           </Stack>
         </Stack.Item>
         {parsedAnswer.plotly_data !== null && (
-          <Stack className={styles.answerContainer}>
+          <Stack className={styles.answerContainer} >
             <Stack.Item grow>
-              <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
+              <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout}/>
             </Stack.Item>
           </Stack>
         )}
