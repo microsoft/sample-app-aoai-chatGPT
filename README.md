@@ -8,9 +8,8 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
   - Azure AI Search Index
   - Azure CosmosDB Mongo vCore vector index
   - Elasticsearch index (preview)
-  - Pinecone index (preview)
-  - AzureML index (preview)
-  - Azure SQL Server (preview)
+  - Pinecone index (private preview)
+  - Azure SQL Server (private preview)
   - Mongo DB (preview)
 
 ## Configure the app
@@ -223,20 +222,6 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
     - `AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
-#### Chat with your data using Azure SQL Server (Preview)
-
-1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
-
-2. To enable Azure SQL Server, you will need to set up Azure SQL Server resources.  Refer to this [instruction guide](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart) to create an Azure SQL database. 
-
-3. Configure data source settings as described in the table below.
-
-    | App Setting | Required? | Default Value | Note |
-    | --- | --- | --- | ------------- |
-    |DATASOURCE_TYPE|Yes||Must be set to `AzureSqlServer`|
-    |AZURE_SQL_SERVER_CONNECTION_STRING|Yes||The connection string to use to connect to your Azure SQL Server instance|
-    |AZURE_SQL_SERVER_TABLE_SCHEMA|Yes||The table schema for your Azure SQL Server table.  Must be surrounded by double quotes (`"`).|
-
 #### Chat with your data using Elasticsearch (Preview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
@@ -272,7 +257,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     - `ELASTICSEARCH_EMBEDDING_MODEL_ID`: the ID of the trained model used to produce embeddings on your index.
     - `ELASTICSEARCH_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
-#### Chat with your data using Pinecone (Preview)
+#### Chat with your data using Pinecone (Private Preview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
 
@@ -299,7 +284,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
     - `PINECONE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
-#### Chat with your data using Mongo DB (Preview)
+#### Chat with your data using Mongo DB (Private Preview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
 
@@ -326,6 +311,20 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     MongoDB uses vector search by default, so ensure these settings are configured on your app:
     - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
     - `MONGODB_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+    
+#### Chat with your data using Azure SQL Server (Private Preview)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To enable Azure SQL Server, you will need to set up Azure SQL Server resources.  Refer to this [instruction guide](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart) to create an Azure SQL database. 
+
+3. Configure data source settings as described in the table below.
+
+    | App Setting | Required? | Default Value | Note |
+    | --- | --- | --- | ------------- |
+    |DATASOURCE_TYPE|Yes||Must be set to `AzureSqlServer`|
+    |AZURE_SQL_SERVER_CONNECTION_STRING|Yes||The connection string to use to connect to your Azure SQL Server instance|
+    |AZURE_SQL_SERVER_TABLE_SCHEMA|Yes||The table schema for your Azure SQL Server table.  Must be surrounded by double quotes (`"`).|
 
 #### Chat with your data using Promptflow
 
