@@ -64,6 +64,10 @@ def use_aoai_embeddings(request):
 def use_elasticsearch_embeddings(request):
     return request.param
 
+@pytest.fixture(scope="function", params=[True, False], ids=["use_mi", "use_keys"])
+def use_mi(request):
+    return request.param
+
 
 @pytest.fixture(scope="function")
 def dotenv_rendered_template_path(
@@ -73,7 +77,8 @@ def dotenv_rendered_template_path(
     enable_chat_history,
     stream, 
     use_aoai_embeddings,
-    use_elasticsearch_embeddings
+    use_elasticsearch_embeddings, 
+    use_mi
 ):
     rendered_template_name = request.node.name.replace("[", "_").replace("]", "_")
     template_path = os.path.join(
@@ -92,6 +97,7 @@ def dotenv_rendered_template_path(
         dotenv_template_params["USE_ELASTICSEARCH_EMBEDDINGS"] = use_elasticsearch_embeddings
     
     dotenv_template_params["USE_AOAI_EMBEDDINGS"] = use_aoai_embeddings
+    dotenv_template_params["USE_MI"] = use_mi
     
     if use_aoai_embeddings or use_elasticsearch_embeddings:
         dotenv_template_params["AZURE_SEARCH_QUERY_TYPE"] = "vector"
@@ -140,6 +146,7 @@ async def test_dotenv(test_app: Quart, dotenv_template_params: dict[str, str]):
             }
         ]
     }
+    
     test_client = test_app.test_client()
     response = await test_client.post(request_path, json=request_data)
     assert response.status_code == 200
