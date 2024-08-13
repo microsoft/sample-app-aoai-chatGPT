@@ -9,6 +9,7 @@ export type ParsedAnswer = {
 }
 
 export const enumerateCitations = (citations: Citation[]) => {
+ 
   const filepathMap = new Map()
   for (const citation of citations) {
     const { filepath } = citation
@@ -20,6 +21,7 @@ export const enumerateCitations = (citations: Citation[]) => {
     citation.part_index = part_i
   }
   return citations
+ 
 }
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
@@ -38,6 +40,9 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
       answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `)
       citation.id = citationIndex // original doc index to de-dupe
       citation.reindex_id = citationReindex.toString() // reindex from 1 for display
+      // test
+      citation.page_number = extractPageNumberFromCitation(citation);
+      // test
       filteredCitations.push(citation)
     }
   })
@@ -49,4 +54,10 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
     markdownFormatText: answerText,
     plotly_data: answer.plotly_data
   }
+}
+
+function extractPageNumberFromCitation(citation: Citation): number{
+ 
+    return citation.page_number ;
+  
 }

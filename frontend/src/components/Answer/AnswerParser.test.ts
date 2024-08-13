@@ -4,6 +4,7 @@ import { AskResponse, Citation } from '../../api' // Ensure this path matches th
 
 import { enumerateCitations, parseAnswer, ParsedAnswer } from './AnswerParser' // Update the path accordingly
 
+
 const sampleCitations: Citation[] = [
   {
     id: 'doc1',
@@ -14,7 +15,8 @@ const sampleCitations: Citation[] = [
     url: null,
     metadata: null,
     chunk_id: null,
-    reindex_id: null
+    reindex_id: null,
+    page_number: 1
   },
   {
     id: 'doc2',
@@ -25,7 +27,8 @@ const sampleCitations: Citation[] = [
     url: null,
     metadata: null,
     chunk_id: null,
-    reindex_id: null
+    reindex_id: null,
+    page_number: 2
   },
   {
     id: 'doc3',
@@ -36,7 +39,8 @@ const sampleCitations: Citation[] = [
     url: null,
     metadata: null,
     chunk_id: null,
-    reindex_id: null
+    reindex_id: null,
+    page_number: 3
   }
 ]
 

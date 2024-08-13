@@ -37,6 +37,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
         .then(response => {
           setLoading(false)
           if (response !== null) {
+            console.log(response);
             setPdfListJson(response)
           } else {
             setPdfListJson({})

@@ -41,7 +41,6 @@ const PdfModal: FC<PdfModalProps> = ({ isOpen, closeModal, data }) => {
       <div className={styles.body}>
         {data?.url ? (
           <iframe src={data?.url || ''} width="700" height="600" className={styles.pdf}></iframe>
-          // width="700" height="500"
         ) : (
           <div className={styles.error}>
             <FileEarmarkExcel color="#334768" size={40} />

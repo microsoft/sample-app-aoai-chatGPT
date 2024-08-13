@@ -28,3 +28,15 @@ export const HistoryButton: React.FC<ButtonProps> = ({ onClick, text }) => {
     />
   )
 }
+
+
+export const FaqButton: React.FC<ButtonProps> = ({ onClick, text }) => {
+  return (
+    <FaqButton
+      className={styles.shareButtonRoot}
+      iconProps={{ iconName: 'Share' }}
+      onClick={onClick}
+      text={text}
+    />
+  )
+}

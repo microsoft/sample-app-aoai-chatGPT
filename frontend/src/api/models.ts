@@ -20,6 +20,8 @@ export type Citation = {
   metadata: string | null
   chunk_id: string | null
   reindex_id: string | null
+  // test page_number
+  page_number: number
 }
 
 export type ToolMessageContent = {

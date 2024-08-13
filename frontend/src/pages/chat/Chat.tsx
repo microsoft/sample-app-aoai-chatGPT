@@ -766,11 +766,37 @@ const Chat = () => {
         <Stack horizontal className={styles.chatRoot}>
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
+              <>
               <Stack className={styles.chatEmptyState}>
                 <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2> 
+             
               </Stack>
+
+              {/* Separate Stack for FAQ Options */}
+        <Stack className={styles.chatFaqOptions}>
+          <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
+          <ul className={styles.optionsNavList}>
+            <li>
+              <button className={styles.faqOption}>
+                <p className={styles.faqOptionText}>Example Option1.</p>
+              </button>
+            </li>
+            <li>
+              <button className={styles.faqOption}>
+                <p className={styles.faqOptionText}>Example Option2.</p>
+              </button>
+            </li>
+            <li>
+              <button className={styles.faqOption}>
+                <p className={styles.faqOptionText}>Example Option3.</p>
+              </button>
+            </li>
+          </ul>
+       
+        </Stack>
+             </>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
                 {messages.map((answer, index) => (
@@ -1001,6 +1027,8 @@ const Chat = () => {
                   rehypePlugins={[rehypeRaw]}
                 />
               </div>
+              {/* test */}
+              <p>Page: {activeCitation.page_number}</p>
             </Stack.Item>
           )}
           {messages && messages.length > 0 && isIntentsPanelOpen && (

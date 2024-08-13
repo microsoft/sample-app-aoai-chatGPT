@@ -52,6 +52,7 @@
   margin-bottom: 0px;
 }
 
+
 .chatEmptyStateSubtitle {
   margin-top: 20px;
   font-style: normal;
@@ -62,6 +63,54 @@
   text-align: center;
   letter-spacing: -0.01em;
   color: #f69300;
+}
+
+
+.chatEmptyStateSubtitleFaq {
+  font-size: 18px;
+  text-align: center;
+  align-items: flex-end;
+  color: #fff;
+}
+
+.optionsNavList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  flex: 1;
+  justify-content: center;
+}
+
+
+.faqOption {
+  background-color: rgb(82, 104, 159); 
+  border: none; 
+  padding: 45px 30px; 
+  border-radius: 8px; 
+  color: #fff; 
+  font-size: 18px; 
+  cursor: pointer; 
+  display: flex;
+  width: 100%;
+  height: 50%;
+  /* max-width: 30%; */
+  align-items: center;  
+  text-align: center; 
+}
+
+.faqOption:hover {
+  background-color: rgb(74, 77, 150);
+}
+
+.faqOptionText {
+  margin: 0;
+  font-size: 20px;
+  width: 100%;
+  height: 50%;
+  color: #fff;
 }
 
 .chatIcon {
