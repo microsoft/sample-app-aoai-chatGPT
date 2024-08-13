@@ -667,9 +667,11 @@ class _MongoDbSettings(BaseSettings, DatasourcePayloadConstructor):
     )
     _type: Literal["mongo_db"] = PrivateAttr(default="mongo_db")
     
-    connection_string: str = Field(exclude=True)
+    username: str = Field(exclude=True)
+    password: str = Field(exclued=True)
     database_name: str
     container_name: str
+    app_name: str
     vector_index: str
     top_k: int = Field(default=5, serialization_alias="top_n_documents")
     strictness: int = 3
@@ -687,8 +689,9 @@ class _MongoDbSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def construct_authentication(self) -> Self:
         self.authentication = {
-            "type": "connection_string",
-            "connection_string": self.connection_string
+            "type": "username_and_password",
+            "username": self.username,
+            "password": "self.password"
         }
         return self
     
