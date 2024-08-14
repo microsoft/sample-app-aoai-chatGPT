@@ -325,6 +325,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |DATASOURCE_TYPE|Yes||Must be set to `AzureSqlServer`|
     |AZURE_SQL_SERVER_CONNECTION_STRING|Yes||The connection string to use to connect to your Azure SQL Server instance|
     |AZURE_SQL_SERVER_TABLE_SCHEMA|Yes||The table schema for your Azure SQL Server table.  Must be surrounded by double quotes (`"`).|
+    |AZURE_SQL_SERVER_PORT||Not publicly available at this time.|The port to use to connect to your Azure SQL Server instance.|
 
 #### Chat with your data using Promptflow
 
