@@ -60,9 +60,6 @@ Please see the [section below](#add-an-identity-provider) for important informat
 
 3. You can see the local running app at http://127.0.0.1:50505.
 
-NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
-
-
 ### Deploy with the Azure CLI
 
 #### Create the Azure App Service
@@ -326,6 +323,8 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |AZURE_SQL_SERVER_CONNECTION_STRING|Yes||The connection string to use to connect to your Azure SQL Server instance|
     |AZURE_SQL_SERVER_TABLE_SCHEMA|Yes||The table schema for your Azure SQL Server table.  Must be surrounded by double quotes (`"`).|
     |AZURE_SQL_SERVER_PORT||Not publicly available at this time.|The port to use to connect to your Azure SQL Server instance.|
+    |AZURE_SQL_SERVER_DATABASE_NAME||Not publicly available at this time.|
+    |AZURE_SQL_SERVER_DATABASE_SERVER||Not publicly available at this time.|
 
 #### Chat with your data using Promptflow
 
