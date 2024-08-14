@@ -1,4 +1,4 @@
-import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
+import React, { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -9,17 +9,16 @@ import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
 import Plot from 'react-plotly.js'
-import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
+import { AskResponse, Citation as APICitation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
 import { AppStateContext } from '../../state/AppProvider'
-
 import { parseAnswer } from './AnswerParser'
-
 import styles from './Answer.module.css'
+import GroupedCitations, { Citation as GroupedCitation } from './GroupedCitations'
 
 interface Props {
   answer: AskResponse
-  onCitationClicked: (citedDocument: Citation) => void
+  onCitationClicked: (citedDocument: APICitation) => void
   onExectResultClicked: () => void
 }
 
@@ -67,38 +66,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     setFeedbackState(currentFeedbackState)
   }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id])
 
-  
-
-  const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
-    let citationFilename = ''
-
-    if (citation.filepath) {
-
-      const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '')
-      if (truncate && citation.filepath.length > filePathTruncationLimit) {
-        const citationLength = citation.filepath.length
-        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Del ${part_i}`
-      } else {
-        citationFilename = `${citation.filepath} - Del ${part_i}`
-      }
-    } else if (citation.filepath && citation.reindex_id) {
-      citationFilename = `${citation.filepath} - Del ${citation.reindex_id}`
-    } else {
-      citationFilename = `Sitering ${index}`
-    }
-
-    if (truncate && citation.filepath) {
-      return citation.filepath
-    }
-
-    return citationFilename
-  }
-
   const onLikeResponseClicked = async () => {
     if (answer.message_id == undefined) return
 
     let newFeedbackState = feedbackState
-    // Set or unset the thumbs up state
     if (feedbackState == Feedback.Positive) {
       newFeedbackState = Feedback.Neutral
     } else {
@@ -110,7 +81,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     })
     setFeedbackState(newFeedbackState)
 
-    // Update message feedback in db
     await historyMessageFeedback(answer.message_id, newFeedbackState)
   }
 
@@ -123,7 +93,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       setFeedbackState(newFeedbackState)
       setIsFeedbackDialogOpen(true)
     } else {
-      // Reset negative feedback to neutral
       newFeedbackState = Feedback.Neutral
       setFeedbackState(newFeedbackState)
       await historyMessageFeedback(answer.message_id, Feedback.Neutral)
@@ -234,9 +203,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       </>
     )
   }
-
   const components = {
-    code({ node, ...props }: { node: any;[key: string]: any }) {
+    code({ node, ...props }: { node: any; [key: string]: any }) {
       let language
       if (props.className) {
         const match = props.className.match(/language-(\w+)/)
@@ -250,6 +218,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       )
     }
   }
+  const handleCitationClick = (citation: GroupedCitation) => {
+    onCitationClicked(citation as unknown as APICitation)
+  }
+
   return (
     <>
       <Stack className={styles.answerContainer} tabIndex={0}>
@@ -277,7 +249,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     onClick={() => onLikeResponseClicked()}
                     style={
                       feedbackState === Feedback.Positive ||
-                        appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
+                      appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
                         ? { color: 'darkgreen', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -288,8 +260,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     onClick={() => onDislikeResponseClicked()}
                     style={
                       feedbackState !== Feedback.Positive &&
-                        feedbackState !== Feedback.Neutral &&
-                        feedbackState !== undefined
+                      feedbackState !== Feedback.Neutral &&
+                      feedbackState !== undefined
                         ? { color: 'darkred', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -314,15 +286,15 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   <Text
                     className={styles.accordionTitle}
                     onClick={toggleIsRefAccordionOpen}
-                    // aria-label="Åpne referanser"
-                    aria-label="Open references" 
+                    aria-label="Open references"
                     tabIndex={0}
                     role="button">
-                    <span>
+                    {/* <span>
                       {parsedAnswer.citations.length > 1
                         ? parsedAnswer.citations.length + ' referanser'
                         : '1 referanse'}
-                    </span>
+                    </span> */}
+                    <span> Referanser </span>
                   </Text>
                   <FontIcon
                     className={styles.accordionIcon}
@@ -361,26 +333,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           )}
         </Stack>
         {chevronIsExpanded && (
-          <div className={styles.citationWrapper}>
-            {parsedAnswer.citations.map((citation, idx) => {
-              return (
-                <span
-                  title={createCitationFilepath(citation, ++idx)}
-                  tabIndex={0}
-                  role="link"
-                  key={idx}
-                  onClick={() => onCitationClicked(citation)}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? onCitationClicked(citation) : null)}
-                  className={styles.citationContainer}
-                  aria-label={createCitationFilepath(citation, idx)}> 
-                  <div className={styles.citation}>{idx}</div>
-                  <a href={citation.url || ''} target='_blank'> {citation.title}</a>
-                  {/* (Del: {citation.filepath?.split("pages_")[1]}) */}
-                  {/* TODO: custom component to show multiple chunks from the same url */}
-                </span>
-              )
-            })}
-          </div>
+          <GroupedCitations 
+            citations={parsedAnswer.citations as unknown as GroupedCitation[]}
+            onCitationClicked={handleCitationClick}
+          />
         )}
       </Stack>
       <Dialog
@@ -389,26 +345,20 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           setFeedbackState(Feedback.Neutral)
         }}
         hidden={!isFeedbackDialogOpen}
-        styles={{
-          main: [
-            {
-              selectors: {
-                ['@media (min-width: 480px)']: {
-                  maxWidth: '600px',
-                  background: '#FFFFFF',
-                  boxShadow: '0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  maxHeight: '600px',
-                  minHeight: '100px'
-                }
-              }
-            }
-          ]
-        }}
         dialogContentProps={{
           title: 'Submit Feedback',
           showCloseButton: true
-        }}>
+        }}
+        modalProps={{
+          styles: {
+            main: {
+              selectors: {
+                ['@media (min-width: 480px)']: styles.dialogStyles
+              }
+            }
+          }
+        }}
+      >
         <Stack tokens={{ childrenGap: 4 }}>
           <div>Din tilbakemelding vil forbedre brukeropplevelsen i fremtiden.</div>
 

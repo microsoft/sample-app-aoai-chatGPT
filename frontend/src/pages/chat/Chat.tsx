@@ -143,6 +143,31 @@ const Chat = () => {
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
 
+      
+    if (assistantMessage.content.trim() === "The requested information is not found in the retrieved data. Please try another query or topic.") {
+      const detectLanguage = (text: string): 'no' | 'ny' | 'none' => {
+        const norwegianWords = ['hei', 'hva', 'hvordan', 'hvor', "hvem", 'kan', 'du', 'jeg', 'hjelp', "hjelpe", 
+          'takk', 'informasjon', 'vennligst', 'forklar', 'hvorfor', 'og', 'eller', 'til', 'når', 'hvilken', 'hvilket', 'hvilke', 'spørsmål', 'svar'];
+    
+        const nynorskWords = ['kva', 'korleis', 'kvar', 'kven', 'eg', 'kvifor', 'eit', 'nokre'];
+    
+        const lowercaseText = text.toLowerCase();
+        
+        if (norwegianWords.some(word => lowercaseText.includes(word))) return 'no';
+        if (nynorskWords.some(word => lowercaseText.includes(word))) return 'ny';
+        
+        return 'none';
+      }
+      const detectedLanguage = detectLanguage(userMessage.content);
+    
+      const translations: { [key: string]: string } = {
+        'no': "Den forespurte informasjonen er ikke tilgjengelig i de hentede dataene. Vennligst prøv et annet spørsmål eller emne.",
+        'ny': "Ingen informasjon funnen i dei henta dataa. Ver venleg og prøv eit anna spørsmål eller emne.",
+      };
+    
+      assistantMessage.content = translations[detectedLanguage] || assistantMessage.content;
+    }
+
       if (resultMessage.context) {
         toolMessage = {
           id: uuid(),
