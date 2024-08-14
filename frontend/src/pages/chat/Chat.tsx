@@ -705,19 +705,8 @@ const Chat = () => {
   }, [AUTH_ENABLED])
 
   useLayoutEffect(() => {
-    const scrollToBottom = () => {
-      chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'auto' })
-    }
-  
-    scrollToBottom()
-  
-    // Set up an interval to keep scrolling while content is being added
-    const scrollInterval = setInterval(scrollToBottom, 100)
-  
-    return () => clearInterval(scrollInterval)
-  }, [messages, showLoadingMessage])
-  
-  
+    chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
