@@ -262,7 +262,8 @@ sup {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
-  color: #115ea3;
+  text-decoration: none;
+  color: inherit;
   cursor: pointer;
 }
 
@@ -275,4 +276,3 @@ sup {
     max-width: 100%; /* Full width on small screens */
   }
 }
-

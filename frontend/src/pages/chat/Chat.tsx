@@ -153,8 +153,9 @@ const Chat = () => {
     
         const lowercaseText = text.toLowerCase();
         
-        if (nynorskWords.some(word => lowercaseText.includes(word))) return 'ny';
         if (norwegianWords.some(word => lowercaseText.includes(word))) return 'no';
+        if (nynorskWords.some(word => lowercaseText.includes(word))) return 'ny';
+
         
         return 'none';
       }
@@ -704,10 +705,16 @@ const Chat = () => {
     if (AUTH_ENABLED !== undefined) getUserInfoList()
   }, [AUTH_ENABLED])
 
-  useLayoutEffect(() => {
-    chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [showLoadingMessage, processMessages])
+  // useLayoutEffect(() => {
+  //   chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
+  // }, [showLoadingMessage, processMessages])
 
+  useEffect(() => {
+    if (chatMessageStreamEnd.current) {
+      chatMessageStreamEnd.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, showLoadingMessage])
+  
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
     // setIsCitationPanelOpen(true)
