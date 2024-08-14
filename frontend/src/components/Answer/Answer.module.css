@@ -66,13 +66,13 @@
   overflow: hidden; /* Hide overflowing text */
 }
 
-.citationWrapper {
+/* .citationWrapper {
   margin-top: 8;
   display: flex;
   flex-flow: wrap column;
   max-height: 150px;
   gap: 4px;
-}
+} */
 
 .citationContainer {
   margin-left: 10px;
@@ -207,3 +207,72 @@ sup {
     margin-bottom: 5px;
   }
 }
+
+.dialogStyles {
+  max-width: 600px;
+  background: #FFFFFF;
+  box-shadow: 0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  max-height: 600px;
+  min-height: 100px;
+}
+
+@media (max-width: 479px) {
+  .dialogStyles {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+}
+
+.citationWrapper {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 8px; /* Add some padding for the scrollbar */
+}
+
+.citationGroup {
+  display: flex;
+  align-items: center;
+  background-color: #f3f3f3;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  max-width: calc(50% - 8px); /* Allow two columns on wider screens */
+  box-sizing: border-box;
+}
+
+.citationIndices {
+  flex-shrink: 0;
+  margin-right: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #424242;
+}
+
+.citationTitle {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #115ea3;
+  cursor: pointer;
+}
+
+.citationTitle:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .citationGroup {
+    max-width: 100%; /* Full width on small screens */
+  }
+}
+
