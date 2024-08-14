@@ -153,8 +153,8 @@ const Chat = () => {
     
         const lowercaseText = text.toLowerCase();
         
-        if (norwegianWords.some(word => lowercaseText.includes(word))) return 'no';
         if (nynorskWords.some(word => lowercaseText.includes(word))) return 'ny';
+        if (norwegianWords.some(word => lowercaseText.includes(word))) return 'no';
         
         return 'none';
       }
@@ -705,8 +705,19 @@ const Chat = () => {
   }, [AUTH_ENABLED])
 
   useLayoutEffect(() => {
-    chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [showLoadingMessage, processMessages])
+    const scrollToBottom = () => {
+      chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'auto' })
+    }
+  
+    scrollToBottom()
+  
+    // Set up an interval to keep scrolling while content is being added
+    const scrollInterval = setInterval(scrollToBottom, 100)
+  
+    return () => clearInterval(scrollInterval)
+  }, [messages, showLoadingMessage])
+  
+  
 
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
