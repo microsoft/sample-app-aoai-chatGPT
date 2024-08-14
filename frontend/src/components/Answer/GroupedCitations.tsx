@@ -38,13 +38,24 @@ const GroupedCitations: React.FC<GroupedCitationsProps> = ({ citations, onCitati
           <span className={styles.citationIndices}>
             {group.indices.join(',')}
           </span>
-          <Text
-            className={styles.citationTitle}
-            onClick={() => onCitationClicked(group.citations[0])}
-            title={group.title} // This will show the full title on hover
-          >
-            {group.title}
-          </Text>
+          {group.citations[0].url ? (
+            <a
+              href={group.citations[0].url}
+              className={styles.citationTitle}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {group.title}
+            </a>
+          ) 
+          : (
+            <Text
+              className={styles.citationTitle}
+              onClick={() => onCitationClicked(group.citations[0])}
+            >
+              {group.title}
+            </Text>
+          )}
         </div>
       ))}
     </div>
