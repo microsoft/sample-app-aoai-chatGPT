@@ -40,6 +40,8 @@ import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel"
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 
+import PdfModal from '../../components/PdfModal/PdfModal'
+
 const enum messageStatus {
   NotRunning = 'Not Running',
   Processing = 'Processing',
@@ -64,7 +66,9 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
-
+  // test
+  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
+  const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
@@ -746,7 +750,14 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
   }, 1000);
 };
  
+// TEst - Function to handle PDF opening
 
+  const handleOpenPdf = (citation: Citation) => {
+    if (citation.url) {
+      setSelectedPdf({ name: citation.title || "Unknown Title", url: citation.url });
+      setShowPdfModal(true);
+    }
+  };
 
   return (
     <div className={styles.container} role="main">
@@ -1026,6 +1037,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                   onClick={() => setIsCitationPanelOpen(false)}
                 />
               </Stack>
+              
               <h5
                 className={styles.citationPanelTitle}
                 tabIndex={0}
@@ -1046,10 +1058,38 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                   rehypePlugins={[rehypeRaw]}
                 />
               </div>
+              {/* test new button link pdf */}
+              <IconButton
+                iconProps={{ iconName: 'PDF' }} // Use an appropriate icon
+                title="Open PDF"
+                ariaLabel="Open PDF"
+                onClick={() => handleOpenPdf(activeCitation)}
+                styles={{
+                root: {
+                marginBottom: '10px',
+                },
+                icon: {
+                color: '#0078D4', // Customize the color
+                },
+                }}
+                />
+
               {/* test */}
               <p>Page: {activeCitation.page_number}</p>
             </Stack.Item>
           )}
+
+          {/* test */}
+          {/* PDF Modal */}
+      {showPdfModal && selectedPdf && (
+        <PdfModal 
+          isOpen={showPdfModal} 
+          closeModal={() => setShowPdfModal(false)} 
+          data={selectedPdf} 
+        />
+      )}
+
+
           {messages && messages.length > 0 && isIntentsPanelOpen && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
               <Stack

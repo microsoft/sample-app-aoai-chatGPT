@@ -87,6 +87,7 @@
 
 .faqOption {
   background-color: rgb(82, 104, 159); 
+  transition: background-color 0.3s ease;
   border: none; 
   padding: 45px 30px; 
   border-radius: 8px; 
@@ -104,6 +105,10 @@
 .faqOption:hover {
   background-color: rgb(74, 77, 150);
   /* background-color: rgb(190, 191, 210); */
+}
+
+.faqOption.pressed {
+  background-color: rgb(74, 77, 150);
 }
 
 .faqOptionText {
