@@ -1,0 +1,10 @@
+{
+    "githubPullRequests.ignoredPullRequestBranches": [
+        "main"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/0cd7229b-af99-4605-b342-debd8f4054b1/resourceGroups/rg-starlightretailchat/providers/Microsoft.Web/sites/app-backend-cm5pxb3znj5ws",
+    "appService.deploySubpath": ".",
+    "cSpell.words": [
+        "pydantic"
+    ]
+}

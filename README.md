@@ -248,8 +248,10 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
 |AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
-|UI_TITLE|Contoso| Chat title (left-top) and page title (HTML)
-|UI_LOGO|| Logo (left-top). Defaults to Contoso logo. Configure the URL to your logo image to modify.
+|UI_TITLE|STARLIGHT RETAIL| Chat title (left-top) and page title (HTML)
+|UI_LOGO|| Logo (left-top). Defaults to ConREADME.md:
+  254  |UI_CHAT_TITLE|Starlight Retail Chat| Title (chat window)README.md:
+  254  |UI_CHAT_TITLE|Starlight Retail Chat| Title (chat window)toso logo. Configure the URL to your logo image to modify.
 |UI_CHAT_LOGO|| Logo (chat window). Defaults to Contoso logo. Configure the URL to your logo image to modify.
 |UI_CHAT_TITLE|Start chatting| Title (chat window)
 |UI_CHAT_DESCRIPTION|This chatbot is configured to answer your questions| Description (chat window)
