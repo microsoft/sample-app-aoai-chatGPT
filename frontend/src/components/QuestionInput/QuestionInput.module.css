@@ -1,26 +1,26 @@
 .questionInputContainer {
-  height: 120px;
+  height: 80px;
   position: absolute;
-  left: 6.5%;
-  right: 0%;
+  left: 5%;
+  right: 5%;
   top: 0%;
   bottom: 0%;
   background: #ffffff;
-  box-shadow:
-    0px 8px 16px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e0e0e0; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
   border-radius: 8px;
+  /* margin-top: 5px; */
 }
 
 .questionInputTextArea {
-  width: 100%;
-  line-height: 40px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  margin-left: 12px;
-  margin-right: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 20px);
+  margin: 10px 12px;
+  border: none;
+  resize: none;
+  font-size: 16px;
+  outline: none; /* Removes the focus outline */
 }
-
 .questionInputSendButtonContainer {
   position: absolute;
   right: 24px;
@@ -46,7 +46,7 @@
   height: 4px;
   left: 0%;
   bottom: 0%;
-  background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%);
+  /* background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%); */
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
@@ -59,6 +59,8 @@
 
 @media (max-width: 480px) {
   .questionInputContainer {
-    left: 16.5%;
+    left: 5%; 
+    right: 5%; 
+    /* 16.5%; */
   }
 }

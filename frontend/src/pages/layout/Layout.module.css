@@ -5,7 +5,7 @@
 }
 
 .header {
-  background-color: #f2f2f2;
+  background-color: #0B1F2C;
 }
 
 .headerContainer {
@@ -28,7 +28,7 @@
   line-height: 28px;
   display: flex;
   align-items: flex-end;
-  color: #242424;
+  color: #ffffff;
 }
 
 .headerIcon {

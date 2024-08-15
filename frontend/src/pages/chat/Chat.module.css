@@ -15,11 +15,8 @@
 .chatRoot {
   flex: 1;
   display: flex;
-  margin-top: 0px;
-  margin-bottom: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
-  gap: 5px;
+  margin: 0; /* Remove margins */
+  /* gap: 5px; */
 }
 
 .chatContainer {
@@ -27,15 +24,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+  width: 100%;
+  padding: 0px; /* Add padding if needed */
+  /* background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%); */
+  border-radius: 0px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
+  margin-top: 5px
 }
-
 .chatEmptyState {
   flex-grow: 1;
   display: flex;
@@ -78,12 +74,19 @@
   /* max-width: 1028px; */
   max-width: 2056px;
   width: 100%;
+  /* width: calc(100% - 100px);s */
   overflow-y: auto;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: 130px;
+  padding-right: 130px;
   display: flex;
   flex-direction: column;
   margin-top: 24px;
+}
+@media (max-width: 480px) {
+  .chatMessageStream {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
 }
 
 .chatMessageUser {
@@ -148,14 +151,13 @@
 .chatInput {
   position: sticky;
   flex: 0 0 100px;
-  padding-top: 12px;
-  padding-bottom: 24px;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-top: 10px;
+  padding-bottom: 0px;
+  padding-left: 200px;
+  padding-right: 200px;
   width: calc(100% - 100px);
-  /* max-width: 1028px; */
   max-width: 2056px;
-  margin-bottom: 50px;
+  margin-bottom: 0px; 
   margin-top: 8px;
 }
 
@@ -222,6 +224,12 @@
   bottom: 116px;
   border: 1px solid #d1d1d1;
   border-radius: 16px;
+  transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.stopGeneratingContainer:hover {
+  background-color: #f0f0f0; /* Change background color on hover */
+  border-color: #a1a1a1; /* Change border color on hover */
 }
 
 .stopGeneratingIcon {
@@ -231,7 +239,7 @@
 }
 
 .stopGeneratingText {
-  width: 103px;
+  width: 100px;
   height: 20px;
   font-style: normal;
   font-weight: 600;
@@ -371,39 +379,8 @@ a {
   cursor: pointer;
 }
 
-/* @media (max-width: 480px) {
-  .chatInput {
-    width: 90%;
-    max-width: 90%;
-  }
-
-  .newChatIcon {
-    left: 0px;
-  }
-
-  .clearChatBroom {
-    left: 0px;
-  }
-
-  .clearChatBroomNoCosmos {
-    left: 0px;
-  }
-
-  .chatEmptyStateTitle {
-    line-height: 36px;
-  }
-
-  .citationPanel {
-    max-width: 100%;
-  }
-} */
-
 /* Responsive adjustments */
 @media (max-width: 480px) {
-  .chatRoot {
-    margin-left: 5px;
-    margin-right: 5px;
-  }
 
   .chatEmptyStateTitle {
     font-size: 24px; /* Smaller font size */
