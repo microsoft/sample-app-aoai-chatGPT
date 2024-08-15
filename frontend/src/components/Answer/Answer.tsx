@@ -130,7 +130,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   const [isCopied, setIsCopied] = useState(false);
 
   // Access the Props properties when copy button click and copy the text to clipboard
-  function clicked(){
+  function copyButton(){
     navigator.clipboard.writeText(answer.answer);
     // console.log("Answer " , answer.answer);
     // console.log("MessageId: " , answer.message_id);
@@ -314,7 +314,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     <Copy20Filled
                       aria-hidden="false"
                       aria-label="Text copied"
-                      onClick={clicked}
+                      onClick={copyButton}
                       style={{
                         color: '68BE15', // Color for when the text is copied
                         cursor: 'pointer'
@@ -324,7 +324,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     <Copy20Regular
                       aria-hidden="false"
                       aria-label="Copy this response"
-                      onClick={clicked}
+                      onClick={copyButton}
                       style={{
                         color: '#68BE15', // Default color
                         cursor: 'pointer'

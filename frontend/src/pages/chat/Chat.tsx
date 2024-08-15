@@ -733,6 +733,21 @@ const Chat = () => {
     )
   }
 
+// test FAQ function
+const [isPressed, setIsPressed] = useState(false);
+
+const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
+  // e.currentTarget.style.backgroundColor = 'rgb(82, 104, 159)'; // Change this to the desired color
+  setIsPressed(true);
+
+  // Reset the copied state after 2 seconds
+  setTimeout(() => {
+    setIsPressed(false);
+  }, 1000);
+};
+ 
+
+
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -774,12 +789,16 @@ const Chat = () => {
              
               </Stack>
 
-              {/* Separate Stack for FAQ Options */}
+              {/* Test - Separate Stack for FAQ Options */}
         <Stack className={styles.chatFaqOptions}>
           <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
           <ul className={styles.optionsNavList}>
             <li>
-              <button className={styles.faqOption}>
+              <button 
+              className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
+              onClick={faq}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
                 <p className={styles.faqOptionText}>Example Option1.</p>
               </button>
             </li>

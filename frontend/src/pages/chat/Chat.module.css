@@ -103,6 +103,7 @@
 
 .faqOption:hover {
   background-color: rgb(74, 77, 150);
+  /* background-color: rgb(190, 191, 210); */
 }
 
 .faqOptionText {
