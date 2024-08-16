@@ -41,6 +41,7 @@ import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 
 import PdfModal from '../../components/PdfModal/PdfModal'
+import { Question } from 'react-bootstrap-icons'
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -740,8 +741,16 @@ const Chat = () => {
 // test FAQ function
 const [isPressed, setIsPressed] = useState(false);
 
-const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
-  // e.currentTarget.style.backgroundColor = 'rgb(82, 104, 159)'; // Change this to the desired color
+
+
+// const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
+const faq = (question: string) =>{
+   if (isLoading) return;
+  const conversation_id = appStateContext?.state.currentChat?.id;
+  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+  ? makeApiRequestWithCosmosDB(question, conversation_id)
+  : makeApiRequestWithoutCosmosDB(question, conversation_id);
+
   setIsPressed(true);
 
   // Reset the copied state after 2 seconds
@@ -749,6 +758,8 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsPressed(false);
   }, 1000);
 };
+// }
+ 
  
 // TEst - Function to handle PDF opening
 
@@ -807,20 +818,28 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
             <li>
               <button 
               className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
-              onClick={faq}
+              // onClick={faq}
+              onClick={() => faq('Ley73')}
               style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
               >
-                <p className={styles.faqOptionText}>Example Option1.</p>
+                <p className={styles.faqOptionText}>Ley73</p>
               </button>
             </li>
             <li>
-              <button className={styles.faqOption}>
-                <p className={styles.faqOptionText}>Example Option2.</p>
+              <button 
+              className={styles.faqOption}
+              onClick={() => faq('Subasta Formal')}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
+                <p className={styles.faqOptionText}>Subasta Formal</p>
               </button>
             </li>
             <li>
-              <button className={styles.faqOption}>
-                <p className={styles.faqOptionText}>Example Option3.</p>
+              <button className={styles.faqOption}
+              onClick={() => faq('Compras de Emergencia')}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
+                <p className={styles.faqOptionText}>Compras de Emergencia</p>
               </button>
             </li>
           </ul>
@@ -1060,7 +1079,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
               </div>
               {/* test new button link pdf */}
               <IconButton
-                iconProps={{ iconName: 'PDF' }} // Use an appropriate icon
+                iconProps={{ iconName: 'PDF' }}
                 title="Open PDF"
                 ariaLabel="Open PDF"
                 onClick={() => handleOpenPdf(activeCitation)}
@@ -1069,7 +1088,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                 marginBottom: '10px',
                 },
                 icon: {
-                color: '#0078D4', // Customize the color
+                color: '#0078D4',
                 },
                 }}
                 />
