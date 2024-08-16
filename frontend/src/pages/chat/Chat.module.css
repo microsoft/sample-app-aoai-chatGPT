@@ -101,6 +101,7 @@
   align-items: center;  
   text-align: center; 
   flex: 1;
+  margin-bottom: 1rem;
 }
 
 .faqOption:hover {
