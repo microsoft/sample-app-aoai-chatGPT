@@ -381,6 +381,21 @@
   flex-grow: 0;
 }
 
+.citationPanelPDF{
+  color:white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px 6px 6px;
+  background-color: #8484ef;
+  border-radius: 8px;
+  width: 100%;
+}
+.citationPanelPDF:hover {
+background-color: #948cff;
+
+}
+
 .exectResultList {
   display: flex;
   flex-direction: column;

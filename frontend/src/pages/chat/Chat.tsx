@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Separator } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
@@ -66,9 +66,9 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
-  // test
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
+  const [pdfName, setPdfName] = useState("No name found");
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
@@ -682,7 +682,9 @@ const Chat = () => {
     chatMessageStreamEnd.current?.scrollIntoView({ behavior: 'smooth' })
   }, [showLoadingMessage, processMessages])
 
+  // Displays the citation panel
   const onShowCitation = (citation: Citation) => {
+    setPdfName(citation.filepath || "Not found")
     setActiveCitation(citation)
     setIsCitationPanelOpen(true)
   }
@@ -737,24 +739,21 @@ const Chat = () => {
     )
   }
 
-// test FAQ function
-const [isPressed, setIsPressed] = useState(false);
+  // FAQ function
+  const [isPressed, setIsPressed] = useState(false);
+  const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setIsPressed(true);
+    setTimeout(() => {
+      setIsPressed(false);
+    }, 1000);
+  };
 
-const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
-  // e.currentTarget.style.backgroundColor = 'rgb(82, 104, 159)'; // Change this to the desired color
-  setIsPressed(true);
-
-  // Reset the copied state after 2 seconds
-  setTimeout(() => {
-    setIsPressed(false);
-  }, 1000);
-};
- 
-// TEst - Function to handle PDF opening
-
+  // Function to handle PDF opening
   const handleOpenPdf = (citation: Citation) => {
     if (citation.url) {
       setSelectedPdf({ name: citation.title || "Unknown Title", url: citation.url });
+      console.log(citation.title, citation.url);
+      console.log(" algo" + pdfName);
       setShowPdfModal(true);
     }
   };
@@ -793,40 +792,37 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <>
-              <Stack className={styles.chatEmptyState}>
-                <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
-                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2> 
-             
-              </Stack>
+                <Stack className={styles.chatEmptyState}>
+                  <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
+                  <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
+                  <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                </Stack>
+                <Stack className={styles.chatFaqOptions}>
+                  <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
+                  <ul className={styles.optionsNavList}>
+                    <li>
+                      <button
+                        className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
+                        onClick={faq}
+                        style={{ backgroundColor: isPressed ? 'rgb(74, 77, 150' : '' }}
+                      >
+                        <p className={styles.faqOptionText}>Example Option1.</p>
+                      </button>
+                    </li>
+                    <li>
+                      <button className={styles.faqOption}>
+                        <p className={styles.faqOptionText}>Example Option2.</p>
+                      </button>
+                    </li>
+                    <li>
+                      <button className={styles.faqOption}>
+                        <p className={styles.faqOptionText}>Example Option3.</p>
+                      </button>
+                    </li>
+                  </ul>
 
-              {/* Test - Separate Stack for FAQ Options */}
-        <Stack className={styles.chatFaqOptions}>
-          <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
-          <ul className={styles.optionsNavList}>
-            <li>
-              <button 
-              className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
-              onClick={faq}
-              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
-              >
-                <p className={styles.faqOptionText}>Example Option1.</p>
-              </button>
-            </li>
-            <li>
-              <button className={styles.faqOption}>
-                <p className={styles.faqOptionText}>Example Option2.</p>
-              </button>
-            </li>
-            <li>
-              <button className={styles.faqOption}>
-                <p className={styles.faqOptionText}>Example Option3.</p>
-              </button>
-            </li>
-          </ul>
-       
-        </Stack>
-             </>
+                </Stack>
+              </>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
                 {messages.map((answer, index) => (
@@ -900,7 +896,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
               )}
               <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
-                  
+
                   // + button to create a new chat
                   <CommandBarButton
                     role="button"
@@ -911,7 +907,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                       iconHovered: {
                         color: '#000000',
                       },
-                      iconPressed:{
+                      iconPressed: {
                         color: '#000000',
                       },
                       iconDisabled: {
@@ -925,7 +921,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                         backgroundColor: '#a9ff00',
                         color: '#000000',
                       },
-                      rootPressed:{
+                      rootPressed: {
                         backgroundColor: '#98ff00',
                       },
                       rootDisabled: {
@@ -950,7 +946,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                     iconHovered: {
                       color: '#000000',
                     },
-                    iconPressed:{
+                    iconPressed: {
                       color: '#000000',
                     },
                     iconDisabled: {
@@ -963,7 +959,7 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                     rootHovered: {
                       backgroundColor: '#a9ff00',
                     },
-                    rootPressed:{
+                    rootPressed: {
                       backgroundColor: '#98ff00',
                     },
                     rootDisabled: {
@@ -1018,26 +1014,26 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                   Citations
                 </span>
                 <IconButton
-                styles={{
-                  icon: {
-                    color: '#fff',
-                  },
-                  iconHovered: {
-                    color: '#fff',
-                  },
-                  rootHovered: {
-                    backgroundColor: '#484492',
-                  },
-                  rootPressed:{
-                    backgroundColor: '#5C57BD',
-                  },
-                }}
+                  styles={{
+                    icon: {
+                      color: '#fff',
+                    },
+                    iconHovered: {
+                      color: '#fff',
+                    },
+                    rootHovered: {
+                      backgroundColor: '#484492',
+                    },
+                    rootPressed: {
+                      backgroundColor: '#5C57BD',
+                    },
+                  }}
                   iconProps={{ iconName: 'Cancel' }}
                   aria-label="Close citations panel"
                   onClick={() => setIsCitationPanelOpen(false)}
                 />
               </Stack>
-              
+
               <h5
                 className={styles.citationPanelTitle}
                 tabIndex={0}
@@ -1058,36 +1054,48 @@ const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
                   rehypePlugins={[rehypeRaw]}
                 />
               </div>
-              {/* test new button link pdf */}
-              <IconButton
-                iconProps={{ iconName: 'PDF' }} // Use an appropriate icon
-                title="Open PDF"
-                ariaLabel="Open PDF"
-                onClick={() => handleOpenPdf(activeCitation)}
+
+              {/* Button link pdf */}
+              <Separator
                 styles={{
-                root: {
-                marginBottom: '10px',
-                },
-                icon: {
-                color: '#0078D4', // Customize the color
-                },
+                  root: {
+                    width: '100%',
+                    position: 'relative',
+                    '::before': {
+                      backgroundColor: '#070034'
+                    }
+                  }
                 }}
+              />
+              <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
+                <IconButton
+                  iconProps={{ iconName: 'PDF' }}
+                  title="Open PDF"
+                  ariaLabel="Open PDF"
+                  styles={{
+                    root: { backgroundColor: 'transparent' },
+                    rootPressed: { backgroundColor: "#8484ef" },
+                    icon: { color: '#070034', fontSize: "25px" },
+                    iconHovered: {color:"070034"},
+                    iconPressed: { color: "070034" },
+                  }}
                 />
+                <span style={{fontStyle: "italic"}}>{pdfName}</span>
+              </div>
 
               {/* test */}
-              <p>Page: {activeCitation.page_number}</p>
+              {/* <p>Página: {activeCitation.page_number}</p> */}
             </Stack.Item>
           )}
 
-          {/* test */}
           {/* PDF Modal */}
-      {showPdfModal && selectedPdf && (
-        <PdfModal 
-          isOpen={showPdfModal} 
-          closeModal={() => setShowPdfModal(false)} 
-          data={selectedPdf} 
-        />
-      )}
+          {showPdfModal && selectedPdf && (
+            <PdfModal
+              isOpen={showPdfModal}
+              closeModal={() => setShowPdfModal(false)}
+              data={selectedPdf}
+            />
+          )}
 
 
           {messages && messages.length > 0 && isIntentsPanelOpen && (
