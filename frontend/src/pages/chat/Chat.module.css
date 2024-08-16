@@ -95,16 +95,16 @@
   font-size: 18px; 
   cursor: pointer; 
   display: flex;
-  width: 100%;
-  height: 50%;
-  /* max-width: 30%; */
+  width: 20rem;
+  height: 10rem;
+  justify-content: center;
   align-items: center;  
   text-align: center; 
+  flex: 1;
 }
 
 .faqOption:hover {
   background-color: rgb(74, 77, 150);
-  /* background-color: rgb(190, 191, 210); */
 }
 
 .faqOption.pressed {
@@ -115,8 +115,9 @@
   margin: 0;
   font-size: 20px;
   width: 100%;
-  height: 50%;
   color: #fff;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .chatIcon {

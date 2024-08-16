@@ -809,11 +809,11 @@ const faq = (question: string) =>{
           <ul className={styles.optionsNavList}>
             <li>
               <button
-              className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
-              onClick={() => faq('Ley73')}
+              className={styles.faqOption}
+              onClick={() => faq('Ley 73 y otras leyes')}
               style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
               >
-                <p className={styles.faqOptionText}>Ley73</p>
+                <p className={styles.faqOptionText}>Ley 73</p>
               </button>
             </li>
             <li>
@@ -827,10 +827,10 @@ const faq = (question: string) =>{
             </li>
             <li>
               <button className={styles.faqOption}
-              onClick={() => faq('Compras de Emergencia')}
+              onClick={() => faq('Compras de Emergencia y Compras Normales')}
               style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
               >
-                <p className={styles.faqOptionText}>Compras de Emergencia</p>
+                <p className={styles.faqOptionText}>Compras de Emergencia y Compras Normales</p>
               </button>
             </li>
           </ul>
