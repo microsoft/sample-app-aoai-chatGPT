@@ -739,16 +739,23 @@ const Chat = () => {
     )
   }
 
-  // FAQ function
-  const [isPressed, setIsPressed] = useState(false);
-  const faq = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setIsPressed(true);
-    setTimeout(() => {
-      setIsPressed(false);
-    }, 1000);
-  };
-
   // Function to handle PDF opening
+const [isPressed, setIsPressed] = useState(false);
+
+const faq = (question: string) =>{
+   if (isLoading) return;
+  const conversation_id = appStateContext?.state.currentChat?.id;
+  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+  ? makeApiRequestWithCosmosDB(question, conversation_id)
+  : makeApiRequestWithoutCosmosDB(question, conversation_id);
+
+  setIsPressed(true);
+  setTimeout(() => {
+    setIsPressed(false);
+  }, 1000);
+};
+
+
   const handleOpenPdf = (citation: Citation) => {
     if (citation.url) {
       setSelectedPdf({ name: citation.title || "Unknown Title", url: citation.url });
@@ -798,30 +805,37 @@ const Chat = () => {
                   <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
                 </Stack>
                 <Stack className={styles.chatFaqOptions}>
-                  <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
-                  <ul className={styles.optionsNavList}>
-                    <li>
-                      <button
-                        className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
-                        onClick={faq}
-                        style={{ backgroundColor: isPressed ? 'rgb(74, 77, 150' : '' }}
-                      >
-                        <p className={styles.faqOptionText}>Example Option1.</p>
-                      </button>
-                    </li>
-                    <li>
-                      <button className={styles.faqOption}>
-                        <p className={styles.faqOptionText}>Example Option2.</p>
-                      </button>
-                    </li>
-                    <li>
-                      <button className={styles.faqOption}>
-                        <p className={styles.faqOptionText}>Example Option3.</p>
-                      </button>
-                    </li>
-                  </ul>
-
-                </Stack>
+          <h2 className={styles.chatEmptyStateSubtitleFaq}>Realiza cualquier pregunta o escoge una de las siguientes opciones:</h2>
+          <ul className={styles.optionsNavList}>
+            <li>
+              <button
+              className={`${styles.faqOption} ${isPressed ? styles.pressed : ''}`}
+              onClick={() => faq('Ley73')}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
+                <p className={styles.faqOptionText}>Ley73</p>
+              </button>
+            </li>
+            <li>
+              <button
+              className={styles.faqOption}
+              onClick={() => faq('Subasta Formal')}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
+                <p className={styles.faqOptionText}>Subasta Formal</p>
+              </button>
+            </li>
+            <li>
+              <button className={styles.faqOption}
+              onClick={() => faq('Compras de Emergencia')}
+              style={{backgroundColor:isPressed ? 'rgb(74, 77, 150' : ''}}
+              >
+                <p className={styles.faqOptionText}>Compras de Emergencia</p>
+              </button>
+            </li>
+          </ul>
+       
+        </Stack>
               </>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
