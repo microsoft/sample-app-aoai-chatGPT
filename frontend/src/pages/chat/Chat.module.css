@@ -26,7 +26,6 @@
   align-items: center;
   width: 100%;
   padding: 0px; /* Add padding if needed */
-  /* background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%); */
   border-radius: 0px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
@@ -264,13 +263,11 @@
   transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 480px) {
   .stopGeneratingContainer {
     left: 33%;
   }
 }
-
-
 
 .stopGeneratingContainer:hover {
   background-color: #f0f0f0; /* Change background color on hover */
