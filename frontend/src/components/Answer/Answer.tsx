@@ -31,7 +31,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     return Feedback.Neutral
   }
 
-  const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false)
+  const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(true)
   const filePathTruncationLimit = 50
 
   const parsedAnswer = useMemo(() => parseAnswer(answer), [answer])
@@ -305,9 +305,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
               </Stack>
             </Stack.Item>
           )}
-          <Stack.Item className={styles.answerDisclaimerContainer}>
+          {/* <Stack.Item className={styles.answerDisclaimerContainer}>
             <span className={styles.answerDisclaimer}>Verifiser alltid AI-generert innhold.</span>
-          </Stack.Item>
+          </Stack.Item> */}
           {!!answer.exec_results?.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
               <Stack style={{ width: '100%' }}>

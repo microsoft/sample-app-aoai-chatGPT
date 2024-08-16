@@ -71,21 +71,58 @@
 
 .chatMessageStream {
   flex-grow: 1;
-  /* max-width: 1028px; */
   max-width: 2056px;
   width: 100%;
-  /* width: calc(100% - 100px);s */
   overflow-y: auto;
-  padding-left: 130px;
-  padding-right: 130px;
+  padding-left: 145px;
+  padding-right: 135px;
   display: flex;
   flex-direction: column;
   margin-top: 24px;
 }
+
+/* WebKit browsers (Chrome, Safari) */
+.chatMessageStream::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatMessageStream::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+
+.chatMessageStream::-webkit-scrollbar-thumb {
+  background: #888; 
+  border-radius: 10px; 
+}
+
+.chatMessageStream::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+/* Firefox */
+.chatMessageStream {
+  scrollbar-width: thin; 
+  scrollbar-color: #888 #f1f1f1; 
+}
+
+@media (max-width: 1600px) {
+  .chatMessageStream {
+    padding-left: 125px;
+    padding-right: 115px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .chatMessageStream {
+    padding-left: 115px;
+    padding-right: 105px;
+  }
+}
+
 @media (max-width: 480px) {
   .chatMessageStream {
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: 23px;
+    padding-right: 23px;
   }
 }
 
@@ -226,6 +263,14 @@
   border-radius: 16px;
   transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for hover effect */
 }
+
+@media (max-width: 1600px) {
+  .stopGeneratingContainer {
+    left: 33%;
+  }
+}
+
+
 
 .stopGeneratingContainer:hover {
   background-color: #f0f0f0; /* Change background color on hover */
@@ -379,7 +424,6 @@ a {
   cursor: pointer;
 }
 
-/* Responsive adjustments */
 @media (max-width: 480px) {
 
   .chatEmptyStateTitle {
@@ -393,11 +437,12 @@ a {
   }
 
   .chatInput {
-    width: 90%; /* Adjusted width to leave room on the right */
-    max-width: 90%; /* Ensure it doesn't exceed 85% */
-    box-sizing: border-box; /* Ensure padding and borders are included in the width */
+    width: 100%;
+    /* max-width: 100%;  */
+    padding-left: 0px;
+    padding-right: 0px;
+    /* /* box-sizing: border-box;  */
   }
-
 
   .newChatIcon, .clearChatBroom, .clearChatBroomNoCosmos {
     left: 0;
