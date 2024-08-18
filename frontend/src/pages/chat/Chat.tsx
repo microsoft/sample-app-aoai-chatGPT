@@ -8,10 +8,12 @@ import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
 import { isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
 import Contoso from '../../assets/Contoso.svg'
-import { XSSAllowTags } from '../../constants/xssAllowTags'
+import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
   ChatMessage,
@@ -30,7 +32,6 @@ import {
   CosmosDBStatus,
   ErrorMessage,
   ExecResults,
-  AzureSqlServerCodeExecResult
 } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -62,6 +63,7 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+  const [logo, setLogo] = useState('')
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -102,6 +104,12 @@ const Chat = () => {
       setErrorMsg(null)
     }, 500)
   }
+
+  useEffect(() => {
+    if (!appStateContext?.state.isLoading) {
+      setLogo(ui?.chat_logo || ui?.logo || Contoso)
+    }
+  }, [appStateContext?.state.isLoading])
 
   useEffect(() => {
     setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
@@ -765,7 +773,7 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
+                <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
@@ -823,7 +831,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && (
+              {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -959,7 +967,7 @@ const Chat = () => {
             </Stack.Item>
           )}
           {messages && messages.length > 0 && isIntentsPanelOpen && (
-            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Exec Results Panel">
+            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
               <Stack
                 aria-label="Intents Panel Header Container"
                 horizontal
@@ -967,7 +975,7 @@ const Chat = () => {
                 horizontalAlign="space-between"
                 verticalAlign="center">
                 <span aria-label="Intents" className={styles.citationPanelHeader}>
-                  Exec Results
+                  Intents
                 </span>
                 <IconButton
                   iconProps={{ iconName: 'Cancel' }}
@@ -979,9 +987,27 @@ const Chat = () => {
                 {execResults.map((execResult) => {
                   return (
                     <Stack className={styles.exectResultList} verticalAlign="space-between">
-                      <p><span>Intent:</span> {execResult.intent}</p>
-                      {execResult.search_query && <p><span>Search Query:</span> {execResult.search_query}</p>}
-                      {execResult.search_result && <p><span>Search Result:</span> {execResult.search_result}</p>}
+                      <><span>Intent:</span> <p>{execResult.intent}</p></>
+                      {execResult.search_query && <><span>Search Query:</span>
+                        <SyntaxHighlighter
+                          style={nord}
+                          wrapLines={true}
+                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                          language="sql"
+                          PreTag="p">
+                          {execResult.search_query}
+                        </SyntaxHighlighter></>}
+                      {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
+                      {execResult.code_generated && <><span>Code Generated:</span>
+                        <SyntaxHighlighter
+                          style={nord}
+                          wrapLines={true}
+                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                          language="python"
+                          PreTag="p">
+                          {execResult.code_generated}
+                        </SyntaxHighlighter>
+                      </>}
                     </Stack>
                   )
                 })}

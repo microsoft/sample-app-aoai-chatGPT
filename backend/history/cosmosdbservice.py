@@ -33,7 +33,6 @@ class CosmosConversationClient():
     async def ensure(self):
         if not self.cosmosdb_client or not self.database_client or not self.container_client:
             return False, "CosmosDB client not initialized correctly"
-            
         try:
             database_info = await self.database_client.read()
         except:
