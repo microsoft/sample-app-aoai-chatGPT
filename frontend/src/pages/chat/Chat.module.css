@@ -84,6 +84,9 @@
   justify-content: center;
 }
 
+*{
+  transition: background-color 0.3s ease;
+}
 
 .faqOption {
   background-color: rgb(82, 104, 159); 
@@ -106,6 +109,7 @@
 
 .faqOption:hover {
   background-color: rgb(74, 77, 150);
+  cursor:pointer;
 }
 
 .faqOption.pressed {
