@@ -23,8 +23,10 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
 }) => {
   const [loading, setLoading] = useState<boolean>(true)
   const [pdfListJson, setPdfListJson] = useState<Object>({})
+  const [filteredPdfList, setFilteredPdfList] = useState<Object>({});
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false)
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const togglePdfModal = () => {
     setShowPdfModal(!showPdfModal)
@@ -38,8 +40,12 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
           setLoading(false)
           if (response !== null) {
             setPdfListJson(response)
+            // test
+            setFilteredPdfList(response)
           } else {
             setPdfListJson({})
+            // test
+            setFilteredPdfList({})
           }
         })
         .catch(_err => {
@@ -49,6 +55,15 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
     }
     getPdfList()
   }, [])
+
+// Function Pdf Search
+useEffect(() => {
+    const filteredList = Object.entries(pdfListJson).filter(([key]) =>
+      key.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredPdfList(Object.fromEntries(filteredList));
+  }, [searchQuery, pdfListJson]);
+
 
   return (
     <>
@@ -91,35 +106,42 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 }
           }>
           <Menu>
-            {toggled ? (
-              false
-            ) : collapsed ? (
-              <MenuItem
-                icon={<ChevronDoubleRight color="#334768" size={20} />}
-                onClick={handleCollapsedChange}
-                rootStyles={{
-                  ['.' + menuClasses.button]: {
-                    color: '#fbfbfb',
-                    '&:hover': {
-                      backgroundColor: '#eecef9'
-                    }
-                  }
-                }}></MenuItem>
-            ) : (
-              <MenuItem
-                suffix={<ChevronDoubleLeft color="#334768" size={20} />}
-                onClick={handleCollapsedChange}
-                rootStyles={{
-                  ['.' + menuClasses.button]: {
-                    color: '#fbfbfb',
-                    '&:hover': {
-                      backgroundColor: '#eecef9'
-                    }
-                  }
-                }}></MenuItem>
+            {toggled ? null : (
+              <>
+                <MenuItem
+                  icon={collapsed ? <ChevronDoubleRight color="#334768" size={20} /> : null}
+                  onClick={handleCollapsedChange}
+                  rootStyles={{
+                    ['.' + menuClasses.button]: {
+                      color: '#fbfbfb',
+                      '&:hover': {
+                        backgroundColor: '#eecef9',
+                      },
+                    },
+                  }}
+                >
+                  {collapsed ? null : <ChevronDoubleLeft color="#334768" size={20} />}
+                </MenuItem>
+                {!collapsed && (
+                  <div style={{ padding: '10px' }}>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search PDFs..."
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                      }}
+                    />
+                  </div>
+                )}
+              </>
             )}
-            {Object.keys(pdfListJson).length > 0 && loading === false
-              ? Object.entries(pdfListJson).map(([key, value]) => (
+            {Object.keys(filteredPdfList).length > 0 && loading === false
+              ? Object.entries(filteredPdfList).map(([key, value]) => (
                   <MenuItem
                     style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
                     rootStyles={{
@@ -127,18 +149,19 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                         whiteSpace: 'normal',
                         maxWidth: '100%',
                         wordWrap: 'break-word',
-                        overflow: 'visible'
+                        overflow: 'visible',
                       },
                       ['.' + menuClasses.button]: {
                         height: '100% !important',
                         paddingTop: '10px',
-                        paddingBottom: '10px'
-                      }
+                        paddingBottom: '10px',
+                      },
                     }}
                     onClick={() => {
-                      setSelectedPdf({ name: key.toString(), url: value.toString() })
-                      setShowPdfModal(true)
-                    }}>
+                      setSelectedPdf({ name: key.toString(), url: value.toString() });
+                      setShowPdfModal(true);
+                    }}
+                  >
                     {key}
                   </MenuItem>
                 ))
@@ -148,7 +171,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                       collapsed && !toggled
                         ? { visibility: 'hidden' }
                         : { display: 'flex', alignItems: 'center', marginTop: '75%' }
-                    }>
+                    }
+                  >
                     <DatabaseSlash color="#334768" size={35} style={{ marginLeft: '8px' }} />
                     <span style={{ fontSize: '24px', marginLeft: '5px' }}>No files available</span>
                   </div>
@@ -164,7 +188,8 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
       </div>
       <PdfModal closeModal={togglePdfModal} isOpen={showPdfModal} data={selectedPdf} />
     </>
-  )
-}
+  );
+};
+
 
 export default SidebarMenu
