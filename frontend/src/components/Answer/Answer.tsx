@@ -24,7 +24,11 @@ interface Props {
   onExectResultClicked: () => void
 }
 
-export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
+ 
+
+// End Test Joshua
+
+export const Answer = ({ answer, onCitationClicked, onExectResultClicked, }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined

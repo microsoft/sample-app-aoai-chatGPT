@@ -68,7 +68,10 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
+
   const [pdfName, setPdfName] = useState("No name found");
+  const [pageFound, setPageFound] = useState("No page Found");
+
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
@@ -689,6 +692,30 @@ const Chat = () => {
     setIsCitationPanelOpen(true)
   }
 
+  // Test Joshua
+const fetchCitationPage = async (citation: Citation) => {
+  try {
+    const filepath = citation.filepath || "";
+    const content = citation.content.substring(0, 50);
+    const response = await fetch(`/blob_name_cdn_url?blob_name=${encodeURIComponent(filepath)}&content=${encodeURIComponent(content)}`, {method: 'GET'});
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      const page = data.page.toString();
+
+      console.log("Prueba en Chat: " + data)
+      console.log("Prueba en Chat: " + data.page)
+      console.log("Prueba en Chat: " + typeof(page))
+
+      setPageFound(data.page)
+  } catch (error) {
+      console.error('There was an issue sending your data:', error);
+  }
+}
+
   const onShowExecResult = () => {
     setIsIntentsPanelOpen(true)
   }
@@ -759,8 +786,6 @@ const faq = (question: string) =>{
   const handleOpenPdf = (citation: Citation) => {
     if (citation.url) {
       setSelectedPdf({ name: citation.title || "Unknown Title", url: citation.url });
-      console.log(citation.title, citation.url);
-      console.log(" algo" + pdfName);
       setShowPdfModal(true);
     }
   };
@@ -856,7 +881,7 @@ const faq = (question: string) =>{
                             feedback: answer.feedback,
                             exec_results: execResults
                           }}
-                          onCitationClicked={c => onShowCitation(c)}
+                          onCitationClicked={c => {onShowCitation(c); fetchCitationPage(c);}}
                           onExectResultClicked={() => onShowExecResult()}
                         />
                       </div>
@@ -1099,8 +1124,8 @@ const faq = (question: string) =>{
                 <span style={{fontStyle: "italic"}}>{pdfName}</span>
               </div>
 
-              {/* test */}
-              {/* <p>Página: {activeCitation.page_number}</p> */}
+              {/* test Joshua*/}
+              <p>Página: {pageFound}</p>
             </Stack.Item>
           )}
 

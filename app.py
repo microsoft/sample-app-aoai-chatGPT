@@ -4,7 +4,7 @@ import os
 import logging
 import uuid
 import httpx
-from func import list_blob_filenames_CDN_urls
+from func import list_blob_filenames_CDN_urls, get_blob_cdn_url, find_text_in_pdf
 from quart import (
     Blueprint,
     Quart,
@@ -72,6 +72,46 @@ async def get_filenames_urls():
         return jsonify(filenames_with_urls), 200
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500
+
+# Test Joshua 
+@bp.route("/blob_name_cdn_url", methods=["GET"])
+def get_blob_url():
+    try:
+        container_name = 'webpage-ley73'
+        conn_str = "DefaultEndpointsProtocol=https;AccountName=strag062kuf;AccountKey=EqNTyx5pZE/S47jFROlCEMfFnmHRytCaZ8xNWo93ypsEIp+K0x6FXbz3a8RshCDAryqSsQVGn1HN+AStOBPyiw==;EndpointSuffix=core.windows.net"
+        blob_name = request.args.get('blob_name')
+        content = request.args.get('content')
+        
+        print("Test JOSHUA ")
+        print("Test en app.py content: " + content)
+        print("Prueba en app.py: " + blob_name)
+         
+        if not conn_str:
+            raise ValueError("Connection string is not set")
+        if not container_name:
+            raise ValueError("Container name is not set")
+        if not blob_name:
+            raise ValueError("Blob name is not provided")
+        
+        blob_with_url = get_blob_cdn_url(conn_str, container_name, blob_name)
+        
+        page_found = find_text_in_pdf(conn_str, container_name, blob_name,content)
+        
+        print()
+        print("Test Joshua")
+        print("Test blob with url: " + blob_with_url)
+        print("Test pages_found: " + str(page_found))
+        print(page_found)
+        
+        if page_found:
+            return jsonify({"page": page_found}), 200
+        else:
+            return jsonify({"error": "Blob not found"}), 404
+        
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
+
+
 
 # def get_filenames_urls():
     # try:
