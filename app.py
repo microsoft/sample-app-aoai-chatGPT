@@ -81,10 +81,6 @@ def get_blob_url():
         conn_str = "DefaultEndpointsProtocol=https;AccountName=strag062kuf;AccountKey=EqNTyx5pZE/S47jFROlCEMfFnmHRytCaZ8xNWo93ypsEIp+K0x6FXbz3a8RshCDAryqSsQVGn1HN+AStOBPyiw==;EndpointSuffix=core.windows.net"
         blob_name = request.args.get('blob_name')
         content = request.args.get('content')
-        
-        print("Test JOSHUA ")
-        print("Test en app.py content: " + content)
-        print("Prueba en app.py: " + blob_name)
          
         if not conn_str:
             raise ValueError("Connection string is not set")
@@ -92,16 +88,12 @@ def get_blob_url():
             raise ValueError("Container name is not set")
         if not blob_name:
             raise ValueError("Blob name is not provided")
+        if not content:
+            raise ValueError("Content is not provided")
         
         blob_with_url = get_blob_cdn_url(conn_str, container_name, blob_name)
-        
         page_found = find_text_in_pdf(conn_str, container_name, blob_name,content)
-        
-        print()
-        print("Test Joshua")
-        print("Test blob with url: " + blob_with_url)
-        print("Test pages_found: " + str(page_found))
-        print(page_found)
+        print(page_found) 
         
         if page_found:
             return jsonify({"page": page_found}), 200
@@ -110,8 +102,6 @@ def get_blob_url():
         
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500
-
-
 
 # def get_filenames_urls():
     # try:

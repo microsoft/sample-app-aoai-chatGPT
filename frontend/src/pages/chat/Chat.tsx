@@ -70,7 +70,7 @@ const Chat = () => {
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
 
   const [pdfName, setPdfName] = useState("No name found");
-  const [pageFound, setPageFound] = useState("No page Found");
+  const [pageFound, setPageFound] = useState("Loading...");
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -692,25 +692,24 @@ const Chat = () => {
     setIsCitationPanelOpen(true)
   }
 
-  // Test Joshua
+  // Search for clicked reference and display the page of the citation
 const fetchCitationPage = async (citation: Citation) => {
   try {
     const filepath = citation.filepath || "";
-    const content = citation.content.substring(0, 50);
+    const content = citation.content.substring(0, 50).replace(/\n/g, "").trim();
     const response = await fetch(`/blob_name_cdn_url?blob_name=${encodeURIComponent(filepath)}&content=${encodeURIComponent(content)}`, {method: 'GET'});
 
       if (!response.ok) {
-          throw new Error('Network response was not ok');
+        setPageFound("Page Not Found")
+      }
+      else{
+        const data = await response.json();
+        const page = data.page.toString()
+        console.log("Replace " + page)
+        console.log("Length " + page.toString().length)
+        setPageFound(data.page.toString().replace(",", ", "))
       }
 
-      const data = await response.json();
-      const page = data.page.toString();
-
-      console.log("Prueba en Chat: " + data)
-      console.log("Prueba en Chat: " + data.page)
-      console.log("Prueba en Chat: " + typeof(page))
-
-      setPageFound(data.page)
   } catch (error) {
       console.error('There was an issue sending your data:', error);
   }
@@ -1073,6 +1072,7 @@ const faq = (question: string) =>{
                 />
               </Stack>
 
+                  {/* Citation Title */}
               <h5
                 className={styles.citationPanelTitle}
                 tabIndex={0}
@@ -1125,7 +1125,7 @@ const faq = (question: string) =>{
               </div>
 
               {/* test Joshua*/}
-              <p>Página: {pageFound}</p>
+              <p className={styles.citationPanelContent}>{pageFound.length > 2 ? `Páginas: ${pageFound}` : `Página: ${pageFound}`}</p>
             </Stack.Item>
           )}
 

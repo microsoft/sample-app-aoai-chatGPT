@@ -402,6 +402,18 @@ background-color: #948cff;
 
 }
 
+.citationPanelPdfPage {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12pt;
+  line-height: 20px;
+  color: #fff;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
 .exectResultList {
   display: flex;
   flex-direction: column;
