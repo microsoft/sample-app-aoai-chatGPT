@@ -1,4 +1,3 @@
-import json
 import os
 import pytest
 from importlib import import_module, reload
@@ -20,7 +19,6 @@ def app_settings(dotenv_path):
     os.environ["DOTENV_PATH"] = dotenv_path
     settings_module = import_module("backend.settings")
     settings_module = reload(settings_module)
-    print(os.environ.items())
     
     yield getattr(settings_module, "app_settings")
 
@@ -73,12 +71,12 @@ def test_dotenv_with_elasticsearch_success(app_settings):
 def test_dotenv_with_embedding_dependency_1(app_settings):
     # Validate model object
     assert app_settings.azure_openai is not None
-    assert app_settings.azure_openai.embedding_name == "embedding_model", app_settings.model_dump()
+    assert app_settings.azure_openai.embedding_name == "embedding_model"
     
     # Validate API payload structure
     payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "deployment_name", json.dumps(payload)
-    assert payload["parameters"]["embedding_dependency"]["deployment_name"] == "embedding_model", json.dumps(payload)
+    assert payload["parameters"]["embedding_dependency"]["type"] == "deployment_name"
+    assert payload["parameters"]["embedding_dependency"]["deployment_name"] == "embedding_model"
     print(payload)
 
 
@@ -90,7 +88,7 @@ def test_dotenv_with_embedding_dependency_2(app_settings):
     
     # Validate API payload structure
     payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint", json.dumps(payload)
+    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
     assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "api_key"
     assert payload["parameters"]["embedding_dependency"]["authentication"]["key"] == "dummy"
     print(payload)
@@ -104,7 +102,7 @@ def test_dotenv_with_embedding_dependency_3(app_settings):
     
     # Validate API payload structure
     payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint", json.dumps(payload)
+    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
     assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "system_assigned_managed_identity"
     print(payload)
     
