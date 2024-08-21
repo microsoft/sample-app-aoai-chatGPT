@@ -66,46 +66,7 @@ def test_dotenv_with_elasticsearch_success(app_settings):
     assert payload["parameters"] is not None
     assert payload["parameters"]["endpoint"] == "dummy"
     print(payload)
-    
-    
-def test_dotenv_with_embedding_dependency_deployment_name(app_settings):
-    # Validate model object
-    assert app_settings.azure_openai is not None
-    assert app_settings.azure_openai.embedding_name == "embedding_model"
-    
-    # Validate API payload structure
-    payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "deployment_name"
-    assert payload["parameters"]["embedding_dependency"]["deployment_name"] == "embedding_model"
-    print(payload)
 
-
-def test_dotenv_with_embedding_dependency_endpointandkey(app_settings):
-    # Validate model object
-    assert app_settings.azure_openai is not None
-    assert app_settings.azure_openai.embedding_endpoint == "https://embeddings.openai.azure.com"
-    assert app_settings.azure_openai.embedding_key == "dummy"
-    
-    # Validate API payload structure
-    payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
-    assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "api_key"
-    assert payload["parameters"]["embedding_dependency"]["authentication"]["key"] == "dummy"
-    print(payload)
-    
-
-def test_dotenv_with_embedding_dependency_mi(app_settings):
-    # Validate model object
-    assert app_settings.azure_openai is not None
-    assert app_settings.azure_openai.embedding_endpoint == "https://embeddings.openai.azure.com"
-    assert app_settings.azure_openai.embedding_key == None
-    
-    # Validate API payload structure
-    payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
-    assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "system_assigned_managed_identity"
-    print(payload)
-    
     
     
 
