@@ -20,6 +20,7 @@ def app_settings(dotenv_path):
     os.environ["DOTENV_PATH"] = dotenv_path
     settings_module = import_module("backend.settings")
     settings_module = reload(settings_module)
+    print(os.environ.items())
     
     yield getattr(settings_module, "app_settings")
 
