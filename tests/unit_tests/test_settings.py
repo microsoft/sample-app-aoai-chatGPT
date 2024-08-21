@@ -88,8 +88,9 @@ def test_dotenv_with_embedding_dependency_2(app_settings):
     
     # Validate API payload structure
     payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "api_key"
-    assert payload["parameters"]["embedding_dependency"]["key"] == "dummy"
+    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
+    assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "api_key"
+    assert payload["parameters"]["embedding_dependency"]["authentication"]["key"] == "dummy"
     print(payload)
     
 
@@ -101,7 +102,8 @@ def test_dotenv_with_embedding_dependency_3(app_settings):
     
     # Validate API payload structure
     payload = app_settings.datasource.construct_payload_configuration()
-    assert payload["parameters"]["embedding_dependency"]["type"] == "system_assigned_managed_identity"
+    assert payload["parameters"]["embedding_dependency"]["type"] == "endpoint"
+    assert payload["parameters"]["embedding_dependency"]["authentication"]["type"] == "system_assigned_managed_identity"
     print(payload)
     
     
