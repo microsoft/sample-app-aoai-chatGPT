@@ -68,7 +68,7 @@ def test_dotenv_with_elasticsearch_success(app_settings):
     print(payload)
     
     
-def test_dotenv_with_embedding_dependency_1(app_settings):
+def test_dotenv_with_embedding_dependency_deployment_name(app_settings):
     # Validate model object
     assert app_settings.azure_openai is not None
     assert app_settings.azure_openai.embedding_name == "embedding_model"
@@ -80,7 +80,7 @@ def test_dotenv_with_embedding_dependency_1(app_settings):
     print(payload)
 
 
-def test_dotenv_with_embedding_dependency_2(app_settings):
+def test_dotenv_with_embedding_dependency_endpointandkey(app_settings):
     # Validate model object
     assert app_settings.azure_openai is not None
     assert app_settings.azure_openai.embedding_endpoint == "https://embeddings.openai.azure.com"
@@ -94,7 +94,7 @@ def test_dotenv_with_embedding_dependency_2(app_settings):
     print(payload)
     
 
-def test_dotenv_with_embedding_dependency_3(app_settings):
+def test_dotenv_with_embedding_dependency_mi(app_settings):
     # Validate model object
     assert app_settings.azure_openai is not None
     assert app_settings.azure_openai.embedding_endpoint == "https://embeddings.openai.azure.com"
