@@ -72,6 +72,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         )}
       </div>
       <div className={styles.questionInputBottomBorder} />
+      <div className={styles.verificationTextContainer}>
+      <span className={styles.verificationText}>HR-assistenten kan gjøre feil. Sjekk viktig informasjon.</span>
+      </div>
     </Stack>
   )
 }
