@@ -182,7 +182,7 @@ class _AzureOpenAISettings(BaseSettings):
                     "endpoint": self.embedding_endpoint,
                     "authentication": {
                         "type": "api_key",
-                        "api_key": self.embedding_key
+                        "key": self.embedding_key
                     }
                 }
             else:
