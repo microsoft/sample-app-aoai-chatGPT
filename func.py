@@ -93,15 +93,24 @@ def find_text_in_pdf(connection_string, container_name, blob_name, content):
     pdf_stream.seek(0)
     
     page_numbers = []
+    found = 0
+    content = re.sub(r'[\s.]+', '', content).lower()
     
     reader = PyPDF2.PdfReader(pdf_stream)
     for page_num, page in enumerate(reader.pages):
         text = page.extract_text()
-        text = re.sub(r'[\s.]+', '', text)
-        content = re.sub(r'[\s.]+', '', content)
+        text = re.sub(r'[\s.]+', '', text).lower()
         
-        if content.lower() in text.lower():
+        if content in text:
             page_numbers.append(page_num + 1)
+            found += 1
+# This if will do a double check with a smaller content
+    if found == 0:
+        for page_num, page in enumerate(reader.pages):
+            text = page.extract_text()
+            text = re.sub(r'[\s.]+', '', text).lower()
+            if content[0:15].lower() in text.lower():
+                page_numbers.append(page_num + 1)
     return page_numbers
 
 #NOTE: FUNCTION TO CHANGE THE CONTENT_TYPE PROPERTIE OF EACH BLOB

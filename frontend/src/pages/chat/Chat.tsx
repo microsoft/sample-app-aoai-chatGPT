@@ -1128,19 +1128,18 @@ const faq = (question: string) =>{
                 <span style={{fontStyle: "italic"}}>{pdfName}</span>
               </div>
 
-              {/* Page where the citation is located */}
+              {/* Page btn where the citation is located */}
               <div className={styles.citationPageButtonContainer}>
-              <p style={{paddingRight: "10px"}}>{pageList.length > 2 ? "Páginas: " : "Página: "}</p>
+              <p>{pageList.length > 1 ? "Páginas: " : "Página: "}</p>
               {pageList.map((value, index) => (
                 <button
                 key={index}
-                value={value}
                 className={styles.citationPdfPageButton}
                 onClick={() => {
                   handleOpenPdf(activeCitation, value.toString());
                 }}
                 > 
-                {value}
+                {pageList.length == 0 ? "Not found" : value}
                 </button>
               ))}
               </div>
