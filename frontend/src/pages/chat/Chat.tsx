@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
-import { isEmpty } from 'lodash'
+import { forEach, isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -39,7 +39,6 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
-
 import PdfModal from '../../components/PdfModal/PdfModal'
 
 const enum messageStatus {
@@ -66,12 +65,11 @@ const Chat = () => {
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
-  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null);
+  const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string; page?: string } | null>(null);
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
 
   const [pdfName, setPdfName] = useState("No name found");
-  const [pageFound, setPageFound] = useState("Loading...");
-
+  const [pageList, setPageList] = useState<number[]>([]);
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
@@ -689,6 +687,7 @@ const Chat = () => {
   const onShowCitation = (citation: Citation) => {
     setPdfName(citation.filepath || "Not found")
     setActiveCitation(citation)
+    fetchCitationPage(citation)
     setIsCitationPanelOpen(true)
   }
 
@@ -696,18 +695,15 @@ const Chat = () => {
 const fetchCitationPage = async (citation: Citation) => {
   try {
     const filepath = citation.filepath || "";
-    const content = citation.content.substring(0, 50).replace(/\n/g, "").trim();
+    const content = citation.content.substring(0, 80).replace(/\n/g, "").trim();
     const response = await fetch(`/blob_name_cdn_url?blob_name=${encodeURIComponent(filepath)}&content=${encodeURIComponent(content)}`, {method: 'GET'});
 
       if (!response.ok) {
-        setPageFound("Page Not Found")
+        // setPageFound("Page Not Found")
       }
       else{
         const data = await response.json();
-        const page = data.page.toString()
-        console.log("Replace " + page)
-        console.log("Length " + page.toString().length)
-        setPageFound(data.page.toString().replace(",", ", "))
+        setPageList(data.page)
       }
 
   } catch (error) {
@@ -781,14 +777,20 @@ const faq = (question: string) =>{
   }, 1000);
 };
 
-
-  const handleOpenPdf = (citation: Citation) => {
+// Handle to Open Single PDF in Citation Panel
+  const handleOpenPdf = (citation: Citation, pageNum?: string) => {
+    console.log("Prueba en HandleOpenPDF: " + pageNum) 
     if (citation.url) {
-      setSelectedPdf({ name: citation.title || "Unknown Title", url: citation.url });
+      setSelectedPdf({ 
+        name: citation.title || "Unknown Title",
+        url: citation.url || "Unknown Url",
+        page: pageNum,
+      });
       setShowPdfModal(true);
     }
   };
 
+  console.log(selectedPdf)
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -880,7 +882,7 @@ const faq = (question: string) =>{
                             feedback: answer.feedback,
                             exec_results: execResults
                           }}
-                          onCitationClicked={c => {onShowCitation(c); fetchCitationPage(c);}}
+                          onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult()}
                         />
                       </div>
@@ -1039,6 +1041,7 @@ const faq = (question: string) =>{
               />
             </Stack>
           </div>
+
           {/* Citation Panel */}
           {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
@@ -1094,7 +1097,7 @@ const faq = (question: string) =>{
                 />
               </div>
 
-              {/* Button link pdf */}
+              {/* hr separator */}
               <Separator
                 styles={{
                   root: {
@@ -1106,6 +1109,7 @@ const faq = (question: string) =>{
                   }
                 }}
               />
+
               {/* Citation Panel Button to open PDF */}
               <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
                 <IconButton
@@ -1124,12 +1128,26 @@ const faq = (question: string) =>{
                 <span style={{fontStyle: "italic"}}>{pdfName}</span>
               </div>
 
-              {/* test Joshua*/}
-              <p className={styles.citationPanelContent}>{pageFound.length > 2 ? `Páginas: ${pageFound}` : `Página: ${pageFound}`}</p>
+              {/* Page where the citation is located */}
+              <div className={styles.citationPageButtonContainer}>
+              <p style={{paddingRight: "10px"}}>{pageList.length > 2 ? "Páginas: " : "Página: "}</p>
+              {pageList.map((value, index) => (
+                <button
+                key={index}
+                value={value}
+                className={styles.citationPdfPageButton}
+                onClick={() => {
+                  handleOpenPdf(activeCitation, value.toString());
+                }}
+                > 
+                {value}
+                </button>
+              ))}
+              </div>
             </Stack.Item>
           )}
 
-          {/* PDF Modal */}
+          {/* Single PDF Modal */}
           {showPdfModal && selectedPdf && (
             <PdfModal
               isOpen={showPdfModal}
@@ -1137,7 +1155,6 @@ const faq = (question: string) =>{
               data={selectedPdf}
             />
           )}
-
 
           {messages && messages.length > 0 && isIntentsPanelOpen && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">

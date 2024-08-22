@@ -66,19 +66,18 @@ def list_blob_filenames_CDN_urls(connection_string, container_name):
     filenames_with_urls = {blob.name: f"{base_url}/{container_name}/{blob.name}" for blob in blob_list}
     return filenames_with_urls
 
-
-# This function fetch an specific PDF when reference in response is clicked
-def get_blob_cdn_url(connection_string, container_name, blob_name):
-    base_url = "https://leyes.azureedge.net/"
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+# # This function fetch an specific PDF when reference in response is clicked
+# def get_blob_cdn_url(connection_string, container_name, blob_name):
+#     base_url = "https://leyes.azureedge.net/"
+#     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+#     blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
     
-    if blob_client.exists():  # Check if the blob exists
-        # Generate the URL for the specific blob
-        blob_url = f"{base_url}{container_name}/{blob_name}"
-        return blob_url
-    else:
-        return None  # Or raise an exception, or return a custom message
+#     if blob_client.exists():  # Check if the blob exists
+#         # Generate the URL for the specific blob
+#         blob_url = f"{base_url}{container_name}/{blob_name}"
+#         return blob_url
+#     else:
+#         return None  # Or raise an exception, or return a custom message
 
 # This function search for text inside a PDF and return the page found
 def find_text_in_pdf(connection_string, container_name, blob_name, content):

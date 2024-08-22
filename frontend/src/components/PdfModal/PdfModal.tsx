@@ -7,14 +7,13 @@ import styles from './PdfModal.module.css'
 interface PdfModalProps {
   isOpen: boolean
   closeModal: Function
-  data: { name: string; url: string } | null
+  data: { name: string; url: string; page?: string } | null
 }
 
 const modalStyle: Styles = {
   content: {
     display: 'flex',
     flexDirection: 'column' as const,
-    // maxWidth: '740px',
     minWidth: '40%',
     minHeight: '40%',
     width: '70%',
@@ -32,6 +31,8 @@ const modalStyle: Styles = {
 }
 
 const PdfModal: FC<PdfModalProps> = ({ isOpen, closeModal, data }) => {
+
+  const pdfURL = data?.url ? `${data.url}#page=${data.page || 1}` : '';
   return (
     <BaseModal isOpen={isOpen} style={modalStyle}>
       <div className={styles.header}>
@@ -40,7 +41,7 @@ const PdfModal: FC<PdfModalProps> = ({ isOpen, closeModal, data }) => {
       </div>
       <div className={styles.body}>
         {data?.url ? (
-          <iframe src={data?.url || ''} width="700" height="600" className={styles.pdf}></iframe>
+          <iframe src={pdfURL} width="700" height="600" className={styles.pdf}></iframe>
         ) : (
           <div className={styles.error}>
             <FileEarmarkExcel color="#334768" size={40} />

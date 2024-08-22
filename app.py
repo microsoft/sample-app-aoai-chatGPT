@@ -4,7 +4,7 @@ import os
 import logging
 import uuid
 import httpx
-from func import list_blob_filenames_CDN_urls, get_blob_cdn_url, find_text_in_pdf
+from func import list_blob_filenames_CDN_urls, find_text_in_pdf
 from quart import (
     Blueprint,
     Quart,
@@ -91,7 +91,6 @@ def get_blob_url():
         if not content:
             raise ValueError("Content is not provided")
         
-        blob_with_url = get_blob_cdn_url(conn_str, container_name, blob_name)
         page_found = find_text_in_pdf(conn_str, container_name, blob_name,content)
         print(page_found) 
         

@@ -5,6 +5,7 @@ import styles from './Button.module.css'
 interface ButtonProps extends IButtonProps {
   onClick: () => void
   text: string | undefined
+  page?: string
 }
 
 export const ShareButton: React.FC<ButtonProps> = ({ onClick, text }) => {
@@ -39,4 +40,16 @@ export const FaqButton: React.FC<ButtonProps> = ({ onClick, text }) => {
       text={text}
     />
   )
+}
+
+// Test Joshua
+export const PdfPageCitationButton: React.FC<ButtonProps> = ({onClick,text, page}) => {
+  return (
+    <PdfPageCitationButton
+        onClick={onClick}
+        text={text}
+        page={page}
+    />
+  )
+
 }

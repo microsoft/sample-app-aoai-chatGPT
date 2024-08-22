@@ -291,6 +291,7 @@
   bottom: 116px;
   border-radius: 16px;
   background-color: #a1dc00;
+  cursor: pointer;
 }
 
 .stopGeneratingIcon {
@@ -402,17 +403,30 @@ background-color: #948cff;
 
 }
 
-.citationPanelPdfPage {
+.citationPageButtonContainer {
+  display: flex;
+  align-items: center;
+  color:#fff
+}
+
+.citationPdfPageButton {
+  background-color: #a1dc00;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 4px;
+  border: none;
   font-style: normal;
   font-weight: 400;
-  font-size: 12pt;
+  font-size: 14px;
   line-height: 20px;
-  color: #fff;
+  color: #000;
   flex: none;
   order: 1;
-  align-self: stretch;
   flex-grow: 0;
+  margin-left: 10px;
+  cursor: pointer;
 }
+
 
 .exectResultList {
   display: flex;
