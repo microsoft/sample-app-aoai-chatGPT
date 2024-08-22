@@ -421,6 +421,18 @@ a {
   cursor: pointer;
 }
 
+.verificationTextContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 0px;
+}
+
+.verificationText {
+  font-size: 14px;
+  color: #668;
+}
+
 @media (max-width: 480px) {
 
   .chatEmptyStateTitle {

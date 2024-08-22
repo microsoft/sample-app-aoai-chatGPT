@@ -25,7 +25,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip list
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -44,11 +43,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'test'
+      name: 'prod'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write 
       contents: read
 
     steps:

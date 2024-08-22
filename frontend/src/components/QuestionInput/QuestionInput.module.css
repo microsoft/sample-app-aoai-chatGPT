@@ -1,6 +1,5 @@
 .questionInputContainer {
   height: 80px; 
-  /* TODO. */
   position: absolute;
   left: 5%;
   right: 5%;
@@ -10,18 +9,20 @@
   border: 1px solid #e0e0e0; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
   border-radius: 8px;
-  /* margin-top: 5px; */
 }
 
+
+/* TODO fix the text input here */
 .questionInputTextArea {
-  width: calc(100% - 24px);
+  width: calc(100% - 60px);
   height: calc(100% - 20px);
   margin: 10px 12px;
   border: none;
   resize: none;
   font-size: 16px;
-  outline: none; /* Removes the focus outline */
+  outline: none;
 }
+
 .questionInputSendButtonContainer {
   position: absolute;
   right: 24px;
@@ -34,7 +35,6 @@
 }
 
 .questionInputSendButtonDisabled {
-  /* opacity: 0.4; */
   width: 24px;
   height: 23px;
   background: none;
@@ -47,9 +47,22 @@
   height: 4px;
   left: 0%;
   bottom: 0%;
-  /* background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%); */
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
+}
+
+.verificationTextContainer {
+  position: absolute;
+  bottom: -21px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.verificationText {
+  font-size: 14px;
+  color: #666;
 }
 
 .questionInputOptionsButton {
@@ -62,6 +75,10 @@
   .questionInputContainer {
     left: 5%; 
     right: 5%; 
-    /* 16.5%; */
   }
+  .verificationText {
+    font-size: 12px;
+    color: #666;
+  }
+  
 }
