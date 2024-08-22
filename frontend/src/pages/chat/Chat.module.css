@@ -427,6 +427,9 @@ background-color: #948cff;
   cursor: pointer;
 }
 
+.citationPdfPageButton:hover {
+  background-color: #a9ff00;
+}
 
 .exectResultList {
   display: flex;
