@@ -18,7 +18,7 @@
     "@fluentui/react": "^8.105.3",
     "@fluentui/react-hooks": "^8.6.29",
     "@fluentui/react-icons": "^2.0.195",
-    "@newjersey/feedback-widget": "^0.5.0",
+    "@newjersey/feedback-widget": "^0.6.0",
     "dompurify": "^3.0.8",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",

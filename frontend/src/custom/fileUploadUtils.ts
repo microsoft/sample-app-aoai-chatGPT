@@ -1,6 +1,11 @@
-import pdfToText from 'react-pdftotext'
-
-export const ACCEPTED_FILE_TYPES = ['.jpg', '.png', '.gif', '.bmp', '.tiff', '.pdf']
+export const ACCEPTED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/bmp',
+  'image/tiff',
+  'application/pdf'
+]
 
 export interface UploadedFile {
   name: string

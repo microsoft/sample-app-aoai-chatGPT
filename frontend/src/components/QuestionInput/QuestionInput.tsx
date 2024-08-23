@@ -52,7 +52,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       if (!isValidLength(question)) {
         setInputError(`Prompt cannot exceed ${MAX_INPUT_LENGTH} characters. Please try a smaller prompt.`)
         logEvent('submit_prompt_client_error_prompt_length', {
-          object_length: question.length
+          input_length: question.length
         })
         return
       }
@@ -124,7 +124,16 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+        setInputError(
+          'Only the following file types are supported: .pdf, .jpeg, .png, .gif, .bmp, .tiff. Please try a different file.'
+        )
+        setSelectedFile(null)
+        if (fileInputRef?.current?.value) {
+          fileInputRef.current.value = ''
+        }
+        logEvent('submit_prompt_client_error_file_type', { object_type: file.type })
+      } else if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
         setInputError('File size of attachments cannot exceed 5 MB. Please try a smaller file.')
         setSelectedFile(null)
@@ -142,22 +151,13 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
-    <Stack horizontal className={styles.questionInputContainer}>
+    <Stack horizontal={false} className={styles.questionInputContainer} wrap={true}>
       {inputError && (
         <div className={styles.errorText}>
           <img src={InfoIcon} alt="" />
           {inputError}
         </div>
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_FILE_TYPES.join(',')}
-        onChange={onFileChange}
-        disabled={disabled}
-        className={styles.fileInput}
-        aria-label="Upload file"
-      />
       <TextField
         className={styles.questionInputTextArea}
         placeholder={placeholder}
@@ -170,18 +170,31 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         ariaLabel="Type a question"
         inputClassName={styles.textAreaOverrides}
       />
-      <div
-        className={styles.questionInputSendButtonContainer}
-        role="button"
-        tabIndex={0}
-        aria-label="Ask question button"
-        onClick={sendQuestion}
-        onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? sendQuestion() : null)}>
-        {sendQuestionDisabled ? (
-          <SendRegular className={styles.questionInputSendButtonDisabled} />
-        ) : (
-          <img src={Send} className={styles.questionInputSendButton} alt="Send Button" />
-        )}
+      <div className={styles.questionInputChatButtons}>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_FILE_TYPES.join(',')}
+            onChange={onFileChange}
+            disabled={disabled}
+            className={styles.fileInput}
+            aria-label="Upload file"
+          />
+        </div>
+        <div
+          className={styles.questionInputSendButtonContainer}
+          role="button"
+          tabIndex={0}
+          aria-label="Ask question button"
+          onClick={sendQuestion}
+          onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? sendQuestion() : null)}>
+          {sendQuestionDisabled ? (
+            <SendRegular className={styles.questionInputSendButtonDisabled} />
+          ) : (
+            <img src={Send} className={styles.questionInputSendButton} alt="Send Button" />
+          )}
+        </div>
       </div>
       <div className={styles.questionInputBottomBorder} />
     </Stack>
