@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Separator } from '@fluentui/react'
-import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import { SquareRegular, ShieldLockRegular, ErrorCircleRegular} from '@fluentui/react-icons'
+import { BiSolidFilePdf } from "react-icons/bi";
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -1112,8 +1113,11 @@ const faq = (question: string) =>{
 
               {/* Citation Panel Button to open PDF */}
               <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
-                <IconButton
-                  iconProps={{ iconName: 'PDF' }}
+              <BiSolidFilePdf color="#070034" size="25px"
+      />
+
+                {/* <IconButton
+                  iconProps={{ iconName: '' }}
                   title="Open PDF"
                   ariaLabel="Open PDF"
                   styles={{
@@ -1124,7 +1128,7 @@ const faq = (question: string) =>{
                     iconHovered: {color:"#070034"},
                     iconPressed: { color: "#070034" },
                   }}
-                />
+                /> */}
                 <span style={{fontStyle: "italic"}}>{pdfName}</span>
               </div>
 

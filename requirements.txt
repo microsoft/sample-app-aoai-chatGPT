@@ -12,3 +12,4 @@ gunicorn==20.1.0
 pydantic-settings==2.2.1
 python-dotenv
 PyPDF2==3.0.1
+react-icons
