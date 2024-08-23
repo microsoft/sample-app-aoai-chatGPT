@@ -1113,23 +1113,8 @@ const faq = (question: string) =>{
 
               {/* Citation Panel Button to open PDF */}
               <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
-              <BiSolidFilePdf color="#070034" size="25px"
-      />
-
-                {/* <IconButton
-                  iconProps={{ iconName: '' }}
-                  title="Open PDF"
-                  ariaLabel="Open PDF"
-                  styles={{
-                    root: { backgroundColor: 'transparent' , paddingRight: "15px"},
-                    rootHovered: {backgroundColor: 'transparent'},
-                    rootPressed: { backgroundColor: 'transparent'},
-                    icon: { color: '#070034', fontSize: "25px" },
-                    iconHovered: {color:"#070034"},
-                    iconPressed: { color: "#070034" },
-                  }}
-                /> */}
-                <span style={{fontStyle: "italic"}}>{pdfName}</span>
+              <BiSolidFilePdf color="#070034" size="25px"/>
+                <span style={{fontStyle: "italic", marginLeft:"6px"}}>{pdfName}</span>
               </div>
 
               {/* Page btn where the citation is located */}
