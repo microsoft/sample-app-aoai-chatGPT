@@ -25,3 +25,21 @@ css-dip3t8::-webkit-scrollbar-thumb {
   margin-top: 230px;
   height: 100%;
 }
+
+.itemChatButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  background-color: #a1dc00;
+  margin: auto 2.5px;
+  cursor: pointer;
+  color:black !important;
+  transition: color 0.6s ease;
+}
+
+.itemChatButton:hover {
+  background-color: yellow;
+}
