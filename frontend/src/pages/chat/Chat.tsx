@@ -1113,7 +1113,7 @@ const faq = (question: string) =>{
 
               {/* Citation Panel Button to open PDF */}
               <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
-              <BiSolidFilePdf color="#070034" size="25px"/>
+              <BiSolidFilePdf color="#070034" size="30px"/>
                 <span style={{fontStyle: "italic", marginLeft:"6px"}}>{pdfName}</span>
               </div>
 
