@@ -41,13 +41,13 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "HR-assistent"
+    title: str = "HR og lønn support"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
     chat_title: str = "Start samtale"
-    chat_description: str = "" #"Denne assistenten er utviklet for å hjelpe deg med å finne svar på dine HR og lønnsrelaterte spørsmål"
+    chat_description: str = "Mikkel kan hjelpe deg med å finne svar på dine HR- og lønnsrelaterte spørsmål"
     #favicon: str = #"favicon.ico" # Leroy logo
-    show_share_button: bool = False
+    show_share_button: bool = True
     show_chat_history_button: bool = False
 
 

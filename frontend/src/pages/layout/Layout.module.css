@@ -44,65 +44,17 @@
   margin-right: 20px;
 }
 
-.shareButton {
-  color: #ffffff;
-}
-
 .shareButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #ffffff;
-}
-
-.urlTextBox {
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
-  color: #707070;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 5px 12px;
-  gap: 4px;
-  background: #ffffff;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-  cursor: pointer;
-  background: #d1d1d1;
-}
-
-.copyButton {
-  color: #424242;
-}
-
-.copyButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #242424;
+  font-size: px; /* Adjust this value to your desired font size */
 }
 
 @media (max-width: 480px) {
   .headerTitleContainer {
     margin-left: 4px;
+  }
+
+  .headerTitle {
+    font-size: 16px;
   }
 
   .headerIcon {

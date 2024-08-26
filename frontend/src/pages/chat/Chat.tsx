@@ -13,6 +13,7 @@ import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
 import Leroy from '../../assets/Leroy.svg'
+import Ole from '../../assets/Ole.svg'
 import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
@@ -107,7 +108,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      setLogo(ui?.chat_logo || ui?.logo || Leroy)
+      setLogo(ui?.chat_logo || ui?.logo || Ole)
     }
   }, [appStateContext?.state.isLoading])
 
@@ -147,7 +148,7 @@ const Chat = () => {
     if (assistantMessage.content.trim() === "The requested information is not found in the retrieved data. Please try another query or topic.") {
       const detectLanguage = (text: string): 'no' | 'ny' | 'none' => {
         const norwegianWords = ['hei', 'hva', 'hvordan', 'hvor', "hvem", 'kan', 'du', 'jeg', 'hjelp', "hjelpe", 
-          'takk', 'informasjon', 'vennligst', 'forklar', 'hvorfor', 'og', 'eller', 'til', 'når', 'hvilken', 'hvilket', 'hvilke', 'spørsmål', 'svar'];
+          'takk', 'informasjon', 'vennligst', 'forklar', 'hvorfor', 'og', 'skal', 'eller', 'til', 'når', 'hvilken', 'hvilket', 'hvilke', 'spørsmål', 'svar'];
     
         const nynorskWords = ['kva', 'korleis', 'kvar', 'kven', 'eg', 'kvifor', 'eit', 'nokre'];
     
