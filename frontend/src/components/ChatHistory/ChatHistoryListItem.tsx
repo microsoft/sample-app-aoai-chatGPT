@@ -25,6 +25,7 @@ import { AppStateContext } from '../../state/AppProvider'
 import { GroupedChatHistory } from './ChatHistoryList'
 
 import styles from './ChatHistoryPanel.module.css'
+import css from '../common/Button.module.css'
 
 interface ChatHistoryListItemCellProps {
   item?: Conversation
@@ -251,14 +252,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             {(isSelected || isHovered) && (
               <Stack horizontal horizontalAlign="end">
                 <IconButton
-                  className={styles.itemButton}
+                  className={`${styles.itemButton} ${css.buttonStructure}`}
                   iconProps={{ iconName: 'Delete' }}
                   title="Delete"
                   onClick={toggleDeleteDialog}
                   onKeyDown={e => (e.key === ' ' ? toggleDeleteDialog() : null)}
                 />
                 <IconButton
-                  className={styles.itemButton}
+                  className={`${styles.itemButton} ${css.buttonStructure}`}
                   iconProps={{ iconName: 'Edit' }}
                   title="Edit"
                   onClick={onEdit}

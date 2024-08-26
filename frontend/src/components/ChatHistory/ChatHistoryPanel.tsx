@@ -118,7 +118,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               paddingLeft: '20px',
               color: "white"
             }}>
-            Chat history
+            Historial
           </Text>
         </StackItem>
         <Stack verticalAlign="start">
@@ -127,7 +127,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
 
             <CommandBarButton
               iconProps={{ iconName: 'More' }}
-              title={'Clear all chat history'}
+              title={'Borrar todo el historia'}
               onClick={onShowContextualMenu}
               aria-label={'clear all chat history'}
               styles={

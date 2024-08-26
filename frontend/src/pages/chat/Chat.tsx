@@ -13,6 +13,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
+import css from '../../components/common/Button.module.css'
 import Contoso from '../../assets/Contoso.svg'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 
@@ -923,7 +924,7 @@ const faq = (question: string) =>{
                 // Stop Generating Button
                 <Stack
                   horizontal
-                  className={styles.stopGeneratingContainer}
+                  className={`${styles.stopGeneratingContainer} ${css.buttonStructure}`}
                   role="button"
                   aria-label="Stop generating"
                   tabIndex={0}
@@ -931,7 +932,7 @@ const faq = (question: string) =>{
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? stopGenerating() : null)}>
                   <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true" />
                   <span className={styles.stopGeneratingText} aria-hidden="true">
-                    Stop generating
+                  Dejar de generar
                   </span>
                 </Stack>
               )}
@@ -943,23 +944,24 @@ const faq = (question: string) =>{
                     role="button"
                     styles={{
                       icon: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconHovered: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconPressed: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconDisabled: {
                         color: '#6e6c6b',
                       },
                       root: {
                         color: '#000000',
-                        backgroundColor: '#a1dc00',
+                        backgroundImage: 'linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 )',
+                        borderRadius: '10px !important' ,
                       },
                       rootHovered: {
-                        backgroundColor: '#a9ff00',
+                        backgroundImage: 'linear-gradient(to top left, #47396a, #6b509e, #d19bd6 )',
                         color: '#000000',
                       },
                       rootPressed: {
@@ -982,29 +984,31 @@ const faq = (question: string) =>{
                   role="button"
                   styles={{
                     icon: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconHovered: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconPressed: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconDisabled: {
                       color: '#6e6c6b',
                     },
                     root: {
-                      color: '#FFFFFF',
-                      backgroundColor: '#a1dc00',
+                      color: '#000000',
+                      backgroundImage: 'linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 )',
+                      borderRadius: '10px !important',
                     },
                     rootHovered: {
-                      backgroundColor: '#a9ff00',
+                      backgroundImage: 'linear-gradient(to top left, #47396a, #6b509e, #d19bd6 )',
+                      color: '#000000',
                     },
                     rootPressed: {
                       backgroundColor: '#98ff00',
                     },
                     rootDisabled: {
-                      backgroundColor: '#BDBDBD',
+                      background: '#BDBDBD',
                     },
                   }}
                   className={
@@ -1029,7 +1033,7 @@ const faq = (question: string) =>{
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Escribe una pregunta..."
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
@@ -1053,7 +1057,7 @@ const faq = (question: string) =>{
                 horizontalAlign="space-between"
                 verticalAlign="center">
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
-                  Citations
+                  Citas
                 </span>
                 <IconButton
                   styles={{
@@ -1112,18 +1116,18 @@ const faq = (question: string) =>{
               />
 
               {/* Citation Panel Button to open PDF */}
-              <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
-              <BiSolidFilePdf color="#070034" size="30px"/>
+              <div onClick={() => handleOpenPdf(activeCitation)} className={`${css.citationPanelPDF} ${css.buttonStructure}`}>
+              <BiSolidFilePdf color="#fff" size="30px"/>
                 <span style={{fontStyle: "italic", marginLeft:"6px"}}>{pdfName}</span>
               </div>
 
               {/* Page btn where the citation is located */}
-              <div className={styles.citationPageButtonContainer}>
+              <div className={css.citationPageButtonContainer}>
               <p>{pageList.length > 1 ? "Páginas: " : "Página: "}</p>
               {pageList.map((value, index) => (
                 <button
                 key={index}
-                className={styles.citationPdfPageButton}
+                className={`${css.citationPdfPageButton} ${css.buttonStructure}`}
                 onClick={() => {
                   handleOpenPdf(activeCitation, value.toString());
                 }}

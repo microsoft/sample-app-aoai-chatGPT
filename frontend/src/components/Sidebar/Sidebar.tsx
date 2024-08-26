@@ -128,11 +128,11 @@ useEffect(() => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search PDFs..."
+                      placeholder="Busqueda de PDFs..."
                       style={{
                         width: '100%',
-                        padding: '8px',
-                        borderRadius: '4px',
+                        padding: '4px',
+                        borderRadius: '10px',
                         border: '1px solid #ccc',
                       }}
                     />
