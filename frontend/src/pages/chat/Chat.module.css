@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background-color: #313158;
+  background-color: #ececec;
 }
 
 .chatRoot {
@@ -22,8 +22,8 @@
   flex-direction: column;
   align-items: center;
   background-image:
-    linear-gradient(to bottom right, #cfe8f3, #a2c5e0, #6ba8d4, #4d90d0, #886bc8),
-    linear-gradient(to bottom left, #4d90d0, #6e8cd1, #907ecf, #af71d0 10%, #c26cd1 10%),
+    linear-gradient(to bottom right, #98daf7, #a2c5e0, #92c4e7, #96bcdf, #886bc8),
+    linear-gradient(to bottom left, #907ecf, #af71d0 10%, #c26cd1 10%),
     linear-gradient(to top right, #c26cd1 20%, #ab79cf 20%, #8a8dc9 20%);
   background-size: 200% 400%;
   animation: waveAnimation 20s ease-in-out infinite;
@@ -82,7 +82,7 @@
   align-items: flex-end;
   text-align: center;
   letter-spacing: -0.01em;
-  color: #f69300;
+  color: #664c96;
 }
 
 
@@ -109,13 +109,13 @@
 }
 
 .faqOption {
-  background-color: rgb(82, 104, 159);
+  background: linear-gradient(to right, #F9E4F0, #CAE5FF);
   transition: background-color 0.3s ease;
   backdrop-filter: blur(10px);
   border: none;
   padding: 45px 30px;
   border-radius: 8px;
-  color: #fff;
+  color: #000;
   font-size: 18px;
   cursor: pointer;
   display: flex;
@@ -129,19 +129,15 @@
 }
 
 .faqOption:hover {
-  background-color: rgb(74, 77, 150);
+  background: linear-gradient(to left, #F9E4F0, #CAE5FF);
   cursor: pointer;
-}
-
-.faqOption.pressed {
-  background-color: rgb(74, 77, 150);
 }
 
 .faqOptionText {
   margin: 0;
   font-size: 20px;
   width: 100%;
-  color: #fff;
+  color: #000;
   text-overflow: ellipsis;
   overflow: hidden;
 }

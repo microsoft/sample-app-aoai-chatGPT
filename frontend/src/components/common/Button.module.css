@@ -121,14 +121,13 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #000;
+  color: #fff;
   flex: none;
   order: 1;
   flex-grow: 0;
   margin-left: 10px;
   cursor: pointer;
 }
-
 
 @media (max-width: 480px) {
   .shareButtonRoot {
