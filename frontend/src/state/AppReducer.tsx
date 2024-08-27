@@ -21,6 +21,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
       } else {
         return { ...state, chatHistory: [...state.chatHistory, action.payload] }
       }
+ 
     case 'UPDATE_CHAT_TITLE':
       if (!state.chatHistory) {
         return { ...state, chatHistory: [] }
@@ -74,6 +75,14 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
           [action.payload.answerId]: action.payload.feedback
         }
       }
+      case 'CREATE_NEW_PDF_CONVERSATION':
+        const newConversation = {
+          id: action.payload.id,
+          pdfKey: action.payload.pdfKey,
+          title: `Conversation about PDF: ${action.payload.pdfKey}`,
+          messages: [],
+          date: new Date().toISOString(),
+        }
     default:
       return state
   }

@@ -62,11 +62,19 @@ export type ExecResults = {
   code_generated: string | null
 }
 
-export type Conversation = {
-  id: string
-  title: string
-  messages: ChatMessage[]
-  date: string
+// export type Conversation = {
+//   id: string
+//   title: string
+//   messages: ChatMessage[]
+//   date: string
+// }
+
+export interface Conversation {
+  id: string;
+  title: string;
+  date: string;
+  messages: ChatMessage[]; // if ChatMessage is another interface
+  pdfKey?: string; 
 }
 
 export enum ChatCompletionType {
