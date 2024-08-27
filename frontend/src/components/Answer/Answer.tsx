@@ -320,7 +320,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, }: Pro
                       aria-label="Text copied"
                       onClick={copyButton}
                       style={{
-                        color: '68BE15', // Color for when the text is copied
+                        color: '#664c96', // Color for when the text is copied
                         cursor: 'pointer'
                       }}
                     />
@@ -330,7 +330,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked, }: Pro
                       aria-label="Copy this response"
                       onClick={copyButton}
                       style={{
-                        color: '#68BE15', // Default color
+                        color: '#664c96', // Default color
                         cursor: 'pointer'
                       }}
                     />

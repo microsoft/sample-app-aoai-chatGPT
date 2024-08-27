@@ -131,7 +131,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               onClick={onShowContextualMenu}
               aria-label={'clear all chat history'}
               styles={
-                { root: { backgroundColor: "#313158" }, rootHovered: { backgroundColor: '#5a5aa3' }, rootPressed: { backgroundColor: "#6f6fc9" }, icon: { color: 'white' }, iconHovered: { color: 'white' }, iconPressed: { color: 'white' } }}
+                { root: { backgroundColor: "#cbe5ff" }, rootHovered: { backgroundColor: '#9ac4e3' }, rootPressed: { backgroundColor: "#cbe1ff" }, icon: { color: 'black' }, iconHovered: { color: 'black' }, iconPressed: { color: 'black' } }}
               role="button"
               id="moreButton"
             />
@@ -147,25 +147,25 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                 subComponentStyles: {
                   menuItem: {
                     root: {
-                      backgroundColor: "white",
-                      color: "white",
+                      backgroundColor: "#9ac4e3",
+                      color: "black",
                       selectors: {
                         ":hover": {
-                          backgroundColor: "#6f6fc9", color: "white",
+                          backgroundColor: "#d6ecfb", color: "black",
                           ".ms-ContextualMenu-icon": {
-                            color: "white",
+                            color: "black",
                           },
                           ":active .ms-ContextualMenu-icon": {
-                            color: "white",
+                            color: "black",
                           }
                         },
                         ":active":{
-                          backgroundColor: "#8484ef"
+                          backgroundColor: "#9ac4e3"
                         }
                       }
                     },
-                    rootPressed: { backgroundColor: "#6f6fc9" },
-                    icon: { color: "#ffffff" },
+                    rootPressed: { backgroundColor: "##9ac4e3" },
+                    icon: { color: "#000" },
                   }
                 }
               }}
@@ -177,7 +177,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               title={'Hide'}
               onClick={handleHistoryClick}
               aria-label={'hide button'}
-              styles={{ root: { backgroundColor: "#313158" }, rootHovered: { backgroundColor: '#5a5aa3' }, rootPressed: { backgroundColor: "#6f6fc9" }, icon: { color: 'white' }, iconHovered: { color: 'white' }, iconPressed: { color: 'white' } }}
+              styles={{ root: { backgroundColor: "#cbe5ff" }, rootHovered: { backgroundColor: '#9ac4e3' }, rootPressed: { backgroundColor: "#9ac4e3" }, icon: { color: 'black' }, iconHovered: { color: 'black' }, iconPressed: { color: 'black' } }}
               role="button"
             />
           </Stack>

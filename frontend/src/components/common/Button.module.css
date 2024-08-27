@@ -112,6 +112,12 @@
   width: 100%;
 }
 
+.citationPageButtonContainer {
+  display: flex;
+  align-items: center;
+  color: black;
+}
+
 .citationPdfPageButton {
   height: 2rem;
   width: 2rem;

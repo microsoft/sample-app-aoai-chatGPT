@@ -1062,19 +1062,21 @@ const faq = (question: string) =>{
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
                   Citas
                 </span>
+
+                {/* X button in Citation Panel */}
                 <IconButton
                   styles={{
                     icon: {
-                      color: '#664c96',
+                      color: 'black',
                     },
                     iconHovered: {
-                      color: '#664c96',
+                      color: 'black',
                     },
                     rootHovered: {
-                      backgroundColor: '#484492',
+                      backgroundColor: '#9ac4e3',
                     },
                     rootPressed: {
-                      backgroundColor: '#5C57BD',
+                      backgroundColor: '#9ac4e3',
                     },
                   }}
                   iconProps={{ iconName: 'Cancel' }}
