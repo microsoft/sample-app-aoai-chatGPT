@@ -48,6 +48,7 @@ export type ChatMessage = {
   id: string
   role: string
   content: string
+  image?: string
   end_turn?: boolean
   date: string
   feedback?: Feedback

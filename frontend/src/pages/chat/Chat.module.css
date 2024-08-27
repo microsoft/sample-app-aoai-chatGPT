@@ -82,6 +82,16 @@
   display: flex;
   justify-content: flex-end;
   margin-bottom: 12px;
+  gap: 5px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.chatImage {
+  border-radius: 5px;
+  height: 100px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .chatMessageUserMessage {
@@ -102,6 +112,11 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 80%;
+  flex-shrink: 0;
+  max-width: calc(100% - 160px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 24px;
 }
 
 .chatMessageGpt {
