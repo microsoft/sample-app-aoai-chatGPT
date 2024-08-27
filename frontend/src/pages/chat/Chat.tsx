@@ -166,6 +166,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+    console.log("NoCosmoQ:", question, "NoCosmoA:",conversationId )
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -290,6 +291,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+    console.log("WithCosmoQ:", question, "WithCosmoA:",conversationId )
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -1031,6 +1033,7 @@ const faq = (question: string) =>{
                 placeholder="Type a new question..."
                 disabled={isLoading}
                 onSend={(question, id) => {
+                  console.log("Question on Send:", question, "Id on Send:",id )
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
                     : makeApiRequestWithoutCosmosDB(question, id)

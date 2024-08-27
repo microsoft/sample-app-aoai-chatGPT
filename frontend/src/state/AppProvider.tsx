@@ -44,7 +44,9 @@ export type Action =
       payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral }
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
+  | { type: 'CREATE_NEW_PDF_CONVERSATION'; payload: { id: string; pdfKey: string } }
 
+  
 const initialState: AppState = {
   isChatHistoryOpen: false,
   chatHistoryLoadingState: ChatHistoryLoadingState.Loading,
@@ -94,7 +96,7 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
         })
       return result
     }
-
+    
     const getHistoryEnsure = async () => {
       dispatch({ type: 'UPDATE_CHAT_HISTORY_LOADING_STATE', payload: ChatHistoryLoadingState.Loading })
       historyEnsure()

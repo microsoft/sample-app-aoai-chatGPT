@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useState, useContext} from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
 import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash } from 'react-bootstrap-icons'
 import { MoonLoader } from 'react-spinners'
@@ -6,6 +6,9 @@ import styles from '../Sidebar/Sidebar.module.css'
 import { pdfList } from '../../api'
 import PdfModal from '../PdfModal/PdfModal'
 import { IconButton, TooltipHost } from '@fluentui/react'
+
+import uuid from 'react-uuid'
+import { AppStateContext } from '../../state/AppProvider'
 
 interface SidebarMenuProps {
   collapsed: boolean
@@ -28,13 +31,40 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false)
   const [selectedPdf, setSelectedPdf] = useState<{ name: string; url: string } | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activePdfKey, setActivePdfKey] = useState<string | null>(null)
 
   const togglePdfModal = () => {
     setShowPdfModal(!showPdfModal)
   }
 
+  const appStateContext = useContext(AppStateContext);
+
+  // Handle the case where the context might be undefined
+  if (!appStateContext) {
+    throw new Error('AppStateContext is not available. Ensure that your component is wrapped with the AppProvider.');
+  }
+
+  if (!appStateContext) {
+    throw new Error('AppStateContext is not available. Ensure that the component is wrapped with the AppProvider.')
+  }
+
   const handleButtonClick = (key: string) => {
-    console.log(`Button clicked for inititiating a new PDF chat: ${key}`);
+    console.log(`Button clicked for initiating a new PDF chat (FilePath): ${key}`)
+    const newConversationId = uuid() // Generate a new conversation ID
+    console.log(`Generated new (conversation ID): ${newConversationId}`)
+
+    appStateContext.dispatch({
+      type: 'CREATE_NEW_PDF_CONVERSATION',
+      payload: {
+        id: newConversationId,
+        pdfKey: key,
+      },
+    })
+
+    setActivePdfKey(key)  // Set the clicked PDF as active
+
+    const updatedState = appStateContext.state.chatHistory
+    console.log('Updated chat history:', updatedState)
   }
 
 
@@ -149,7 +179,12 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             {Object.keys(filteredPdfList).length > 0 && loading === false
               ? Object.entries(filteredPdfList).map(([key, value]) => (
                 <MenuItem
-                  style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
+                  // style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
+                  style={{
+                    color: '#201F1E',
+                    backgroundColor: activePdfKey === key ? '#d4e0f4' : 'transparent',  // Apply background color if selected
+                    borderRadius: '5px',  // Optional: add some rounded corners
+                  }}
                   rootStyles={{
                     ['.' + menuClasses.label]: {
                       whiteSpace: 'normal',
@@ -164,9 +199,11 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                     },
                   }}
                   onClick={() => {
-                    setSelectedPdf({ name: key.toString(), url: value.toString() });
-                    setShowPdfModal(true);
+                    setSelectedPdf({ name: key.toString(), url: value.toString() })
+                    setShowPdfModal(true)
+                    setActivePdfKey(null)
                   }}
+                  key={key} 
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <TooltipHost
