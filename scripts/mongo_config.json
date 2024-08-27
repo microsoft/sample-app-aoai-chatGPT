@@ -1,0 +1,12 @@
+[
+    {
+        "data_path": "<path to data>",
+        "connection_string": "<Mongo database connection string>",
+        "database_name": "<Mongo database name>",
+        "collection_name": "<Mongo collection name>",
+        "index_name": "<Mongo vector index>",
+        "vector_field": "<Mongo vector field>",
+        "chunk_size": 1024,
+        "token_overlap": 128
+    }
+]
