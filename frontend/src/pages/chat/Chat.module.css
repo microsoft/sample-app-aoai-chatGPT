@@ -306,6 +306,7 @@
   left: calc(50% - 161px / 2 + 25.8px);
   bottom: 116px;
   cursor: pointer;
+  width: 14%;
 }
 
 .stopGeneratingIcon {
@@ -315,8 +316,8 @@
 }
 
 .stopGeneratingText {
-  width: 103px;
-  height: 20px;
+  /* width: 103px;
+  height: 20px; */
   font-style: normal;
   font-weight: 600;
   font-size: 14px;
@@ -325,8 +326,9 @@
   align-items: center;
   color: white;
   flex: none;
-  order: 0;
-  flex-grow: 0;
+  /* order: 0;
+  flex-grow: 0; */
+  text-align: center;
 }
 
 .citationPanel {

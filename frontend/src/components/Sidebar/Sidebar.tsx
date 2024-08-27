@@ -1,6 +1,6 @@
-import { FC, useEffect, useState, useContext} from 'react'
+import { FC, useEffect, useState, useContext } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
-import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash } from 'react-bootstrap-icons'
+import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash, Display } from 'react-bootstrap-icons'
 import { MoonLoader } from 'react-spinners'
 import styles from '../Sidebar/Sidebar.module.css'
 import css from '../../components/common/Button.module.css'
@@ -199,7 +199,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                     setShowPdfModal(true)
                     setActivePdfKey(null)
                   }}
-                  key={key} 
+                  key={key}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <TooltipHost
@@ -228,16 +228,19 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                     </TooltipHost>
 
                     {/* Button for chat per document */}
+                    {false ? (
                     <IconButton
+                      // style={{ display: 'none' }} //Hide Chat by document button
                       className={`${styles.itemChatButton} ${css.buttonStructure}`}
                       iconProps={{ iconName: 'CannedChat' }}
-                      title="Canned Chat"
-                      ariaLabel="Canned Chat"
+                      title="Chat por documento"
+                      ariaLabel="Botón de Chat por documento"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleButtonClick(key);
                       }}
                     />
+                    ) : null}
                   </div>
                 </MenuItem>
               ))

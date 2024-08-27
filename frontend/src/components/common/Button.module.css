@@ -150,7 +150,9 @@
 .buttonStructure {
   border-radius: 10px !important;
   background-image: linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 ) !important;
-  color: white
+  color: white;
+  width: 50%;
+  text-align: center;
 }
 
 .buttonStructure:hover {
