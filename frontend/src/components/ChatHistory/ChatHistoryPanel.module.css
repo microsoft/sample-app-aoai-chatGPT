@@ -36,7 +36,7 @@
   background-color: #a1dc00;
   margin: auto 2.5px;
   cursor: pointer;
-  color:black !important;
+  color:rgb(255, 255, 255) !important;
 }
 
 .itemButton:hover {

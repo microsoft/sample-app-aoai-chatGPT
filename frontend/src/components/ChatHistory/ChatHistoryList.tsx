@@ -13,14 +13,20 @@ export interface GroupedChatHistory {
   entries: Conversation[]
 }
 
+const monthsInSpanish = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
 const groupByMonth = (entries: Conversation[]) => {
-  const groups: GroupedChatHistory[] = [{ month: 'Recent', entries: [] }]
+  const groups: GroupedChatHistory[] = [{ month: 'Reciente', entries: [] }]
   const currentDate = new Date()
 
   entries.forEach(entry => {
     const date = new Date(entry.date)
     const daysDifference = (currentDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
-    const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' })
+    const month = monthsInSpanish[date.getMonth()]
+    const monthYear = `${month} ${date.getFullYear()}`
     const existingGroup = groups.find(group => group.month === monthYear)
 
     if (daysDifference <= 7) {
@@ -35,13 +41,12 @@ const groupByMonth = (entries: Conversation[]) => {
   })
 
   groups.sort((a, b) => {
-    // Check if either group has no entries and handle it
     if (a.entries.length === 0 && b.entries.length === 0) {
-      return 0 // No change in order
+      return 0
     } else if (a.entries.length === 0) {
-      return 1 // Move 'a' to a higher index (bottom)
+      return 1
     } else if (b.entries.length === 0) {
-      return -1 // Move 'b' to a higher index (bottom)
+      return -1
     }
     const dateA = new Date(a.entries[0].date)
     const dateB = new Date(b.entries[0].date)

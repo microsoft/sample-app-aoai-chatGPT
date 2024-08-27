@@ -1,10 +1,10 @@
 .shareButtonRoot {
-  width: 86px;
+  width: 7.5rem;
   height: 32px;
   border-radius: 4px;
   background-color: #070034;
-  /* background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0f6cbd 33.63%, #2d87c3 70.31%, #8dddd8 100%); */
   padding: 5px 12px;
+  /* background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0f6cbd 33.63%, #2d87c3 70.31%, #8dddd8 100%); */
 }
 
 .shareButtonRoot:hover {
@@ -23,30 +23,112 @@
   color: #ffffff;
 }
 
+/* Share -> Copy Button  */
+.copyButtonContainer {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 12px;
+  gap: 4px;
+  border: 1px solid #d1d1d1;
+}
+
+.copyButtonContainer:hover {
+  cursor: pointer;
+}
+
+.copyButton {
+  color: #424242;
+}
+
+.copyButtonText {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #242424;
+}
+
+/* History Button */
+
+.historyButtonRoot {
+  width: 7.5rem;
+  line-height: 20px;
+  border: none;
+  border-radius: 10px;  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.historyButtonRoot span {
+  color: white; 
+  font-weight: 600;
+  font-size: 14px;
+  margin-left: 10px;  
+
+}
+
+/* Share Button */
+
+.shareButtonContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-right: 20px;
+}
+
+.shareButton {
+  color: #ffffff;
+}
+
+.shareButtonText {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+}
+
 .shareButtonRoot i,
 .shareButtonRoot:hover i {
   color: #ffffff !important;
 }
 
-.historyButtonRoot {
-  width: 180px;
+/* Citation Panel */
+.citationPanelPDF {
+  color: white;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px 6px 6px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.citationPdfPageButton {
+  height: 2rem;
+  width: 2rem;
   border-radius: 4px;
-  color:white;
-  background-color: #070034;
   border: none;
-}
- 
-.historyButtonRoot span {
-  color:white;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #000;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
-.historyButtonRoot:hover {
-  background: rgb(57, 50, 102);
-}
-
-.historyButtonRoot:active {
- background-color:#5a5aa3;
-}
 
 @media (max-width: 480px) {
   .shareButtonRoot {
@@ -59,3 +141,14 @@
     padding: 0 8px;
   }
 }
+
+.buttonStructure {
+  border-radius: 10px !important;
+  background-image: linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 ) !important;
+  color: white !important
+}
+
+.buttonStructure:hover {
+  background-image: linear-gradient(to top left, #47396a, #6b509e, #d19bd6 ) !important;
+}
+

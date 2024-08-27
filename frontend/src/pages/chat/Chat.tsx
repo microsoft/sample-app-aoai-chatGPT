@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
 import { CommandBarButton, IconButton, Dialog, DialogType, Stack, Separator } from '@fluentui/react'
-import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import { SquareRegular, ShieldLockRegular, ErrorCircleRegular} from '@fluentui/react-icons'
+import { BiSolidFilePdf } from "react-icons/bi";
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -12,6 +13,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
+import css from '../../components/common/Button.module.css'
 import Contoso from '../../assets/Contoso.svg'
 import { XSSAllowTags } from '../../constants/xssAllowTags'
 
@@ -924,7 +926,7 @@ const faq = (question: string) =>{
                 // Stop Generating Button
                 <Stack
                   horizontal
-                  className={styles.stopGeneratingContainer}
+                  className={`${styles.stopGeneratingContainer} ${css.buttonStructure}`}
                   role="button"
                   aria-label="Stop generating"
                   tabIndex={0}
@@ -932,7 +934,7 @@ const faq = (question: string) =>{
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? stopGenerating() : null)}>
                   <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true" />
                   <span className={styles.stopGeneratingText} aria-hidden="true">
-                    Stop generating
+                  Dejar de generar
                   </span>
                 </Stack>
               )}
@@ -944,23 +946,24 @@ const faq = (question: string) =>{
                     role="button"
                     styles={{
                       icon: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconHovered: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconPressed: {
-                        color: '#000000',
+                        color: '#fff',
                       },
                       iconDisabled: {
                         color: '#6e6c6b',
                       },
                       root: {
                         color: '#000000',
-                        backgroundColor: '#a1dc00',
+                        backgroundImage: 'linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 )',
+                        borderRadius: '10px !important' ,
                       },
                       rootHovered: {
-                        backgroundColor: '#a9ff00',
+                        backgroundImage: 'linear-gradient(to top left, #47396a, #6b509e, #d19bd6 )',
                         color: '#000000',
                       },
                       rootPressed: {
@@ -983,29 +986,31 @@ const faq = (question: string) =>{
                   role="button"
                   styles={{
                     icon: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconHovered: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconPressed: {
-                      color: '#000000',
+                      color: '#fff',
                     },
                     iconDisabled: {
                       color: '#6e6c6b',
                     },
                     root: {
-                      color: '#FFFFFF',
-                      backgroundColor: '#a1dc00',
+                      color: '#000000',
+                      backgroundImage: 'linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 )',
+                      borderRadius: '10px !important',
                     },
                     rootHovered: {
-                      backgroundColor: '#a9ff00',
+                      backgroundImage: 'linear-gradient(to top left, #47396a, #6b509e, #d19bd6 )',
+                      color: '#000000',
                     },
                     rootPressed: {
                       backgroundColor: '#98ff00',
                     },
                     rootDisabled: {
-                      backgroundColor: '#BDBDBD',
+                      background: '#BDBDBD',
                     },
                   }}
                   className={
@@ -1030,7 +1035,7 @@ const faq = (question: string) =>{
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Escribe una pregunta..."
                 disabled={isLoading}
                 onSend={(question, id) => {
                   console.log("Question on Send:", question, "Id on Send:",id )
@@ -1055,7 +1060,7 @@ const faq = (question: string) =>{
                 horizontalAlign="space-between"
                 verticalAlign="center">
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
-                  Citations
+                  Citas
                 </span>
                 <IconButton
                   styles={{
@@ -1114,30 +1119,18 @@ const faq = (question: string) =>{
               />
 
               {/* Citation Panel Button to open PDF */}
-              <div onClick={() => handleOpenPdf(activeCitation)} className={styles.citationPanelPDF}>
-                <IconButton
-                  iconProps={{ iconName: 'PDF' }}
-                  title="Open PDF"
-                  ariaLabel="Open PDF"
-                  styles={{
-                    root: { backgroundColor: 'transparent' , paddingRight: "15px"},
-                    rootHovered: {backgroundColor: 'transparent'},
-                    rootPressed: { backgroundColor: 'transparent'},
-                    icon: { color: '#070034', fontSize: "25px" },
-                    iconHovered: {color:"#070034"},
-                    iconPressed: { color: "#070034" },
-                  }}
-                />
-                <span style={{fontStyle: "italic"}}>{pdfName}</span>
+              <div onClick={() => handleOpenPdf(activeCitation)} className={`${css.citationPanelPDF} ${css.buttonStructure}`}>
+              <BiSolidFilePdf color="#fff" size="30px"/>
+                <span style={{fontStyle: "italic", marginLeft:"6px"}}>{pdfName}</span>
               </div>
 
               {/* Page btn where the citation is located */}
-              <div className={styles.citationPageButtonContainer}>
+              <div className={css.citationPageButtonContainer}>
               <p>{pageList.length > 1 ? "Páginas: " : "Página: "}</p>
               {pageList.map((value, index) => (
                 <button
                 key={index}
-                className={styles.citationPdfPageButton}
+                className={`${css.citationPdfPageButton} ${css.buttonStructure}`}
                 onClick={() => {
                   handleOpenPdf(activeCitation, value.toString());
                 }}

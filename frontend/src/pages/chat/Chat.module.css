@@ -21,8 +21,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color:#070034;
-  color:white;
+  background-image:
+    linear-gradient(to bottom right, #cfe8f3, #a2c5e0, #6ba8d4, #4d90d0, #886bc8),
+    linear-gradient(to bottom left, #4d90d0, #6e8cd1, #907ecf, #af71d0 10%, #c26cd1 10%),
+    linear-gradient(to top right, #c26cd1 20%, #ab79cf 20%, #8a8dc9 20%);
+  background-size: 200% 400%;
+  animation: waveAnimation 20s ease-in-out infinite;
+  background-position: center;
+  color: white;
   /* background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%); */
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -30,6 +36,20 @@
   border-radius: 8px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
+}
+
+@keyframes waveAnimation {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
 }
 
 .chatEmptyState {
@@ -84,32 +104,33 @@
   justify-content: center;
 }
 
-*{
+* {
   transition: background-color 0.3s ease;
 }
 
 .faqOption {
-  background-color: rgb(82, 104, 159); 
+  background-color: rgb(82, 104, 159);
   transition: background-color 0.3s ease;
-  border: none; 
-  padding: 45px 30px; 
-  border-radius: 8px; 
-  color: #fff; 
-  font-size: 18px; 
-  cursor: pointer; 
+  backdrop-filter: blur(10px);
+  border: none;
+  padding: 45px 30px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
   display: flex;
   width: 20rem;
   height: 10rem;
   justify-content: center;
-  align-items: center;  
-  text-align: center; 
+  align-items: center;
+  text-align: center;
   flex: 1;
   margin-bottom: 1rem;
 }
 
 .faqOption:hover {
   background-color: rgb(74, 77, 150);
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .faqOption.pressed {
@@ -199,7 +220,7 @@
   word-wrap: break-word;
   gap: 12px;
   align-items: center;
-  color:red;
+  color: red;
 }
 
 .chatMessageErrorContent {
@@ -257,7 +278,6 @@
   color: black;
   border-radius: 4px;
   z-index: 1;
-  background-color: #a1dc00;
 }
 
 .newChatIcon {
@@ -282,22 +302,20 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 5px 16px;
+  padding: 5px 5px;
   gap: 4px;
   position: absolute;
-  width: 161px;
+  width: 250px;
   height: 32px;
   left: calc(50% - 161px / 2 + 25.8px);
   bottom: 116px;
-  border-radius: 16px;
-  background-color: #a1dc00;
   cursor: pointer;
 }
 
 .stopGeneratingIcon {
   width: 14px;
   height: 14px;
-  color: black;
+  color: white;
 }
 
 .stopGeneratingText {
@@ -309,7 +327,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: black;
+  color: white;
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -388,47 +406,20 @@
   flex-grow: 0;
 }
 
-.citationPanelPDF{
-  color:white;
+.citationPanelPDF {
+  color: white;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   display: flex;
   align-items: center;
   padding: 6px 10px 6px 6px;
-  background-color: #8484ef;
   border-radius: 8px;
   width: 100%;
-}
-.citationPanelPDF:hover {
-background-color: #948cff;
-
 }
 
 .citationPageButtonContainer {
   display: flex;
   align-items: center;
-  color:#fff
-}
-
-.citationPdfPageButton {
-  background-color: #a1dc00;
-  height: 2rem;
-  width: 2rem;
-  border-radius: 4px;
-  border: none;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
-  color: #000;
-  flex: none;
-  order: 1;
-  flex-grow: 0;
-  margin-left: 10px;
-  cursor: pointer;
-}
-
-.citationPdfPageButton:hover {
-  background-color: #a9ff00;
+  color: #fff
 }
 
 .exectResultList {
@@ -447,7 +438,7 @@ background-color: #948cff;
   border-bottom: none;
 }
 
-.exectResultList > p {
+.exectResultList>p {
   display: flex;
   flex-direction: row;
   gap: 4px;
@@ -455,7 +446,7 @@ background-color: #948cff;
   margin-bottom: 16px;
 }
 
-.exectResultList > span {
+.exectResultList>span {
   font-weight: 600;
 }
 

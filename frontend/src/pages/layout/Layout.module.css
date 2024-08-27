@@ -34,30 +34,9 @@
 }
 
 .headerIcon {
-  height: 32px;
+  height: 55px;
   width: auto;
   margin-left: 36px;
-}
-
-.shareButtonContainer {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  margin-right: 20px;
-}
-
-.shareButton {
-  color: #ffffff;
-}
-
-.shareButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #ffffff;
 }
 
 .urlTextBox {
@@ -68,38 +47,6 @@
   color: #707070;
   border: 1px solid #d1d1d1;
   border-radius: 4px;
-}
-
-.copyButtonContainer {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 5px 12px;
-  gap: 4px;
-  background: #ffffff;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
-  cursor: pointer;
-  background: #d1d1d1;
-}
-
-.copyButton {
-  color: #424242;
-}
-
-.copyButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #242424;
 }
 
 @media (max-width: 480px) {
