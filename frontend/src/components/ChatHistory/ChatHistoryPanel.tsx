@@ -116,7 +116,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               fontSize: '18px',
               marginRight: 'auto',
               paddingLeft: '20px',
-              color: "white"
+              color: "black"
             }}>
             Historial
           </Text>
@@ -147,7 +147,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                 subComponentStyles: {
                   menuItem: {
                     root: {
-                      backgroundColor: "#5a5aa3",
+                      backgroundColor: "white",
                       color: "white",
                       selectors: {
                         ":hover": {

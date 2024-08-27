@@ -1,3 +1,13 @@
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+html {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 .layout {
   display: flex;
   flex-direction: column;
@@ -7,7 +17,7 @@
 .header {
   /* background-color: #f2f2f2; */
   /* background-color: rgb(152, 153, 169); */
-  background-color: #d0d3d8;
+  background-color: #cbe5ff;
 }
 
 .headerContainer {

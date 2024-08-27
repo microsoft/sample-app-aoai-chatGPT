@@ -26,20 +26,23 @@ css-dip3t8::-webkit-scrollbar-thumb {
   height: 100%;
 }
 
+.searchbarPDF{
+  width: 100%;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  padding: 14px;
+}
+
 .itemChatButton {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
-  background-color: #a1dc00;
+  width:32px;
+  height: 32px;
   margin: auto 2.5px;
   cursor: pointer;
-  color:black !important;
+  color:#fff !important;
   transition: color 0.6s ease;
 }
 
-.itemChatButton:hover {
-  background-color: yellow;
-}

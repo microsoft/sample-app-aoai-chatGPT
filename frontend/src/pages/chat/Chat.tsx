@@ -1065,10 +1065,10 @@ const faq = (question: string) =>{
                 <IconButton
                   styles={{
                     icon: {
-                      color: '#fff',
+                      color: '#664c96',
                     },
                     iconHovered: {
-                      color: '#fff',
+                      color: '#664c96',
                     },
                     rootHovered: {
                       backgroundColor: '#484492',
@@ -1112,7 +1112,7 @@ const faq = (question: string) =>{
                     width: '100%',
                     position: 'relative',
                     '::before': {
-                      backgroundColor: '#070034'
+                      backgroundColor: '#664c96'
                     }
                   }
                 }}

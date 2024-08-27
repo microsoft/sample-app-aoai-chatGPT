@@ -1,7 +1,7 @@
 .container {
   max-height: calc(100vh - 100px);
   width: 300px;
-  color:white;
+  color:black;
 }
 
 .listContainer {
@@ -23,7 +23,7 @@
 }
 
 .itemCell:hover {
-  background: #5a5aa3;
+  background: #dcebff;
 }
 
 .itemButton {
@@ -33,14 +33,13 @@
   width: 28px;
   height: 28px;
   border-radius: 5px;
-  background-color: #a1dc00;
   margin: auto 2.5px;
   cursor: pointer;
-  color:rgb(255, 255, 255) !important;
+  color:white;
 }
 
 .itemButton:hover {
-  background-color: #a9ff00;
+  color: white
 }
 
 .chatGroup {
@@ -64,7 +63,7 @@
   font-weight: 600;
   margin-bottom: 5px;
   padding-left: 15px;
-  color:white;
+  color:black;
 }
 
 .chatTitle {
@@ -72,7 +71,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color:white;
+  color:rgb(0, 0, 0) !important;
 }
 
 @media (max-width: 480px) {

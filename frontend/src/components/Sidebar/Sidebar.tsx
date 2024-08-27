@@ -3,6 +3,7 @@ import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-
 import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash } from 'react-bootstrap-icons'
 import { MoonLoader } from 'react-spinners'
 import styles from '../Sidebar/Sidebar.module.css'
+import css from '../../components/common/Button.module.css'
 import { pdfList } from '../../api'
 import PdfModal from '../PdfModal/PdfModal'
 import { IconButton, TooltipHost } from '@fluentui/react'
@@ -115,7 +116,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             collapsed && !toggled
               ? {
                 ['.' + sidebarClasses.container]: {
-                  backgroundColor: 'rgb(202, 203, 219)',
+                  backgroundColor: '#cbe5ff',
                   '&::-webkit-scrollbar': {
                     display: 'none'
                   }
@@ -123,7 +124,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
               }
               : {
                 ['.' + sidebarClasses.container]: {
-                  backgroundColor: 'rgb(202, 203, 219)',
+                  backgroundColor: '#cbe5ff',
                   '&::-webkit-scrollbar': {
                     width: '5px',
                     height: '5px',
@@ -161,16 +162,11 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 {!collapsed && (
                   <div style={{ padding: '10px' }}>
                     <input
+                      className={styles.searchbarPDF}
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Busqueda de PDFs..."
-                      style={{
-                        width: '100%',
-                        padding: '4px',
-                        borderRadius: '10px',
-                        border: '1px solid #ccc',
-                      }}
                     />
                   </div>
                 )}
@@ -182,7 +178,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                   // style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
                   style={{
                     color: '#201F1E',
-                    backgroundColor: activePdfKey === key ? '#d4e0f4' : 'transparent',  // Apply background color if selected
+                    backgroundColor: activePdfKey === key ? '#cbe1ff' : 'transparent',  // Apply background color if selected
                     borderRadius: '5px',  // Optional: add some rounded corners
                   }}
                   rootStyles={{
@@ -230,12 +226,13 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                         {key}
                       </span>
                     </TooltipHost>
+
+                    {/* Button for chat per document */}
                     <IconButton
-                      className={styles.itemChatButton}
+                      className={`${styles.itemChatButton} ${css.buttonStructure}`}
                       iconProps={{ iconName: 'CannedChat' }}
                       title="Canned Chat"
                       ariaLabel="Canned Chat"
-                      // styles={{ root: { color: '#0078d4' } }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleButtonClick(key);
