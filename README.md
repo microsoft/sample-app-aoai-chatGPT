@@ -10,6 +10,7 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
   - Elasticsearch index (preview)
   - Pinecone index (private preview)
   - Azure SQL Server (private preview)
+  - Mongo DB (preview)
 
 ## Configure the app
 
@@ -283,6 +284,34 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
     - `PINECONE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
+#### Chat with your data using Mongo DB (Private Preview)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To connect to your data, you need to specify an Mongo DB database configuration.  Learn more about [MongoDB](https://www.mongodb.com/).
+
+3. Configure data source settings as described in the table below.
+
+    | App Setting | Required? | Default Value | Note |
+    | --- | --- | --- | ------------- |
+    |DATASOURCE_TYPE|Yes||Must be set to `MongoDB`|
+    |MONGODB_CONNECTION_STRING|Yes||The connection string used to connect to your Mongo DB instance|
+    |MONGODB_VECTOR_INDEX|Yes||The name of your Mongo DB vector index|
+    |MONGODB_DATABASE_NAME|Yes||The name of your Mongo DB database|
+    |MONGODB_CONTAINER_NAME|Yes||The name of your Mongo DB container|
+    |MONGODB_TOP_K|No|5|The number of documents to retrieve when querying your search index.|
+    |MONGODB_ENABLE_IN_DOMAIN|No|True|Limits responses to only queries relating to your data.|
+    |MONGODB_STRICTNESS|No|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
+    |MONGODB_CONTENT_COLUMNS|No||List of fields in your search index that contains the text content of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
+    |MONGODB_FILENAME_COLUMN|No|| Field from your search index that gives a unique identifier of the source of your data to display in the UI.|
+    |MONGODB_TITLE_COLUMN|No||Field from your search index that gives a relevant title or header for your data content to display in the UI.|
+    |MONGODB_URL_COLUMN|No||Field from your search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
+    |MONGODB_VECTOR_COLUMNS|No||List of fields in your search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
+
+    MongoDB uses vector search by default, so ensure these settings are configured on your app:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `MONGODB_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+    
 #### Chat with your data using Azure SQL Server (Private Preview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
