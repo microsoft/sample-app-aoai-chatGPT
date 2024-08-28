@@ -58,6 +58,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-top: 5%;
 }
 
 .chatEmptyStateTitle {
@@ -83,6 +84,7 @@
   text-align: center;
   letter-spacing: -0.01em;
   color: #664c96;
+  margin-bottom: -25%;
 }
 
 
@@ -91,6 +93,7 @@
   text-align: center;
   align-items: flex-end;
   color: #fff;
+  margin-bottom: 4%;
 }
 
 .optionsNavList {

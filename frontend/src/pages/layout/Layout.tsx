@@ -159,9 +159,11 @@ const Layout = () => {
               tabIndex={0}
               aria-label="Copy"
               onClick={handleCopyClick}
-              onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
-              <CopyRegular className={styles.copyButton} />
-              <span className={styles.copyButtonText}>{copyText}</span>
+              onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}
+              style={{ height: '34px', display: 'flex', alignItems: 'center'}}
+              >
+              <CopyRegular className={styles.copyButton}  />
+              <span className={styles.copyButtonText} style={{textAlign: 'center'}}>{copyText}</span>
             </div>
           </Stack>
         </Dialog>
