@@ -154,16 +154,22 @@ const Layout = () => {
           <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
             <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
             <div
-              className={`${styles.copyButtonContainer} ${css.buttonStructure}` }
+              className={`${css.copyButtonContainer} ${css.buttonStructure}` }
               role="button"
               tabIndex={0}
               aria-label="Copy"
               onClick={handleCopyClick}
+<<<<<<< Updated upstream
               onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}
               style={{ height: '34px', display: 'flex', alignItems: 'center'}}
               >
               <CopyRegular className={styles.copyButton}  />
               <span className={styles.copyButtonText} style={{textAlign: 'center'}}>{copyText}</span>
+=======
+              onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
+              <CopyRegular />
+              <span className={css.copyButtonText}>{copyText}</span>
+>>>>>>> Stashed changes
             </div>
           </Stack>
         </Dialog>

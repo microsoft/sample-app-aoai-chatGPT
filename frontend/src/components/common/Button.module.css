@@ -39,10 +39,6 @@
   cursor: pointer;
 }
 
-.copyButton {
-  color: #424242;
-}
-
 .copyButtonText {
   font-style: normal;
   font-weight: 600;
@@ -50,7 +46,7 @@
   line-height: 20px;
   display: flex;
   align-items: center;
-  color: #242424;
+  color: #fff;
 }
 
 /* History Button */
@@ -151,8 +147,6 @@
   border-radius: 10px !important;
   background-image: linear-gradient(to bottom right, #47396a, #6b509e, #d19bd6 ) !important;
   color: white;
-  width: 50%;
-  text-align: center;
 }
 
 .buttonStructure:hover {

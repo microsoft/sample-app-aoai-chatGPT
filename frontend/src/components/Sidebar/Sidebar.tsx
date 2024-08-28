@@ -150,9 +150,9 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                   onClick={handleCollapsedChange}
                   rootStyles={{
                     ['.' + menuClasses.button]: {
-                      color: '#fbfbfb',
+                      color: 'yellow',
                       '&:hover': {
-                        backgroundColor: '#eecef9',
+                        backgroundColor: 'red',
                       },
                     },
                   }}
@@ -177,10 +177,9 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                 <MenuItem
                   // style={collapsed && !toggled ? { visibility: 'hidden' } : { color: '#201F1E' }}
                   style={{
-                    color: '#201F1E',
                     backgroundColor: activePdfKey === key ? '#cbe1ff' : 'transparent',  // Apply background color if selected
-                    borderRadius: '5px',  // Optional: add some rounded corners
                   }}
+                  className={styles.itemPdfList}
                   rootStyles={{
                     ['.' + menuClasses.label]: {
                       whiteSpace: 'normal',

@@ -34,6 +34,15 @@ css-dip3t8::-webkit-scrollbar-thumb {
   padding: 14px;
 }
 
+.itemPdfList{
+  color: 'black';
+  border-radius: '5px';
+}
+
+.itemPdfList:hover {
+background: #9ac4e3;
+}
+
 .itemChatButton {
   display: flex;
   justify-content: center;
