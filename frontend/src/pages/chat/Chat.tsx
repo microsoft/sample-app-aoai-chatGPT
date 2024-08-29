@@ -96,9 +96,9 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail &&
       hideErrorDialog
     ) {
-      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
+      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Por favor contacte al administrador.`
       setErrorMsg({
-        title: 'Chat history is not enabled',
+        title: 'El historial de chat no está habilitado',
         subtitle: subtitle
       })
       toggleErrorDialog()
