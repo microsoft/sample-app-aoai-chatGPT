@@ -198,30 +198,30 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
             <form aria-label="edit title form" onSubmit={e => handleSaveEdit(e)} style={{ padding: '5px 0px' }}>
               <Stack horizontal verticalAlign={'center'}>
                 <Stack.Item>
-                  <TextField
-                    componentRef={textFieldRef}
-                    autoFocus={textFieldFocused}
-                    value={editTitle}
-                    placeholder={item.title}
-                    onChange={chatHistoryTitleOnChange}
-                    onKeyDown={handleKeyPressEdit}
-                    disabled={errorRename ? true : false}
-                    styles={{
-                      root: {
-                        selectors: {
-                          ".ms-TextField-fieldGroup": {
-                            border: '1px solid #fff !important',
-                            borderRadius: '10px !important',
-                            height: '2.3rem'
-                          },
-                          ".ms-TextField-field":{
-                            paddingLeft: '10px',
-                            color: 'black',
-                          }
-                        },
-                      },
-                    }}
-                  />
+                <TextField
+    componentRef={textFieldRef}
+    autoFocus={textFieldFocused}
+    value={editTitle}
+    placeholder={item.title}
+    onChange={chatHistoryTitleOnChange}
+    onKeyDown={handleKeyPressEdit}
+    disabled={errorRename ? true : false}
+    styles={{
+      root: {
+        selectors: {
+          ".ms-TextField-fieldGroup": {
+            border: '1px solid transparent !important',
+            borderRadius: '10px !important',
+            height: '2.3rem',
+          },
+          ".ms-TextField-field": {
+            paddingLeft: '10px',
+            color: 'black',
+          },
+        },
+      },
+    }}
+/>
                 </Stack.Item>
                 {editTitle && (
                   <Stack.Item>

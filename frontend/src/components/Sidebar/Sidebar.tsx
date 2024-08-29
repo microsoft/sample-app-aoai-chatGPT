@@ -166,7 +166,7 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Busqueda de PDFs..."
+                      placeholder="Búsqueda de PDFs..."
                     />
                   </div>
                 )}
