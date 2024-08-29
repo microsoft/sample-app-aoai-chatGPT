@@ -52,11 +52,11 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
 
   const clearAllDialogContentProps = {
     type: DialogType.close,
-    title: !clearingError ? 'Are you sure you want to clear all chat history?' : 'Error deleting all of chat history',
+    title: !clearingError ? '¿Estás seguro de que quieres borrar todo el historial de chat?' : 'Error al eliminar todo el historial de chat',
     closeButtonAriaLabel: 'Close',
     subText: !clearingError
-      ? 'All chat history will be permanently removed.'
-      : 'Please try again. If the problem persists, please contact the site administrator.'
+      ? 'Todo el historial de chat se eliminará permanentemente.'
+      : 'Por favor inténtalo de nuevo. Si el problema persiste, comuníquese con el administrador del sitio.'
   }
 
   const modalProps = {
@@ -131,7 +131,12 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               onClick={onShowContextualMenu}
               aria-label={'clear all chat history'}
               styles={
-                { root: { backgroundColor: "#cbe5ff" }, rootHovered: { backgroundColor: '#9ac4e3' }, rootPressed: { backgroundColor: "#cbe1ff" }, icon: { color: 'black' }, iconHovered: { color: 'black' }, iconPressed: { color: 'black' } }}
+                { root: { backgroundColor: "#cbe5ff" },
+                  rootHovered: { backgroundColor: '#9ac4e3' },
+                  rootPressed: { backgroundColor: "#cbe1ff" },
+                  icon: { color: 'black' },
+                  iconHovered: { color: 'black' },
+                  iconPressed: { color: 'black' } }}
               role="button"
               id="moreButton"
             />
@@ -174,7 +179,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
             {/* X button */}
             <CommandBarButton
               iconProps={{ iconName: 'Cancel' }}
-              title={'Hide'}
+              title={'Esconder'}
               onClick={handleHistoryClick}
               aria-label={'hide button'}
               styles={{ root: { backgroundColor: "#cbe5ff" }, rootHovered: { backgroundColor: '#9ac4e3' }, rootPressed: { backgroundColor: "#9ac4e3" }, icon: { color: 'black' }, iconHovered: { color: 'black' }, iconPressed: { color: 'black' } }}
@@ -214,12 +219,12 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                         {appStateContext?.state.isCosmosDBAvailable?.status && (
                           <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>
                         )}
-                        {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
+                        {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error al cargar el historial de chat</span>}
                       </Text>
                     </StackItem>
                     <StackItem>
                       <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14, color: 'white' }}>
-                        <span>Chat history can't be saved at this time</span>
+                        <span>El historial de chat no se puede guardar en este momento</span>
                       </Text>
                     </StackItem>
                   </Stack>
@@ -242,7 +247,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                   </StackItem>
                   <StackItem>
                     <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14, color: 'white' }}>
-                      <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
+                      <span style={{ whiteSpace: 'pre-wrap' }}>Cargando historial de chat</span>
                     </Text>
                   </StackItem>
                 </Stack>
@@ -257,11 +262,11 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
         dialogContentProps={clearAllDialogContentProps}
         modalProps={modalProps}>
         <DialogFooter>
-          {!clearingError && <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />}
+          {!clearingError && <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Borrar todo" />}
           <DefaultButton
             onClick={onHideClearAllDialog}
             disabled={clearing}
-            text={!clearingError ? 'Cancel' : 'Close'}
+            text={!clearingError ? 'Cancelar' : 'Cerrar'}
           />
         </DialogFooter>
       </Dialog>

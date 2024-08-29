@@ -25,7 +25,7 @@ import { AppStateContext } from '../../state/AppProvider'
 import { GroupedChatHistory } from './ChatHistoryList'
 
 import styles from './ChatHistoryPanel.module.css'
-import css from '../common/Button.module.css'
+import css from '../../components/common/Button.module.css'
 
 interface ChatHistoryListItemCellProps {
   item?: Conversation
@@ -65,9 +65,9 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
   const isSelected = item?.id === appStateContext?.state.currentChat?.id
   const dialogContentProps = {
     type: DialogType.close,
-    title: 'Are you sure you want to delete this item?',
+    title: '¿Estás seguro de que quieres borrar todo el historial de chat?',
     closeButtonAriaLabel: 'Close',
-    subText: 'The history of this chat session will permanently removed.'
+    subText: 'Todo el historial de chat se eliminará permanentemente.'
   }
 
   const modalProps = {
@@ -127,7 +127,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
       return
     }
     if (editTitle == item.title) {
-      setErrorRename('Error: Enter a new title to proceed.')
+      setErrorRename('Error: ingrese un nuevo título para continuar.')
       setTimeout(() => {
         setErrorRename(undefined)
         setTextFieldFocused(true)
@@ -140,7 +140,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
     setRenameLoading(true)
     const response = await historyRename(item.id, editTitle)
     if (!response.ok) {
-      setErrorRename('Error: could not rename item')
+      setErrorRename('Error: no se pudo cambiar el nombre del elemento')
       setTimeout(() => {
         setTextFieldFocused(true)
         setErrorRename(undefined)
@@ -196,7 +196,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         <>
           <Stack.Item style={{ width: '100%' }}>
             <form aria-label="edit title form" onSubmit={e => handleSaveEdit(e)} style={{ padding: '5px 0px' }}>
-              <Stack horizontal verticalAlign={'start'}>
+              <Stack horizontal verticalAlign={'center'}>
                 <Stack.Item>
                   <TextField
                     componentRef={textFieldRef}
@@ -205,8 +205,22 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                     placeholder={item.title}
                     onChange={chatHistoryTitleOnChange}
                     onKeyDown={handleKeyPressEdit}
-                    // errorMessage={errorRename}
                     disabled={errorRename ? true : false}
+                    styles={{
+                      root: {
+                        selectors: {
+                          ".ms-TextField-fieldGroup": {
+                            border: '1px solid #fff !important',
+                            borderRadius: '10px !important',
+                            height: '2.3rem'
+                          },
+                          ".ms-TextField-field":{
+                            paddingLeft: '10px',
+                            color: 'black',
+                          }
+                        },
+                      },
+                    }}
                   />
                 </Stack.Item>
                 {editTitle && (
@@ -219,7 +233,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                         onClick={e => handleSaveEdit(e)}
                         aria-label="confirm new title"
                         iconProps={{ iconName: 'CheckMark' }}
-                        styles={{ root: { color: 'green', marginLeft: '5px' } }}
+                        styles={{ root: { color: 'green', marginLeft: '5px' }, rootHovered: { color: 'green', marginLeft: '5px', background: '#cbe5ff' } }}
                       />
                       <IconButton
                         role="button"
@@ -228,7 +242,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                         onClick={() => cancelEditTitle()}
                         aria-label="cancel edit title"
                         iconProps={{ iconName: 'Cancel' }}
-                        styles={{ root: { color: 'red', marginLeft: '5px' } }}
+                        styles={{ root: { color: 'red', marginLeft: '5px' }, rootHovered: { color: 'red', marginLeft: '5px', background: '#cbe5ff' } }}
                       />
                     </Stack>
                   </Stack.Item>
@@ -246,6 +260,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
           </Stack.Item>
         </>
       ) : (
+        // Delete and Edit buttons in Chat History Panel
         <>
           <Stack horizontal verticalAlign={'center'} style={{ width: '100%' }}>
             <div className={styles.chatTitle}>{truncatedTitle}</div>
@@ -254,14 +269,14 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
                 <IconButton
                   className={`${styles.itemButton} ${css.buttonStructure}`}
                   iconProps={{ iconName: 'Delete' }}
-                  title="Delete"
+                  title="Borrar"
                   onClick={toggleDeleteDialog}
                   onKeyDown={e => (e.key === ' ' ? toggleDeleteDialog() : null)}
                 />
                 <IconButton
                   className={`${styles.itemButton} ${css.buttonStructure}`}
                   iconProps={{ iconName: 'Edit' }}
-                  title="Edit"
+                  title="Editar"
                   onClick={onEdit}
                   onKeyDown={e => (e.key === ' ' ? onEdit() : null)}
                 />
@@ -275,7 +290,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
           styles={{
             root: { color: 'red', marginTop: 5, fontSize: 14 }
           }}>
-          Error: could not delete item
+          Error: no se pudo eliminar el elemento
         </Text>
       )}
       <Dialog
@@ -284,8 +299,8 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
         dialogContentProps={dialogContentProps}
         modalProps={modalProps}>
         <DialogFooter>
-          <PrimaryButton onClick={onDelete} text="Delete" />
-          <DefaultButton onClick={toggleDeleteDialog} text="Cancel" />
+          <PrimaryButton onClick={onDelete} text="Borrar" className={`${css.deletePanelButtonsGeneral} ${css.deletePanelButton}`} />
+          <DefaultButton onClick={toggleDeleteDialog} text="Cancelar" className={css.deletePanelButtonsGeneral} />
         </DialogFooter>
       </Dialog>
     </Stack>

@@ -131,6 +131,20 @@
   cursor: pointer;
 }
 
+.deletePanelButtonsGeneral{
+  border-radius: 10px;
+}
+
+.deletePanelButton{
+  background-color: rgb(224, 36, 36);
+  border:none
+}
+
+.deletePanelButton:hover{
+  background-color: rgb(194, 15, 15);
+  border:none;
+}
+
 @media (max-width: 480px) {
   .shareButtonRoot {
     width: auto;

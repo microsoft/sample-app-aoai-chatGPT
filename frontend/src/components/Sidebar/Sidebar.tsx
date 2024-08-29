@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useContext } from 'react'
 import { Menu, MenuItem, Sidebar, menuClasses, sidebarClasses } from 'react-pro-sidebar'
-import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash, Display } from 'react-bootstrap-icons'
+import { ChevronDoubleLeft, ChevronDoubleRight, DatabaseSlash, Display, ArrowRightCircle,ArrowLeftCircle } from 'react-bootstrap-icons'
 import { MoonLoader } from 'react-spinners'
 import styles from '../Sidebar/Sidebar.module.css'
 import css from '../../components/common/Button.module.css'
@@ -146,18 +146,18 @@ const SidebarMenu: FC<SidebarMenuProps> = ({
             {toggled ? null : (
               <>
                 <MenuItem
-                  icon={collapsed ? <ChevronDoubleRight color="#334768" size={20} /> : null}
+                  icon={collapsed ? <ArrowRightCircle color="#47396a" size={30} /> : null}
                   onClick={handleCollapsedChange}
                   rootStyles={{
                     ['.' + menuClasses.button]: {
-                      color: 'yellow',
+                      color: 'black',
                       '&:hover': {
-                        backgroundColor: 'red',
+                        backgroundColor: '#9ac4e3 !important',
                       },
                     },
                   }}
                 >
-                  {collapsed ? null : <ChevronDoubleLeft color="#334768" size={20} />}
+                  {collapsed ? null : <ArrowLeftCircle color="#47396a" size={30} />}
                 </MenuItem>
                 {!collapsed && (
                   <div style={{ padding: '10px' }}>
