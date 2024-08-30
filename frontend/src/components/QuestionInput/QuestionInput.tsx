@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { FontIcon, Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
 
@@ -6,7 +6,7 @@ import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
 import { ChatMessage } from '../../api'
-import { resizeImage } from '../../utils/resizeImage'
+import { AppStateContext } from '../../state/AppProvider'
 
 interface Props {
   onSend: (question: ChatMessage['content'], id?: string) => void
@@ -19,6 +19,9 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
   const [base64Image, setBase64Image] = useState<string | null>(null);
+
+  const appStateContext = useContext(AppStateContext)
+  const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -87,22 +90,23 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
       />
-      <div className={styles.fileInputContainer}>
-        <input
-          type="file"
-          id="fileInput"
-          onChange={(event) => handleImageUpload(event)}
-          accept="image/*"
-          className={styles.fileInput}
-        />
-        <label htmlFor="fileInput" className={styles.fileLabel} aria-label='Upload Image'>
-          <FontIcon
-            className={styles.fileIcon}
-            iconName={'PhotoCollection'}
-            aria-label='Upload Image'
+      {OYD_ENABLED && !OYD_ENABLED && (
+        <div className={styles.fileInputContainer}>
+          <input
+            type="file"
+            id="fileInput"
+            onChange={(event) => handleImageUpload(event)}
+            accept="image/*"
+            className={styles.fileInput}
           />
-        </label>
-      </div>
+          <label htmlFor="fileInput" className={styles.fileLabel} aria-label='Upload Image'>
+            <FontIcon
+              className={styles.fileIcon}
+              iconName={'PhotoCollection'}
+              aria-label='Upload Image'
+            />
+          </label>
+        </div>)}
       {base64Image && <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />}
       <div
         className={styles.questionInputSendButtonContainer}

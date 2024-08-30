@@ -138,6 +138,7 @@ export type FrontendSettings = {
   feedback_enabled?: string | null
   ui?: UI
   sanitize_answer?: boolean
+  oyd_enabled?: boolean
 }
 
 export enum Feedback {
