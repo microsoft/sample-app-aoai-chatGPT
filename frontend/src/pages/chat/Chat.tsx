@@ -64,6 +64,7 @@ const Chat = () => {
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [logo, setLogo] = useState('')
+  const [answerId, setAnswerId] = useState<string>('')
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -132,15 +133,27 @@ const Chat = () => {
   let toolMessage = {} as ChatMessage
   let assistantContent = ''
 
+  useEffect(() => parseExecResults(execResults), [execResults])
+
+  const parseExecResults = (exec_results_: any): void => {
+    if (exec_results_ == undefined) return
+    const exec_results = exec_results_.length === 2 ? exec_results_ : exec_results_.splice(2)
+    appStateContext?.dispatch({ type: 'SET_ANSWER_EXEC_RESULT', payload: { answerId: answerId, exec_result: exec_results } })
+  }
+
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
     if (resultMessage.content.includes('all_exec_results')) {
       const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
       setExecResults(parsedExecResults.all_exec_results)
+      assistantMessage.context = JSON.stringify({
+        all_exec_results: parsedExecResults.all_exec_results
+      })
     }
 
     if (resultMessage.role === ASSISTANT) {
+      setAnswerId(resultMessage.id)
       assistantContent += resultMessage.content
-      assistantMessage = resultMessage
+      assistantMessage = { ...assistantMessage, ...resultMessage }
       assistantMessage.content = assistantContent
 
       if (resultMessage.context) {
@@ -689,7 +702,7 @@ const Chat = () => {
     setIsCitationPanelOpen(true)
   }
 
-  const onShowExecResult = () => {
+  const onShowExecResult = (answerId: string) => {
     setIsIntentsPanelOpen(true)
   }
 
@@ -716,10 +729,11 @@ const Chat = () => {
       try {
         const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
         const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
+
         if (codeExecResult === undefined) {
           return null;
         }
-        return codeExecResult;
+        return codeExecResult.toString();
       }
       catch {
         return null;
@@ -791,13 +805,13 @@ const Chat = () => {
                           answer={{
                             answer: answer.content,
                             citations: parseCitationFromMessage(messages[index - 1]),
-                            plotly_data: parsePlotFromMessage(messages[index - 1]),
+                            generated_chart: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
                             feedback: answer.feedback,
                             exec_results: execResults
                           }}
                           onCitationClicked={c => onShowCitation(c)}
-                          onExectResultClicked={() => onShowExecResult()}
+                          onExectResultClicked={() => onShowExecResult(answerId)}
                         />
                       </div>
                     ) : answer.role === ERROR ? (
@@ -818,7 +832,7 @@ const Chat = () => {
                         answer={{
                           answer: "Generating answer...",
                           citations: [],
-                          plotly_data: null
+                          generated_chart: null
                         }}
                         onCitationClicked={() => null}
                         onExectResultClicked={() => null}
@@ -984,33 +998,31 @@ const Chat = () => {
                 />
               </Stack>
               <Stack horizontalAlign="space-between">
-                {execResults.map((execResult) => {
-                  return (
-                    <Stack className={styles.exectResultList} verticalAlign="space-between">
-                      <><span>Intent:</span> <p>{execResult.intent}</p></>
-                      {execResult.search_query && <><span>Search Query:</span>
-                        <SyntaxHighlighter
-                          style={nord}
-                          wrapLines={true}
-                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
-                          language="sql"
-                          PreTag="p">
-                          {execResult.search_query}
-                        </SyntaxHighlighter></>}
-                      {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
-                      {execResult.code_generated && <><span>Code Generated:</span>
-                        <SyntaxHighlighter
-                          style={nord}
-                          wrapLines={true}
-                          lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
-                          language="python"
-                          PreTag="p">
-                          {execResult.code_generated}
-                        </SyntaxHighlighter>
-                      </>}
-                    </Stack>
-                  )
-                })}
+                {appStateContext?.state?.answerExecResult[answerId]?.map((execResult: ExecResults, index) => (
+                  <Stack className={styles.exectResultList} verticalAlign="space-between">
+                    <><span>Intent:</span> <p>{execResult.intent}</p></>
+                    {execResult.search_query && <><span>Search Query:</span>
+                      <SyntaxHighlighter
+                        style={nord}
+                        wrapLines={true}
+                        lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                        language="sql"
+                        PreTag="p">
+                        {execResult.search_query}
+                      </SyntaxHighlighter></>}
+                    {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
+                    {execResult.code_generated && <><span>Code Generated:</span>
+                      <SyntaxHighlighter
+                        style={nord}
+                        wrapLines={true}
+                        lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                        language="python"
+                        PreTag="p">
+                        {execResult.code_generated}
+                      </SyntaxHighlighter>
+                    </>}
+                  </Stack>
+                ))}
               </Stack>
             </Stack.Item>
           )}
