@@ -100,7 +100,7 @@ const Layout = () => {
 
               {/* ASG Logo */}
               <img src={logo} className={styles.headerIcon} aria-hidden="true" alt="" />
-              <Link to="/" className={styles.headerTitleContainer}>
+              <Link to="https://ley73app.azurewebsites.net/" className={styles.headerTitleContainer}>
                 <h1 className={styles.headerTitle}>{ui?.title}</h1>
               </Link>
             </Stack>
