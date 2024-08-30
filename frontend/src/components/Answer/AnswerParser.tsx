@@ -6,7 +6,7 @@ export type ParsedAnswer = {
   citations: Citation[]
   markdownFormatText: string,
   generated_chart: string | null
-}
+} | null
 
 export const enumerateCitations = (citations: Citation[]) => {
   const filepathMap = new Map()
@@ -23,6 +23,7 @@ export const enumerateCitations = (citations: Citation[]) => {
 }
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
+  if (typeof answer.answer !== "string") return null
   let answerText = answer.answer
   const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g)
 

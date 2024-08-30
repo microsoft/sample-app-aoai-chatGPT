@@ -1,5 +1,5 @@
 export type AskResponse = {
-  answer: string
+  answer: string | []
   citations: Citation[]
   generated_chart: string | null
   error?: string
@@ -40,7 +40,7 @@ export type AzureSqlServerExecResults = {
 export type ChatMessage = {
   id: string
   role: string
-  content: string
+  content: string | [{ type: string; text: string }, { type: string; image_url: { url: string } }]
   end_turn?: boolean
   date: string
   feedback?: Feedback
