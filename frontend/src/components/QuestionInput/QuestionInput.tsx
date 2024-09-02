@@ -21,7 +21,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const [base64Image, setBase64Image] = useState<string | null>(null);
 
   const appStateContext = useContext(AppStateContext)
-  const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled
+  const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false;
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -90,7 +90,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
       />
-      {OYD_ENABLED && !OYD_ENABLED && (
+      {!OYD_ENABLED && (
         <div className={styles.fileInputContainer}>
           <input
             type="file"
