@@ -247,17 +247,17 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
-              <ReactMarkdown
+              {parsedAnswer && <ReactMarkdown
                 linkTarget="_blank"
                 remarkPlugins={[remarkGfm, supersub]}
                 children={
                   SANITIZE_ANSWER
-                    ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
-                    : parsedAnswer.markdownFormatText
+                    ? DOMPurify.sanitize(parsedAnswer?.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
+                    : parsedAnswer?.markdownFormatText
                 }
                 className={styles.answerText}
                 components={components}
-              />
+              />}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
@@ -290,15 +290,15 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         </Stack.Item>
-        {parsedAnswer.generated_chart !== null && (
+        {parsedAnswer?.generated_chart !== null && (
           <Stack className={styles.answerContainer}>
             <Stack.Item grow>
-              <img src={`data:image/png;base64, ${parsedAnswer.generated_chart}`} />
+              <img src={`data:image/png;base64, ${parsedAnswer?.generated_chart}`} />
             </Stack.Item>
           </Stack>
         )}
         <Stack horizontal className={styles.answerFooter}>
-          {!!parsedAnswer.citations.length && (
+          {!!parsedAnswer?.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
               <Stack style={{ width: '100%' }}>
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
@@ -352,7 +352,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         </Stack>
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>
-            {parsedAnswer.citations.map((citation, idx) => {
+            {parsedAnswer?.citations.map((citation, idx) => {
               return (
                 <span
                   title={createCitationFilepath(citation, ++idx)}

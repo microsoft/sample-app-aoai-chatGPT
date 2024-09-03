@@ -85,6 +85,7 @@
 }
 
 .chatMessageUserMessage {
+  position: relative;
   display: flex;
   padding: 20px;
   background: #edf5fd;
@@ -358,6 +359,15 @@ a {
 .viewSourceButton:hover {
   text-decoration: underline;
   cursor: pointer;
+}
+
+.uploadedImageChat {
+  position: absolute;
+  right: -23px;
+  bottom: -35px;
+  max-width: 70%;
+  max-height: 70%;
+  border-radius: 4px;
 }
 
 @media (max-width: 480px) {
