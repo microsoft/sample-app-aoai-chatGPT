@@ -1,0 +1,36 @@
+name: Docker Image Publish
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: 'Az CLI login'
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: 'ACR login'
+      run: |
+        az acr login --name crjekadeveus
+
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+        docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+        docker tag crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/theo-chat:latest
+        docker push crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+        docker push crjekadeveus.azurecr.io/theo-chat:latest
