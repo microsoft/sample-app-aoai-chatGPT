@@ -143,8 +143,8 @@ const Chat = () => {
 
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
     if (typeof resultMessage.content === "string" && resultMessage.content.includes('all_exec_results')) {
-      const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults;
-      setExecResults(parsedExecResults.all_exec_results);
+      const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
+      setExecResults(parsedExecResults.all_exec_results)
       assistantMessage.context = JSON.stringify({
         all_exec_results: parsedExecResults.all_exec_results
       });
@@ -180,13 +180,13 @@ const Chat = () => {
   };
 
   const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
-    setIsLoading(true);
-    setShowLoadingMessage(true);
-    const abortController = new AbortController();
-    abortFuncs.current.unshift(abortController);
+    setIsLoading(true)
+    setShowLoadingMessage(true)
+    const abortController = new AbortController()
+    abortFuncs.current.unshift(abortController)
 
-    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }];
-    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question;
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
 
     const userMessage: ChatMessage = {
       id: uuid(),
@@ -307,12 +307,12 @@ const Chat = () => {
   };
 
   const makeApiRequestWithCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
-    setIsLoading(true);
-    setShowLoadingMessage(true);
-    const abortController = new AbortController();
-    abortFuncs.current.unshift(abortController);
-    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }];
-    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question;
+    setIsLoading(true)
+    setShowLoadingMessage(true)
+    const abortController = new AbortController()
+    abortFuncs.current.unshift(abortController)
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
 
     const userMessage: ChatMessage = {
       id: uuid(),
@@ -321,8 +321,8 @@ const Chat = () => {
       date: new Date().toISOString()
     };
 
-    let request: ConversationRequest;
-    let conversation;
+    let request: ConversationRequest
+    let conversation
     if (conversationId) {
       conversation = appStateContext?.state?.chatHistory?.find(conv => conv.id === conversationId);
       if (!conversation) {
