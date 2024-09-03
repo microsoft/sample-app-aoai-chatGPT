@@ -3,7 +3,7 @@ name: Docker Image Publish
 on:
   push:
     branches:
-    - main
+    - develop
 
 jobs:
 
@@ -31,6 +31,6 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-        docker tag crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/theo-chat:latest
+        docker tag crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/theo-chat:develop
         docker push crjekadeveus.azurecr.io/theo-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-        docker push crjekadeveus.azurecr.io/theo-chat:latest
+        docker push crjekadeveus.azurecr.io/theo-chat:develop
