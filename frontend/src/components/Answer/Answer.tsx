@@ -8,7 +8,6 @@ import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
-import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
 import { AppStateContext } from '../../state/AppProvider'
@@ -20,7 +19,7 @@ import styles from './Answer.module.css'
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
-  onExectResultClicked: () => void
+  onExectResultClicked: (answerId: string) => void
 }
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
@@ -248,17 +247,17 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
-              <ReactMarkdown
+              {parsedAnswer && <ReactMarkdown
                 linkTarget="_blank"
                 remarkPlugins={[remarkGfm, supersub]}
                 children={
                   SANITIZE_ANSWER
-                    ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
-                    : parsedAnswer.markdownFormatText
+                    ? DOMPurify.sanitize(parsedAnswer?.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
+                    : parsedAnswer?.markdownFormatText
                 }
                 className={styles.answerText}
                 components={components}
-              />
+              />}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
@@ -291,15 +290,15 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           </Stack>
         </Stack.Item>
-        {parsedAnswer.plotly_data !== null && (
+        {parsedAnswer?.generated_chart !== null && (
           <Stack className={styles.answerContainer}>
             <Stack.Item grow>
-              <Plot data={parsedAnswer.plotly_data.data} layout={parsedAnswer.plotly_data.layout} />
+              <img src={`data:image/png;base64, ${parsedAnswer?.generated_chart}`} />
             </Stack.Item>
           </Stack>
         )}
         <Stack horizontal className={styles.answerFooter}>
-          {!!parsedAnswer.citations.length && (
+          {!!parsedAnswer?.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
               <Stack style={{ width: '100%' }}>
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
@@ -333,7 +332,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
                   <Text
                     className={styles.accordionTitle}
-                    onClick={() => onExectResultClicked()}
+                    onClick={() => onExectResultClicked(answer.message_id ?? '')}
                     aria-label="Open Intents"
                     tabIndex={0}
                     role="button">
@@ -353,7 +352,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         </Stack>
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>
-            {parsedAnswer.citations.map((citation, idx) => {
+            {parsedAnswer?.citations.map((citation, idx) => {
               return (
                 <span
                   title={createCitationFilepath(citation, ++idx)}

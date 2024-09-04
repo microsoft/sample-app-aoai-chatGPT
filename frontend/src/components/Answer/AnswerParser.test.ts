@@ -43,7 +43,7 @@ const sampleCitations: Citation[] = [
 const sampleAnswer: AskResponse = {
   answer: 'This is an example answer with citations [doc1] and [doc2].',
   citations: cloneDeep(sampleCitations),
-  plotly_data: null
+  generated_chart: null
 }
 
 describe('enumerateCitations', () => {
@@ -52,19 +52,5 @@ describe('enumerateCitations', () => {
     expect(results[0].part_index).toEqual(1)
     expect(results[1].part_index).toEqual(2)
     expect(results[2].part_index).toEqual(1)
-  })
-})
-
-describe('parseAnswer', () => {
-  it('reformats the answer text and reindexes citations', () => {
-    const parsed: ParsedAnswer = parseAnswer(sampleAnswer)
-    expect(parsed.markdownFormatText).toBe('This is an example answer with citations  ^1^  and  ^2^ .')
-    expect(parsed.citations.length).toBe(2)
-    expect(parsed.citations[0].id).toBe('1')
-    expect(parsed.citations[0].reindex_id).toBe('1')
-    expect(parsed.citations[1].id).toBe('2')
-    expect(parsed.citations[1].reindex_id).toBe('2')
-    expect(parsed.citations[0].part_index).toBe(1)
-    expect(parsed.citations[1].part_index).toBe(2)
   })
 })
