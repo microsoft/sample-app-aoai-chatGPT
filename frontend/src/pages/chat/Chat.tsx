@@ -142,7 +142,7 @@ const Chat = () => {
   }
 
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
-    if (resultMessage.content.includes('all_exec_results')) {
+    if (typeof resultMessage.content === "string" && resultMessage.content.includes('all_exec_results')) {
       const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
       setExecResults(parsedExecResults.all_exec_results)
       assistantMessage.context = JSON.stringify({
@@ -179,16 +179,19 @@ const Chat = () => {
     }
   }
 
-  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
 
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
+
     const userMessage: ChatMessage = {
       id: uuid(),
       role: 'user',
-      content: question,
+      content: questionContent as string,
       date: new Date().toISOString()
     }
 
@@ -196,7 +199,7 @@ const Chat = () => {
     if (!conversationId) {
       conversation = {
         id: conversationId ?? uuid(),
-        title: question,
+        title: question as string,
         messages: [userMessage],
         date: new Date().toISOString()
       }
@@ -303,20 +306,21 @@ const Chat = () => {
     return abortController.abort()
   }
 
-  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
 
     const userMessage: ChatMessage = {
       id: uuid(),
       role: 'user',
-      content: question,
+      content: questionContent as string,
       date: new Date().toISOString()
     }
 
-    //api call params set here (generate)
     let request: ConversationRequest
     let conversation
     if (conversationId) {
@@ -648,7 +652,7 @@ const Chat = () => {
         }
         const noContentError = appStateContext.state.currentChat.messages.find(m => m.role === ERROR)
 
-        if (!noContentError?.content.includes(NO_CONTENT_ERROR)) {
+        if (typeof noContentError?.content === "string" && !noContentError?.content.includes(NO_CONTENT_ERROR)) {
           saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
             .then(res => {
               if (!res.ok) {
@@ -713,7 +717,7 @@ const Chat = () => {
   }
 
   const parseCitationFromMessage = (message: ChatMessage) => {
-    if (message?.role && message?.role === 'tool') {
+    if (message?.role && message?.role === 'tool' && typeof message?.content === "string") {
       try {
         const toolMessage = JSON.parse(message.content) as ToolMessageContent
         return toolMessage.citations
@@ -725,7 +729,7 @@ const Chat = () => {
   }
 
   const parsePlotFromMessage = (message: ChatMessage) => {
-    if (message?.role && message?.role === "tool") {
+    if (message?.role && message?.role === "tool" && typeof message?.content === "string") {
       try {
         const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
         const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
@@ -797,11 +801,13 @@ const Chat = () => {
                   <>
                     {answer.role === 'user' ? (
                       <div className={styles.chatMessageUser} tabIndex={0}>
-                        <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                        <div className={styles.chatMessageUserMessage}>
+                          {typeof answer.content === "string" && answer.content ? answer.content : Array.isArray(answer.content) ? <>{answer.content[0].text} <img className={styles.uploadedImageChat} src={answer.content[1].image_url.url} alt="Uploaded Preview" /></> : null}
+                        </div>
                       </div>
                     ) : answer.role === 'assistant' ? (
                       <div className={styles.chatMessageGpt}>
-                        <Answer
+                        {typeof answer.content === "string" && <Answer
                           answer={{
                             answer: answer.content,
                             citations: parseCitationFromMessage(messages[index - 1]),
@@ -812,7 +818,7 @@ const Chat = () => {
                           }}
                           onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult(answerId)}
-                        />
+                        />}
                       </div>
                     ) : answer.role === ERROR ? (
                       <div className={styles.chatMessageError}>
@@ -820,7 +826,7 @@ const Chat = () => {
                           <ErrorCircleRegular className={styles.errorIcon} style={{ color: 'rgba(182, 52, 67, 1)' }} />
                           <span>Error</span>
                         </Stack>
-                        <span className={styles.chatMessageErrorContent}>{answer.content}</span>
+                        <span className={styles.chatMessageErrorContent}>{typeof answer.content === "string" && answer.content}</span>
                       </div>
                     ) : null}
                   </>
