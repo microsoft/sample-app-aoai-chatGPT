@@ -216,7 +216,11 @@ const Chat = () => {
 
     let result = {} as ChatResponse
     try {
-      const response = await conversationApi(request, abortController.signal)
+      const response = await conversationApi(
+        request,
+        abortController.signal,
+        appStateContext?.state.frontendSettings?.conversation_id_header
+      )
       if (response?.body) {
         const reader = response.body.getReader()
 

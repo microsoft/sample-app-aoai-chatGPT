@@ -147,6 +147,7 @@ export type FrontendSettings = {
   feedback_enabled?: string | null
   ui?: UI
   sanitize_answer?: boolean
+  conversation_id_header?: string
 }
 
 export enum Feedback {

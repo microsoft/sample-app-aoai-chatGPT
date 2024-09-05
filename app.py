@@ -103,6 +103,7 @@ frontend_settings = {
         "show_chat_history_button": app_settings.ui.show_chat_history_button,
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
+    "conversation_id_header": app_settings.base_settings.conversation_id_header,
 }
 
 

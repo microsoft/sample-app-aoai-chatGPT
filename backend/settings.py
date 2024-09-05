@@ -670,6 +670,7 @@ class _BaseSettings(BaseSettings):
     auth_enabled: bool = False
     sanitize_answer: bool = False
     use_promptflow: bool = False
+    conversation_id_header: Optional[str] = None
 
 
 class _AppSettings(BaseModel):

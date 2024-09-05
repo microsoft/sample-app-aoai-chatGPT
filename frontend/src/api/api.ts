@@ -3,7 +3,11 @@ import { FileType, UploadedFile } from '../custom/fileUploadUtils'
 
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
-export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+export async function conversationApi(
+  options: ConversationRequest,
+  abortSignal: AbortSignal,
+  conversationIdHeader: string | null | undefined
+): Promise<Response> {
   const formatContent = (message: any) => {
     const apiMessage = structuredClone(message)
 
@@ -30,7 +34,8 @@ export async function conversationApi(options: ConversationRequest, abortSignal:
   const response = await fetch('/conversation', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'conversation-id': conversationIdHeader ?? ''
     },
     body: JSON.stringify({
       messages: options.messages.map(formatContent)
