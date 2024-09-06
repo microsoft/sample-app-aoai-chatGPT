@@ -219,22 +219,28 @@ def prepare_model_args(request_body, request_headers):
 
     for message in request_messages:
         if message:
-            if message["role"] == "assistant" and "context" in message:
-                context_obj = json.loads(message["context"])
-                messages.append(
-                    {
-                        "role": message["role"],
-                        "content": message["content"],
-                        "context": context_obj
-                    }
-                )
-            else:
-                messages.append(
-                    {
-                        "role": message["role"],
-                        "content": message["content"]
-                    }
-                )
+            match message["role"]:
+                case "user":
+                    messages.append(
+                        {
+                            "role": message["role"],
+                            "content": message["content"]
+                        }
+                    )
+                case "assistant" | "function" | "tool":
+                    messages_helper = {}
+                    messages_helper["role"] = message["role"]
+                    if "name" in message:
+                        messages_helper["name"] = message["name"]
+                    if "function_call" in message:
+                        messages_helper["function_call"] = message["function_call"]
+                    messages_helper["content"] = message["content"]
+                    if "context" in message:
+                        context_obj = json.loads(message["context"])
+                        messages_helper["context"] = context_obj
+                    
+                    messages.append(messages_helper)
+
 
     user_json = None
     if (MS_DEFENDER_ENABLED):
@@ -250,17 +256,21 @@ def prepare_model_args(request_body, request_headers):
         "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model,
-        "user": user_json
+        "user": user_json,
     }
 
-    if app_settings.datasource:
-        model_args["extra_body"] = {
-            "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
-                    request=request
-                )
-            ]
-        }
+    if messages[-1]["role"] == "user":
+        print("User message add tools")
+        model_args["tools"] = azure_openai_tools
+
+        if app_settings.datasource:
+            model_args["extra_body"] = {
+                "data_sources": [
+                    app_settings.datasource.construct_payload_configuration(
+                        request=request
+                    )
+                ]
+            }
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -333,6 +343,94 @@ async def promptflow_request(request):
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
+def get_current_weather(location):
+    return json.dumps({
+        "Weather": "Sunny",
+        "Temperature": "25°C",
+        "Weather Image": "<a href=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1msDBU.img />"
+    })
+
+azure_openai_tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Returns the current weather for a given location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The location to get the weather for"
+                }
+            },
+            "required": ["location"]
+        }
+    }
+}]
+
+azure_openai_available_tools = {
+    "get_current_weather": get_current_weather
+}
+
+def process_function_call(response):
+    response_message = response.choices[0].message
+    messages = []
+
+    # Step 2: check if GPT wanted to call a function
+    if response_message.tool_calls:
+        print("Recommended Function call:")
+        print(response_message.tool_calls[0])
+        print()
+
+        # Step 3: call the function
+        # Note: the JSON response may not always be valid; be sure to handle errors
+
+        function_name = response_message.tool_calls[0].function.name
+
+        # verify function exists
+        if function_name not in azure_openai_available_tools:
+            return "Function " + function_name + " does not exist"
+        function_to_call = azure_openai_available_tools[function_name]
+
+        # verify function has correct number of arguments
+        function_args = json.loads(response_message.tool_calls[0].function.arguments)
+        function_response = function_to_call(**function_args)
+
+        print("Output of function call:")
+        print(function_response)
+        print()
+
+        # Step 4: send the info on the function call and function response to GPT
+
+        # adding assistant response to messages
+        
+        messages.append(
+            {
+                "role": response_message.role,
+                "function_call": {
+                    "name": function_name,
+                    "arguments": response_message.tool_calls[0].function.arguments,
+                },
+                "content": None,
+            }
+        )
+        
+        # adding function response to messages
+        messages.append(
+            {
+                "role": "function",
+                "name": function_name,
+                "content": function_response,
+            }
+        )  # extend conversation with function response
+
+        print("Messages in second request:")
+        for message in messages:
+            print(message)
+        print()
+        
+        return messages
+    return None
 
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
@@ -343,6 +441,10 @@ async def send_chat_request(request_body, request_headers):
             
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
+
+    print("Model args")
+    print(model_args)
+    print("Model args")
 
     try:
         azure_openai_client = await init_openai_client()
@@ -369,7 +471,27 @@ async def complete_chat_request(request_body, request_headers):
     else:
         response, apim_request_id = await send_chat_request(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
-        return format_non_streaming_response(response, history_metadata, apim_request_id)
+        non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+
+        # Step 1: check if GPT wanted to call a function
+        function_response = process_function_call(response)
+
+        if function_response:
+            request_body["messages"].extend(function_response)
+
+            print("Request body with function response:")
+            print(request_body)
+            print("Request body with function response:")
+            
+            response, apim_request_id = await send_chat_request(request_body, request_headers)
+            history_metadata = request_body.get("history_metadata", {})
+            non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+
+            print("Response with function response:")
+            print(response)
+            print("Response with function response")
+
+    return non_streaming_response
 
 
 async def stream_chat_request(request_body, request_headers):
