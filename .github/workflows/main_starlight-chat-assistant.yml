@@ -49,9 +49,7 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -62,17 +60,10 @@ jobs:
         run: unzip release.zip
 
       
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_31ADFF7018964A4DB7F46C2188BA2209 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5CC0AB45C55C4D7086198061571DFD94 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FEE9B91AD2604014B17826EC3B82AF2D }}
-
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'Starlight-Chat-Assistant'
           slot-name: 'Production'
-          
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4086DD334BFD44D5B699858E3ABD9D50 }}
