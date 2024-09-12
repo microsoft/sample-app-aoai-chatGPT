@@ -8,9 +8,8 @@ import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
-
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
-import { XSSAllowTags } from '../../constants/xssAllowTags'
+import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
 import { AppStateContext } from '../../state/AppProvider'
 
 import { parseAnswer } from './AnswerParser'
@@ -20,9 +19,10 @@ import styles from './Answer.module.css'
 interface Props {
   answer: AskResponse
   onCitationClicked: (citedDocument: Citation) => void
+  onExectResultClicked: (answerId: string) => void
 }
 
-export const Answer = ({ answer, onCitationClicked }: Props) => {
+export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -227,7 +227,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
   }
 
   const components = {
-    code({ node, ...props }: { node: any; [key: string]: any }) {
+    code({ node, ...props }: { node: any;[key: string]: any }) {
       let language
       if (props.className) {
         const match = props.className.match(/language-(\w+)/)
@@ -247,17 +247,17 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
-              <ReactMarkdown
+              {parsedAnswer && <ReactMarkdown
                 linkTarget="_blank"
                 remarkPlugins={[remarkGfm, supersub]}
                 children={
                   SANITIZE_ANSWER
-                    ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags })
-                    : parsedAnswer.markdownFormatText
+                    ? DOMPurify.sanitize(parsedAnswer?.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
+                    : parsedAnswer?.markdownFormatText
                 }
                 className={styles.answerText}
                 components={components}
-              />
+              />}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
@@ -268,7 +268,7 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     onClick={() => onLikeResponseClicked()}
                     style={
                       feedbackState === Feedback.Positive ||
-                      appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
+                        appStateContext?.state.feedbackState[answer.message_id] === Feedback.Positive
                         ? { color: 'darkgreen', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -279,8 +279,8 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
                     onClick={() => onDislikeResponseClicked()}
                     style={
                       feedbackState !== Feedback.Positive &&
-                      feedbackState !== Feedback.Neutral &&
-                      feedbackState !== undefined
+                        feedbackState !== Feedback.Neutral &&
+                        feedbackState !== undefined
                         ? { color: 'darkred', cursor: 'pointer' }
                         : { color: 'slategray', cursor: 'pointer' }
                     }
@@ -290,8 +290,15 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
             </Stack.Item>
           </Stack>
         </Stack.Item>
+        {parsedAnswer?.generated_chart !== null && (
+          <Stack className={styles.answerContainer}>
+            <Stack.Item grow>
+              <img src={`data:image/png;base64, ${parsedAnswer?.generated_chart}`} />
+            </Stack.Item>
+          </Stack>
+        )}
         <Stack horizontal className={styles.answerFooter}>
-          {!!parsedAnswer.citations.length && (
+          {!!parsedAnswer?.citations.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
               <Stack style={{ width: '100%' }}>
                 <Stack horizontal horizontalAlign="start" verticalAlign="center">
@@ -319,10 +326,33 @@ export const Answer = ({ answer, onCitationClicked }: Props) => {
           <Stack.Item className={styles.answerDisclaimerContainer}>
             <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
           </Stack.Item>
+          {!!answer.exec_results?.length && (
+            <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
+              <Stack style={{ width: '100%' }}>
+                <Stack horizontal horizontalAlign="start" verticalAlign="center">
+                  <Text
+                    className={styles.accordionTitle}
+                    onClick={() => onExectResultClicked(answer.message_id ?? '')}
+                    aria-label="Open Intents"
+                    tabIndex={0}
+                    role="button">
+                    <span>
+                      Show Intents
+                    </span>
+                  </Text>
+                  <FontIcon
+                    className={styles.accordionIcon}
+                    onClick={handleChevronClick}
+                    iconName={'ChevronRight'}
+                  />
+                </Stack>
+              </Stack>
+            </Stack.Item>
+          )}
         </Stack>
         {chevronIsExpanded && (
           <div className={styles.citationWrapper}>
-            {parsedAnswer.citations.map((citation, idx) => {
+            {parsedAnswer?.citations.map((citation, idx) => {
               return (
                 <span
                   title={createCitationFilepath(citation, ++idx)}

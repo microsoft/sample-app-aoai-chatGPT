@@ -85,6 +85,7 @@
 }
 
 .chatMessageUserMessage {
+  position: relative;
   display: flex;
   padding: 20px;
   background: #edf5fd;
@@ -308,6 +309,34 @@
   flex-grow: 0;
 }
 
+.exectResultList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #ccc;
+  margin-top: 12px;
+}
+
+.exectResultList:first-child {
+  margin-top: 0;
+}
+
+.exectResultList:last-child {
+  border-bottom: none;
+}
+
+.exectResultList > p {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  margin: 0;
+  margin-bottom: 16px;
+}
+
+.exectResultList > span {
+  font-weight: 600;
+}
+
 a {
   padding-left: 5px;
   padding-right: 5px;
@@ -330,6 +359,15 @@ a {
 .viewSourceButton:hover {
   text-decoration: underline;
   cursor: pointer;
+}
+
+.uploadedImageChat {
+  position: absolute;
+  right: -23px;
+  bottom: -35px;
+  max-width: 70%;
+  max-height: 70%;
+  border-radius: 4px;
 }
 
 @media (max-width: 480px) {

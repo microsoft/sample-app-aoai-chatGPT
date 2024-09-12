@@ -1,9 +1,11 @@
 export type AskResponse = {
-  answer: string
+  answer: string | []
   citations: Citation[]
+  generated_chart: string | null
   error?: string
   message_id?: string
   feedback?: Feedback
+  exec_results?: ExecResults[]
 }
 
 export type Citation = {
@@ -23,14 +25,33 @@ export type ToolMessageContent = {
   intent: string
 }
 
+export type AzureSqlServerExecResult = {
+  intent: string
+  search_query: string | null
+  search_result: string | null
+  code_generated: string | null
+  code_exec_result?: string | undefined
+}
+
+export type AzureSqlServerExecResults = {
+  all_exec_results: AzureSqlServerExecResult[]
+}
+
 export type ChatMessage = {
   id: string
   role: string
-  content: string
+  content: string | [{ type: string; text: string }, { type: string; image_url: { url: string } }]
   end_turn?: boolean
   date: string
   feedback?: Feedback
   context?: string
+}
+
+export type ExecResults = {
+  intent: string
+  search_query: string | null
+  search_result: string | null
+  code_generated: string | null
 }
 
 export type Conversation = {
@@ -109,6 +130,7 @@ export type UI = {
   logo?: string
   chat_logo?: string
   show_share_button?: boolean
+  show_chat_history_button?: boolean
 }
 
 export type FrontendSettings = {
@@ -116,6 +138,7 @@ export type FrontendSettings = {
   feedback_enabled?: string | null
   ui?: UI
   sanitize_answer?: boolean
+  oyd_enabled?: boolean
 }
 
 export enum Feedback {

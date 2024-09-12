@@ -62,3 +62,35 @@
     left: 16.5%;
   }
 }
+
+.fileInputContainer {
+  position: absolute;
+  right: 24px;
+  top: 20px;
+}
+
+.fileInput {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.fileLabel {
+  display: inline-block;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+}
+
+.fileIcon {
+  font-size: 20px;
+  color: #424242;
+}
+
+.uploadedImage {
+  margin-right: 70px;
+}

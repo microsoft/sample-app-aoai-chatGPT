@@ -65,13 +65,21 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
     case 'SET_COSMOSDB_STATUS':
       return { ...state, isCosmosDBAvailable: action.payload }
     case 'FETCH_FRONTEND_SETTINGS':
-      return { ...state, frontendSettings: action.payload }
+      return { ...state, isLoading: false, frontendSettings: action.payload }
     case 'SET_FEEDBACK_STATE':
       return {
         ...state,
         feedbackState: {
           ...state.feedbackState,
           [action.payload.answerId]: action.payload.feedback
+        }
+      }
+    case 'SET_ANSWER_EXEC_RESULT':
+      return {
+        ...state,
+        answerExecResult: {
+          ...state.answerExecResult,
+          [action.payload.answerId]: action.payload.exec_result
         }
       }
     default:

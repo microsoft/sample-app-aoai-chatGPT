@@ -8,10 +8,12 @@ import rehypeRaw from 'rehype-raw'
 import uuid from 'react-uuid'
 import { isEmpty } from 'lodash'
 import DOMPurify from 'dompurify'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
 import Contoso from '../../assets/Contoso.svg'
-import { XSSAllowTags } from '../../constants/xssAllowTags'
+import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
   ChatMessage,
@@ -19,6 +21,7 @@ import {
   conversationApi,
   Citation,
   ToolMessageContent,
+  AzureSqlServerExecResults,
   ChatResponse,
   getUserInfo,
   Conversation,
@@ -27,13 +30,14 @@ import {
   historyClear,
   ChatHistoryLoadingState,
   CosmosDBStatus,
-  ErrorMessage
-} from '../../api'
-import { Answer } from '../../components/Answer'
-import { QuestionInput } from '../../components/QuestionInput'
-import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
-import { AppStateContext } from '../../state/AppProvider'
-import { useBoolean } from '@fluentui/react-hooks'
+  ErrorMessage,
+  ExecResults,
+} from "../../api";
+import { Answer } from "../../components/Answer";
+import { QuestionInput } from "../../components/QuestionInput";
+import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
+import { AppStateContext } from "../../state/AppProvider";
+import { useBoolean } from "@fluentui/react-hooks";
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -50,13 +54,17 @@ const Chat = () => {
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false)
   const [activeCitation, setActiveCitation] = useState<Citation>()
   const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false)
+  const [isIntentsPanelOpen, setIsIntentsPanelOpen] = useState<boolean>(false)
   const abortFuncs = useRef([] as AbortController[])
   const [showAuthMessage, setShowAuthMessage] = useState<boolean | undefined>()
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [execResults, setExecResults] = useState<ExecResults[]>([])
   const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning)
   const [clearingChat, setClearingChat] = useState<boolean>(false)
   const [hideErrorDialog, { toggle: toggleErrorDialog }] = useBoolean(true)
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
+  const [logo, setLogo] = useState('')
+  const [answerId, setAnswerId] = useState<string>('')
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -99,6 +107,12 @@ const Chat = () => {
   }
 
   useEffect(() => {
+    if (!appStateContext?.state.isLoading) {
+      setLogo(ui?.chat_logo || ui?.logo || Contoso)
+    }
+  }, [appStateContext?.state.isLoading])
+
+  useEffect(() => {
     setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
   }, [appStateContext?.state.chatHistoryLoadingState])
 
@@ -119,10 +133,27 @@ const Chat = () => {
   let toolMessage = {} as ChatMessage
   let assistantContent = ''
 
+  useEffect(() => parseExecResults(execResults), [execResults])
+
+  const parseExecResults = (exec_results_: any): void => {
+    if (exec_results_ == undefined) return
+    const exec_results = exec_results_.length === 2 ? exec_results_ : exec_results_.splice(2)
+    appStateContext?.dispatch({ type: 'SET_ANSWER_EXEC_RESULT', payload: { answerId: answerId, exec_result: exec_results } })
+  }
+
   const processResultMessage = (resultMessage: ChatMessage, userMessage: ChatMessage, conversationId?: string) => {
+    if (typeof resultMessage.content === "string" && resultMessage.content.includes('all_exec_results')) {
+      const parsedExecResults = JSON.parse(resultMessage.content) as AzureSqlServerExecResults
+      setExecResults(parsedExecResults.all_exec_results)
+      assistantMessage.context = JSON.stringify({
+        all_exec_results: parsedExecResults.all_exec_results
+      })
+    }
+
     if (resultMessage.role === ASSISTANT) {
+      setAnswerId(resultMessage.id)
       assistantContent += resultMessage.content
-      assistantMessage = resultMessage
+      assistantMessage = { ...assistantMessage, ...resultMessage }
       assistantMessage.content = assistantContent
 
       if (resultMessage.context) {
@@ -148,16 +179,19 @@ const Chat = () => {
     }
   }
 
-  const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
 
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
+
     const userMessage: ChatMessage = {
       id: uuid(),
       role: 'user',
-      content: question,
+      content: questionContent as string,
       date: new Date().toISOString()
     }
 
@@ -165,7 +199,7 @@ const Chat = () => {
     if (!conversationId) {
       conversation = {
         id: conversationId ?? uuid(),
-        title: question,
+        title: question as string,
         messages: [userMessage],
         date: new Date().toISOString()
       }
@@ -272,20 +306,21 @@ const Chat = () => {
     return abortController.abort()
   }
 
-  const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+  const makeApiRequestWithCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
     abortFuncs.current.unshift(abortController)
+    const questionContent = typeof question === 'string' ? question : [{ type: "text", text: question[0].text }, { type: "image_url", image_url: { url: question[1].image_url.url } }]
+    question = typeof question !== 'string' && question[0]?.text?.length > 0 ? question[0].text : question
 
     const userMessage: ChatMessage = {
       id: uuid(),
       role: 'user',
-      content: question,
+      content: questionContent as string,
       date: new Date().toISOString()
     }
 
-    //api call params set here (generate)
     let request: ConversationRequest
     let conversation
     if (conversationId) {
@@ -517,6 +552,7 @@ const Chat = () => {
         appStateContext?.dispatch({ type: 'UPDATE_CHAT_HISTORY', payload: appStateContext?.state.currentChat })
         setActiveCitation(undefined)
         setIsCitationPanelOpen(false)
+        setIsIntentsPanelOpen(false)
         setMessages([])
       }
     }
@@ -582,6 +618,7 @@ const Chat = () => {
     setProcessMessages(messageStatus.Processing)
     setMessages([])
     setIsCitationPanelOpen(false)
+    setIsIntentsPanelOpen(false)
     setActiveCitation(undefined)
     appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null })
     setProcessMessages(messageStatus.Done)
@@ -615,7 +652,7 @@ const Chat = () => {
         }
         const noContentError = appStateContext.state.currentChat.messages.find(m => m.role === ERROR)
 
-        if (!noContentError?.content.includes(NO_CONTENT_ERROR)) {
+        if (typeof noContentError?.content === "string" && !noContentError?.content.includes(NO_CONTENT_ERROR)) {
           saveToDB(appStateContext.state.currentChat.messages, appStateContext.state.currentChat.id)
             .then(res => {
               if (!res.ok) {
@@ -669,6 +706,10 @@ const Chat = () => {
     setIsCitationPanelOpen(true)
   }
 
+  const onShowExecResult = (answerId: string) => {
+    setIsIntentsPanelOpen(true)
+  }
+
   const onViewSource = (citation: Citation) => {
     if (citation.url && !citation.url.includes('blob.core')) {
       window.open(citation.url, '_blank')
@@ -676,7 +717,7 @@ const Chat = () => {
   }
 
   const parseCitationFromMessage = (message: ChatMessage) => {
-    if (message?.role && message?.role === 'tool') {
+    if (message?.role && message?.role === 'tool' && typeof message?.content === "string") {
       try {
         const toolMessage = JSON.parse(message.content) as ToolMessageContent
         return toolMessage.citations
@@ -685,6 +726,26 @@ const Chat = () => {
       }
     }
     return []
+  }
+
+  const parsePlotFromMessage = (message: ChatMessage) => {
+    if (message?.role && message?.role === "tool" && typeof message?.content === "string") {
+      try {
+        const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
+        const codeExecResult = execResults.all_exec_results.at(-1)?.code_exec_result;
+
+        if (codeExecResult === undefined) {
+          return null;
+        }
+        return codeExecResult.toString();
+      }
+      catch {
+        return null;
+      }
+      // const execResults = JSON.parse(message.content) as AzureSqlServerExecResults;
+      // return execResults.all_exec_results.at(-1)?.code_exec_result;
+    }
+    return null;
   }
 
   const disabledButton = () => {
@@ -730,7 +791,7 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={ui?.chat_logo ? ui.chat_logo : Contoso} className={styles.chatIcon} aria-hidden="true" />
+                <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
@@ -740,19 +801,24 @@ const Chat = () => {
                   <>
                     {answer.role === 'user' ? (
                       <div className={styles.chatMessageUser} tabIndex={0}>
-                        <div className={styles.chatMessageUserMessage}>{answer.content}</div>
+                        <div className={styles.chatMessageUserMessage}>
+                          {typeof answer.content === "string" && answer.content ? answer.content : Array.isArray(answer.content) ? <>{answer.content[0].text} <img className={styles.uploadedImageChat} src={answer.content[1].image_url.url} alt="Uploaded Preview" /></> : null}
+                        </div>
                       </div>
                     ) : answer.role === 'assistant' ? (
                       <div className={styles.chatMessageGpt}>
-                        <Answer
+                        {typeof answer.content === "string" && <Answer
                           answer={{
                             answer: answer.content,
                             citations: parseCitationFromMessage(messages[index - 1]),
+                            generated_chart: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
-                            feedback: answer.feedback
+                            feedback: answer.feedback,
+                            exec_results: execResults
                           }}
                           onCitationClicked={c => onShowCitation(c)}
-                        />
+                          onExectResultClicked={() => onShowExecResult(answerId)}
+                        />}
                       </div>
                     ) : answer.role === ERROR ? (
                       <div className={styles.chatMessageError}>
@@ -760,7 +826,7 @@ const Chat = () => {
                           <ErrorCircleRegular className={styles.errorIcon} style={{ color: 'rgba(182, 52, 67, 1)' }} />
                           <span>Error</span>
                         </Stack>
-                        <span className={styles.chatMessageErrorContent}>{answer.content}</span>
+                        <span className={styles.chatMessageErrorContent}>{typeof answer.content === "string" && answer.content}</span>
                       </div>
                     ) : null}
                   </>
@@ -770,10 +836,12 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: 'Generating answer...',
-                          citations: []
+                          answer: "Generating answer...",
+                          citations: [],
+                          generated_chart: null
                         }}
                         onCitationClicked={() => null}
+                        onExectResultClicked={() => null}
                       />
                     </div>
                   </>
@@ -783,7 +851,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && (
+              {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -916,6 +984,52 @@ const Chat = () => {
                   rehypePlugins={[rehypeRaw]}
                 />
               </div>
+            </Stack.Item>
+          )}
+          {messages && messages.length > 0 && isIntentsPanelOpen && (
+            <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Intents Panel">
+              <Stack
+                aria-label="Intents Panel Header Container"
+                horizontal
+                className={styles.citationPanelHeaderContainer}
+                horizontalAlign="space-between"
+                verticalAlign="center">
+                <span aria-label="Intents" className={styles.citationPanelHeader}>
+                  Intents
+                </span>
+                <IconButton
+                  iconProps={{ iconName: 'Cancel' }}
+                  aria-label="Close intents panel"
+                  onClick={() => setIsIntentsPanelOpen(false)}
+                />
+              </Stack>
+              <Stack horizontalAlign="space-between">
+                {appStateContext?.state?.answerExecResult[answerId]?.map((execResult: ExecResults, index) => (
+                  <Stack className={styles.exectResultList} verticalAlign="space-between">
+                    <><span>Intent:</span> <p>{execResult.intent}</p></>
+                    {execResult.search_query && <><span>Search Query:</span>
+                      <SyntaxHighlighter
+                        style={nord}
+                        wrapLines={true}
+                        lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                        language="sql"
+                        PreTag="p">
+                        {execResult.search_query}
+                      </SyntaxHighlighter></>}
+                    {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
+                    {execResult.code_generated && <><span>Code Generated:</span>
+                      <SyntaxHighlighter
+                        style={nord}
+                        wrapLines={true}
+                        lineProps={{ style: { wordBreak: 'break-all', whiteSpace: 'pre-wrap' } }}
+                        language="python"
+                        PreTag="p">
+                        {execResult.code_generated}
+                      </SyntaxHighlighter>
+                    </>}
+                  </Stack>
+                ))}
+              </Stack>
             </Stack.Item>
           )}
           {appStateContext?.state.isChatHistoryOpen &&
