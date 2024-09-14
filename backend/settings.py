@@ -44,7 +44,7 @@ class _UiSettings(BaseSettings):
     title: str = "MSHack"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
-    chat_title: str = "Start Hacking"
+    chat_title: str = "Start Hacking into the world"
     chat_description: str = "Caution: This can be addictive :)"
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
