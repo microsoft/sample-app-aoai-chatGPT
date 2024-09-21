@@ -35,9 +35,7 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-
 import requests
-
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -557,13 +555,10 @@ async def conversation_internal(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
-
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
-            
             return response
-
         else:
             result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
