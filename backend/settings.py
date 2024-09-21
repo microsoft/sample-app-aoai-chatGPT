@@ -753,7 +753,7 @@ class _BaseSettings(BaseSettings):
         env_ignore_empty=True
     )
     datasource_type: Optional[str] = None
-    auth_enabled: bool = False
+    auth_enabled: bool = True
     sanitize_answer: bool = False
     use_promptflow: bool = False
 
