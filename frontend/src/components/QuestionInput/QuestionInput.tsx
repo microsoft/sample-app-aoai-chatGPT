@@ -1,26 +1,26 @@
-import { useContext, useState } from 'react'
-import { FontIcon, Stack, TextField } from '@fluentui/react'
-import { SendRegular } from '@fluentui/react-icons'
+import { useContext, useState } from 'react';
+import { FontIcon, Stack, TextField } from '@fluentui/react';
+import { SendRegular } from '@fluentui/react-icons';
 
 import Send from '../../assets/Send.svg';
 
-import styles from './QuestionInput.module.css'
-import { ChatMessage } from '../../api'
-import { AppStateContext } from '../../state/AppProvider'
+import styles from './QuestionInput.module.css';
+import { ChatMessage } from '../../api';
+import { AppStateContext } from '../../state/AppProvider';
 
 interface Props {
-  onSend: (question: ChatMessage['content'], id?: string) => void
-  disabled: boolean
-  placeholder?: string
-  clearOnSend?: boolean
-  conversationId?: string
+  onSend: (question: ChatMessage['content'], id?: string) => void;
+  disabled: boolean;
+  placeholder?: string;
+  clearOnSend?: boolean;
+  conversationId?: string;
 }
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
-  const [question, setQuestion] = useState<string>('')
+  const [question, setQuestion] = useState<string>('');
   const [base64Image, setBase64Image] = useState<string | null>(null);
 
-  const appStateContext = useContext(AppStateContext)
+  const appStateContext = useContext(AppStateContext);
   const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false;
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,11 +53,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     const questionTest: ChatMessage["content"] = base64Image ? [{ type: "text", text: question }, { type: "image_url", image_url: { url: base64Image } }] : question.toString();
 
     if (conversationId && questionTest !== undefined) {
-      onSend(questionTest, conversationId)
-      setBase64Image(null)
+      onSend(questionTest, conversationId);
+      setBase64Image(null);
     } else {
-      onSend(questionTest)
-      setBase64Image(null)
+      onSend(questionTest);
+      setBase64Image(null);
     }
 
     if (clearOnSend) {
