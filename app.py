@@ -36,6 +36,9 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+import requests
+
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
@@ -111,6 +114,9 @@ frontend_settings = {
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 
+azure_openai_tools = []
+azure_openai_available_tools = []
+
 # Initialize Azure OpenAI Client
 async def init_openai_client():
     azure_openai_client = None
@@ -159,6 +165,14 @@ async def init_openai_client():
         # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
 
+        # Remote function calls
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
+            response = requests.get(azure_functions_tools_url)
+            azure_openai_tools.append(json.loads(response.text))
+            for tool in azure_openai_tools:
+                azure_openai_available_tools.append(tool["function"]["name"])
+
         azure_openai_client = AsyncAzureOpenAI(
             api_version=app_settings.azure_openai.preview_api_version,
             api_key=aoai_api_key,
@@ -173,6 +187,19 @@ async def init_openai_client():
         azure_openai_client = None
         raise e
 
+def openai_remote_azure_function_call(function_name, function_args):
+    if not app_settings.azure_openai.function_call_azure_functions_enabled:
+        return
+
+    azure_functions_tool_url = f"{app_settings.azure_openai.function_call_azure_functions_tool_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tool_key}"
+    headers = {'content-type': 'application/json'}
+    body = {
+        "tool_name": function_name,
+        "tool_arguments": json.loads(function_args)
+    }
+    response = requests.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
+    
+    return response.text
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
@@ -256,12 +283,12 @@ def prepare_model_args(request_body, request_headers):
         "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model,
-        "user": user_json,
+        "user": user_json
     }
 
     if messages[-1]["role"] == "user":
-        print("User message add tools")
-        model_args["tools"] = azure_openai_tools
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            model_args["tools"] = azure_openai_tools
 
         if app_settings.datasource:
             model_args["extra_body"] = {
@@ -343,95 +370,44 @@ async def promptflow_request(request):
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
-def get_current_weather(location):
-    return json.dumps({
-        "Weather": "Sunny",
-        "Temperature": "25°C",
-        "Weather Image": "<a href=https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1msDBU.img />"
-    })
-
-azure_openai_tools = [{
-    "type": "function",
-    "function": {
-        "name": "get_current_weather",
-        "description": "Returns the current weather for a given location",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "location": {
-                    "type": "string",
-                    "description": "The location to get the weather for"
-                }
-            },
-            "required": ["location"]
-        }
-    }
-}]
-
-azure_openai_available_tools = {
-    "get_current_weather": get_current_weather
-}
 
 def process_function_call(response):
     response_message = response.choices[0].message
     messages = []
 
-    # Step 2: check if GPT wanted to call a function
     if response_message.tool_calls:
-        print("Recommended Function call:")
-        print(response_message.tool_calls[0])
-        print()
+        for tool_call in response_message.tool_calls:
+            # Check if function exists
+            if tool_call.function.name not in azure_openai_available_tools:
+                continue
+            
+            function_response = openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
 
-        # Step 3: call the function
-        # Note: the JSON response may not always be valid; be sure to handle errors
-
-        function_name = response_message.tool_calls[0].function.name
-
-        # verify function exists
-        if function_name not in azure_openai_available_tools:
-            return "Function " + function_name + " does not exist"
-        function_to_call = azure_openai_available_tools[function_name]
-
-        # verify function has correct number of arguments
-        function_args = json.loads(response_message.tool_calls[0].function.arguments)
-        function_response = function_to_call(**function_args)
-
-        print("Output of function call:")
-        print(function_response)
-        print()
-
-        # Step 4: send the info on the function call and function response to GPT
-
-        # adding assistant response to messages
-        
-        messages.append(
-            {
-                "role": response_message.role,
-                "function_call": {
-                    "name": function_name,
-                    "arguments": response_message.tool_calls[0].function.arguments,
-                },
-                "content": None,
-            }
-        )
-        
-        # adding function response to messages
-        messages.append(
-            {
-                "role": "function",
-                "name": function_name,
-                "content": function_response,
-            }
-        )  # extend conversation with function response
-
-        print("Messages in second request:")
-        for message in messages:
-            print(message)
-        print()
+            # adding assistant response to messages
+            messages.append(
+                {
+                    "role": response_message.role,
+                    "function_call": {
+                        "name": tool_call.function.name,
+                        "arguments": tool_call.function.arguments,
+                    },
+                    "content": None,
+                }
+            )
+            
+            # adding function response to messages
+            messages.append(
+                {
+                    "role": "function",
+                    "name": tool_call.function.name,
+                    "content": function_response,
+                }
+            )  # extend conversation with function response
         
         return messages
+    
     return None
-
+    
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
     messages = request_body.get("messages", [])
@@ -441,10 +417,6 @@ async def send_chat_request(request_body, request_headers):
             
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
-
-    print("Model args")
-    print(model_args)
-    print("Model args")
 
     try:
         azure_openai_client = await init_openai_client()
@@ -473,46 +445,125 @@ async def complete_chat_request(request_body, request_headers):
         history_metadata = request_body.get("history_metadata", {})
         non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
 
-        # Step 1: check if GPT wanted to call a function
-        function_response = process_function_call(response)
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            function_response = process_function_call(response)
 
-        if function_response:
-            request_body["messages"].extend(function_response)
+            if function_response:
+                request_body["messages"].extend(function_response)
 
-            print("Request body with function response:")
-            print(request_body)
-            print("Request body with function response:")
-            
-            response, apim_request_id = await send_chat_request(request_body, request_headers)
-            history_metadata = request_body.get("history_metadata", {})
-            non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
-
-            print("Response with function response:")
-            print(response)
-            print("Response with function response")
+                response, apim_request_id = await send_chat_request(request_body, request_headers)
+                history_metadata = request_body.get("history_metadata", {})
+                non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
 
     return non_streaming_response
 
 
 async def stream_chat_request(request_body, request_headers):
+    print("Stream Chat Request")
+    print(request_body)
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
     
-    async def generate():
-        async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+    messages = []
 
-    return generate()
+    async def generate(apim_request_id, history_metadata):
+        tool_calls = []
+        current_tool_call = None
+        tool_arguments_stream = ""
+        function_messages = []
+        tool_name = ""
+        tool_call_streaming_state = "INITIAL"
+
+        async for completionChunk in response:
+            if app_settings.azure_openai.function_call_azure_functions_enabled:
+                print("Completion Chunk: ", completionChunk)
+
+                if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
+                    response_message = completionChunk.choices[0].delta
+
+                    # Function calling stream processing
+                    if response_message.tool_calls and tool_call_streaming_state in ["INITIAL", "STREAMING"]:
+                        tool_call_streaming_state = "STREAMING"
+                        for tool_call_chunk in response_message.tool_calls:
+                            # New tool call
+                            if tool_call_chunk.id:
+                                #print("New tool call: {0}", tool_call_chunk.id)
+                                if current_tool_call:
+                                    tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
+                                    current_tool_call["tool_arguments"] = tool_arguments_stream
+                                    tool_arguments_stream = ""
+                                    tool_name = ""
+                                    tool_calls.append(current_tool_call)
+
+                                current_tool_call = {
+                                    "tool_id": tool_call_chunk.id,
+                                    "tool_name": tool_call_chunk.function.name if tool_name == "" else tool_name
+                                }
+                            else:
+                                tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
+                            
+                    # Function call - Streaming completed
+                    elif response_message.tool_calls is None and tool_call_streaming_state == "STREAMING":
+                        current_tool_call["tool_arguments"] = tool_arguments_stream
+                        tool_calls.append(current_tool_call)
+                        
+                        #print("Tool Calls: ", tool_calls)
+                        
+                        for tool_call in tool_calls:
+                            tool_response = openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
+
+                            function_messages.append({
+                                "role": "assistant",
+                                "function_call": {
+                                    "name" : tool_call["tool_name"],
+                                    "arguments": tool_call["tool_arguments"]
+                                },
+                                "content": None
+                            })
+                            function_messages.append({
+                                "tool_call_id": tool_call["tool_id"],
+                                "role": "function",
+                                "name": tool_call["tool_name"],
+                                "content": tool_response,
+                            })
+                        
+                        # Reset for the next tool call
+                        messages = function_messages
+                        function_messages = []
+                        tool_calls = []
+                        current_tool_call = None
+                        tool_arguments_stream = ""
+                        tool_name = ""
+                        tool_id = None
+                        tool_call_streaming_state = "COMPLETED"
+
+                        request_body["messages"].extend(messages)
+
+                        function_response, apim_request_id = await send_chat_request(request_body, request_headers)
+
+                        async for functionCompletionChunk in function_response:
+                            yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
+
+                    else:
+                        # No function call, asistant response
+                        yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+    
+            else:
+                yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+    return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
 
 
 async def conversation_internal(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
+
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
+            
             return response
+
         else:
             result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
