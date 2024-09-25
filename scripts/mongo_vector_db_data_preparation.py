@@ -6,7 +6,7 @@ import uuid
 
 import requests
 from data_utils import Document
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import AzureCliCredential
 from pymongo.mongo_client import MongoClient
@@ -119,7 +119,8 @@ def upsert_documents_to_index(
         ):
     for document in docs:
         finalDocChunk:dict = {}
-        finalDocChunk["_id"] = f"doc:{uuid.uuid4()}"
+        doc_id = f"doc:{uuid.uuid4()}"
+        finalDocChunk["_id"] = doc_id
         finalDocChunk['title'] = document.title
         finalDocChunk["filepath"] = document.filepath
         finalDocChunk["url"] = document.url
@@ -131,10 +132,10 @@ def upsert_documents_to_index(
 
         try:
             mongo_collection.insert_one(finalDocChunk)
-            print(f"Upsert doc chunk {document.id} successfully")
+            print(f"Upsert doc chunk {doc_id} successfully")
         
         except Exception as e:
-            print(f"Failed to upsert doc chunk {document.id}")
+            print(f"Failed to upsert doc chunk {doc_id}")
             continue
 
 def create_index(config, credential, form_recognizer_client=None, embedding_model_endpoint=None, use_layout=False, njobs=4):
@@ -203,18 +204,22 @@ if __name__ == "__main__":
     form_recognizer_client = None
 
     print("Data preparation script started")
-    if args.form_rec_resource and args.form_rec_key:
+    if args.form_rec_resource:
         os.environ["FORM_RECOGNIZER_ENDPOINT"] = f"https://{args.form_rec_resource}.cognitiveservices.azure.com/"
-        os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
+        form_rec_cred = credential
+        if args.form_rec_key:
+            os.environ["FORM_RECOGNIZER_KEY"] = args.form_rec_key
+            form_rec_cred = AzureKeyCredential(args.form_rec_key)
         if args.njobs==1:
-            form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=AzureKeyCredential(args.form_rec_key))
+            form_recognizer_client = DocumentIntelligenceClient(endpoint=f"https://{args.form_rec_resource}.cognitiveservices.azure.com/", credential=form_rec_cred)
         print(f"Using Form Recognizer resource {args.form_rec_resource} for PDF cracking, with the {'Layout' if args.form_rec_use_layout else 'Read'} model.")
 
     for index_config in config:        
         if index_config.get("index_name") and not args.embedding_model_endpoint:
             raise Exception("ERROR: Vector search is enabled in the config, but no embedding model endpoint and key were provided. Please provide these values or disable vector search.")
         print("Preparing data for index:", index_config["index_name"])
-        os.environ["EMBEDDING_MODEL_KEY"] = args.embedding_model_key
+        if args.embedding_model_key:
+            os.environ["EMBEDDING_MODEL_KEY"] = args.embedding_model_key
         create_index(index_config, credential, form_recognizer_client, embedding_model_endpoint=args.embedding_model_endpoint, use_layout=args.form_rec_use_layout, njobs=args.njobs)
         print("Data preparation for index", index_config["index_name"], "completed")
 
