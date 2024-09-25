@@ -16,11 +16,11 @@
 }
 
 .chatContainer {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
     0px 0px 2px rgba(0, 0, 0, 0.12);
@@ -28,6 +28,32 @@
   overflow-y: auto;
   max-height: calc(100vh - 100px);
 }
+/* 
+.backgroundContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.backgroundImage {
+  object-fit: cover;
+  object-position: left;
+  width: 100%;
+  height: 100%;
+}
+
+.backgroundImageForeground {
+  opacity: 0.85;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
+} */
 
 .chatEmptyState {
   flex-grow: 1;
@@ -70,7 +96,7 @@
   flex-grow: 1;
   max-width: 1028px;
   width: 100%;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   padding-left: 24px;
   padding-right: 24px;
   display: flex;
@@ -88,7 +114,7 @@
   position: relative;
   display: flex;
   padding: 20px;
-  background: #edf5fd;
+  background: #008ff4;
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -97,7 +123,7 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #242424;
+  color: #fff;
   order: 0;
   flex-grow: 0;
   white-space: pre-wrap;

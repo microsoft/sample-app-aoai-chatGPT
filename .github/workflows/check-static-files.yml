@@ -16,8 +16,8 @@ jobs:
         id: changed-frontend-src-files
         with:
           files: |
-             frontend/src/**/*.tsx
-             frontend/src/**/*.css
+            frontend/src/**/*.tsx
+            frontend/src/**/*.css
 
       - name: List changed frontend static files
         id: changed-frontend-static-files
@@ -36,8 +36,9 @@ jobs:
         id: changed-logo-files
         with:
           files: |
-             frontend/public/favicon.ico
-             frontend/src/assets
+            frontend/public/favicon.ico
+            frontend/public/logo.svg
+            frontend/src/assets
 
       - name: Comment on logo customizations
         if: steps.changed-logo-files.outputs.any_changed == 'true'
@@ -45,7 +46,7 @@ jobs:
         with:
           message: |
             "Hello contributor, it appears that your pull request contains some customizations to branding. We are unable to approve your PR at this time. If you believe this message to be in error, please correct these unsupported changes and try again, or reach out to one of the maintainers of the repo to discuss the changes."
-        
+
       - name: Fail on logo customizations
         if: steps.changed-logo-files.outputs.any_changed == 'true'
         run: echo "Logos are customized, which is not a supported change." && exit 1
