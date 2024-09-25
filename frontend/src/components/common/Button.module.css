@@ -1,7 +1,6 @@
 .shareButtonRoot {
   width: 86px;
   height: 32px;
-  border-radius: 4px;
   background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0f6cbd 33.63%, #2d87c3 70.31%, #8dddd8 100%);
   padding: 5px 12px;
 }
