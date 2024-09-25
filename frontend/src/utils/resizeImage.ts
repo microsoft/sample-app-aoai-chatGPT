@@ -1,5 +1,3 @@
-//
-
 export const resizeImage = (file: Blob, maxWidth: number, maxHeight: number): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image()
