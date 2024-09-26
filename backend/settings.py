@@ -331,7 +331,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         **kwargs
     ):
         request = kwargs.pop('request', None)
-        if request and self.permitted_groups_column:
+        if request and (self.permitted_groups_column or self.chatbot_id):
             self.filter = self._set_filter_string(request)
             
         self.embedding_dependency = \
