@@ -14,6 +14,8 @@ AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get(
     "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN"
 )
 
+AZURE_SEARCH_CHATBOT_ID = os.environ.get("AZURE_SEARCH_CHATBOT_ID")
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -63,16 +65,13 @@ def fetchUserGroups(userToken, nextLink=None):
         return []
 
 
-def generateFilterString(userToken):
-    # Get list of groups user is a member of
-    userGroups = fetchUserGroups(userToken)
-
+def generateFilterString(chatbotId):
     # Construct filter string
-    if not userGroups:
-        logging.debug("No user groups found")
+    if not chatbotId:
+        logging.debug("No chatbot ID provided")
+        return None
 
-    group_ids = ", ".join([obj["id"] for obj in userGroups])
-    return f"{AZURE_SEARCH_PERMITTED_GROUPS_COLUMN}/any(g:search.in(g, '{group_ids}'))"
+    return f"chatbot_id eq '{chatbotId}'"
 
 
 def format_non_streaming_response(chatCompletion, history_metadata, apim_request_id):
