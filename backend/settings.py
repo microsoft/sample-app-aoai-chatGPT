@@ -270,6 +270,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         'vectorSemanticHybrid'
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
+    chatbot_id: Optional[str] = Field(default=None, exclude=True)
     
     # Constructed fields
     endpoint: Optional[str] = None
@@ -316,18 +317,12 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         self.query_type = to_snake(self.query_type)
 
     def _set_filter_string(self, request: Request) -> str:
-        if self.permitted_groups_column:
-            user_token = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
-            logging.debug(f"USER TOKEN is {'present' if user_token else 'not present'}")
-            if not user_token:
-                raise ValueError(
-                    "Document-level access control is enabled, but user access token could not be fetched."
-                )
-
-            filter_string = generateFilterString(user_token)
+        if self.chatbot_id:
+            chatbot_id = self.chatbot_id
+            filter_string = generateFilterString(chatbot_id)
             logging.debug(f"FILTER: {filter_string}")
             return filter_string
-        
+
         return None
             
     def construct_payload_configuration(
