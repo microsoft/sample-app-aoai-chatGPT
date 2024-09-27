@@ -44,7 +44,7 @@ cat .env | jq -R '. | capture("(?<name>[A-Z_]+)=(?<value>.*)")' | jq -s '.[].slo
 To run the app locally, configure the `.env` file with the correct values, and configure the extra setting `AUTH_ENABLED=false` for testing without the Application Authentication enabled. You can then run from VS Code by using <kbd>F5</kbd>. 
 
 If you get an error message: `Unauthorized. Access token is missing, invalid, audience is incorrect`, then run `az login` before running the App. If you still get an error after that, make sure your account has access to the Azure OpenAi instance. You can list the roll assignments and create it through: 
-`az role assignment create --assignee <your-user-id> --role "Cognitive Services Contributor" --scope /subscriptions/<your-subscription-id>/resourceGroups/<your-resource-group>/providers/Microsoft.CognitiveServices/accounts/<your-cognitive-services-account>`
+`az role assignment create --assignee <your-user-id> --role "Cognitive Services OpenAI User" --scope /subscriptions/<your-subscription-id>/resourceGroups/<your-resource-group>/providers/Microsoft.CognitiveServices/accounts/<your-cognitive-services-account>`
 
 ## Deploy the app
 
