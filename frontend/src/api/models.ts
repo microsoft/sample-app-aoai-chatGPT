@@ -135,6 +135,7 @@ export type UI = {
 
 export type FrontendSettings = {
   auth_enabled?: string | null
+  chatbot_limited_message_count?: string | null
   feedback_enabled?: string | null
   ui?: UI
   sanitize_answer?: boolean
