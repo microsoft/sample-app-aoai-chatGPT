@@ -91,7 +91,7 @@ class _AzureOpenAIFunction(BaseModel):
 class _AzureOpenAITool(BaseModel):
     type: Literal['function'] = 'function'
     function: _AzureOpenAIFunction
-    
+
 
 class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -195,7 +195,7 @@ class _AzureOpenAISettings(BaseSettings):
                 }
         else:   
             return None
-    
+
 
 class _SearchCommonSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -271,36 +271,36 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
     chatbot_id: Optional[str] = Field(default=None, exclude=True)
-    
+
     # Constructed fields
     endpoint: Optional[str] = None
     authentication: Optional[dict] = None
     embedding_dependency: Optional[dict] = None
     fields_mapping: Optional[dict] = None
-    filter: Optional[str] = Field(default=None, exclude=True)
-    
+    filter: Optional[str] = Field(default=None, exclude=False)
+
     @field_validator('content_columns', 'vector_columns', mode="before")
     @classmethod
     def split_columns(cls, comma_separated_string: str) -> List[str]:
         if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
             return parse_multi_columns(comma_separated_string)
-        
+
         return None
-    
+
     @model_validator(mode="after")
     def set_endpoint(self) -> Self:
         self.endpoint = f"https://{self.service}.{self.endpoint_suffix}"
         return self
-    
+
     @model_validator(mode="after")
     def set_authentication(self) -> Self:
         if self.key:
             self.authentication = {"type": "api_key", "key": self.key}
         else:
             self.authentication = {"type": "system_assigned_managed_identity"}
-            
+
         return self
-    
+
     @model_validator(mode="after")
     def set_fields_mapping(self) -> Self:
         self.fields_mapping = {
@@ -311,7 +311,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             "vector_fields": self.vector_columns
         }
         return self
-    
+
     @model_validator(mode="after")
     def set_query_type(self) -> Self:
         self.query_type = to_snake(self.query_type)
@@ -324,7 +324,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             return filter_string
 
         return None
-            
+
     def construct_payload_configuration(
         self,
         *args,
@@ -333,12 +333,12 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
         request = kwargs.pop('request', None)
         if request and (self.permitted_groups_column or self.chatbot_id):
             self.filter = self._set_filter_string(request)
-            
+
         self.embedding_dependency = \
             self._settings.azure_openai.extract_embedding_dependency()
         parameters = self.model_dump(exclude_none=True, by_alias=True)
         parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
-        
+
         return {
             "type": self._type,
             "parameters": parameters
@@ -661,7 +661,7 @@ class _AzureSqlServerSettings(BaseSettings, DatasourcePayloadConstructor):
             "type": self._type,
             "parameters": parameters
         }
-    
+
 
 class _MongoDbSettings(BaseSettings, DatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
@@ -738,8 +738,8 @@ class _MongoDbSettings(BaseSettings, DatasourcePayloadConstructor):
             "type": self._type,
             "parameters": parameters
         }
-        
-        
+
+
 class _BaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
