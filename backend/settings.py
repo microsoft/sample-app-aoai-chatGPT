@@ -749,6 +749,7 @@ class _BaseSettings(BaseSettings):
     )
     datasource_type: Optional[str] = None
     auth_enabled: bool = True
+    chatbot_limited_message_count: bool = False
     sanitize_answer: bool = False
     use_promptflow: bool = False
 

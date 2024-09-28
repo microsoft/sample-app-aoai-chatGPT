@@ -89,9 +89,9 @@ USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 # Frontend Settings via Environment Variables
 frontend_settings = {
     "auth_enabled": app_settings.base_settings.auth_enabled,
+    "chatbot_limited_message_count": app_settings.base_settings.chatbot_limited_message_count,
     "feedback_enabled": (
-        app_settings.chat_history and
-        app_settings.chat_history.enable_feedback
+        app_settings.chat_history and app_settings.chat_history.enable_feedback
     ),
     "ui": {
         "title": app_settings.ui.title,
