@@ -271,7 +271,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
     chatbot_id: Optional[str] = Field(default=None, exclude=True)
-    
+
     # Constructed fields
     endpoint: Optional[str] = None
     authentication: Optional[dict] = None
