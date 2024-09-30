@@ -49,6 +49,7 @@ const Chat = () => {
   const appStateContext = useContext(AppStateContext);
   const ui = appStateContext?.state.frontendSettings?.ui;
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled;
+  const CHATBOT_LIMITED_MESSAGE_COUNT = appStateContext?.state.frontendSettings?.chatbot_limited_message_count;
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
@@ -57,6 +58,7 @@ const Chat = () => {
   const [isIntentsPanelOpen, setIsIntentsPanelOpen] = useState<boolean>(false);
   const abortFuncs = useRef([] as AbortController[]);
   const [showAuthMessage, setShowAuthMessage] = useState<boolean | undefined>();
+  const [showChatbotLimitedMessageCount, setShowChatbotLimitedMessageCount] = useState<boolean>(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [execResults, setExecResults] = useState<ExecResults[]>([]);
   const [processMessages, setProcessMessages] = useState<messageStatus>(messageStatus.NotRunning);
@@ -121,6 +123,11 @@ const Chat = () => {
       setShowAuthMessage(false);
       return;
     }
+
+    if (CHATBOT_LIMITED_MESSAGE_COUNT) {
+      setShowChatbotLimitedMessageCount(true);
+    }
+
     const userInfoList = await getUserInfo();
     if (userInfoList.length === 0 && window.location.hostname !== '127.0.0.1') {
       setShowAuthMessage(true);
@@ -784,6 +791,20 @@ const Chat = () => {
           </h2>
           <h2 className={styles.chatEmptyStateSubtitle} style={{ fontSize: '20px' }}>
             <strong>If you deployed in the last 10 minutes, please wait and reload the page after 10 minutes.</strong>
+          </h2>
+        </Stack>
+      ) : showChatbotLimitedMessageCount ? (
+        <Stack className={styles.chatEmptyState}>
+          <ErrorCircleRegular
+            className={styles.chatIcon}
+            style={{ color: 'red', height: '200px', width: '200px' }}
+          />
+          <h1 className={styles.chatEmptyStateTitle}>Monthly Chat Limit Reached</h1>
+          <h2 className={styles.chatEmptyStateSubtitle}>
+            The monthly limit for total chat messages has been reached for this plan.
+          </h2>
+          <h2 className={styles.chatEmptyStateSubtitle} style={{ fontSize: '20px' }}>
+            <strong>Please try again next month or contact the administrator to upgrade your plan.</strong>
           </h2>
         </Stack>
       ) : (
