@@ -373,6 +373,7 @@ The interface allows for easy adaptation of the UI by modifying certain elements
 |UI_FAVICON|No|| Defaults to Contoso favicon. Configure the URL to your favicon to modify.
 |UI_SHOW_SHARE_BUTTON|No|True|Share button (right-top)
 |UI_SHOW_CHAT_HISTORY_BUTTON|No|True|Show chat history button (right-top)
+|UI_FOOTER_DISCLAIMER|No||AI-generated content may be incorrect. (chat-bubble footer)
 |SANITIZE_ANSWER|No|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 
 Any custom images assigned to variables `UI_LOGO`, `UI_CHAT_LOGO` or `UI_FAVICON` should be added to the [public](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/frontend/public) folder before building the project. The Vite build process will automatically copy theses files to the [static](https://github.com/microsoft/sample-app-aoai-chatGPT/tree/main/static) folder on each build of the frontend. The corresponding environment variables should then be set using a relative path such as `static/<my image filename>` to ensure that the frontend code can find them.
