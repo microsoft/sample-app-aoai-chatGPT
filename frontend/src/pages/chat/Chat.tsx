@@ -887,8 +887,8 @@ const Chat = () => {
                   </span>
                 </Stack>
               )}
-              <Stack>
-                {/* {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
+              {/* <Stack>
+                {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
                     role="button"
                     styles={{
@@ -913,7 +913,7 @@ const Chat = () => {
                     disabled={disabledButton()}
                     aria-label="start a new chat button"
                   />
-                )} */}
+                )}
                 <CommandBarButton
                   role="button"
                   styles={{
@@ -951,7 +951,7 @@ const Chat = () => {
                   onDismiss={handleErrorDialogClose}
                   dialogContentProps={errorDialogContentProps}
                   modalProps={modalProps}></Dialog>
-              </Stack>
+              </Stack> */}
               <QuestionInput
                 clearOnSend
                 placeholder="Type a new question..."
