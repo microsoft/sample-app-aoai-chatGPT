@@ -1,4 +1,5 @@
 .answerContainer {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -177,6 +178,16 @@
 .clickableSup:hover {
   text-decoration: underline;
   cursor: pointer;
+}
+
+.copyButton {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
 }
 
 sup {

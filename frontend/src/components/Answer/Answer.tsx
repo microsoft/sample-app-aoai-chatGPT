@@ -1,155 +1,162 @@
-import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
-import { useBoolean } from '@fluentui/react-hooks'
-import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
-import DOMPurify from 'dompurify'
-import remarkGfm from 'remark-gfm'
-import supersub from 'remark-supersub'
-import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
-import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
-import { AppStateContext } from '../../state/AppProvider'
+import { FormEvent, useContext, useEffect, useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react';
+import { useBoolean } from '@fluentui/react-hooks';
+import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons';
+import DOMPurify from 'dompurify';
+import remarkGfm from 'remark-gfm';
+import supersub from 'remark-supersub';
+import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api';
+import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables';
+import { AppStateContext } from '../../state/AppProvider';
+import { RiFileCopyLine } from "react-icons/ri";
 
-import { parseAnswer } from './AnswerParser'
+import { parseAnswer } from './AnswerParser';
 
-import styles from './Answer.module.css'
+import styles from './Answer.module.css';
 
 interface Props {
-  answer: AskResponse
-  onCitationClicked: (citedDocument: Citation) => void
-  onExectResultClicked: (answerId: string) => void
+  answer: AskResponse;
+  onCitationClicked: (citedDocument: Citation) => void;
+  onExectResultClicked: (answerId: string) => void;
 }
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
   const initializeAnswerFeedback = (answer: AskResponse) => {
-    if (answer.message_id == undefined) return undefined
-    if (answer.feedback == undefined) return undefined
-    if (answer.feedback.split(',').length > 1) return Feedback.Negative
-    if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback
-    return Feedback.Neutral
-  }
+    if (answer.message_id == undefined) return undefined;
+    if (answer.feedback == undefined) return undefined;
+    if (answer.feedback.split(',').length > 1) return Feedback.Negative;
+    if (Object.values(Feedback).includes(answer.feedback)) return answer.feedback;
+    return Feedback.Neutral;
+  };
 
-  const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false)
-  const filePathTruncationLimit = 50
+  const [isRefAccordionOpen, { toggle: toggleIsRefAccordionOpen }] = useBoolean(false);
+  const filePathTruncationLimit = 50;
 
-  const parsedAnswer = useMemo(() => parseAnswer(answer), [answer])
-  const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen)
-  const [feedbackState, setFeedbackState] = useState(initializeAnswerFeedback(answer))
-  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false)
-  const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false)
-  const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([])
-  const appStateContext = useContext(AppStateContext)
+  const parsedAnswer = useMemo(() => parseAnswer(answer), [answer]);
+  const [chevronIsExpanded, setChevronIsExpanded] = useState(isRefAccordionOpen);
+  const [feedbackState, setFeedbackState] = useState(initializeAnswerFeedback(answer));
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [showReportInappropriateFeedback, setShowReportInappropriateFeedback] = useState(false);
+  const [negativeFeedbackList, setNegativeFeedbackList] = useState<Feedback[]>([]);
+  const appStateContext = useContext(AppStateContext);
   const FEEDBACK_ENABLED =
-    appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-  const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer
+    appStateContext?.state.frontendSettings?.feedback_enabled && appStateContext?.state.isCosmosDBAvailable?.cosmosDB;
+  const SANITIZE_ANSWER = appStateContext?.state.frontendSettings?.sanitize_answer;
 
   const handleChevronClick = () => {
-    setChevronIsExpanded(!chevronIsExpanded)
-    toggleIsRefAccordionOpen()
-  }
+    setChevronIsExpanded(!chevronIsExpanded);
+    toggleIsRefAccordionOpen();
+  };
 
   useEffect(() => {
-    setChevronIsExpanded(isRefAccordionOpen)
-  }, [isRefAccordionOpen])
+    setChevronIsExpanded(isRefAccordionOpen);
+  }, [isRefAccordionOpen]);
 
   useEffect(() => {
-    if (answer.message_id == undefined) return
+    if (answer.message_id == undefined) return;
 
-    let currentFeedbackState
+    let currentFeedbackState;
     if (appStateContext?.state.feedbackState && appStateContext?.state.feedbackState[answer.message_id]) {
-      currentFeedbackState = appStateContext?.state.feedbackState[answer.message_id]
+      currentFeedbackState = appStateContext?.state.feedbackState[answer.message_id];
     } else {
-      currentFeedbackState = initializeAnswerFeedback(answer)
+      currentFeedbackState = initializeAnswerFeedback(answer);
     }
-    setFeedbackState(currentFeedbackState)
-  }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id])
+    setFeedbackState(currentFeedbackState);
+  }, [appStateContext?.state.feedbackState, feedbackState, answer.message_id]);
 
   const createCitationFilepath = (citation: Citation, index: number, truncate: boolean = false) => {
-    let citationFilename = ''
+    let citationFilename = '';
 
     if (citation.filepath) {
-      const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '')
+      const part_i = citation.part_index ?? (citation.chunk_id ? parseInt(citation.chunk_id) + 1 : '');
       if (truncate && citation.filepath.length > filePathTruncationLimit) {
-        const citationLength = citation.filepath.length
-        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`
+        const citationLength = citation.filepath.length;
+        citationFilename = `${citation.filepath.substring(0, 20)}...${citation.filepath.substring(citationLength - 20)} - Part ${part_i}`;
       } else {
-        citationFilename = `${citation.filepath} - Part ${part_i}`
+        citationFilename = `${citation.filepath} - Part ${part_i}`;
       }
     } else if (citation.filepath && citation.reindex_id) {
-      citationFilename = `${citation.filepath} - Part ${citation.reindex_id}`
+      citationFilename = `${citation.filepath} - Part ${citation.reindex_id}`;
     } else {
-      citationFilename = `Citation ${index}`
+      citationFilename = `Citation ${index}`;
     }
-    return citationFilename
-  }
+    return citationFilename;
+  };
 
   const onLikeResponseClicked = async () => {
-    if (answer.message_id == undefined) return
+    if (answer.message_id == undefined) return;
 
-    let newFeedbackState = feedbackState
+    let newFeedbackState = feedbackState;
     // Set or unset the thumbs up state
     if (feedbackState == Feedback.Positive) {
-      newFeedbackState = Feedback.Neutral
+      newFeedbackState = Feedback.Neutral;
     } else {
-      newFeedbackState = Feedback.Positive
+      newFeedbackState = Feedback.Positive;
     }
     appStateContext?.dispatch({
       type: 'SET_FEEDBACK_STATE',
       payload: { answerId: answer.message_id, feedback: newFeedbackState }
-    })
-    setFeedbackState(newFeedbackState)
+    });
+    setFeedbackState(newFeedbackState);
 
     // Update message feedback in db
-    await historyMessageFeedback(answer.message_id, newFeedbackState)
-  }
+    await historyMessageFeedback(answer.message_id, newFeedbackState);
+  };
 
   const onDislikeResponseClicked = async () => {
-    if (answer.message_id == undefined) return
+    if (answer.message_id == undefined) return;
 
-    let newFeedbackState = feedbackState
+    let newFeedbackState = feedbackState;
     if (feedbackState === undefined || feedbackState === Feedback.Neutral || feedbackState === Feedback.Positive) {
-      newFeedbackState = Feedback.Negative
-      setFeedbackState(newFeedbackState)
-      setIsFeedbackDialogOpen(true)
+      newFeedbackState = Feedback.Negative;
+      setFeedbackState(newFeedbackState);
+      setIsFeedbackDialogOpen(true);
     } else {
       // Reset negative feedback to neutral
-      newFeedbackState = Feedback.Neutral
-      setFeedbackState(newFeedbackState)
-      await historyMessageFeedback(answer.message_id, Feedback.Neutral)
+      newFeedbackState = Feedback.Neutral;
+      setFeedbackState(newFeedbackState);
+      await historyMessageFeedback(answer.message_id, Feedback.Neutral);
     }
     appStateContext?.dispatch({
       type: 'SET_FEEDBACK_STATE',
       payload: { answerId: answer.message_id, feedback: newFeedbackState }
-    })
-  }
+    });
+  };
 
   const updateFeedbackList = (ev?: FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean) => {
-    if (answer.message_id == undefined) return
-    const selectedFeedback = (ev?.target as HTMLInputElement)?.id as Feedback
+    if (answer.message_id == undefined) return;
+    const selectedFeedback = (ev?.target as HTMLInputElement)?.id as Feedback;
 
-    let feedbackList = negativeFeedbackList.slice()
+    let feedbackList = negativeFeedbackList.slice();
     if (checked) {
-      feedbackList.push(selectedFeedback)
+      feedbackList.push(selectedFeedback);
     } else {
-      feedbackList = feedbackList.filter(f => f !== selectedFeedback)
+      feedbackList = feedbackList.filter(f => f !== selectedFeedback);
     }
 
-    setNegativeFeedbackList(feedbackList)
-  }
+    setNegativeFeedbackList(feedbackList);
+  };
 
   const onSubmitNegativeFeedback = async () => {
-    if (answer.message_id == undefined) return
-    await historyMessageFeedback(answer.message_id, negativeFeedbackList.join(','))
-    resetFeedbackDialog()
-  }
+    if (answer.message_id == undefined) return;
+    await historyMessageFeedback(answer.message_id, negativeFeedbackList.join(','));
+    resetFeedbackDialog();
+  };
 
   const resetFeedbackDialog = () => {
-    setIsFeedbackDialogOpen(false)
-    setShowReportInappropriateFeedback(false)
-    setNegativeFeedbackList([])
-  }
+    setIsFeedbackDialogOpen(false);
+    setShowReportInappropriateFeedback(false);
+    setNegativeFeedbackList([]);
+  };
+
+  const copyToClipboard = (answerToCopy: string | undefined) => {
+    if (answerToCopy !== undefined) {
+      navigator.clipboard.writeText(answerToCopy);
+    }
+  };
 
   const UnhelpfulFeedbackContent = () => {
     return (
@@ -186,8 +193,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           Report inappropriate content
         </div>
       </>
-    )
-  }
+    );
+  };
 
   const ReportInappropriateFeedbackContent = () => {
     return (
@@ -223,41 +230,48 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             onChange={updateFeedbackList}></Checkbox>
         </Stack>
       </>
-    )
-  }
+    );
+  };
 
   const components = {
-    code({ node, ...props }: { node: any;[key: string]: any }) {
-      let language
+    code({ node, ...props }: { node: any;[key: string]: any; }) {
+      let language;
       if (props.className) {
-        const match = props.className.match(/language-(\w+)/)
-        language = match ? match[1] : undefined
+        const match = props.className.match(/language-(\w+)/);
+        language = match ? match[1] : undefined;
       }
-      const codeString = node.children[0].value ?? ''
+      const codeString = node.children[0].value ?? '';
       return (
         <SyntaxHighlighter style={nord} language={language} PreTag="div" {...props}>
           {codeString}
         </SyntaxHighlighter>
-      )
+      );
     }
-  }
+  };
   return (
     <>
       <Stack className={styles.answerContainer} tabIndex={0}>
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
-              {parsedAnswer && <ReactMarkdown
-                linkTarget="_blank"
-                remarkPlugins={[remarkGfm, supersub]}
-                children={
-                  SANITIZE_ANSWER
-                    ? DOMPurify.sanitize(parsedAnswer?.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
-                    : parsedAnswer?.markdownFormatText
-                }
-                className={styles.answerText}
-                components={components}
-              />}
+              {parsedAnswer && (
+                <ReactMarkdown
+                  linkTarget="_blank"
+                  remarkPlugins={[remarkGfm, supersub]}
+                  children={
+                    SANITIZE_ANSWER
+                      ? DOMPurify.sanitize(parsedAnswer.markdownFormatText, { ALLOWED_TAGS: XSSAllowTags, ALLOWED_ATTR: XSSAllowAttributes })
+                      : parsedAnswer.markdownFormatText
+                  }
+                  className={styles.answerText}
+                  components={components}
+                />
+              )}
+              {parsedAnswer && parsedAnswer.markdownFormatText && parsedAnswer.markdownFormatText.trim().length > 0 && parsedAnswer.markdownFormatText !== "Generating answer..." && (
+                <button className={styles.copyButton} onClick={() => copyToClipboard(parsedAnswer.markdownFormatText)}>
+                  <RiFileCopyLine size={20} />
+                </button>
+              )}
             </Stack.Item>
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
@@ -366,15 +380,15 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                   <div className={styles.citation}>{idx}</div>
                   {createCitationFilepath(citation, idx, true)}
                 </span>
-              )
+              );
             })}
           </div>
         )}
       </Stack>
       <Dialog
         onDismiss={() => {
-          resetFeedbackDialog()
-          setFeedbackState(Feedback.Neutral)
+          resetFeedbackDialog();
+          setFeedbackState(Feedback.Neutral);
         }}
         hidden={!isFeedbackDialogOpen}
         styles={{
@@ -410,5 +424,5 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         </Stack>
       </Dialog>
     </>
-  )
-}
+  );
+};
