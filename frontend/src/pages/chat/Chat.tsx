@@ -119,13 +119,14 @@ const Chat = () => {
   }, [appStateContext?.state.chatHistoryLoadingState]);
 
   const getUserInfoList = async () => {
-    if (!AUTH_ENABLED) {
-      setShowAuthMessage(false);
+    if (CHATBOT_LIMITED_MESSAGE_COUNT) {
+      setShowChatbotLimitedMessageCount(true);
       return;
     }
 
-    if (CHATBOT_LIMITED_MESSAGE_COUNT) {
-      setShowChatbotLimitedMessageCount(true);
+    if (!AUTH_ENABLED) {
+      setShowAuthMessage(false);
+      return;
     }
 
     const userInfoList = await getUserInfo();
