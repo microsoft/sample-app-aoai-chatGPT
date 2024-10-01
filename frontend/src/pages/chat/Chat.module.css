@@ -372,8 +372,9 @@ a {
 
 @media (max-width: 480px) {
   .chatInput {
-    width: 90%;
-    max-width: 90%;
+    width: 100%;
+    margin-bottom: 0px;
+    max-width: 100%;
   }
 
   .newChatIcon {
