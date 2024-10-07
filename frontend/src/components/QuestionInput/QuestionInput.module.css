@@ -82,15 +82,7 @@
 }
 
 @media (max-width: 480px) {
-  .questionInputContainer {
-    left: 0%;
-    height: 90px;
-  }
   .fileIcon {
     font-size: 20px;
-  }
-  .questionInputSendButtonDisabled {
-    width: 20px;
-    height: 20px;
   }
 }

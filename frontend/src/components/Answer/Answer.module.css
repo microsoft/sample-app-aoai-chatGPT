@@ -21,7 +21,7 @@
   flex-grow: 0;
   margin: 11px;
   white-space: normal;
-  word-wrap: break-word;
+  word-wrap: auto;
   max-width: 800px;
   overflow-x: auto;
 }
