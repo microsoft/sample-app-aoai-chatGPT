@@ -38,6 +38,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+import LoadingAnimation from '../../components/Answer/LoadingAnimation';
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -52,6 +53,7 @@ const Chat = () => {
   const CHATBOT_LIMITED_MESSAGE_COUNT = appStateContext?.state.frontendSettings?.chatbot_limited_message_count;
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false);
   const [activeCitation, setActiveCitation] = useState<Citation>();
   const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false);
@@ -189,6 +191,7 @@ const Chat = () => {
 
   const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true);
+    setIsGenerating(true);
     setShowLoadingMessage(true);
     const abortController = new AbortController();
     abortFuncs.current.unshift(abortController);
@@ -306,6 +309,7 @@ const Chat = () => {
       }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
       setShowLoadingMessage(false);
       abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
       setProcessMessages(messageStatus.Done);
@@ -316,6 +320,7 @@ const Chat = () => {
 
   const makeApiRequestWithCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
     setIsLoading(true);
+    setIsGenerating(true);
     setShowLoadingMessage(true);
     const abortController = new AbortController();
     abortFuncs.current.unshift(abortController);
@@ -535,6 +540,7 @@ const Chat = () => {
       }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
       setShowLoadingMessage(false);
       abortFuncs.current = abortFuncs.current.filter(a => a !== abortController);
       setProcessMessages(messageStatus.Done);
@@ -636,6 +642,7 @@ const Chat = () => {
     abortFuncs.current.forEach(a => a.abort());
     setShowLoadingMessage(false);
     setIsLoading(false);
+    setIsGenerating(false);
   };
 
   useEffect(() => {
@@ -809,7 +816,7 @@ const Chat = () => {
           </h2>
         </Stack>
       ) : (
-        <Stack horizontal className={styles.chatRoot}>
+        <>
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
@@ -856,15 +863,9 @@ const Chat = () => {
                 {showLoadingMessage && (
                   <>
                     <div className={styles.chatMessageGpt}>
-                      <Answer
-                        answer={{
-                          answer: "Generating answer...",
-                          citations: [],
-                          generated_chart: null
-                        }}
-                        onCitationClicked={() => null}
-                        onExectResultClicked={() => null}
-                      />
+                      <div className={styles.chatLoadingContainer}>
+                        <LoadingAnimation />
+                      </div>
                     </div>
                   </>
                 )}
@@ -873,7 +874,7 @@ const Chat = () => {
             )}
 
             <Stack horizontal className={styles.chatInput}>
-              {isLoading && messages.length > 0 && (
+              {/* {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -887,7 +888,7 @@ const Chat = () => {
                     Stop generating
                   </span>
                 </Stack>
-              )}
+              )} */}
               {/* <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
@@ -955,8 +956,10 @@ const Chat = () => {
               </Stack> */}
               <QuestionInput
                 clearOnSend
+                isGenerating={isGenerating}
+                stopGenerating={stopGenerating}
                 placeholder="Type a new question..."
-                disabled={isLoading}
+                disabled={isLoading || isGenerating}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
                     ? makeApiRequestWithCosmosDB(question, id)
@@ -1056,7 +1059,7 @@ const Chat = () => {
           )}
           {appStateContext?.state.isChatHistoryOpen &&
             appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
-        </Stack>
+        </>
       )}
     </div>
   );
