@@ -20,8 +20,9 @@
   align-self: stretch;
   flex-grow: 0;
   margin: 11px;
+  overflow-wrap: break-word;
+  word-break: normal;
   white-space: normal;
-  word-wrap: auto;
   max-width: 800px;
   overflow-x: auto;
 }

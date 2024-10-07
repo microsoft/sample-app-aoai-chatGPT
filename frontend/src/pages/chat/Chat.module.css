@@ -109,8 +109,9 @@
   line-height: 22px;
   order: 0;
   flex-grow: 0;
-  white-space: pre-wrap;
-  word-wrap: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
   max-width: 60%;
 }
 
@@ -138,8 +139,9 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  white-space: pre-wrap;
-  word-wrap: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
   gap: 12px;
   align-items: center;
 }
