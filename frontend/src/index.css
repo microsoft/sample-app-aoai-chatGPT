@@ -1,3 +1,9 @@
+@import "@volvo-cars/css/font-face.css";
+@import "@volvo-cars/css/tokens.css";
+@import "@volvo-cars/css/styles_all-media.css";
+@import "@volvo-cars/css/debug.css";
+
+
 * {
   box-sizing: border-box;
 }
@@ -27,3 +33,56 @@ html {
 #root {
   height: 100%;
 }
+
+/* CSS changes start */
+._container_1oila_1{ 
+  background-color: #f2f2f2;
+  ._chatContainer_1oila_18{
+    max-height: calc(100vh - 20px);
+  }
+}
+
+._chatInput_1oila_140{
+  margin-bottom: 2%;
+  flex: 0;
+
+  ._stopGeneratingContainer_1oila_201{
+    background-color: #62b7cf;
+
+    ._stopGeneratingText_1oila_224{
+      flex: 1;
+      top: -56px;
+      left: calc(50% - 80.5px);
+    }
+  }
+
+  ._questionInputContainer_4p7gm_1{ 
+    height:-webkit-fill-available;	
+
+    ._questionInputTextArea_4p7gm_15 {
+      flex: .95;
+      display: flex;
+      align-items: center;
+      margin-right: 40px;
+
+      .ms-TextField-wrapper{ flex: 1;}
+      .ms-TextField-fieldGroup{ min-height: auto;}
+      .ms-TextField-field{ line-height:10px;}
+    }
+
+    ._questionInputSendButtonContainer_4p7gm_24 {
+      display: flex;
+      height: 100%;
+      bottom: auto;
+      align-items: center;
+      right: 12px;
+    }
+  }
+
+  @media (min-width:480px) and (max-width: 1024px) {
+    ._questionInputContainer_4p7gm_1 {
+        left: 11.5%;
+    }
+  }
+}
+/* end */

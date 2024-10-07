@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, Dialog, DialogType, Stack , IconButton } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
+import { IconButton as VolvoIconButton } from '@volvo-cars/react-icons'
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -50,7 +51,7 @@ const Chat = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
   const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false)
   const [activeCitation, setActiveCitation] = useState<Citation>()
   const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false)
@@ -791,7 +792,10 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={logo} className={styles.chatIcon} aria-hidden="true" />
+                <img src={logo} 
+                  // className={styles.chatIcon} 
+                  className='w-1/2'
+                  aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
                 <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
               </Stack>
@@ -850,8 +854,8 @@ const Chat = () => {
               </div>
             )}
 
-            <Stack horizontal className={styles.chatInput}>
-              {isLoading && messages.length > 0 && (
+            <Stack horizontal className={`${styles.chatInput} , p-0`}>
+              {isLoading && messages.length > 0 && ( 
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -866,7 +870,7 @@ const Chat = () => {
                   </span>
                 </Stack>
               )}
-              <Stack>
+              <Stack className='m-4 justify-center'>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
                     role="button"
@@ -892,8 +896,18 @@ const Chat = () => {
                     disabled={disabledButton()}
                     aria-label="start a new chat button"
                   />
+                  // <VolvoIconButton
+                  //   aria-label="Close"
+                  //   color="neutral"
+                  //   disabled
+                  //   icon="plus"
+                  //   iconFilled
+                  //   iconName="edit"
+                  //   // onClick={function Ua() {}}
+                  //   variant="outlined"
+                  // />
                 )}
-                <CommandBarButton
+                {/* <CommandBarButton
                   role="button"
                   styles={{
                     icon: {
@@ -924,6 +938,14 @@ const Chat = () => {
                   }
                   disabled={disabledButton()}
                   aria-label="clear chat button"
+                /> */}
+                <VolvoIconButton aria-label="clear chat button" iconName="delete" 
+                  onClick={
+                    appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
+                      ? clearChat
+                      : newChat
+                  }
+                  disabled={disabledButton()}
                 />
                 <Dialog
                   hidden={hideErrorDialog}

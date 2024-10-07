@@ -9,6 +9,7 @@ import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
+import { Icon, Wordmark } from '@volvo-cars/react-icons'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
@@ -76,14 +77,23 @@ const Layout = () => {
   return (
     <div className={styles.layout}>
       <header className={styles.header} role={'banner'}>
-        <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
-          <Stack horizontal verticalAlign="center">
-            <img src={logo} className={styles.headerIcon} aria-hidden="true" alt="" />
+        <Stack horizontal verticalAlign="center" horizontalAlign="space-between" className='m-24'>
+          <Stack horizontal verticalAlign="center" className='justify-center flex-grow'>
+            <img src={logo} 
+              height={'16'}
+              width={'200'}
+              className='logo'
+              // className={styles.headerIcon} 
+              aria-hidden="true" alt="Volvo" 
+            />
+            {/* <Wordmark/> */}
             <Link to="/" className={styles.headerTitleContainer}>
-              <h1 className={styles.headerTitle}>{ui?.title}</h1>
+              {/* <h1 className={styles.headerTitle}>
+                {ui?.title}
+              </h1> */}
             </Link>
           </Stack>
-          <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
+          {/* <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
                 onClick={handleHistoryClick}
@@ -91,7 +101,7 @@ const Layout = () => {
               />
             )}
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
-          </Stack>
+          </Stack> */}
         </Stack>
       </header>
       <Outlet />
