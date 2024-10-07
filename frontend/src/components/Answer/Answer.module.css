@@ -3,13 +3,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 8.1285px;
+  padding: 20px;
   gap: 5.42px;
-  background: #ffffff;
-  box-shadow:
-    0px 1px 2px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 5.419px;
+  border: 1px solid #ff4c00;
+  border-radius: 18px;
 }
 
 .answerText {
@@ -17,14 +14,15 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
-  color: #323130;
+  color: white;
   flex: none;
   order: 1;
   align-self: stretch;
   flex-grow: 0;
   margin: 11px;
+  overflow-wrap: break-word;
+  word-break: normal;
   white-space: normal;
-  word-wrap: break-word;
   max-width: 800px;
   overflow-x: auto;
 }
@@ -56,7 +54,7 @@
   display: flex;
   align-items: center;
   text-align: center;
-  color: #707070;
+  color: white;
   flex: none;
   order: 1;
   flex-grow: 0;
@@ -181,6 +179,7 @@
 }
 
 .copyButton {
+  color: white;
   position: absolute;
   top: 5px;
   right: 5px;
