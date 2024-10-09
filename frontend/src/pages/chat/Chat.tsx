@@ -873,9 +873,8 @@ const Chat = () => {
               </div>
             )}
 
-            <div className={styles.chatInputBackDrop}>
-              <Stack horizontal className={styles.chatInput}>
-                {/* {isLoading && messages.length > 0 && (
+            <Stack horizontal className={styles.chatInput}>
+              {/* {isLoading && messages.length > 0 && (
                 <Stack
                   horizontal
                   className={styles.stopGeneratingContainer}
@@ -890,7 +889,7 @@ const Chat = () => {
                   </span>
                 </Stack>
               )} */}
-                {/* <Stack>
+              {/* <Stack>
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
                     role="button"
@@ -955,23 +954,22 @@ const Chat = () => {
                   dialogContentProps={errorDialogContentProps}
                   modalProps={modalProps}></Dialog>
               </Stack> */}
-                <QuestionInput
-                  clearOnSend
-                  isGenerating={isGenerating}
-                  stopGenerating={stopGenerating}
-                  placeholder="Type a new question..."
-                  disabled={isLoading || isGenerating}
-                  onSend={(question, id) => {
-                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                      ? makeApiRequestWithCosmosDB(question, id)
-                      : makeApiRequestWithoutCosmosDB(question, id);
-                  }}
-                  conversationId={
-                    appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
-                  }
-                />
-              </Stack>
-            </div>
+              <QuestionInput
+                clearOnSend
+                isGenerating={isGenerating}
+                stopGenerating={stopGenerating}
+                placeholder="Type a new question..."
+                disabled={isLoading || isGenerating}
+                onSend={(question, id) => {
+                  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+                    ? makeApiRequestWithCosmosDB(question, id)
+                    : makeApiRequestWithoutCosmosDB(question, id);
+                }}
+                conversationId={
+                  appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
+                }
+              />
+            </Stack>
           </div>
           {/* Citation Panel */}
           {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
