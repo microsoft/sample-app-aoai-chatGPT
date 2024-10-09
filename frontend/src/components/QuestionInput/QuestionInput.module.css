@@ -3,7 +3,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 20px;
   border-radius: 8px;
   z-index: 10;
   display: flex;
@@ -84,5 +84,8 @@
 @media (max-width: 480px) {
   .fileIcon {
     font-size: 20px;
+  }
+  .questionInputContainer {
+    max-width: 90vw;
   }
 }
