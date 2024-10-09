@@ -1,28 +1,30 @@
 .questionInputContainer {
-  height: 120px;
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 20px;
+  bottom: 0;
   border-radius: 8px;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 20px;
-  max-width: 1028px;
   margin: 0 auto;
+  padding: 0 100px;
+  max-width: 1200px;
+  background-color: #111111;
+  padding-bottom: 20px;
 }
 
 .questionInputTextArea {
+  background-color: white;
+  margin: 0 auto;
   width: 100%;
-  margin: 0;
 }
 
 .questionInputSendButtonContainer {
   position: absolute;
-  right: 30px;
-  bottom: 45px;
+  right: 110px;
+  bottom: 37px;
 }
 
 .questionInputSendButton {
@@ -87,5 +89,11 @@
   }
   .questionInputContainer {
     max-width: 90vw;
+    padding: 0;
+    padding-bottom: 20px;
+  }
+  .questionInputSendButtonContainer {
+    right: 10px;
+    bottom: 35px;
   }
 }
