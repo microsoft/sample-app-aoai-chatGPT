@@ -1,0 +1,2853 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "GetRootFolder": {
+                "inputs": {
+                    "body": {
+                        "method": "GET",
+                        "uri": "_api/web/GetFolderByServerRelativeUrl('Shared Documents')/Files"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/sites/yuantwtestsitecolab1210'))}/httprequest"
+                },
+                "runAfter": {
+                    "Recursively_list_all_the_files": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "GetSharingInformation": {
+                "inputs": {
+                    "body": {
+                        "method": "POST",
+                        "uri": "_api/web/Lists(@a1)/GetItemById(@a2)/GetSharingInformation?@a1=%2750a3d13a%2De561%2D4d18%2D8198%2Dce6508e1221e%27&@a2=%2713%27&$Expand=pickerSettings,permissionsInformation,sharingLinkTemplates,addressBarLinkSettings"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/sites/yuantwtestsitecolab1210'))}/httprequest"
+                },
+                "runAfter": {
+                    "GetRootFolder": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Get_user": {
+                "inputs": {
+                    "body": {
+                        "method": "GET",
+                        "uri": "_api/Web/GetUserById(12)"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/sites/yuantwtestsitecolab1210'))}/httprequest"
+                },
+                "runAfter": {
+                    "GetSharingInformation": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Get_users_by_site_owners": {
+                "inputs": {
+                    "body": {
+                        "method": "GET",
+                        "uri": "_api/Web/SiteGroups/GetByName('yuantwtestsitecolab1210 Visitors')/users"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/sites/yuantwtestsitecolab1210'))}/httprequest"
+                },
+                "runAfter": {
+                    "GetSharingInformation": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Get_users_by_site_owners2": {
+                "inputs": {
+                    "body": {
+                        "method": "GET",
+                        "uri": "_api/Web/SiteGroups/GetByName('yuantwtestsite128 Members')/users"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/sites/yuantwtestsitecolab1210'))}/httprequest"
+                },
+                "runAfter": {
+                    "GetSharingInformation": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Initialize_variable_PendingFolders": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "PendingFolders",
+                            "type": "array",
+                            "value": [
+                                "@variables('SeedFolder')"
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_SeedFolder": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_SeedFolder": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SeedFolder",
+                            "type": "string",
+                            "value": "@{concat(variables('SitePath'), '/Shared Documents')}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_SitePath": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Initialize_variable_SitePath": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SitePath",
+                            "type": "string",
+                            "value": "@{concat('/', join(skip(split(parameters('siteUrl'), '/'),3),'/'))}"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Parse_JSON": {
+                "inputs": {
+                    "content": "@body('GetSharingInformation')",
+                    "schema": {
+                        "properties": {
+                            "d": {
+                                "properties": {
+                                    "__metadata": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "type": {
+                                                "type": "string"
+                                            },
+                                            "uri": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "addressBarLinkSettings": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "linkDisabled": {
+                                                "type": "boolean"
+                                            },
+                                            "linkPermission": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "ageGroup": {
+                                        "type": "integer"
+                                    },
+                                    "anonymousLinkExpirationRestrictionDays": {
+                                        "type": "integer"
+                                    },
+                                    "anyoneLinkTrackUsers": {
+                                        "type": "boolean"
+                                    },
+                                    "blockPeoplePickerAndSharing": {
+                                        "type": "boolean"
+                                    },
+                                    "canAddExternalPrincipal": {
+                                        "type": "boolean"
+                                    },
+                                    "canAddInternalPrincipal": {
+                                        "type": "boolean"
+                                    },
+                                    "canRequestAccessForGrantAccess": {
+                                        "type": "boolean"
+                                    },
+                                    "canSendEmail": {
+                                        "type": "boolean"
+                                    },
+                                    "canUseSimplifiedRoles": {
+                                        "type": "boolean"
+                                    },
+                                    "currentRole": {
+                                        "type": "integer"
+                                    },
+                                    "customizedExternalSharingServiceUrl": {
+                                        "type": "string"
+                                    },
+                                    "defaultLinkKind": {
+                                        "type": "integer"
+                                    },
+                                    "defaultShareLinkPermission": {
+                                        "type": "integer"
+                                    },
+                                    "defaultShareLinkScope": {
+                                        "type": "integer"
+                                    },
+                                    "defaultShareLinkToExistingAccess": {
+                                        "type": "boolean"
+                                    },
+                                    "directUrl": {
+                                        "type": "string"
+                                    },
+                                    "displayName": {
+                                        "type": "string"
+                                    },
+                                    "enforceIBSegmentFiltering": {
+                                        "type": "boolean"
+                                    },
+                                    "enforceSPOSearch": {
+                                        "type": "boolean"
+                                    },
+                                    "fileExtension": {
+                                        "type": "string"
+                                    },
+                                    "hasUniquePermissions": {
+                                        "type": "boolean"
+                                    },
+                                    "isConsumerFiles": {
+                                        "type": "boolean"
+                                    },
+                                    "isPremium": {
+                                        "type": "boolean"
+                                    },
+                                    "isStubFile": {
+                                        "type": "boolean"
+                                    },
+                                    "itemUniqueId": {
+                                        "type": "string"
+                                    },
+                                    "itemUrl": {
+                                        "type": "string"
+                                    },
+                                    "microserviceShareUiUrl": {
+                                        "type": "string"
+                                    },
+                                    "outlookEndpointHostUrl": {
+                                        "type": "string"
+                                    },
+                                    "permissionsInformation": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "hasInheritedLinks": {
+                                                "type": "boolean"
+                                            },
+                                            "links": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "results": {
+                                                        "items": {
+                                                            "properties": {
+                                                                "inheritedFrom": {},
+                                                                "isInherited": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "linkDetails": {
+                                                                    "properties": {
+                                                                        "AllowsAnonymousAccess": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "ApplicationId": {},
+                                                                        "BlocksDownload": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "Created": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "CreatedBy": {},
+                                                                        "Description": {},
+                                                                        "Embeddable": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "Expiration": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "HasExternalGuestInvitees": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "Invitations": {
+                                                                            "properties": {
+                                                                                "__metadata": {
+                                                                                    "properties": {
+                                                                                        "type": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "type": "object"
+                                                                                },
+                                                                                "results": {
+                                                                                    "type": "array"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "IsActive": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsAddressBarLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsCreateOnlyLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsDefault": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsEditLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsEphemeral": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsFormsLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsManageListLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsReviewLink": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "IsUnhealthy": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "LastModified": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "LastModifiedBy": {},
+                                                                        "LimitUseToApplication": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "LinkKind": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "MeetingId": {},
+                                                                        "PasswordLastModified": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "PasswordLastModifiedBy": {},
+                                                                        "RedeemedUsers": {
+                                                                            "properties": {
+                                                                                "__metadata": {
+                                                                                    "properties": {
+                                                                                        "type": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "type": "object"
+                                                                                },
+                                                                                "results": {
+                                                                                    "type": "array"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "RequiresPassword": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "RestrictToExistingRelationships": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "RestrictedShareMembership": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "Scope": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "ShareId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "ShareTokenString": {},
+                                                                        "SharingLinkStatus": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "TrackLinkUsers": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "Url": {},
+                                                                        "__metadata": {
+                                                                            "properties": {
+                                                                                "type": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "linkMembers": {
+                                                                    "properties": {
+                                                                        "__metadata": {
+                                                                            "properties": {
+                                                                                "type": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "results": {
+                                                                            "type": "array"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "totalLinkMembersCount": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "inheritedFrom",
+                                                                "isInherited",
+                                                                "linkDetails",
+                                                                "linkMembers",
+                                                                "totalLinkMembersCount"
+                                                            ],
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "principals": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "results": {
+                                                        "items": {
+                                                            "properties": {
+                                                                "inheritedFrom": {},
+                                                                "isInherited": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "principal": {
+                                                                    "properties": {
+                                                                        "__metadata": {
+                                                                            "properties": {
+                                                                                "type": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "directoryObjectId": {},
+                                                                        "email": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "expiration": {},
+                                                                        "id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "isActive": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "isExternal": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "jobTitle": {},
+                                                                        "loginName": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "principalType": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "userId": {},
+                                                                        "userPrincipalName": {}
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "role": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "inheritedFrom",
+                                                                "isInherited",
+                                                                "principal",
+                                                                "role"
+                                                            ],
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "siteAdmins": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "results": {
+                                                        "items": {
+                                                            "properties": {
+                                                                "inheritedFrom": {},
+                                                                "isInherited": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "principal": {
+                                                                    "properties": {
+                                                                        "__metadata": {
+                                                                            "properties": {
+                                                                                "type": {
+                                                                                    "type": "string"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "directoryObjectId": {},
+                                                                        "email": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "expiration": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "id": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "isActive": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "isExternal": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "jobTitle": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "loginName": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "principalType": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "userId": {},
+                                                                        "userPrincipalName": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "role": {
+                                                                    "type": "integer"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "inheritedFrom",
+                                                                "isInherited",
+                                                                "principal",
+                                                                "role"
+                                                            ],
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "pickerSettings": {
+                                        "properties": {
+                                            "AllowEmailAddresses": {
+                                                "type": "boolean"
+                                            },
+                                            "AllowOnlyEmailAddresses": {
+                                                "type": "boolean"
+                                            },
+                                            "PrincipalAccountType": {
+                                                "type": "string"
+                                            },
+                                            "PrincipalSource": {
+                                                "type": "integer"
+                                            },
+                                            "QuerySettings": {
+                                                "properties": {
+                                                    "ExcludeAllUsersOnTenantClaim": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "IsSharing": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "UseSubstrateSearch": {
+                                                "type": "boolean"
+                                            },
+                                            "VisibleSuggestions": {
+                                                "type": "integer"
+                                            },
+                                            "__metadata": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string"
+                                                    },
+                                                    "uri": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "recipientLimits": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "checkPermissions": {
+                                                "properties": {
+                                                    "AliasOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "EmailOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "MixedRecipients": {
+                                                        "type": "integer"
+                                                    },
+                                                    "ObjectIdOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "grantDirectAccess": {
+                                                "properties": {
+                                                    "AliasOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "EmailOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "MixedRecipients": {
+                                                        "type": "integer"
+                                                    },
+                                                    "ObjectIdOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "shareLink": {
+                                                "properties": {
+                                                    "AliasOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "EmailOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "MixedRecipients": {
+                                                        "type": "integer"
+                                                    },
+                                                    "ObjectIdOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "shareLinkWithDeferRedeem": {
+                                                "properties": {
+                                                    "AliasOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "EmailOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "MixedRecipients": {
+                                                        "type": "integer"
+                                                    },
+                                                    "ObjectIdOnly": {
+                                                        "type": "integer"
+                                                    },
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "sensitivityLabelInformation": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "displayName": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "shareUiUrl": {
+                                        "type": "string"
+                                    },
+                                    "sharedObjectType": {
+                                        "type": "integer"
+                                    },
+                                    "sharingAbilities": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "anonymousLinkAbilities": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddNewExternalPrincipals": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canHaveExternalUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "linkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "passwordProtected": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "submitOnlylinkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "supportsRestrictToExistingRelationships": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "supportsRestrictedView": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "trackLinkUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "anyoneLinkAbilities": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddNewExternalPrincipals": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canHaveExternalUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageSubmitOnlyLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "linkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "passwordProtected": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "submitOnlylinkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "supportsRestrictToExistingRelationships": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "supportsRestrictedView": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "trackLinkUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "canStopSharing": {
+                                                "type": "boolean"
+                                            },
+                                            "directSharingAbilities": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddExternalPrincipal": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddInternalPrincipal": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canRequestGrantAccess": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "supportsReviewPermission": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "organizationLinkAbilities": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddNewExternalPrincipals": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteSubmitOnlyLink": {},
+                                                    "canGetEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetSubmitOnlyLink": {},
+                                                    "canHaveExternalUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageSubmitOnlyLink": {},
+                                                    "linkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "passwordProtected": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "submitOnlylinkExpiration": {},
+                                                    "supportsRestrictToExistingRelationships": {},
+                                                    "supportsRestrictedView": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "trackLinkUsers": {}
+                                                },
+                                                "type": "object"
+                                            },
+                                            "peopleSharingLinkAbilities": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canAddNewExternalPrincipals": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canDeleteSubmitOnlyLink": {},
+                                                    "canGetEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canGetSubmitOnlyLink": {},
+                                                    "canHaveExternalUsers": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageEditLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageManageListLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReadLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageReviewLink": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "canManageSubmitOnlyLink": {},
+                                                    "linkExpiration": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "defaultExpirationInDays": {
+                                                                "type": "integer"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "passwordProtected": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "submitOnlylinkExpiration": {},
+                                                    "supportsRestrictToExistingRelationships": {},
+                                                    "supportsRestrictedView": {
+                                                        "properties": {
+                                                            "__metadata": {
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "disabledReason": {
+                                                                "type": "integer"
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "trackLinkUsers": {}
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "sharingLinkTemplates": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "templates": {
+                                                "properties": {
+                                                    "__metadata": {
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "results": {
+                                                        "items": {
+                                                            "properties": {
+                                                                "linkDetails": {},
+                                                                "passwordProtected": {
+                                                                    "type": "boolean"
+                                                                },
+                                                                "role": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "scope": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "shareKind": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "trackLinkUsers": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "linkDetails",
+                                                                "passwordProtected",
+                                                                "role",
+                                                                "scope",
+                                                                "shareKind",
+                                                                "trackLinkUsers"
+                                                            ],
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "sharingStatus": {
+                                        "type": "integer"
+                                    },
+                                    "showExternalSharingWarning": {
+                                        "type": "boolean"
+                                    },
+                                    "siteIBMode": {
+                                        "type": "string"
+                                    },
+                                    "siteIBSegmentIDs": {
+                                        "properties": {
+                                            "__metadata": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "results": {
+                                                "type": "array"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "siteId": {
+                                        "type": "string"
+                                    },
+                                    "standardRolesModified": {
+                                        "type": "boolean"
+                                    },
+                                    "substrateFileId": {
+                                        "type": "string"
+                                    },
+                                    "tenantDisplayName": {
+                                        "type": "string"
+                                    },
+                                    "tenantId": {
+                                        "type": "string"
+                                    },
+                                    "userIsSharingViaMCS": {},
+                                    "userPhotoCdnBaseUrl": {},
+                                    "webTemplateId": {
+                                        "type": "integer"
+                                    },
+                                    "webUrl": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "Get_users_by_site_owners": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "Recursively_list_all_the_files": {
+                "actions": {
+                    "Collect_sub_folders": {
+                        "inputs": {
+                            "from": "@body('Parse_list')['Row']",
+                            "where": "@equals(item()['FSObjType'], '1')"
+                        },
+                        "runAfter": {
+                            "Parse_list": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Query"
+                    },
+                    "Concat_sub_folders_url_to_pending_folders": {
+                        "inputs": "@union(variables('PendingFolders'), body('Select_sub_folder_url'))",
+                        "runAfter": {
+                            "Select_sub_folder_url": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Compose"
+                    },
+                    "Exit_if_failed": {
+                        "inputs": {
+                            "name": "PendingFolders",
+                            "value": []
+                        },
+                        "runAfter": {
+                            "List_folder": [
+                                "Failed"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Get_first_pending_folder": {
+                        "inputs": "@concat('_api/web/GetListUsingPath(DecodedUrl=@a1)/RenderListDataAsStream?@a1=%27', encodeURIComponent(variables('SeedFolder')), '%27&RootFolder=', encodeURIComponent(first(variables('PendingFolders'))))",
+                        "runAfter": {},
+                        "type": "Compose"
+                    },
+                    "List_folder": {
+                        "inputs": {
+                            "body": {
+                                "body": "{\n  \"parameters\": {  \"ViewXml\": \"\\n    <View> \\n    <RowLimit Paged=\\\"TRUE\\\">5000</RowLimit></View>\\n\\n\"\n  }\n}",
+                                "method": "POST",
+                                "uri": "@{outputs('Get_first_pending_folder')}"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://microsoft.sharepoint-df.com/teams/ALPSAzureLanguagePillars'))}/httprequest"
+                        },
+                        "runAfter": {
+                            "Get_first_pending_folder": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Parse_list": {
+                        "inputs": {
+                            "content": "@body('List_folder')",
+                            "schema": {
+                                "properties": {
+                                    "body": {
+                                        "properties": {
+                                            "Row": {
+                                                "items": {
+                                                    "properties": {
+                                                        "FSObjType": {
+                                                            "type": "string"
+                                                        },
+                                                        "ServerUrl": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "Update_pending_folders": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Remove_first_pending_folder": {
+                        "inputs": "@skip(variables('PendingFolders'), 1)",
+                        "runAfter": {
+                            "List_folder": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Compose"
+                    },
+                    "Select_sub_folder_url": {
+                        "inputs": {
+                            "from": "@body('Collect_sub_folders')",
+                            "select": "@item()['ServerUrl']"
+                        },
+                        "runAfter": {
+                            "Collect_sub_folders": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Select"
+                    },
+                    "Update_pending_folders": {
+                        "inputs": {
+                            "name": "PendingFolders",
+                            "value": "@outputs('Remove_first_pending_folder')"
+                        },
+                        "runAfter": {
+                            "Remove_first_pending_folder": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    },
+                    "Update_pending_folders_with_new_sub_folders": {
+                        "inputs": {
+                            "name": "PendingFolders",
+                            "value": "@outputs('Concat_sub_folders_url_to_pending_folders')"
+                        },
+                        "runAfter": {
+                            "Concat_sub_folders_url_to_pending_folders": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    }
+                },
+                "expression": "@equals(length(variables('PendingFolders')), 0)",
+                "limit": {
+                    "count": 5,
+                    "timeout": "PT1H"
+                },
+                "runAfter": {
+                    "Initialize_variable_PendingFolders": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Until"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            },
+            "siteUrl": {
+                "defaultValue": "https://microsoft.sharepoint-df.com/teams/ALPSAzureLanguagePillars",
+                "type": "String"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "conditions": [],
+                "evaluatedRecurrence": {
+                    "frequency": "Month",
+                    "interval": 3,
+                    "timeZone": "Pacific Standard Time"
+                },
+                "recurrence": {
+                    "frequency": "Month",
+                    "interval": 3,
+                    "timeZone": "Pacific Standard Time"
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "sharepointonline": {
+                    "connectionId": "/subscriptions/10e1de13-9717-4242-acf5-3e241940d326/resourceGroups/yuantw_sharepoint/providers/Microsoft.Web/connections/sharepointonline2",
+                    "connectionName": "sharepointonline2",
+                    "id": "/subscriptions/10e1de13-9717-4242-acf5-3e241940d326/providers/Microsoft.Web/locations/eastus/managedApis/sharepointonline"
+                }
+            }
+        }
+    }
+}
