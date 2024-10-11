@@ -167,10 +167,15 @@ async def init_openai_client():
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
             response = requests.get(azure_functions_tools_url)
-            azure_openai_tools.append(json.loads(response.text))
-            for tool in azure_openai_tools:
-                azure_openai_available_tools.append(tool["function"]["name"])
+            response_status_code = response.status_code
+            if response_status_code == requests.codes.ok:
+                azure_openai_tools.extend(json.loads(response.text))
+                for tool in azure_openai_tools:
+                    azure_openai_available_tools.append(tool["function"]["name"])
+            else:
+                logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
 
+        
         azure_openai_client = AsyncAzureOpenAI(
             api_version=app_settings.azure_openai.preview_api_version,
             api_key=aoai_api_key,
@@ -186,7 +191,7 @@ async def init_openai_client():
         raise e
 
 def openai_remote_azure_function_call(function_name, function_args):
-    if not app_settings.azure_openai.function_call_azure_functions_enabled:
+    if app_settings.azure_openai.function_call_azure_functions_enabled is not True:
         return
 
     azure_functions_tool_url = f"{app_settings.azure_openai.function_call_azure_functions_tool_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tool_key}"
@@ -196,7 +201,8 @@ def openai_remote_azure_function_call(function_name, function_args):
         "tool_arguments": json.loads(function_args)
     }
     response = requests.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
-    
+    response.raise_for_status()
+
     return response.text
 
 async def init_cosmosdb_client():
@@ -286,7 +292,7 @@ def prepare_model_args(request_body, request_headers):
     }
 
     if messages[-1]["role"] == "user":
-        if app_settings.azure_openai.function_call_azure_functions_enabled:
+        if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
             model_args["tools"] = azure_openai_tools
 
         if app_settings.datasource:
@@ -458,8 +464,6 @@ async def complete_chat_request(request_body, request_headers):
 
 
 async def stream_chat_request(request_body, request_headers):
-    print("Stream Chat Request")
-    print(request_body)
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
     
@@ -475,8 +479,6 @@ async def stream_chat_request(request_body, request_headers):
 
         async for completionChunk in response:
             if app_settings.azure_openai.function_call_azure_functions_enabled:
-                print("Completion Chunk: ", completionChunk)
-
                 if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
                     response_message = completionChunk.choices[0].delta
 
@@ -486,7 +488,6 @@ async def stream_chat_request(request_body, request_headers):
                         for tool_call_chunk in response_message.tool_calls:
                             # New tool call
                             if tool_call_chunk.id:
-                                #print("New tool call: {0}", tool_call_chunk.id)
                                 if current_tool_call:
                                     tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
                                     current_tool_call["tool_arguments"] = tool_arguments_stream
@@ -505,8 +506,6 @@ async def stream_chat_request(request_body, request_headers):
                     elif response_message.tool_calls is None and tool_call_streaming_state == "STREAMING":
                         current_tool_call["tool_arguments"] = tool_arguments_stream
                         tool_calls.append(current_tool_call)
-                        
-                        #print("Tool Calls: ", tool_calls)
                         
                         for tool_call in tool_calls:
                             tool_response = openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
