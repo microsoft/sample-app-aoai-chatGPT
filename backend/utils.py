@@ -182,10 +182,12 @@ def format_pf_non_streaming_response(
                 "content": chatCompletion[response_field_name] 
             })
         if citations_field_name in chatCompletion:
+            citation_content= {"citations": chatCompletion[citations_field_name]}
             messages.append({ 
                 "role": "tool",
-                "content": chatCompletion[citations_field_name]
+                "content": json.dumps(citation_content)
             })
+
         response_obj = {
             "id": chatCompletion["id"],
             "model": "",
