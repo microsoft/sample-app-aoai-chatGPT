@@ -464,12 +464,12 @@ async def complete_chat_request(request_body, request_headers):
 
 class AzureOpenaiFunctionCallStreamState():
     def __init__(self):
-        self.tool_calls = []
-        self.current_tool_call = None
-        self.tool_arguments_stream = ""
-        self.function_messages = []
-        self.tool_name = ""
-        self.tool_call_streaming_state = "INITIAL"
+        self.tool_calls = []                # All tool calls detected in the stream
+        self.tool_name = ""                 # Tool name being streamed
+        self.tool_arguments_stream = ""     # Tool arguments being streamed
+        self.current_tool_call = None       # JSON with the tool name and arguments currently being streamed
+        self.function_messages = []         # All function messages to be appended to the chat history
+        self.streaming_state = "INITIAL"    # Streaming state (INITIAL, STREAMING, COMPLETED)
 
 
 def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
@@ -477,8 +477,8 @@ def process_function_call_stream(completionChunk, function_call_stream_state, re
         response_message = completionChunk.choices[0].delta
         
         # Function calling stream processing
-        if response_message.tool_calls and function_call_stream_state.tool_call_streaming_state in ["INITIAL", "STREAMING"]:
-            function_call_stream_state.tool_call_streaming_state = "STREAMING"
+        if response_message.tool_calls and function_call_stream_state.streaming_state in ["INITIAL", "STREAMING"]:
+            function_call_stream_state.streaming_state = "STREAMING"
             for tool_call_chunk in response_message.tool_calls:
                 # New tool call
                 if tool_call_chunk.id:
@@ -497,7 +497,7 @@ def process_function_call_stream(completionChunk, function_call_stream_state, re
                     function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
                 
         # Function call - Streaming completed
-        elif response_message.tool_calls is None and function_call_stream_state.tool_call_streaming_state == "STREAMING":
+        elif response_message.tool_calls is None and function_call_stream_state.streaming_state == "STREAMING":
             function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
             function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
             
@@ -519,11 +519,11 @@ def process_function_call_stream(completionChunk, function_call_stream_state, re
                     "content": tool_response,
                 })
             
-            function_call_stream_state.tool_call_streaming_state = "COMPLETED"
-            return function_call_stream_state.tool_call_streaming_state
+            function_call_stream_state.streaming_state = "COMPLETED"
+            return function_call_stream_state.streaming_state
         
         else:
-            return function_call_stream_state.tool_call_streaming_state
+            return function_call_stream_state.streaming_state
 
 
 async def stream_chat_request(request_body, request_headers):
