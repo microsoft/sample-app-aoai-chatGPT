@@ -13,6 +13,7 @@
   max-width: 1200px;
   background-color: #111111;
   padding-bottom: 20px;
+  height: 120px;
 }
 
 .questionInputTextArea {
@@ -24,7 +25,7 @@
 .questionInputSendButtonContainer {
   position: absolute;
   right: 110px;
-  bottom: 37px;
+  bottom: 55px;
 }
 
 .questionInputSendButton {
@@ -94,6 +95,6 @@
   }
   .questionInputSendButtonContainer {
     right: 10px;
-    bottom: 35px;
+    bottom: 55px;
   }
 }
