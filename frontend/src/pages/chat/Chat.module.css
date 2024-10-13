@@ -108,6 +108,7 @@
   order: 0;
   flex-grow: 0;
   overflow-wrap: break-word;
+  overflow: hidden;
   word-break: normal;
   white-space: normal;
   max-width: 60%;
