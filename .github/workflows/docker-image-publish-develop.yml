@@ -1,36 +1,41 @@
-name: Docker Image Publish Develop
+name: Development Deployment
 
 on:
   push:
     branches:
-    - develop
+      - develop
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '20.x' # set this to the node version to use (supports 8.x, 10.x, 12.x)
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-
-  build:
-
+  build-and-push:
     runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
+    environment: Development
     steps:
-    - name: 'Az CLI login'
-      uses: azure/login@v1
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Checkout GitHub Action
+        uses: actions/checkout@v4
 
-    - name: 'ACR login'
-      run: |
-        az acr login --name crjekadeveus
+      - name: 'Az CLI login'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.IDENTITY_CLIENTID }}
+          tenant-id: ${{ secrets.IDENTITY_TENANTID }}
+          subscription-id: ${{ secrets.IDENTITY_SUBSCRIPTIONID }}
 
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: |
-        docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-        docker tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/daisy-chat:develop
-        docker push crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-        docker push crjekadeveus.azurecr.io/daisy-chat:develop
+      - name: 'ACR login'
+        run: |
+          az acr login --name crjekadeveus
+
+      - name: Build and push Docker image
+        run: |
+          docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          docker tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/daisy-chat:develop
+          docker push crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          docker push crjekadeveus.azurecr.io/daisy-chat:develop

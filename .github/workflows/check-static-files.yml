@@ -1,9 +1,8 @@
 name: Check changes to static files
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+
 
 jobs:
   changed_files:
