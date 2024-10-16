@@ -4,10 +4,7 @@
 name: Python application
 
 on:
-  push:
-    branches: [ "disabled" ]
-  pull_request:
-    branches: [ "disabled" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
