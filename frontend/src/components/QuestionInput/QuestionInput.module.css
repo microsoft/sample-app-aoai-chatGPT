@@ -1,7 +1,7 @@
 .questionInputContainer {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 0px;
+  right: 0px;
   bottom: 0;
   border-radius: 8px;
   z-index: 10;
@@ -9,8 +9,8 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  padding: 0 100px;
-  max-width: 1200px;
+  padding: 0 15px 0 3px;
+  max-width: min(1010px, calc(100% - 48px));
   background-color: #111111;
   padding-bottom: 20px;
   min-height: 120px;
@@ -24,7 +24,7 @@
 
 .questionInputSendButtonContainer {
   position: absolute;
-  right: 110px;
+  right: 25px;
   bottom: 55px;
 }
 
@@ -82,6 +82,16 @@
 
 .uploadedImage {
   margin-right: 70px;
+}
+
+@media (max-width: 1050px) {
+  .questionInputContainer {
+    padding: 0px;
+  }
+  .questionInputSendButtonContainer {
+    right: 10px;
+    bottom: 45px;
+  }
 }
 
 @media (max-width: 480px) {
