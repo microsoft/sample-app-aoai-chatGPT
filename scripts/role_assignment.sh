@@ -38,6 +38,10 @@ function get_resource_group(){
   echo "$1" | cut -d'/' -f5
 }
 
+function get_resource_type(){
+  echo "$1" | cut -d'/' -f7
+}
+
 function get_resource_name(){
   echo "$1" | cut -d'/' -f9
 }
@@ -54,7 +58,7 @@ function get_azure_search_resource_system_assigned_identity_principal_id(){
 
 function get_system_assigned_identity_principal_id(){
   resource_id="$1"
-  resource_type=$(echo "$resource_id" | cut -d'/' -f7)
+  resource_type=$(get_resource_type $resource_id)
   if [[ "$resource_type" == "Microsoft.CognitiveServices" ]]; then
     get_azure_openai_resource_system_assigned_identity_principal_id $resource_id
   elif [[ "$resource_type" == "Microsoft.Search" ]]; then
