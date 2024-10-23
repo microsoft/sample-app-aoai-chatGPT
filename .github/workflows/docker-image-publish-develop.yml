@@ -35,7 +35,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-          docker tag crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/daisy-chat:develop
-          docker push crjekadeveus.azurecr.io/daisy-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-          docker push crjekadeveus.azurecr.io/daisy-chat:develop
+          docker build . --file WebApp.Dockerfile --tag crjekadeveus.azurecr.io/seren-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          docker tag crjekadeveus.azurecr.io/seren-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER crjekadeveus.azurecr.io/seren-chat:develop
+          docker push crjekadeveus.azurecr.io/seren-chat:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          docker push crjekadeveus.azurecr.io/seren-chat:develop
