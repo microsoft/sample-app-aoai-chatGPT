@@ -44,7 +44,7 @@ class _UiSettings(BaseSettings):
     title: str = "Contoso"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
+    chat_title: Optional[str] = None
     chat_description: str = "This chatbot is configured to answer your questions"
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
