@@ -1,8 +1,19 @@
-.questionInputContainer {
+.bottomContainer {
   position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(1010px, calc(100% - 48px));
+  width: 100%;
+  background-color: #111111;
+  z-index: 10;
+}
+
+.questionInputContainer {
+  position: relative;
   left: 0px;
   right: 0px;
-  bottom: 0;
+  bottom: 20px;
   border-radius: 8px;
   z-index: 10;
   display: flex;
@@ -10,10 +21,9 @@
   justify-content: center;
   margin: 0 auto;
   padding: 0 15px 0 3px;
-  max-width: min(1010px, calc(100% - 48px));
   background-color: #111111;
   padding-bottom: 20px;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .questionInputTextArea {
@@ -25,7 +35,7 @@
 .questionInputSendButtonContainer {
   position: absolute;
   right: 25px;
-  bottom: 55px;
+  bottom: 45px;
 }
 
 .questionInputSendButton {
@@ -84,14 +94,18 @@
   margin-right: 70px;
 }
 
-@media (max-width: 1050px) {
-  .questionInputContainer {
-    padding: 0px;
-  }
-  .questionInputSendButtonContainer {
-    right: 10px;
-    bottom: 45px;
-  }
+.disclaimer {
+  position: fixed;
+  font-size: 12px;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20px 0;
+  color: white;
+  z-index: 12;
+  text-align: center;
+  border-radius: 8px;
+  width: 100%;
 }
 
 @media (max-width: 480px) {
@@ -105,6 +119,6 @@
   }
   .questionInputSendButtonContainer {
     right: 10px;
-    bottom: 55px;
+    bottom: 45px;
   }
 }

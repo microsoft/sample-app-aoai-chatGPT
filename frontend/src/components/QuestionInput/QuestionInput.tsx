@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { BsPaperclip } from 'react-icons/bs'
 import { RiStopCircleLine } from 'react-icons/ri'
@@ -29,6 +29,13 @@ export const QuestionInput = ({
 }: Props) => {
   const [question, setQuestion] = useState<string>('')
   const [base64Image, setBase64Image] = useState<string | null>(null)
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
+
+  useEffect(() => {
+    if (isGenerating) {
+      setShowDisclaimer(true)
+    }
+  }, [isGenerating])
 
   const appStateContext = useContext(AppStateContext)
   const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false
@@ -94,7 +101,7 @@ export const QuestionInput = ({
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
-    <div className={styles.backDrop}>
+    <div className={styles.bottomContainer}>
       <Stack
         className={styles.questionInputContainer}
         horizontal
@@ -215,6 +222,7 @@ export const QuestionInput = ({
         </div>
         <div className={styles.questionInputBottomBorder} />
       </Stack>
+      {showDisclaimer && <div className={styles.disclaimer}>AI-generated content may be inaccurate</div>}
     </div>
   )
 }
