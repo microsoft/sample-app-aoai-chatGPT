@@ -41,7 +41,7 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Contoso"
+    title: str = "Seren | Guiding businesses with custom-trained AI"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
     chat_title: Optional[str] = None
