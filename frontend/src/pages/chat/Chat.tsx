@@ -39,6 +39,7 @@ import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
 import { AppStateContext } from '../../state/AppProvider'
 import { useBoolean } from '@fluentui/react-hooks'
 import LoadingAnimation from '../../components/Answer/LoadingAnimation'
+import { RiCloseLargeFill } from 'react-icons/ri'
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -734,6 +735,7 @@ const Chat = () => {
   const onShowCitation = (citation: Citation) => {
     setActiveCitation(citation)
     setIsCitationPanelOpen(true)
+    // window.open(citation.url!, '_blank')
   }
 
   const onShowExecResult = (answerId: string) => {
@@ -832,8 +834,8 @@ const Chat = () => {
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
-                <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                {ui?.chat_title && <h1 className={styles.chatEmptyStateTitle}>{ui.chat_title}</h1>}
+                {ui?.chat_description && <h2 className={styles.chatEmptyStateSubtitle}>{ui.chat_description}</h2>}
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
@@ -1009,8 +1011,9 @@ const Chat = () => {
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
                   Citations
                 </span>
-                <IconButton
-                  iconProps={{ iconName: 'Cancel' }}
+                <RiCloseLargeFill
+                  className={styles.citationCloseButton}
+                  size={22}
                   aria-label="Close citations panel"
                   onClick={() => setIsCitationPanelOpen(false)}
                 />

@@ -24,6 +24,10 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+a {
+  color: #1573c5;
+}
+
 #root {
   height: 100%;
 }
