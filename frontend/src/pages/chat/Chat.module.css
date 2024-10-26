@@ -245,24 +245,18 @@
 }
 
 .citationPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 16px 16px;
+  padding: 16px;
   gap: 8px;
   background: #222222;
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
-  flex: auto;
-  order: 0;
-  align-self: stretch;
-  flex-grow: 0.3;
-  max-width: 30%;
   overflow-y: scroll;
-  max-height: calc(100vh - 100px);
-  z-index: 10;
+  z-index: 12;
 }
 
 .citationPanelHeaderContainer {
@@ -274,10 +268,18 @@
   font-weight: 600;
   font-size: 18px;
   line-height: 24px;
-  color: white;
+  color: #fbdd6e;
   flex: none;
   order: 0;
   flex-grow: 0;
+}
+
+.citationCloseButton {
+  color: #fbdd6e;
+}
+
+.citationCloseButton:hover {
+  cursor: pointer;
 }
 
 .citationPanelDismiss {
@@ -287,7 +289,6 @@
 }
 
 .citationPanelDismiss:hover {
-  background-color: #d1d1d1;
   cursor: pointer;
 }
 
