@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { BsPaperclip } from 'react-icons/bs'
 import { RiStopCircleLine } from 'react-icons/ri'
@@ -94,7 +94,7 @@ export const QuestionInput = ({
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
-    <div className={styles.backDrop}>
+    <div className={styles.bottomContainer}>
       <Stack
         className={styles.questionInputContainer}
         horizontal
@@ -215,6 +215,7 @@ export const QuestionInput = ({
         </div>
         <div className={styles.questionInputBottomBorder} />
       </Stack>
+      <div className={styles.disclaimer}>AI-generated content may be inaccurate</div>
     </div>
   )
 }

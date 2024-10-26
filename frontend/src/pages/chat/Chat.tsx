@@ -732,8 +732,7 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    setActiveCitation(citation)
-    setIsCitationPanelOpen(true)
+    window.open(citation.url!, '_blank')
   }
 
   const onShowExecResult = (answerId: string) => {
