@@ -39,6 +39,7 @@ import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
 import { AppStateContext } from '../../state/AppProvider'
 import { useBoolean } from '@fluentui/react-hooks'
 import LoadingAnimation from '../../components/Answer/LoadingAnimation'
+import { RiCloseLargeFill } from 'react-icons/ri'
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -732,7 +733,9 @@ const Chat = () => {
   }, [showLoadingMessage, processMessages])
 
   const onShowCitation = (citation: Citation) => {
-    window.open(citation.url!, '_blank')
+    setActiveCitation(citation)
+    setIsCitationPanelOpen(true)
+    // window.open(citation.url!, '_blank')
   }
 
   const onShowExecResult = (answerId: string) => {
@@ -1008,8 +1011,9 @@ const Chat = () => {
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
                   Citations
                 </span>
-                <IconButton
-                  iconProps={{ iconName: 'Cancel' }}
+                <RiCloseLargeFill
+                  className={styles.citationCloseButton}
+                  size={22}
                   aria-label="Close citations panel"
                   onClick={() => setIsCitationPanelOpen(false)}
                 />
