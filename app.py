@@ -424,9 +424,9 @@ def get_configured_data_source(case_id):
 
 
         if filter and case_id:
-            filter = filter + " && search.ismatch('/"+ case_id +"/','sfUrl')"
+            filter = filter + " && search.ismatchscoring('"+ case_id +"','sfUrl')"
         elif case_id:
-            filter = "search.ismatch('/"+ case_id +"/','sfUrl')"
+            filter = "search.ismatchscoring('"+ case_id +"','sfUrl')"
 
         # Set authentication
         authentication = {}
