@@ -3,6 +3,7 @@ import json
 import os
 import logging
 import uuid
+import urllib.parse
 from dotenv import load_dotenv
 import httpx
 from quart import (
@@ -420,13 +421,13 @@ def get_configured_data_source(case_id):
                 )
 
             filter = generateFilterString(userToken)
-            logging.debug(f"FILTER: {filter}")
-
 
         if filter and case_id:
-            filter = filter + " && search.ismatchscoring('"+ case_id +"','sfUrl')"
+            filter = filter + " && search.ismatchscoring('"+ urllib.parse.quote(case_id, safe='') +"','sfUrl')"
         elif case_id:
-            filter = "search.ismatchscoring('"+ case_id +"','sfUrl')"
+            filter = "search.ismatchscoring('"+ urllib.parse.quote(case_id, safe='') +"','sfUrl')"
+
+        logging.debug(f"FILTER: {filter}")
 
         # Set authentication
         authentication = {}
