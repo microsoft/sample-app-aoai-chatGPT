@@ -86,6 +86,9 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
   useEffect(() => {
     // Check for cosmosdb config and fetch initial data here
     const fetchChatHistory = async (offset = 0): Promise<Conversation[] | null> => {
+      // Temporarily disabled to avoid exposing chat history in network tab
+      // Will be re-enabled when proper security measures are in place
+      /*
       const result = await historyList(offset)
         .then(response => {
           if (response) {
@@ -102,6 +105,11 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
           return null
         })
       return result
+      */
+      
+      // Temporary implementation
+      dispatch({ type: 'FETCH_CHAT_HISTORY', payload: null })
+      return null
     }
 
     const getHistoryEnsure = async () => {
