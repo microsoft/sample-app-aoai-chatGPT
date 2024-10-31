@@ -423,9 +423,9 @@ def get_configured_data_source(case_id):
             filter = generateFilterString(userToken)
 
         if filter and case_id:
-            filter = filter + " && search.ismatchscoring('"+ urllib.parse.quote(case_id, safe='') +"','sfUrl')"
+            filter = filter + " && search.ismatchscoring('"+ case_id +"','sfUrl')"
         elif case_id:
-            filter = "search.ismatchscoring('"+ urllib.parse.quote(case_id, safe='') +"','sfUrl')"
+            filter = "search.ismatchscoring('"+ case_id +"','sfUrl')"
 
         logging.debug(f"FILTER: {filter}")
 
