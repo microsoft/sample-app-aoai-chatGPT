@@ -404,6 +404,7 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
     if "data_paths" in config:
         data_configs.extend(config["data_paths"])
 
+    result_chunks = [];
     for data_config in data_configs:
         # chunk directory
         print(f"Chunking path {data_config['path']}...")
@@ -431,9 +432,12 @@ def create_index(config, credential, form_recognizer_client=None, embedding_mode
         print(f"Files with errors: {result.num_files_with_errors} files")
         print(f"Found {len(result.chunks)} chunks")
 
-        # upload documents to index
-        print("Uploading documents to index...")
-        upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result.chunks, credential)
+        # combine all chunks from different data paths together for upload
+        result_chunks.extend(result.chunks)
+
+    # upload documents to index
+    print("Uploading documents to index...")
+    upload_documents_to_index(service_name, subscription_id, resource_group, index_name, result_chunks, credential)
 
     # check if index is ready/validate index
     print("Validating index...")
