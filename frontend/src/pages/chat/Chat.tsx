@@ -113,7 +113,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (!appStateContext?.state.isLoading) {
-      setLogo(ui?.chat_logo || ui?.logo || Contoso)
+      setLogo(ui?.chat_logo || '')
     }
   }, [appStateContext?.state.isLoading])
 
@@ -833,7 +833,7 @@ const Chat = () => {
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
-                <img src={logo} className={styles.chatIcon} aria-hidden="true" />
+                {ui?.chat_logo && <img src={ui.chat_logo} className={styles.chatIcon} aria-hidden="true" />}
                 {ui?.chat_title && <h1 className={styles.chatEmptyStateTitle}>{ui.chat_title}</h1>}
                 {ui?.chat_description && <h2 className={styles.chatEmptyStateSubtitle}>{ui.chat_description}</h2>}
               </Stack>

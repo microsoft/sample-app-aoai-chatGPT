@@ -16,6 +16,7 @@ import { RiFileCopyLine } from 'react-icons/ri'
 import { parseAnswer } from './AnswerParser'
 
 import styles from './Answer.module.css'
+import vectorIcon from '../../assets/Vector.png'
 
 interface Props {
   answer: AskResponse
@@ -158,6 +159,12 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     }
   }
 
+  const AssistantIcon = () => (
+    <div className={styles.assistantIcon}>
+      <img src={vectorIcon} className={styles.robotIcon} />
+    </div>
+  )
+
   const UnhelpfulFeedbackContent = () => {
     return (
       <>
@@ -253,6 +260,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       <Stack className={styles.answerContainer} tabIndex={0}>
         <Stack.Item>
           <Stack horizontal grow>
+            <Stack.Item className={styles.iconContainer}>
+              <AssistantIcon />
+            </Stack.Item>
             <Stack.Item grow>
               {parsedAnswer && (
                 <ReactMarkdown
