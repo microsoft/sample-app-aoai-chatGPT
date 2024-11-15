@@ -26,6 +26,6 @@ RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \
 COPY . /usr/src/app/  
 COPY --from=frontend /home/node/app/static  /usr/src/app/static/
 WORKDIR /usr/src/app  
-EXPOSE 80  
+EXPOSE 8000  
 
 CMD ["gunicorn"  , "-b", "0.0.0.0:80", "app:app"]
