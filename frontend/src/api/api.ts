@@ -30,7 +30,7 @@ export async function conversationApi(
         apiMessage.content = [
           {
             type: 'text',
-            text: `The following document is a CSV document. Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
+            text: `The following document is in CSV format. Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
           },
           { type: 'text', text: apiMessage.content }
         ]
