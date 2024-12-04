@@ -4,7 +4,8 @@ export const ACCEPTED_FILE_TYPES = [
   'image/gif',
   'image/bmp',
   'image/tiff',
-  'application/pdf'
+  'application/pdf',
+  'text/csv'
 ]
 
 export interface UploadedFile {
@@ -17,5 +18,6 @@ export interface UploadedFile {
 
 export enum FileType {
   Image,
-  Pdf
+  Pdf,
+  Csv
 }
