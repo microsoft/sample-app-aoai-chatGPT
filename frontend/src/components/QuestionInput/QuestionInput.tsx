@@ -35,7 +35,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     }
 
     const send = (uploadedFile?: UploadedFile) => {
-      if (uploadedFile != null && uploadedFile.type === FileType.Pdf && !isValidLength(uploadedFile.contents)) {
+      if (uploadedFile != null && uploadedFile.type !== FileType.Image && !isValidLength(uploadedFile.contents)) {
         setInputError(`File contents cannot exceed ${MAX_INPUT_LENGTH} characters. Please try a smaller file.`)
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {
@@ -92,6 +92,19 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
           .catch(_error => {
             setInputError('Failed to upload PDF. Please try uploading a different file.')
           })
+      } else if (selectedFile.type === 'text/csv') {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          send({
+            name: selectedFile.name,
+            type: FileType.Csv,
+            contents: reader.result as string,
+            extension: selectedFile.type,
+            size: selectedFile.size
+          })
+        }
+
+        reader.readAsText(selectedFile)
       } else {
         const reader = new FileReader()
         reader.onloadend = () => {
@@ -126,7 +139,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     if (file) {
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
         setInputError(
-          'Only the following file types are supported: .pdf, .jpeg, .png, .gif, .bmp, .tiff. Please try a different file.'
+          'Only the following file types are supported: .csv, .pdf, .jpeg, .png, .gif, .bmp, .tiff. Please try a different file.'
         )
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {

@@ -9,9 +9,11 @@ export async function conversationApi(
   conversationIdHeader: string | null | undefined
 ): Promise<Response> {
   const formatContent = (message: any) => {
-    const apiMessage = structuredClone(message)
+    const uploadedFile = message.uploaded_file as UploadedFile | undefined | null
 
-    const uploadedFile = apiMessage.uploaded_file as UploadedFile | undefined | null
+    const apiMessage = structuredClone(message)
+    delete apiMessage.uploaded_file
+
     if (uploadedFile != null && uploadedFile.contents) {
       if (uploadedFile.type === FileType.Image) {
         apiMessage.content = [
@@ -23,6 +25,14 @@ export async function conversationApi(
           {
             type: 'text',
             text: `Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
+          },
+          { type: 'text', text: apiMessage.content }
+        ]
+      } else if (uploadedFile.type === FileType.Csv) {
+        apiMessage.content = [
+          {
+            type: 'text',
+            text: `The following document is in CSV format. Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
           },
           { type: 'text', text: apiMessage.content }
         ]
