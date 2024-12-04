@@ -26,6 +26,14 @@ export async function conversationApi(
           },
           { type: 'text', text: apiMessage.content }
         ]
+      } else if (uploadedFile.type === FileType.Csv) {
+        apiMessage.content = [
+          {
+            type: 'text',
+            text: `The following document is a CSV document. Use the following document in your responses:\n ---BEGIN DOCUMENT---${uploadedFile.contents}---END DOCUMENT---`
+          },
+          { type: 'text', text: apiMessage.content }
+        ]
       }
     }
     return apiMessage
