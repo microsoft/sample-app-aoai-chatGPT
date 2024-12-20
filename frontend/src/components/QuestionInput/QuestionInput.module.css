@@ -91,6 +91,32 @@
   color: #424242;
 }
 
-.uploadedImage {
+.uploadedImageContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-right: 70px;
+  cursor: pointer;
+}
+
+.uploadedImage {
+  max-width: 108px;
+  max-height: 100%;
+  transition: filter 0.3s ease;
+}
+
+.uploadedImageContainer:hover .uploadedImage {
+  filter: grayscale(100%) brightness(80%);
+}
+
+.trashIcon {
+  position: absolute;
+  font-size: 20px;
+  color: red;
+  display: none;
+}
+
+.uploadedImageContainer:hover .trashIcon {
+  display: block;
 }
