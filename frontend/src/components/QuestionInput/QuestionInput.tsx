@@ -29,7 +29,12 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     if (file) {
       await convertToBase64(file);
+      event.target.value = '';
     }
+  };
+
+  const removeImage = () => {
+    setBase64Image(null);
   };
 
   const convertToBase64 = async (file: Blob) => {
@@ -38,6 +43,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
       setBase64Image(resizedBase64);
     } catch (error) {
       console.error('Error:', error);
+      removeImage();
     }
   };
 
@@ -50,11 +56,10 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     if (conversationId && questionTest !== undefined) {
       onSend(questionTest, conversationId)
-      setBase64Image(null)
     } else {
       onSend(questionTest)
-      setBase64Image(null)
     }
+    removeImage()
 
     if (clearOnSend) {
       setQuestion('')
@@ -103,7 +108,12 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
             />
           </label>
         </div>)}
-      {base64Image && <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />}
+      {base64Image && (
+        <div className={styles.uploadedImageContainer} onClick={removeImage}>
+          <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />
+          <FontIcon className={styles.trashIcon} iconName={'Delete'} />
+        </div>
+      )}
       <div
         className={styles.questionInputSendButtonContainer}
         role="button"
