@@ -2,6 +2,26 @@
 
 This document has information specific to the NJ-specific fork of the Microsfot open source OpenAI chat app.
 
+## Overall architecture
+
+- This full-stack application uses a Python web server, React frontend, and is deployed on Azure App Service
+- This code is deployed to a production stage (`nj-stable` branch) and dev stage (`nj-stable-dev` branch)
+- Note that certain features from the open-source parent are not enabled, such as chat history (anything related to `CosmosDB`)
+
+## Local setup
+
+1. Clone repo and go to `nj-stable` branch
+2. Copy `.env` file from Bitwarden (reach out to Platform team for access)
+3. Run `./start.sh`
+
+## Deployment
+
+1. Log into Azure and go to the `nj-aichat-internal` App Service (reach out to Platform team for access)
+2. [If dev stage] In the left menu, click Deployments > Deployment slots. Click on `nj-aichat-internal-dev`.
+3. In the left menu, click Deployments > Deployment Center.
+4. In the top bar, click the "Sync" button to sync the deployed application with the latest commit on the corresponding branch.
+5. Under the top bar, click the "Logs" tab to see the deployment status (it will change to "Success" when completed)
+
 ## How to keep NJ version up to date with latest upstream changes
 
 The `nj-stable` branch is deployed to our actual chat application, and we should pull in changes from the microsoft upstream when they come in. Here is how to do so:
