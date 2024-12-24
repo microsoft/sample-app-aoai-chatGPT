@@ -2,11 +2,12 @@ import { useRef, useState } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
 import pdfToText from 'react-pdftotext'
+import { extractRawText } from 'mammoth'
 
 import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
-import { ACCEPTED_FILE_TYPES, FileType, UploadedFile } from '../../custom/fileUploadUtils'
+import { ACCEPTED_FILE_TYPES, UploadedFile, isImageFile } from '../../custom/fileUploadUtils'
 import { logEvent } from '../../custom/logEvent'
 import InfoIcon from '../../assets/info.svg'
 
@@ -29,13 +30,13 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [inputError, setInputError] = useState<string>('')
 
-  const sendQuestion = () => {
+  const sendQuestion = async () => {
     if (disabled || !question.trim()) {
       return
     }
 
     const send = (uploadedFile?: UploadedFile) => {
-      if (uploadedFile != null && uploadedFile.type !== FileType.Image && !isValidLength(uploadedFile.contents)) {
+      if (uploadedFile != null && !isImageFile(uploadedFile) && !isValidLength(uploadedFile.contents)) {
         setInputError(`File contents cannot exceed ${MAX_INPUT_LENGTH} characters. Please try a smaller file.`)
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {
@@ -74,7 +75,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     }
 
     if (selectedFile) {
-      if (selectedFile.type === 'application/pdf') {
+      if (selectedFile.type === ACCEPTED_FILE_TYPES.PDF) {
         pdfToText(selectedFile)
           .then(extractedText => {
             if (extractedText.length === 0) {
@@ -82,7 +83,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
             } else {
               send({
                 name: selectedFile.name,
-                type: FileType.Pdf,
                 contents: extractedText,
                 extension: selectedFile.type,
                 size: selectedFile.size
@@ -92,12 +92,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
           .catch(_error => {
             setInputError('Failed to upload PDF. Please try uploading a different file.')
           })
-      } else if (selectedFile.type === 'text/csv') {
+      } else if (selectedFile.type === ACCEPTED_FILE_TYPES.CSV) {
         const reader = new FileReader()
         reader.onloadend = () => {
           send({
             name: selectedFile.name,
-            type: FileType.Csv,
             contents: reader.result as string,
             extension: selectedFile.type,
             size: selectedFile.size
@@ -105,12 +104,29 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         }
 
         reader.readAsText(selectedFile)
+      } else if (selectedFile.type === ACCEPTED_FILE_TYPES.DOCX) {
+        try {
+          const arrayBuffer = await selectedFile.arrayBuffer()
+          const extractedText = (await extractRawText({ arrayBuffer })).value
+
+          if (extractedText.length === 0) {
+            setInputError('Could not read text from document. Please try uploading a different file.')
+          } else {
+            send({
+              name: selectedFile.name,
+              contents: extractedText,
+              extension: selectedFile.type,
+              size: selectedFile.size
+            })
+          }
+        } catch (err) {
+          setInputError('Failed to upload .docx file. Please try uploading a different file.')
+        }
       } else {
         const reader = new FileReader()
         reader.onloadend = () => {
           send({
             name: selectedFile.name,
-            type: FileType.Image,
             contents: reader.result as string,
             extension: selectedFile.type,
             size: selectedFile.size
@@ -136,10 +152,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+
     if (file) {
-      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      if (!(Object.values(ACCEPTED_FILE_TYPES) as string[]).includes(file.type)) {
         setInputError(
-          'Only the following file types are supported: .csv, .pdf, .jpeg, .png, .gif, .bmp, .tiff. Please try a different file.'
+          'Only the following file types are supported: .csv, .docx, .pdf, .jpeg, .png, .gif, .bmp, .tiff. Please try a different file.'
         )
         setSelectedFile(null)
         if (fileInputRef?.current?.value) {
@@ -188,7 +205,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
           <input
             ref={fileInputRef}
             type="file"
-            accept={ACCEPTED_FILE_TYPES.join(',')}
+            accept={(Object.values(ACCEPTED_FILE_TYPES) as string[]).join(',')}
             onChange={onFileChange}
             disabled={disabled}
             className={styles.fileInput}

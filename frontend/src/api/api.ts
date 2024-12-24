@@ -1,5 +1,5 @@
 import { chatHistorySampleData } from '../constants/chatHistory'
-import { FileType, UploadedFile } from '../custom/fileUploadUtils'
+import { UploadedFile, ACCEPTED_FILE_TYPES, isImageFile } from '../custom/fileUploadUtils'
 
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
@@ -15,12 +15,12 @@ export async function conversationApi(
     delete apiMessage.uploaded_file
 
     if (uploadedFile != null && uploadedFile.contents) {
-      if (uploadedFile.type === FileType.Image) {
+      if (isImageFile(uploadedFile)) {
         apiMessage.content = [
           { type: 'image_url', image_url: { url: uploadedFile.contents } },
           { type: 'text', text: apiMessage.content }
         ]
-      } else if (uploadedFile.type === FileType.Pdf) {
+      } else if (uploadedFile.extension === ACCEPTED_FILE_TYPES.PDF || uploadedFile.extension === ACCEPTED_FILE_TYPES.DOCX) {
         apiMessage.content = [
           {
             type: 'text',
@@ -28,7 +28,7 @@ export async function conversationApi(
           },
           { type: 'text', text: apiMessage.content }
         ]
-      } else if (uploadedFile.type === FileType.Csv) {
+      } else if (uploadedFile.extension === ACCEPTED_FILE_TYPES.CSV) {
         apiMessage.content = [
           {
             type: 'text',

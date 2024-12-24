@@ -38,7 +38,7 @@ import { QuestionInput } from '../../components/QuestionInput'
 import { ChatHistoryPanel } from '../../components/ChatHistory/ChatHistoryPanel'
 import { AppStateContext } from '../../state/AppProvider'
 import { useBoolean } from '@fluentui/react-hooks'
-import { FileType, UploadedFile } from '../../custom/fileUploadUtils'
+import { UploadedFile, isImageFile } from '../../custom/fileUploadUtils'
 import { logEvent } from '../../custom/logEvent'
 
 const enum messageStatus {
@@ -816,7 +816,7 @@ const Chat = () => {
                       <div className={styles.chatMessageUser} tabIndex={0}>
                         <div className={styles.chatMessageUserMessage}>
                           {answer.uploaded_file != null &&
-                            answer.uploaded_file.type === FileType.Image &&
+                            isImageFile(answer.uploaded_file) &&
                             answer.uploaded_file.contents && (
                               <div className={styles.chatMessageUserAttachment}>
                                 <img
