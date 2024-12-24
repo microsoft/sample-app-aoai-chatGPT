@@ -69,13 +69,8 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
 
     filteredCitations = enumerateCitations(filteredCitations);
     
-    const appStateContext = useContext(AppStateContext)
-    const ui = appStateContext?.state.frontendSettings?.ui;
-    const outOfScopeRegex = /Please try another query or topic\.$/;
-    const outOfScopeResponse = ui?.out_of_scope_message;
-    if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
-      answerText = outOfScopeResponse;
-    }
+    answerText = replaceOutScopeMessage(answerText);
+    answerText = replaceCitationLinks(answerText, answer.citations);
 
     return {
         citations: filteredCitations,
@@ -87,4 +82,25 @@ export function parseAnswer(answer: AskResponse): ParsedAnswer {
           })),
         markdownFormatText: answerText
     };
+}
+
+function replaceCitationLinks(answerText: string, citations: Citation[]): string {  
+  return answerText.replace(/\[([^\]]+)\]\(#doc(\d+)\)/g, (match, linkText, docNumber) => {
+    const newUrl = citations[docNumber - 1]?.url;
+    if (newUrl) {
+      return `[${linkText}](${newUrl})`;
+    }
+    return match;
+  });
+}
+
+function replaceOutScopeMessage(answerText: string): string {
+  const appStateContext = useContext(AppStateContext);
+  const ui = appStateContext?.state.frontendSettings?.ui;
+  const outOfScopeRegex = /Please try another query or topic\.$/;
+  const outOfScopeResponse = ui?.out_of_scope_message;
+  if (outOfScopeResponse && outOfScopeRegex.test(answerText)) {
+    return outOfScopeResponse;
+  }
+  return answerText;
 }
