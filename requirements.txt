@@ -1,5 +1,5 @@
 flask>=2.3.3
 gunicorn>=21.2.0
 python-dotenv>=1.0.0
-google-cloud-discoveryengine>=1.0.0
+google-cloud-discoveryengine>=0.13.5
 google-auth>=2.22.0
