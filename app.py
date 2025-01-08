@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from flask import Flask, request, jsonify
-from google.cloud import discoveryengine
+from google.cloud import discoveryengine_v1beta
 from google.oauth2 import service_account
 from dotenv import load_dotenv
 
@@ -19,12 +19,13 @@ GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 # Initialize Google Client
 try:
     credentials = service_account.Credentials.from_service_account_file(GOOGLE_CREDENTIALS_PATH)
-    agent_client = discoveryengine.AgentServiceClient(credentials=credentials)
-    agent_path = agent_client.agent_path(
+    agent_client = discoveryengine_v1beta.ConversationalSearchServiceClient(
+        credentials=credentials
+    )
+    agent_path = agent_client.search_engine_path(
         project=GOOGLE_PROJECT_ID,
         location=GOOGLE_LOCATION,
-        collection="default_collection",
-        data_store=GOOGLE_AGENT_ID
+        search_engine=GOOGLE_AGENT_ID
     )
 except Exception as e:
     logging.error(f"Failed to initialize Google Agent client: {str(e)}")
@@ -42,65 +43,30 @@ def chat():
         conversation = request_body.get("messages", [])
         stream = request_body.get("stream", False)
 
-        print("Received conversation:", conversation)
-
         if not conversation:
             return jsonify({"error": "No messages provided"}), 400
 
-        # Format conversation history for Google Agent
-        formatted_messages = [{
-            "author": msg["role"],
-            "content": msg["content"]
-        } for msg in conversation]
-        
-         # Request payload
-        payload = {
-            "query": {
-                "text": formatted_messages[-1]["content"],
-                "queryId": ""
-            },
-            "session": session,
-            "relatedQuestionsSpec": {
-                "enable": True
-            },
-            "answerGenerationSpec": {
-                "ignoreAdversarialQuery": False,
-                "ignoreNonAnswerSeekingQuery": False,
-                "ignoreLowRelevantContent": False,
-                "includeCitations": True,
-                "promptSpec": {
-                    "preamble": "You are a Northramp director preparing documentation for a response to a request for information. You are an expert sales strategist tasked with crafting a response to a Request for Information(RFP or RFI).The RFP outlines several key requirements and preferences. Please generate a draft proposal response that aligns with these requirements, highlights our unique selling propositions, and addresses potential client concerns, as well as Northramp past performance that reflects experience against the requirements"
-                },
-                "modelSpec": {
-                    "modelVersion": "gemini-1.5-flash-002/answer_gen/v1"
-                }
-            }
-        }
+        # Format conversation history
+        conversation_message = discoveryengine_v1beta.types.TextInput(
+            text=conversation[-1]["content"]
+        )
 
-        # Prepare the request for Google Agent
-        agent_request = discoveryengine.ConverseAgentRequest(
-            agent=agent_path,
-            query=formatted_messages[-1]["content"],
-            # context={
-            #     "messages": formatted_messages[:-1]
-            # }
-            answerGenerationSpec={
-                "ignoreAdversarialQuery": False,
-                "ignoreNonAnswerSeekingQuery": False,
-                "ignoreLowRelevantContent": False,
-                "includeCitations": True,
-                "promptSpec": {
-                    "preamble": "You are a Northramp director preparing documentation. You are an expert sales strategist"
-                },
-                "modelSpec": {
-                    "modelVersion": "gemini-1.5-flash-002/answer_gen/v1"
-                }
-            }
+        serving_config = agent_client.serving_config_path(
+            project=GOOGLE_PROJECT_ID,
+            location=GOOGLE_LOCATION,
+            data_store=GOOGLE_AGENT_ID,
+            serving_config="default_config"
+        )
+
+        # Create the conversation request
+        request = discoveryengine_v1beta.types.ConversationalSearchRequest(
+            serving_config=serving_config,
+            query=conversation_message
         )
 
         # Make the API call
         try:
-            response = agent_client.converse_agent(agent_request)
+            response = agent_client.converse(request)
         except Exception as e:
             logging.error(f"Error calling Google Agent: {str(e)}")
             return jsonify({"error": f"Failed to get response from Google Agent: {str(e)}"}), 500
@@ -115,13 +81,13 @@ def chat():
             }]
         }
 
-        if hasattr(response, 'citations') and response.citations:
+        if hasattr(response.reply, 'attribution') and response.reply.attribution:
             chat_response["choices"][0]["messages"][0]["citations"] = [
                 {
-                    "content": citation.content,
-                    "title": citation.title if hasattr(citation, 'title') else None,
-                    "url": citation.url if hasattr(citation, 'url') else None,
-                } for citation in response.citations
+                    "content": source.content,
+                    "title": source.uri if hasattr(source, 'uri') else None,
+                    "url": source.uri if hasattr(source, 'uri') else None,
+                } for source in response.reply.attribution
             ]
 
         return jsonify(chat_response)
