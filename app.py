@@ -42,6 +42,8 @@ def chat():
         conversation = request_body.get("messages", [])
         stream = request_body.get("stream", False)
 
+        print("Received conversation:", conversation)
+
         if not conversation:
             return jsonify({"error": "No messages provided"}), 400
 
@@ -50,13 +52,49 @@ def chat():
             "author": msg["role"],
             "content": msg["content"]
         } for msg in conversation]
+        
+         # Request payload
+        payload = {
+            "query": {
+                "text": formatted_messages[-1]["content"],
+                "queryId": ""
+            },
+            "session": session,
+            "relatedQuestionsSpec": {
+                "enable": True
+            },
+            "answerGenerationSpec": {
+                "ignoreAdversarialQuery": False,
+                "ignoreNonAnswerSeekingQuery": False,
+                "ignoreLowRelevantContent": False,
+                "includeCitations": True,
+                "promptSpec": {
+                    "preamble": "You are a Northramp director preparing documentation for a response to a request for information. You are an expert sales strategist tasked with crafting a response to a Request for Information(RFP or RFI).The RFP outlines several key requirements and preferences. Please generate a draft proposal response that aligns with these requirements, highlights our unique selling propositions, and addresses potential client concerns, as well as Northramp past performance that reflects experience against the requirements"
+                },
+                "modelSpec": {
+                    "modelVersion": "gemini-1.5-flash-002/answer_gen/v1"
+                }
+            }
+        }
 
         # Prepare the request for Google Agent
         agent_request = discoveryengine.ConverseAgentRequest(
             agent=agent_path,
             query=formatted_messages[-1]["content"],
-            context={
-                "messages": formatted_messages[:-1]
+            # context={
+            #     "messages": formatted_messages[:-1]
+            # }
+            answerGenerationSpec={
+                "ignoreAdversarialQuery": False,
+                "ignoreNonAnswerSeekingQuery": False,
+                "ignoreLowRelevantContent": False,
+                "includeCitations": True,
+                "promptSpec": {
+                    "preamble": "You are a Northramp director preparing documentation. You are an expert sales strategist"
+                },
+                "modelSpec": {
+                    "modelVersion": "gemini-1.5-flash-002/answer_gen/v1"
+                }
             }
         )
 
