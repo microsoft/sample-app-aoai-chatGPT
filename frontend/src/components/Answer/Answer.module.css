@@ -76,7 +76,7 @@
   font-size: 12px;
   line-height: 16px;
 
-  color: #115ea3;
+  color: var(--natuvion-600);
   display: flex;
   flex-direction: row;
   align-items: center;

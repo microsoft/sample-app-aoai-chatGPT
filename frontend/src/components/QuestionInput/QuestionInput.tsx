@@ -77,7 +77,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   return (
     <Stack horizontal className={styles.questionInputContainer}>
       <TextField
-        className={styles.questionInputTextArea}
+        className={`${styles.questionInputTextArea} disable-active-border`}
         placeholder={placeholder}
         multiline
         resizable={false}

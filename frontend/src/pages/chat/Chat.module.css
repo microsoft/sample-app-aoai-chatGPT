@@ -88,7 +88,7 @@
   position: relative;
   display: flex;
   padding: 20px;
-  background: #edf5fd;
+  background-color: color-mix(in srgb, var(--natuvion-600) 5%, transparent 80%);
   border-radius: 8px;
   box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
@@ -162,6 +162,7 @@
   left: 7px;
   top: 13px;
   color: #ffffff;
+        border: 1px solid #d1d1d1;
   border-radius: 4px;
   z-index: 1;
 }
@@ -195,6 +196,7 @@
   top: 66px;
   color: #ffffff;
   border-radius: 4px;
+  border: 1px solid #d1d1d1;
   z-index: 1;
 }
 
@@ -347,7 +349,7 @@ a {
   font-weight: 600;
   font-size: 12px;
   line-height: 16px;
-  color: #115ea3;
+  color:var(--natuvion-600);
   flex-direction: row;
   align-items: center;
   padding: 4px 6px;

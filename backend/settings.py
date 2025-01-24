@@ -41,9 +41,9 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Contoso"
-    logo: Optional[str] = None
-    chat_logo: Optional[str] = None
+    title: str = "Natuvion Chat"
+    logo: Optional[str] = "/static/nat-logo.svg"
+    chat_logo: Optional[str] = "/static/nat-logo.svg"
     chat_title: str = "Start chatting"
     chat_description: str = "This chatbot is configured to answer your questions"
     favicon: str = "/favicon.ico"

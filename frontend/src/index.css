@@ -1,16 +1,16 @@
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html,
 body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-  background: #f2f2f2;
+    background: #f2f2f2;
   font-family:
     'Segoe UI',
     'Segoe UI Web (West European)',
@@ -20,10 +20,54 @@ html {
     Roboto,
     'Helvetica Neue',
     sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  height: 100%;
+    height: 100%;
+}
+
+.ms-Button--primary {
+    border: none;
+    background: var(--natuvion-600);
+}
+
+.ms-Button--primary:hover {
+    background: var(--natuvion-800);
+}
+
+.ms-Button-icon {
+    color: var(--natuvion-600);
+}
+
+.ms-Button:hover .ms-Button-icon {
+    color: var(--natuvion-600);
+}
+
+.ms-ContextualMenu-icon {
+    color: var(--natuvion-600);
+}
+
+.ms-ContextualMenu-link:hover .ms-ContextualMenu-icon {
+    color: var(--natuvion-800);
+}
+
+.ms-TextField.is-active:not(.disable-active-border) .ms-TextField-fieldGroup::after  {
+    border: 1px solid var(--natuvion-600);
+}
+
+
+:root {
+    --natuvion-50: #f0fdf3;
+    --natuvion-100: #dbfde3;
+    --natuvion-200: #baf8c9;
+    --natuvion-300: #84f19e;
+    --natuvion-400: #47e16d;
+    --natuvion-500: #1fc84a;
+    --natuvion-600: #13a538;
+    --natuvion-700: #13822f;
+    --natuvion-800: #14672a;
+    --natuvion-900: #135426;
+    --natuvion-950: #042f11;
 }

@@ -25,6 +25,7 @@ import { AppStateContext } from '../../state/AppProvider'
 import ChatHistoryList from './ChatHistoryList'
 
 import styles from './ChatHistoryPanel.module.css'
+import color = Mocha.reporters.Base.color;
 
 interface ChatHistoryPanelProps {}
 
@@ -67,7 +68,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
   }
 
   const menuItems: IContextualMenuItem[] = [
-    { key: 'clearAll', text: 'Clear all chat history', iconProps: { iconName: 'Delete' } }
+    { key: 'clearAll',className:'nat-btn-primary', text: 'Clear all chat history', iconProps: { iconName: 'Delete' } }
   ]
 
   const handleHistoryClick = () => {
@@ -122,6 +123,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
         <Stack verticalAlign="start">
           <Stack horizontal styles={commandBarButtonStyle}>
             <CommandBarButton
+                className={`nat-btn-text-accent`}
               iconProps={{ iconName: 'More' }}
               title={'Clear all chat history'}
               onClick={onShowContextualMenu}
@@ -138,6 +140,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
               onDismiss={onHideContextualMenu}
             />
             <CommandBarButton
+                className={`nat-btn-text-accent`}
               iconProps={{ iconName: 'Cancel' }}
               title={'Hide'}
               onClick={handleHistoryClick}
@@ -222,7 +225,8 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
         dialogContentProps={clearAllDialogContentProps}
         modalProps={modalProps}>
         <DialogFooter>
-          {!clearingError && <PrimaryButton onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />}
+          {!clearingError && <PrimaryButton
+              onClick={onClearAllChatHistory} disabled={clearing} text="Clear All" />}
           <DefaultButton
             onClick={onHideClearAllDialog}
             disabled={clearing}

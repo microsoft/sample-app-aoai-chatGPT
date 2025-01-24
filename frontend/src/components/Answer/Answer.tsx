@@ -182,7 +182,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             defaultChecked={negativeFeedbackList.includes(Feedback.OtherUnhelpful)}
             onChange={updateFeedbackList}></Checkbox>
         </Stack>
-        <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: '#115EA3', cursor: 'pointer' }}>
+        <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: ' var(--natuvion-600);', cursor: 'pointer' }}>
           Report inappropriate content
         </div>
       </>
