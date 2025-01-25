@@ -41,7 +41,7 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Natuvion Chat"
+    title: str = "Natuvion"
     logo: Optional[str] = "/static/nat-logo.svg"
     chat_logo: Optional[str] = "/static/nat-logo.svg"
     chat_title: str = "Start chatting"

@@ -1,5 +1,5 @@
 import {useContext, useEffect, useLayoutEffect, useRef, useState} from 'react'
-import {CommandBarButton, Dialog, DialogType, IconButton, Stack} from '@fluentui/react'
+import {CommandBarButton, Dialog, DialogType, IconButton, Spinner, SpinnerSize, Stack} from '@fluentui/react'
 import {ErrorCircleRegular, ShieldLockRegular, SquareRegular} from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
@@ -38,6 +38,7 @@ import {QuestionInput} from "../../components/QuestionInput";
 import {ChatHistoryPanel} from "../../components/ChatHistory/ChatHistoryPanel";
 import {AppStateContext} from "../../state/AppProvider";
 import {useBoolean} from "@fluentui/react-hooks";
+import {useSearchParams} from "react-router-dom";
 
 const enum messageStatus {
     NotRunning = 'Not Running',
@@ -50,7 +51,8 @@ const Chat = () => {
     const ui = appStateContext?.state.frontendSettings?.ui
     const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [isInitLoading, setIsInitLoading] = useState<boolean>(true)
     const [showLoadingMessage, setShowLoadingMessage] = useState<boolean>(false)
     const [activeCitation, setActiveCitation] = useState<Citation>()
     const [isCitationPanelOpen, setIsCitationPanelOpen] = useState<boolean>(false)
@@ -65,6 +67,8 @@ const Chat = () => {
     const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
     const [logo, setLogo] = useState('')
     const [answerId, setAnswerId] = useState<string>('')
+    const [searchParams] = useSearchParams()
+    const initialValue = searchParams.get('q') || ''
 
     const errorDialogContentProps = {
         type: DialogType.close,
@@ -99,6 +103,12 @@ const Chat = () => {
         }
     }, [appStateContext?.state.isCosmosDBAvailable])
 
+    useEffect(() => {
+        if (appStateContext?.state.isCosmosDBAvailable?.status == CosmosDBStatus.Working && initialValue && appStateContext?.state.isCosmosDBAvailable.cosmosDB) {
+            onSend(initialValue);
+        }
+    }, [appStateContext?.state.isCosmosDBAvailable]);
+
     const handleErrorDialogClose = () => {
         toggleErrorDialog()
         setTimeout(() => {
@@ -114,6 +124,7 @@ const Chat = () => {
 
     useEffect(() => {
         setIsLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
+        setIsInitLoading(appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Loading)
     }, [appStateContext?.state.chatHistoryLoadingState])
 
     const getUserInfoList = async () => {
@@ -182,6 +193,11 @@ const Chat = () => {
         }
     }
 
+    const onSend = (question: ChatMessage['content'], id?: string) => {
+        appStateContext?.state.isCosmosDBAvailable?.cosmosDB
+            ? makeApiRequestWithCosmosDB(question, id)
+            : makeApiRequestWithoutCosmosDB(question, id)
+    }
     const makeApiRequestWithoutCosmosDB = async (question: ChatMessage["content"], conversationId?: string) => {
         setIsLoading(true)
         setShowLoadingMessage(true)
@@ -799,6 +815,24 @@ const Chat = () => {
             ) : (
                 <Stack horizontal className={styles.chatRoot}>
                     <div className={styles.chatContainer}>
+                        {isInitLoading && (
+                            <div className={styles.spinnerContainer}>
+                                <Spinner
+                                    className={styles.natSpinner}
+                                    styles={{
+                                        circle: {
+                                            stroke: 'var(--natuvion-600)',
+                                        },
+                                        root: {
+                                            color: 'var(--natuvion-600)',
+                                        },
+                                        label: {
+                                            color: 'var(--natuvion-600)',
+                                        },
+                                    }}
+                                    size={SpinnerSize.large} label="Loading..." />
+                            </div>
+                        )}
                         {!messages || messages.length < 1 ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img src={logo} className={styles.chatIcon} aria-hidden="true"/>
@@ -947,11 +981,7 @@ const Chat = () => {
                                 clearOnSend
                                 placeholder="Type a new question..."
                                 disabled={isLoading}
-                                onSend={(question, id) => {
-                                    appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                                        ? makeApiRequestWithCosmosDB(question, id)
-                                        : makeApiRequestWithoutCosmosDB(question, id)
-                                }}
+                                onSend={onSend}
                                 conversationId={
                                     appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
                                 }

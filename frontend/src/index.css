@@ -57,6 +57,10 @@ html {
     border: 1px solid var(--natuvion-600);
 }
 
+.ms-Spinner-circle {
+    color: var(--natuvion-600);
+    border-color: var(--natuvion-600) var(--natuvion-200) var(--natuvion-200);
+}
 
 :root {
     --natuvion-50: #f0fdf3;
