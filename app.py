@@ -21,6 +21,7 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
+from azure.monitor.opentelemetry import configure_azure_monitor
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -35,6 +36,13 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    configure_azure_monitor(
+        logger_name = os.environ.get("WEBSITE_SITE_NAME", __name__),
+    )
+
+logger = logging.getLogger(os.environ.get("WEBSITE_SITE_NAME", __name__))
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -52,7 +60,7 @@ def create_app():
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
         except Exception as e:
-            logging.exception("Failed to initialize CosmosDB client")
+            logger.exception("Failed to initialize CosmosDB client")
             app.cosmos_conversation_client = None
             raise e
     
@@ -144,7 +152,7 @@ async def init_openai_client():
         aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
-            logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
+            logger.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
             async with DefaultAzureCredential() as credential:
                 ad_token_provider = get_bearer_token_provider(
                     credential,
@@ -169,7 +177,7 @@ async def init_openai_client():
 
         return azure_openai_client
     except Exception as e:
-        logging.exception("Exception in Azure OpenAI initialization", e)
+        logger.exception("Exception in Azure OpenAI initialization", e)
         azure_openai_client = None
         raise e
 
@@ -197,11 +205,11 @@ async def init_cosmosdb_client():
                 enable_message_feedback=app_settings.chat_history.enable_feedback,
             )
         except Exception as e:
-            logging.exception("Exception in CosmosDB initialization", e)
+            logger.exception("Exception in CosmosDB initialization", e)
             cosmos_conversation_client = None
             raise e
     else:
-        logging.debug("CosmosDB not configured")
+        logger.debug("CosmosDB not configured")
 
     return cosmos_conversation_client
 
@@ -297,7 +305,7 @@ def prepare_model_args(request_body, request_headers):
                         "embedding_dependency"
                     ]["authentication"][field] = "*****"
 
-    logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
+    logger.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
 
     return model_args
 
@@ -309,7 +317,7 @@ async def promptflow_request(request):
             "Authorization": f"Bearer {app_settings.promptflow.api_key}",
         }
         # Adding timeout for scenarios where response takes longer to come back
-        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
+        logger.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
         async with httpx.AsyncClient(
             timeout=float(app_settings.promptflow.response_timeout)
         ) as client:
@@ -332,7 +340,7 @@ async def promptflow_request(request):
         resp["id"] = request["messages"][-1]["id"]
         return resp
     except Exception as e:
-        logging.error(f"An error occurred while making promptflow_request: {e}")
+        logger.error(f"An error occurred while making promptflow_request: {e}")
 
 
 async def send_chat_request(request_body, request_headers):
@@ -351,7 +359,7 @@ async def send_chat_request(request_body, request_headers):
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
-        logging.exception("Exception in send_chat_request")
+        logger.exception("Exception in send_chat_request")
         raise e
 
     return response, apim_request_id
@@ -397,7 +405,7 @@ async def conversation_internal(request_body, request_headers):
             return jsonify(result)
 
     except Exception as ex:
-        logging.exception(ex)
+        logger.exception(ex)
         if hasattr(ex, "status_code"):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
@@ -418,7 +426,7 @@ def get_frontend_settings():
     try:
         return jsonify(frontend_settings), 200
     except Exception as e:
-        logging.exception("Exception in /frontend_settings")
+        logger.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
 
 
@@ -475,7 +483,7 @@ async def add_conversation():
         return await conversation_internal(request_body, request.headers)
 
     except Exception as e:
-        logging.exception("Exception in /history/generate")
+        logger.exception("Exception in /history/generate")
         return jsonify({"error": str(e)}), 500
 
 
@@ -525,7 +533,7 @@ async def update_conversation():
         return jsonify(response), 200
 
     except Exception as e:
-        logging.exception("Exception in /history/update")
+        logger.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
 
 
@@ -571,7 +579,7 @@ async def update_message():
             )
 
     except Exception as e:
-        logging.exception("Exception in /history/message_feedback")
+        logger.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
 
 
@@ -614,7 +622,7 @@ async def delete_conversation():
             200,
         )
     except Exception as e:
-        logging.exception("Exception in /history/delete")
+        logger.exception("Exception in /history/delete")
         return jsonify({"error": str(e)}), 500
 
 
@@ -776,7 +784,7 @@ async def delete_all_conversations():
         )
 
     except Exception as e:
-        logging.exception("Exception in /history/delete_all")
+        logger.exception("Exception in /history/delete_all")
         return jsonify({"error": str(e)}), 500
 
 
@@ -814,7 +822,7 @@ async def clear_messages():
             200,
         )
     except Exception as e:
-        logging.exception("Exception in /history/clear_messages")
+        logger.exception("Exception in /history/clear_messages")
         return jsonify({"error": str(e)}), 500
 
 
@@ -833,7 +841,7 @@ async def ensure_cosmos():
 
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
-        logging.exception("Exception in /history/ensure")
+        logger.exception("Exception in /history/ensure")
         cosmos_exception = str(e)
         if "Invalid credentials" in cosmos_exception:
             return jsonify({"error": cosmos_exception}), 401
@@ -878,7 +886,7 @@ async def generate_title(conversation_messages) -> str:
         title = response.choices[0].message.content
         return title
     except Exception as e:
-        logging.exception("Exception while generating title", e)
+        logger.exception("Exception while generating title", e)
         return messages[-2]["content"]
 
 
