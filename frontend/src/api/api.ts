@@ -3,21 +3,35 @@ import { chatHistorySampleData } from '../constants/chatHistory'
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
 export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
-  const response = await fetch('/conversation', {
+  const response = await fetch('/assistant', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      messages: options.messages
+      content: options.messages[options.messages.length - 1]?.content || "Hallo!"
     }),
     signal: abortSignal
   })
-
   return response
 }
 
 export async function getUserInfo(): Promise<UserInfo[]> {
+  console.log('Using mock data for user info in local environment.', window.location);
+ // if (window.location.hostname === 'localhost') {
+    console.log('Using mock data for user info in local environment.')
+    return [
+      {
+        access_token: 'string',
+        expires_on: 'string',
+        id_token: 'string',
+        provider_name: 'string',
+        user_claims: [],
+        user_id: 'string'
+      },
+    ]
+  //}
+
   const response = await fetch('/.auth/me')
   if (!response.ok) {
     console.log('No identity provider found. Access to chat will be blocked.')

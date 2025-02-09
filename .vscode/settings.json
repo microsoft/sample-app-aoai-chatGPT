@@ -1,0 +1,32 @@
+{
+    "python.analysis.logLevel": "Trace",
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
+    ],
+    "python.linting.pylintArgs": [
+        "--max-line-length=120"
+    ],
+    "flake8": {
+        "max-line-length": 120
+    },
+    "python.linting.enabled": true, // Aktiviert das Linting (falls es noch nicht aktiviert ist)
+    "python.formatting.provider": "black", // Optional: Black als Formatter hinzufügen
+    "editor.formatOnSave": true, // Automatisches Formatieren beim Speichern,
+    "logViewer.logLevel": "info",
+    "logViewer.watch": [
+        {
+            "title": "Full Log (Dev-Container)",
+            "pattern": "/workspaces/sjc-app-aoai-chatGPT/logs/backend.log"
+        },
+        {
+            "title": "Dev Log (Dev-Container)",
+            "pattern": "/workspaces/sjc-app-aoai-chatGPT/logs/dev.log"
+        },
+        {
+            "title": "Backend-Log",
+            "pattern": "/Users/andreasdyballa/Dev/sjc/sjc-app-aoai-chatGPT/backend.log"
+        },
+    ],
+    "bitoAI.codeCompletion.enableAutoCompletion": false
+
+}
