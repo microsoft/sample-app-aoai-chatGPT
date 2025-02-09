@@ -22,6 +22,7 @@ from azure.identity.aio import (
     get_bearer_token_provider
 )
 from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -51,6 +52,7 @@ cosmos_db_ready = asyncio.Event()
 
 def create_app():
     app = Quart(__name__)
+    app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     
