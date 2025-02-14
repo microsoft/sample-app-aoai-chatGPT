@@ -3,17 +3,19 @@ name: Docker Image Build
 on:
   pull_request:
     branches:
-    - main
+      - main
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run:         
-        docker build . --file WebApp.Dockerfile --tag sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
-      
+      - uses: actions/checkout@v3
+      - name: Azure Container Registry Login
+        uses: Azure/docker-login@v2
+        with:
+          login-server: sampleappaoaichatgpt.azurecr.io
+          username: ${{ secrets.WEBAPP_ACR_USERNAME }}
+          password: ${{ secrets.WEBAPP_ACR_PASSWORD }}
+      - name: Build the Docker image
+        run: docker build . --file WebApp.Dockerfile --tag sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
