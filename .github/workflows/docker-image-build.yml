@@ -18,6 +18,6 @@ jobs:
           username: ${{ secrets.WEBAPP_ACR_USERNAME }}
           password: ${{ secrets.WEBAPP_ACR_PASSWORD }}
       - name: Build and Push Docker Image
-        run: |
+        run:
           docker build . --file WebApp.Dockerfile --tag sjcopenaiwebappregistry.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
           docker push sjcopenaiwebappregistry.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
