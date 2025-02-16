@@ -93,6 +93,12 @@ class _AzureOpenAITool(BaseModel):
     function: _AzureOpenAIFunction
 
 
+print("### DEBUG: ENVIRONMENT VARIABLES ###")
+for key, value in os.environ.items():
+    print(f"{key}={value}")
+print("### DEBUG END ###")
+
+
 class _AzureOpenAISettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_OPENAI_",
