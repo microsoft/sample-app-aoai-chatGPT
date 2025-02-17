@@ -19,7 +19,8 @@ https://learn.microsoft.com/ja-jp/azure/search/semantic-search-overview<br>
 5つと指定したとき、同じ事例を拾ってきてしまう。<br>
 <img width="500" alt="スクリーンショット 2025-02-17 23 45 28" src="https://github.com/user-attachments/assets/f6117107-d0f8-463d-9f49-c4184fa2bb5d" />
 
-10社分と指定したとき、同じ会社を選択したり、ブレインズを選択してしまう。<br>
-<img width="500" alt="スクリーンショット 2025-02-17 23 49 05" src="https://github.com/user-attachments/assets/60266e02-df48-4a9c-b32c-922e77ddff8a" />
+10社分と指定したとき、同じ会社を選択したり、ブレインズを事例として回答してしまう。<br>
+<img width="500" alt="スクリーンショット 2025-02-17 23 49 05" src="https://github.com/user-attachments/assets/60266e02-df48-4a9c-b32c-922e77ddff8a" /><br>
 <img width="500" alt="スクリーンショット 2025-02-17 23 49 16" src="https://github.com/user-attachments/assets/924e16b5-d40d-4077-bf43-b4a8b855be4e" />
+
 
