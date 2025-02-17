@@ -13,3 +13,10 @@ https://learn.microsoft.com/ja-jp/azure/search/semantic-search-overview<br>
 
 デプロイしたアプリの環境変数`AZURE_SEARCH_TOP_K`でも確認可能<br>
 <img width="500" alt="スクリーンショット 2025-02-17 23 38 21" src="https://github.com/user-attachments/assets/60880606-b48c-4e27-9ede-352bf7b60839" />
+
+
+### 実験１
+5つと指定したとき、同じ事例を拾ってきてしまう。<br>
+<img width="500" alt="スクリーンショット 2025-02-17 23 45 28" src="https://github.com/user-attachments/assets/f6117107-d0f8-463d-9f49-c4184fa2bb5d" />
+
+
