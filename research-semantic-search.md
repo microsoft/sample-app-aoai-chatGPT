@@ -3,7 +3,7 @@
 https://learn.microsoft.com/ja-jp/azure/ai-services/openai/concepts/use-your-data?tabs=ai-search%2Ccopilot#runtime-parameters
 
 ### Azure AI Search でのセマンティック ランク付け
-https://learn.microsoft.com/ja-jp/azure/search/semantic-search-overview
+https://learn.microsoft.com/ja-jp/azure/search/semantic-search-overview<br>
 取得するドキュメントの数を変更したい時<br>
 取得したドキュメント<br>
 このパラメーターは、3、5、10、または 20 に設定できる整数であり、最終的な応答を作成するために大規模言語モデルに提供されるドキュメント チャンクの数を制御します。既定では、5 に設定されます。<br>
