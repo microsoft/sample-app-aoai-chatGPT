@@ -5,8 +5,8 @@ https://learn.microsoft.com/ja-jp/azure/ai-services/openai/concepts/use-your-dat
 ### Azure AI Search でのセマンティック ランク付け
 <table>
   <tr>
-    <th style="width: 30%;">パラメーター名</th>
-    <th style="width: 70%;">説明</th>
+    <th style="width: 40%;">パラメーター名</th>
+    <th style="width: 60%;">説明</th>
   </tr>
   <tr>
     <td>取得したドキュメント</td>
