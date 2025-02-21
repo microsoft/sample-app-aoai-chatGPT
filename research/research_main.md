@@ -23,17 +23,23 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 "deploymentId": "text-embedding-3-large",
 "dimensions": 3072,
 ```
-#### Webアプリの環境変数の一部
+### Webアプリの環境変数（一部）
+#### 検索
 |名前|値|
 |---|--|
 |AZURE_SEARCH_QUERY_TYPE|vector_semantic_hybrid|
 |AZURE_SEARCH_STRICTNESS|3|
 |AZURE_SEARCH_TOP_K|5|
+
+#### LLM
+|名前|値|
+|---|--|
 |AZURE_OPENAI_MAX_TOKENS|2000|
 |AZURE_OPENAI_MODEL|gpt-4o|
 |AZURE_OPENAI_EMBEDDING_NAME|text-embedding-3-large|
 |AZURE_OPENAI_SYSTEM_MESSAGE|Neuron ESの導入事例の情報を見つけるのに役立つ AI アシスタントです。回答には出典元ファイルのurlをつけてください。|
 <br>
+
 ## 構築したチャットボットの動作確認
 上記のパラメーターで
 
