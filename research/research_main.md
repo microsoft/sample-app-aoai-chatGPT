@@ -16,7 +16,8 @@ Search Serviceのスキルセット
 "defaultLanguageCode": "ja",
 "textSplitMode": "pages",
 "maximumPageLength": 2000,
-"pageOverlapLength": 500,```
+"pageOverlapLength": 500,
+```
 
      "@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
       "name": "#2",
