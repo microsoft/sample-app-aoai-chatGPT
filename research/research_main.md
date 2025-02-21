@@ -26,7 +26,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 ### Webアプリの環境変数（一部）
 #### 検索
 |名前|値|
-|---|--|
+|:---|:--|
 |AZURE_SEARCH_QUERY_TYPE|vector_semantic_hybrid|
 |AZURE_SEARCH_STRICTNESS|3|
 |AZURE_SEARCH_TOP_K|5|
@@ -35,7 +35,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 #### LLM
 |名前|値|
-|---|--|
+|:---|:--|
 |AZURE_OPENAI_MAX_TOKENS|2000|
 |AZURE_OPENAI_MODEL|gpt-4o|
 |AZURE_OPENAI_EMBEDDING_NAME|text-embedding-3-large|
