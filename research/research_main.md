@@ -1,7 +1,7 @@
 # NeuronESの導入事例を答えてくれるチャットボットの実験記録
 NeuronESの事例について回答してくれるAIアシスタントを`sample-app-aoai-chatGPT`を使って構築しました。データソースにNeuronESの詳細事例のファイル（.pdf, .pptx）を26件格納しています。これを使って「チャットボットでファイル検索ができるか？」を実験しました。
 
-アーキテクチャダイヤグラム(https://learn.microsoft.com/ja-jp/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat)<br>
+[アーキテクチャダイヤグラム](https://learn.microsoft.com/ja-jp/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat)<br>
 <img src="./image/openai-end-to-end-basic.svg" alt="Example SVG" width="800">
 
 ## 構築したチャットボットの動作確認
