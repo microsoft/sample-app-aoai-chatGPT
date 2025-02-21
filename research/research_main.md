@@ -27,9 +27,10 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 #### 検索
 |名前|値|
 |---|--|
-|AZURE_SEARCH_QUERY_TYPE|vector_semantic_hybrid|　セマンティックランカー Free 1か月あたりのリクエストが 1,000件
+|AZURE_SEARCH_QUERY_TYPE|vector_semantic_hybrid|
 |AZURE_SEARCH_STRICTNESS|3|
 |AZURE_SEARCH_TOP_K|5|
+セマンティックランカー Free 1か月あたりのリクエストが 1,000件<br>
 
 #### LLM
 |名前|値|
