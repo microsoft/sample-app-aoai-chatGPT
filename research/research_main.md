@@ -9,7 +9,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 26ファイル -> Azure Blob storage -> Azure AI Search(前処理 -> ベクトル化 -> インデックス -> セマンティック検索) -> App Service（Webアプリ) <-> Azure OpenAI Service(Azure OpenAI Model)<br>
 <br>
 構築したチャットボットのパラメーターは以下になっています。<br>
-### Search Serviceのスキルセット<br>
+### Search Serviceのスキルセット
 #### 前処理(チャンク設定)
 ```"@odata.type": "#Microsoft.Skills.Text.SplitSkill",
 "description": "Split skill to chunk documents",
@@ -32,9 +32,11 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |AZURE_OPENAI_MAX_TOKENS|2000|
 |AZURE_OPENAI_MODEL|gpt-4o|
 |AZURE_OPENAI_EMBEDDING_NAME|text-embedding-3-large|
-
+|AZURE_OPENAI_SYSTEM_MESSAGE|Neuron ESの導入事例の情報を見つけるのに役立つ AI アシスタントです。
+回答には出典元ファイルのurlをつけてください。|
+<br>
 ## 構築したチャットボットの動作確認
-
+上記のパラメーターで
 
 
 
