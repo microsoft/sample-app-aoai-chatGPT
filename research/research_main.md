@@ -2,7 +2,7 @@
 `sample-app-aoai-chatGPT`を使ってチャットボットを構築しました。データソースにNeuronESの詳細事例のファイル（.pdf, .pptx）を26件格納し、NeuronESの事例について回答してくれるAIアシスタントとしています。これを使って「チャットボットでファイル検索ができるか？」を実験します。
 
 
-![Uploading openai-end-to-end-basic.svg…]()
+
 
 
 
