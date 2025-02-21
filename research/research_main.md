@@ -10,7 +10,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 構築したチャットボットのパラメーターは以下になっています。<br>
 
-Search Serviceのスキルセット<br>
+### Search Serviceのスキルセット<br>
+#### チャンク設定
 ```"@odata.type": "#Microsoft.Skills.Text.SplitSkill",
 "description": "Split skill to chunk documents",
 "defaultLanguageCode": "ja",
@@ -18,7 +19,7 @@ Search Serviceのスキルセット<br>
 "maximumPageLength": 2000,
 "pageOverlapLength": 500,
 ```
-
+#### ベクトル化
 ```"@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
 "deploymentId": "text-embedding-3-large",
 "dimensions": 3072,
