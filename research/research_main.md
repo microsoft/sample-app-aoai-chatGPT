@@ -5,9 +5,37 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 <img src="./image/openai-end-to-end-basic.svg" alt="Example SVG" width="800">
 
 ## 構築したチャットボットの動作確認
-構築したチャットボットのパラメーターは以下になっています。
+構築したチャットボットの構成は下記になっています。<br>
+26ファイル -> Azure Blob storage -> Azure AI Search(ベクトル化 -> インデックス -> セマンティック検索) -> App Service（チャットボット) <-> Azure OpenAI Service(gptモデル) <br>
+
+構築したチャットボットのパラメーターは以下になっています。<br>
+
+Search Serviceのスキルセット
+```"@odata.type": "#Microsoft.Skills.Text.SplitSkill",
+"description": "Split skill to chunk documents",
+"defaultLanguageCode": "ja",
+"textSplitMode": "pages",
+"maximumPageLength": 2000,
+"pageOverlapLength": 500,```
+
+     "@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
+      "name": "#2",
+      "context": "/document/pages/*",
+      "resourceUri": "https://neuron-is-demo.openai.azure.com",
+      "apiKey": "<redacted>",
+      "deploymentId": "text-embedding-3-large",
+      "dimensions": 3072,
+
+
 |名前|値|
 |---|--|
+|AZURE_OPENAI_MAX_TOKENS|2000|
+|AZURE_OPENAI_MODEL|gpt-4o|
+|AZURE_OPENAI_MODEL|gpt-4o|
+|AZURE_SEARCH_QUERY_TYPE|vector_semantic_hybrid|
+|AZURE_SEARCH_STRICTNESS|3|
+|AZURE_SEARCH_TOP_K|5|
+
 |AZURE_OPENAI_EMBEDDING_NAME|text-embedding-3-large|
 
 
