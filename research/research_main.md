@@ -4,6 +4,11 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 [アーキテクチャダイヤグラム](https://learn.microsoft.com/ja-jp/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat)<br>
 <img src="./image/openai-end-to-end-basic.svg" alt="Example SVG" width="800">
 
+この実験を参考にしていただきたい方
+- 生成AIを使ったチャットボットのサービスをご利用の方
+- Microsoft 365 Copilotを評価している方（基本的に、本実験で構築したチャットボットで使っているAzureのサービスで構成されていると考えられるため）
+- 生成AIの利用をご検討の方
+
 ## 構築したチャットボットのパラメーター設定
 構築したチャットボットの構成は下記になっています。<br>
 26ファイル -> Azure Blob storage -> Azure AI Search(前処理 -> ベクトル化 -> インデックス -> セマンティック検索) -> App Service（Webアプリ) <-> Azure OpenAI Service(Azure OpenAI Model)<br>
