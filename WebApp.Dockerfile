@@ -17,7 +17,7 @@ RUN apk add --no-cache --virtual .build-deps \
     openssl-dev \  
     curl \  
     && apk add --no-cache \  
-    libpq
+    libpq 
   
 COPY requirements.txt /usr/src/app/  
 RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt \  
