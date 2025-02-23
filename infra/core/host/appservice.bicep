@@ -74,6 +74,8 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
         ENABLE_ORYX_BUILD: string(enableOryxBuild)
       },
       !empty(applicationInsightsName) ? { APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString } : {},
+      { AZURE_SDK_TRACING_IMPLEMENTATION: 'opentelemetry' },
+      { AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED: 'false' },
       !empty(keyVaultName) ? { AZURE_KEY_VAULT_ENDPOINT: keyVault.properties.vaultUri } : {},
       !empty(authClientSecret) ? { AUTH_CLIENT_SECRET: authClientSecret } : {}
     )

@@ -12,7 +12,7 @@
           // onInit: null, // Once the application insights instance has loaded and initialized this callback function will be called with 1 argument -- the sdk instance (DO NOT ADD anything to the sdk.queue -- As they won't get called)
           // sri: false, // Custom optional value to specify whether fetching the snippet from integrity file and do integrity check 
           cfg: { // Application Insights Configuration
-              connectionString: "YOUR_CONNECTION_STRING"
+              connectionString: "{{ applicationinsights_connection_string }}"
           }
       });
     </script>

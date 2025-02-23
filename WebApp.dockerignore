@@ -3,3 +3,11 @@
 WebApp.Dockerfile
 WebApp.dockerignore
 frontend/node_modules
+.git
+~
+__pycache__
+.venv
+.vscode
+.devcontainer
+node_modules
+.env

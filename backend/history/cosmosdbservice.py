@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import exceptions
+from logging import getLogger
+logger = getLogger(__name__)
   
 class CosmosConversationClient():
     
@@ -35,12 +37,14 @@ class CosmosConversationClient():
             return False, "CosmosDB client not initialized correctly"
         try:
             database_info = await self.database_client.read()
-        except:
+        except Exception as e:
+            logger.error("Failed to connect to cosmos", e)
             return False, f"CosmosDB database {self.database_name} on account {self.cosmosdb_endpoint} not found"
         
         try:
             container_info = await self.container_client.read()
-        except:
+        except Exception as e:
+            logger.error("Failed to get cosmos container", e)
             return False, f"CosmosDB container {self.container_name} not found"
             
         return True, "CosmosDB client initialized successfully"

@@ -22,6 +22,7 @@ from azure.identity.aio import (
     get_bearer_token_provider
 )
 from azure.monitor.opentelemetry import configure_azure_monitor
+from azure.ai.inference.tracing import AIInferenceInstrumentor 
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -37,9 +38,12 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+# Instrument AI Inference API 
+AIInferenceInstrumentor().instrument()
 
-if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+if app_settings.base_settings.applicationinsights_connection_string:
     configure_azure_monitor(
+        connection_string=app_settings.base_settings.applicationinsights_connection_string,
         logger_name = os.environ.get("WEBSITE_SITE_NAME", __name__),
     )
 
@@ -74,7 +78,8 @@ async def index():
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
-        favicon=app_settings.ui.favicon
+        favicon=app_settings.ui.favicon,
+        applicationinsights_connection_string=app_settings.base_settings.applicationinsights_connection_string
     )
 
 
