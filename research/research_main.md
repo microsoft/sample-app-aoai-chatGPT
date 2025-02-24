@@ -66,6 +66,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |AZURE_OPENAI_MODEL|gpt-4o|
 |AZURE_OPENAI_EMBEDDING_NAME|text-embedding-3-large|
 |AZURE_OPENAI_SYSTEM_MESSAGE|Neuron ESの導入事例の情報を見つけるのに役立つ AI アシスタントです。回答には出典元ファイルのurlをつけてください。|
+|AZURE_OPENAI_TEMPERATURE|0|
+|AZURE_OPENAI_TOP_P|0|
 <br>
 
 ## 構築したチャットボットの動作確認
@@ -81,15 +83,18 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 
 
-パラメーターの設定変更による回答内容の変化を確認する
+## パラメーターの設定変更による回答内容の変化の実験
 - 基本的にはAzure上に作ったチャットボットを使う。Azure OpenAI ServiceとAzure AI Searchを利用する。
-- 比較のために、Difyで作ったチャットボットも利用する。LLMやEmbeddingはAzure OpenAI Serviceを利用する。
+- 比較のために、Difyで作ったチャットボットも利用する。LLMやEmbeddingはAzure OpenAI Serviceを利用する。Rerankモデルはcohereの`rerank-multilingual-v3.0`。
 
-#### チャンキングの影響
-#### Embeddingモデルの影響
-#### [セマンティック検索のtop-kの影響](./research-semantic-search.md)
-#### LLMのモデルの違いによる回答精度の違いと回答速度の違い
-#### LLMのパラメーターの影響
+|項目|パラメーター|実験値|実験結果|考察|
+|:--|:--------|:----|:------|:--|
+|チャンキングの影響|前処理(チャンク設定)| | | |
+|Embeddingモデルの影響|ベクトル化| | | |
+|[セマンティック検索のtop-kの影響](./research-semantic-search.md)|検索| | | |
+|LLMのモデルの違いによる回答精度の違いと回答速度の違い|LLM| | | |
+|LLMのパラメーターの影響|LLM| | | |
+|LLMの利用料|LLM| | | |
 
 
 
