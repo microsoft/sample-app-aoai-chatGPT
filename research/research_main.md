@@ -28,6 +28,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 "maximumPageLength": 2000,
 "pageOverlapLength": 500,
 -->
+`"@odata.type": "#Microsoft.Skills.Text.SplitSkill"`
 |パラメーター名|値|
 |:-----------|:--|
 |defaultLanguageCode|ja|
@@ -36,10 +37,18 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |pageOverlapLength|500|
 
 #### ベクトル化
-```"@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
+<!--
+"@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill",
 "deploymentId": "text-embedding-3-large",
 "dimensions": 3072,
-```
+-->
+`@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill"`
+|パラメーター名|値|
+|:-----------|:--|
+|deploymentId|text-embedding-3-large|
+|dimensions|3072|
+
+
 ### Webアプリの環境変数（一部）
 #### 検索
 |名前|値|
