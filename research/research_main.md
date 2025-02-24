@@ -28,6 +28,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 "maximumPageLength": 2000,
 "pageOverlapLength": 500,
 -->
+|パラメーター名|値|
+|:-----------|:--|
 |defaultLanguageCode|ja|
 |textSplitMode|pages|
 |maximumPageLength|2000|
