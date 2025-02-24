@@ -15,7 +15,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 ## 構築したチャットボットのパラメーター設定
 構築したチャットボットの構成は下記になっています。<br>
 26ファイル -> Azure Blob storage -> Azure AI Search(前処理 -> ベクトル化 -> インデックス -> セマンティック検索) -> App Service（Webアプリ) <-> Azure OpenAI Service(Azure OpenAI Model)<br>
-|ここに図を入れる|
+**ここに図を入れる**
 <br>
 構築したチャットボットのパラメーターは以下になっています。<br>
 ### Search Serviceのスキルセット
