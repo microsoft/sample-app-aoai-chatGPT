@@ -42,7 +42,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 "deploymentId": "text-embedding-3-large",
 "dimensions": 3072,
 -->
-`@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill"`
+`"@odata.type": "#Microsoft.Skills.Text.AzureOpenAIEmbeddingSkill"`
 |パラメーター名|値|
 |:-----------|:--|
 |deploymentId|text-embedding-3-large|
