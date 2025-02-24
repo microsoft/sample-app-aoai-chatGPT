@@ -57,7 +57,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |AZURE_SEARCH_STRICTNESS|3|
 |AZURE_SEARCH_TOP_K|5|
 
-セマンティックランカー Free 1か月あたりのリクエストが 1,000件<br>
+セマンティックランカー Free 1か月あたりのリクエストが 1,000件を使用<br>
 
 #### LLM
 |名前|値|
