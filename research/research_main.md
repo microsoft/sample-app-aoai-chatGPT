@@ -85,7 +85,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 ## パラメーターの設定変更による回答内容の変化の実験
 - 基本的にはAzure上に作ったチャットボットを使う。Azure OpenAI ServiceとAzure AI Searchを利用する。
-- 比較のために、Difyで作ったチャットボットも利用する。LLMやEmbeddingはAzure OpenAI Serviceを利用する。Rerankモデルはcohereの`rerank-multilingual-v3.0`。
+- 比較のために、Difyで作ったチャットボットも利用する。LLMやEmbeddingはAzure OpenAI Serviceを利用する。Rerankモデルはcohereの`rerank-multilingual-v3.0`。Difyの方は、事例のファイルは7ファイルのみのアップロード。PDFファイルの読み込みで文字化けがひどく、手動で修正した。
 
 |項目|パラメーター|実験値|実験に利用したプロンプトNo.|実験結果|考察|
 |:--|:--------|:----|:--------------------|:------|:--|
