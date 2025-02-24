@@ -97,6 +97,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 ## 料金に関する考察
 Azureのサービスを利用する場合と、Chat EIを利用する場合を比較する。
-|利用サービス|
-
+|利用サービス|データソース保管場所|前処理|ベクトル化|ベクトルデータベース|セマンティック検索|LLM|
+|:--------|:---------------|:----|:------|:--------------|:------------|:---|
+|Azure|Azure Blog Storageなど|Azure AI Search|Azure OpenAI Service|Azure AI Search|Azure AI Search|Azure OpenAI Service|
+|Chat EI|ファイルサーバー、 SharePoint、Box、など|組み込み|組み込み|組み込み|（要検討）|Azure OpenAI Service, Amazon Bedrock,など|
 
