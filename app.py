@@ -183,8 +183,8 @@ async def init_openai_client():
         if not aoai_api_key:
             logger.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
             async with (
-                AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
-                if os.environ["AZURE_TENANT_ID"]
+                AzureDeveloperCliCredential(tenant_id=os.environ.get("AZURE_TENANT_ID", None))
+                if os.environ.get("AZURE_TENANT_ID", None)
                 else DefaultAzureCredential()
             ) as cred:
                 credential = cred
@@ -233,8 +233,8 @@ async def init_cosmosdb_client():
 
             if not app_settings.chat_history.account_key:
                 async with (
-                    AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
-                    if os.environ["AZURE_TENANT_ID"]
+                    AzureDeveloperCliCredential(tenant_id=os.environ.get("AZURE_TENANT_ID", None))
+                    if os.environ.get("AZURE_TENANT_ID", None)
                     else DefaultAzureCredential()
                 ) as cred:
                     credential = cred

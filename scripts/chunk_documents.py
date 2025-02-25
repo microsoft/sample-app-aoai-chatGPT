@@ -59,8 +59,8 @@ if __name__ == "__main__":
         config = json.load(f)
 
     credential = (
-        AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
-        if os.environ["AZURE_TENANT_ID"]
+        AzureDeveloperCliCredential(tenant_id=os.environ.get("AZURE_TENANT_ID", None))
+        if os.environ.get("AZURE_TENANT_ID", None)
         else DefaultAzureCredential()
     )
 
