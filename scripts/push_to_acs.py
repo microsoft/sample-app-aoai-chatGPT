@@ -4,7 +4,7 @@ import dataclasses
 import json
 import os
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, AzureDeveloperCliCredential
 from azure.keyvault.secrets import SecretClient
 
 from data_preparation import create_or_update_search_index, upload_documents_to_index
@@ -21,7 +21,11 @@ if __name__ == "__main__":
     with open(args.config_file) as f:
         config = json.load(f)
 
-    credential = DefaultAzureCredential()
+    credential = (
+        AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
+        if os.environ["AZURE_TENANT_ID"]
+        else DefaultAzureCredential()
+    )
 
     if type(config) is not list:
         config = [config]

@@ -17,7 +17,7 @@ from quart import (
 )
 
 from azure.ai.inference.aio import ChatCompletionsClient
-from azure.identity.aio import DefaultAzureCredential
+from azure.identity.aio import DefaultAzureCredential, AzureDeveloperCliCredential
 from azure.core.credentials import AzureKeyCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 from azure.ai.inference.tracing import AIInferenceInstrumentor
@@ -182,7 +182,12 @@ async def init_openai_client():
         credential = None
         if not aoai_api_key:
             logger.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
-            credential = DefaultAzureCredential()
+            async with (
+                AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
+                if os.environ["AZURE_TENANT_ID"]
+                else DefaultAzureCredential()
+            ) as cred:
+                credential = cred
         else:
             logger.debug("Using AZURE_OPENAI_KEY for auth")
             credential = AzureKeyCredential(aoai_api_key)
@@ -198,6 +203,7 @@ async def init_openai_client():
         logger.info("Initializing Azure OpenAI client using endpoint %s", endpoint)
         azure_openai_client = ChatCompletionsClient(
             credential=credential,
+            credential_scopes=["https://cognitiveservices.azure.com/.default"],
             endpoint=endpoint,
             api_version=app_settings.azure_openai.preview_api_version,
             # default_headers=default_headers,
@@ -226,7 +232,11 @@ async def init_cosmosdb_client():
             )
 
             if not app_settings.chat_history.account_key:
-                async with DefaultAzureCredential() as cred:
+                async with (
+                    AzureDeveloperCliCredential(tenant_id=os.environ["AZURE_TENANT_ID"])
+                    if os.environ["AZURE_TENANT_ID"]
+                    else DefaultAzureCredential()
+                ) as cred:
                     credential = cred
             else:
                 credential = app_settings.chat_history.account_key
@@ -390,17 +400,15 @@ async def send_chat_request(request_body, request_headers):
 
     try:
         azure_openai_client = await init_openai_client()
-        response = (
-            await azure_openai_client.complete(
-                messages=model_args.get("messages"),
-                temperature=app_settings.azure_openai.temperature,
-                max_tokens=app_settings.azure_openai.max_tokens,
-                top_p=app_settings.azure_openai.top_p,
-                stop=app_settings.azure_openai.stop_sequence,
-                stream=app_settings.azure_openai.stream,
-                model=app_settings.azure_openai.model,
-                model_extras=extra_body,
-            )
+        response = await azure_openai_client.complete(
+            messages=model_args.get("messages"),
+            temperature=app_settings.azure_openai.temperature,
+            max_tokens=app_settings.azure_openai.max_tokens,
+            top_p=app_settings.azure_openai.top_p,
+            stop=app_settings.azure_openai.stop_sequence,
+            stream=app_settings.azure_openai.stream,
+            model=app_settings.azure_openai.model,
+            model_extras=extra_body,
         )
         # TODO: not clear how to get apim-request-id from the response
         # apim_request_id = raw_response.headers.get("apim-request-id")
