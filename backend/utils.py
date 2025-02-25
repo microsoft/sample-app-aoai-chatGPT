@@ -80,7 +80,8 @@ def format_non_streaming_response(chatCompletion, history_metadata, apim_request
         "id": chatCompletion.id,
         "model": chatCompletion.model,
         "created": chatCompletion.created,
-        "object": chatCompletion.object,
+        # TODO: response from inference doesn't have object field
+        "object": getattr(chatCompletion, "object", None),
         "choices": [{"messages": []}],
         "history_metadata": history_metadata,
         "apim-request-id": apim_request_id,
