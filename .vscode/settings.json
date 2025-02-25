@@ -1,16 +1,5 @@
 {
     "python.analysis.logLevel": "Trace",
-    "python.linting.flake8Args": [
-        "--max-line-length=120"
-    ],
-    "python.linting.pylintArgs": [
-        "--max-line-length=120"
-    ],
-    "flake8": {
-        "max-line-length": 120
-    },
-    "python.linting.enabled": true, // Aktiviert das Linting (falls es noch nicht aktiviert ist)
-    "python.formatting.provider": "black", // Optional: Black als Formatter hinzufügen
     "editor.formatOnSave": true, // Automatisches Formatieren beim Speichern,
     "logViewer.logLevel": "info",
     "logViewer.watch": [
@@ -28,5 +17,4 @@
         },
     ],
     "bitoAI.codeCompletion.enableAutoCompletion": false
-
 }
