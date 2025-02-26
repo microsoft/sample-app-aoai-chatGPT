@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 import dataclasses
+import datetime
 
 from typing import List
 
@@ -17,6 +18,8 @@ AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get(
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
+        if isinstance(o, (datetime.date, datetime.datetime)):
+            return o.isoformat()        
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
         return super().default(o)
@@ -112,7 +115,7 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
         "id": chatCompletionChunk.id,
         "model": chatCompletionChunk.model,
         "created": chatCompletionChunk.created,
-        "object": chatCompletionChunk.object,
+        "object": getattr(chatCompletionChunk, "object", None),
         "choices": [{"messages": []}],
         "history_metadata": history_metadata,
         "apim-request-id": apim_request_id,
