@@ -15,6 +15,10 @@
               connectionString: "{{ applicationinsights_connection_string }}"
           }
       });
+      if("{{ user_id }}".length > 0) {
+        const validatedId = "{{ user_id }}".replace(/[,;=| ]+/g, "_");
+        appInsights.setAuthenticatedUserContext(validatedId);
+      }
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="{{ favicon }}" />

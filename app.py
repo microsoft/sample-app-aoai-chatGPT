@@ -87,11 +87,14 @@ def create_app():
 
 @bp.route("/")
 async def index():
+    user_id = request.headers.get('X-Ms-Client-Principal-Id', '')
+
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
         favicon=app_settings.ui.favicon,
         applicationinsights_connection_string=app_settings.base_settings.applicationinsights_connection_string,
+        user_id = user_id,
     )
 
 
