@@ -99,7 +99,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 <table border="0">
   <tr>
-    <th style="text-align: left;">項目</th>
+    <th style="text-align: left">項目</th>
     <th>利用サービス</th>
     <th width="400">コスト</th>
     <th width="200">考察</th>
@@ -115,15 +115,15 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
   <tr>
     <td valign="top">Webアプリ</td>
     <td valign="top">App Service</td>
-    <td valign="top">Premium v3 P1V3, 2vCPU, 8GBメモリ、月額137.24 USD=21,272円/月</td>
-    <td valign="top">実験では、Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月を利用。<br>利用人数によってアップグレード。夜間や休日に止められない月額固定費。</td>
+    <td valign="top">Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月</td>
+    <td valign="top">利用人数によってアップグレード。夜間や休日に止められない月額固定費。</td>
   </tr>
   <tr>
     <td valign="top">LLM・ベクトル化</td>
-    <td valign="top">Azure OpenAI Service</td>
+    <td valign="top">OpenAI Service</td>
   </tr>
     <tr>
-    <td valign="top">トータルコスト</td>
+    <td valign="top">合計コスト</td>
     <td></td>
   </tr>
 </table>
