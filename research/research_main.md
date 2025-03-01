@@ -97,12 +97,12 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 ## 料金に関する考察
 チャットボットの料金の分析
 
-<table border="0">
+<table border="1">
   <tr>
-    <th style="text-align:left; width="200">項目</th>
-    <th width="200">利用サービス</th>
+    <th style="text-align:left; width="200";>項目</th>
+    <th width="150">利用サービス</th>
     <th width="300">コスト</th>
-    <th width="300">考察</th>
+    <th width="200">考察</th>
   </tr>
   <tr>
     <td valign="top">ベクトルデータベース・検索</td>
