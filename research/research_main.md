@@ -99,10 +99,10 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 <table border="0">
   <tr>
-    <th width="200">項目</th>
-    <th width="250">利用サービス</th>
-    <th width="400">コスト</th>
-    <th width="300">考察</th>
+    <th width="180">項目</th>
+    <th width="280">利用サービス</th>
+    <th width="450">コスト</th>
+    <th width="350">考察</th>
   </tr>
   <tr>
     <td valign="top">ベクトルデータベース・検索</td>
@@ -127,7 +127,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
     <tr>
     <td valign="top">合計コスト</td>
     <td valign="top">上記以外に、<br>Blob Storage（事例ファイルを保存）<br>Cosmos DB（会話履歴の保存）<br>Synapse Analysis（会話履歴の抽出）<br>を利用。</td>
-    <td valign="top">月額27,000~30,000円。<br>LLMの利用料にもよるが、AI Searchが合計コストの70%~80%を占める。<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
+    <td valign="top">月額約20,000円。<br>LLMの利用料にもよるが、AI Searchが合計コストの70%~80%を占める。<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
     <td valign="top">記載していないが、自動で追加されるMicrosoft Defender for Cloudが毎日150円程かかっており、月額4500円になるのが気になる。</td>
   </tr>
 </table>
