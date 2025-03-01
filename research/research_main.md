@@ -116,14 +116,18 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
     <td valign="top">Webアプリ</td>
     <td valign="top">App Service</td>
     <td valign="top">Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月</td>
-    <td valign="top">利用人数によってアップグレード。夜間や休日に止められない月額固定費。</td>
+    <td valign="top">夜間や休日に停止できない月額固定費。利用人数や利用頻度によってアップグレード。</td>
   </tr>
   <tr>
     <td valign="top">LLM・ベクトル化</td>
     <td valign="top">OpenAI Service</td>
+    <td valign="top">従量課金。gpt-4o利用の場合、1回の質問と回答で約15円（Embeddingモデル利用料含む）。</td>
+    <td valign="top">約15円の内訳は、Inputに13円〜14円かかっている。チャンクの設定でInputの価格を抑えられると予想する。</td>
   </tr>
     <tr>
     <td valign="top">合計コスト</td>
-    <td></td>
+    <td>上記以外に、Blob Storage（事例ファイルを保存）、Cosmos DB（会話履歴の保存）、Synapse Analysis（会話履歴の抽出）を利用。</td>
+    <td>LLMの利用料にもよるが、AI Searchが合計コストの75%程を占める。</td>
+    <td>ストレージコスト（blob storage)は月額数円。記載していないが、自動で追加されるMicrosoft Defender for Cloudが毎日150円程かかっており、月額4500円になるのが気になる。</td>
   </tr>
 </table>
