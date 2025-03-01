@@ -97,31 +97,31 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 ## 料金に関する考察
 チャットボットの料金の分析
 
-<table>
+<table border="0">
   <tr>
     <th width="200">項目</th>
     <th width="200">利用サービス</th>
-    <th width="200">コスト</th>
-    <th width="200">考察</th>
+    <th width="300">コスト</th>
+    <th width="300">考察</th>
   </tr>
   <tr>
-    <td>ベクトルデータベース・検索<td>
-    <td>AI Search<td>
-    <td>Japan East $330.34/月 = 51,200円/月（155円/ドル）。26ファイルを最大チャンク長2000, オーバーラップ500でベクトル化した場合、検索インデックス内ドキュメント数54,ストレージ合計2.67MB使用。160万ファイルで合計ストレージ164GBになる。<td>
-    <td>夜間や休日に停止できない月額固定費。利用人数は関係ない。<td>
+    <td valign="top">ベクトルデータベース・検索</td>
+    <td valign="top">AI Search</td>
+    <td valign="top">Japan East $330.34/月 = 51,200円/月（155円/ドル）。26ファイルを最大チャンク長2000, オーバーラップ500でベクトル化した場合、検索インデックス内ドキュメント数54,ストレージ合計2.67MB使用。160万ファイルで合計ストレージ164GBになる。</td>
+    <td valign="top">夜間や休日に停止できない月額固定費。利用人数は関係ない。</td>
   </tr>
   <tr>
-    <td>Webアプリ<td>
-    <td>App Service<td>
-    <td>Premium v3 P1V3, 2vCPU, 8GBメモリ、月額137.24 USD=21,272円/月<td>
-    <td>実験では、Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月を利用。利用人数によってアップグレード。夜間や休日に止められない月額固定費。<td>
+    <td valign="top">Webアプリ</td>
+    <td valign="top">App Service</td>
+    <td valign="top">Premium v3 P1V3, 2vCPU, 8GBメモリ、月額137.24 USD=21,272円/月</td>
+    <td valign="top">実験では、Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月を利用。利用人数によってアップグレード。夜間や休日に止められない月額固定費。</td>
   </tr>
   <tr>
-    <td>LLM・ベクトル化<td>
-    <td>Azure OpenAI Service<td>
+    <td valign="top">LLM・ベクトル化</td>
+    <td valign="top">Azure OpenAI Service</td>
   </tr>
     <tr>
-    <td>トータルコスト<td>
-    <td><td>
+    <td valign="top">トータルコスト</td>
+    <td></td>
   </tr>
 </table>
