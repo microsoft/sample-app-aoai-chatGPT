@@ -96,7 +96,9 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 ## 料金に関する考察
 チャットボットの料金の分析
-- ベクトルデータベース・検索（Azure AI Search）
-- Webアプリ（App Service）
-- LLM・ベクトル化（Azure OpenAI Service）
-- トータルコスト
+|項目|利用サービス|月額|考察|
+|:--|:---------|:--|:--|
+|ベクトルデータベース・検索|Azure AI Search|
+|Webアプリ|App Service|
+|LLM・ベクトル化|Azure OpenAI Service|
+|トータルコスト||
