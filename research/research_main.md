@@ -99,10 +99,10 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 
 <table border="0">
   <tr>
-    <th style="text-align: right;" width="150">項目</th>
+    <th style="text-align: left;">項目</th>
     <th width="150">利用サービス</th>
-    <th width="300">コスト</th>
-    <th width="300">考察</th>
+    <th width="350">コスト</th>
+    <th width="200">考察</th>
   </tr>
   <tr>
     <td valign="top">ベクトルデータベース・検索</td>
