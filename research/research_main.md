@@ -95,5 +95,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |LLMのパラメーターの影響|LLM|実験値|実験に利用したプロンプトNo.|実験結果|考察|
 
 ## 料金に関する考察
-LLMの従量課金に関する考察
-
+チャットボットの料金の分析
+- ベクトルデータベース・検索（Azure AI Search）
+- Webアプリ（App Service）
+- LLM・ベクトル化（Azure OpenAI Service）
+- トータルコスト
