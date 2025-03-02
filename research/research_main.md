@@ -34,7 +34,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 26ファイル -> Azure Blob storage -> Azure AI Search(前処理 -> ベクトル化 -> インデックス -> セマンティック検索) -> App Service（Webアプリ) <-> Azure OpenAI Service(Azure OpenAI Model)<br>
 **ここに図を入れる**
 <br>
-構築したチャットボットのパラメーターは以下になっています。<br>
+構築したチャットボットのパラメーターは以下です。<br>
 ### Search Serviceのスキルセット
 #### 前処理(チャンク設定)
 <!--
