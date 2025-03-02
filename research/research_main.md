@@ -105,7 +105,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
     <th width="180">項目</th>
     <th width="280">利用サービス</th>
     <th width="450">コスト</th>
-    <th width="350">考察</th>
+    <th width="300">考察</th>
   </tr>
   <tr>
     <td valign="top">ベクトルデータベース・検索</td>
