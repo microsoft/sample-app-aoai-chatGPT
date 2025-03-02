@@ -42,15 +42,15 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 "description": "Split skill to chunk documents",
 "defaultLanguageCode": "ja",
 "textSplitMode": "pages",
-"maximumPageLength": 2000,
-"pageOverlapLength": 500,
+"maximumPageLength": 512,
+"pageOverlapLength": 128,
 -->
 |パラメーター名|値|
 |:-----------|:--|
 |defaultLanguageCode|ja|
 |textSplitMode|pages|
-|maximumPageLength|2000|
-|pageOverlapLength|500|
+|maximumPageLength|512|
+|pageOverlapLength|128|
 
 #### ベクトル化
 <!--
