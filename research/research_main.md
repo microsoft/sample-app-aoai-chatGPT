@@ -19,7 +19,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |--:|:-------|:--|:--|:-----------|
 |1|Neuronの導入事例を探してください|回答する事例の数を確認|3社の事例を回答|26社の事例を結果表示|
 |2|SharePointを検索対象にした導入事例を探してください|2社の事例を回答するか確認|2社の事例を回答|2社の事例を結果表示|
-|3|SPOを検索対象にした導入事例を探してください|「SPO」を「SharePoint Online」として回答できるか確認（あいまい検索）|1社の事例を回答|類義語登録が必要|
+|3|SPOを検索対象にした導入事例を探してください|「SPO」を「SharePoint Online」として回答できるか確認（あいまい検索）|1社の事例を回答|類義語検索で2社の事例を結果表示|
 |4|Neuronの導入事例を10社分探してください|10社分の事例を回答するか確認|5社を回答<br>「残りの導入事例については、追加の情報が必要です」と表示|結果に表示する事例の数は指定できないが10社以上の事例を表示|
 |5|
 |6|
@@ -129,7 +129,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
   </tr>
     <tr>
     <td valign="top">合計コスト</td>
-    <td valign="top">上記以外に、<br>- Blob Storage（事例ファイルを保存）<br>- Cosmos DB（会話履歴の保存）<br>- Synapse Analysis（会話履歴の抽出）<br>を利用。</td>
+    <td valign="top">上記以外に<br>- Blob Storage（事例ファイルを保存）<br>- Cosmos DB（会話履歴の保存）<br>- Synapse Analysis（会話履歴の抽出）<br>を利用。</td>
     <td valign="top">月額約22,000円。<br>LLMの利用料「15円/回×3回/人/日×5人×20日/月=4,500円」と試算。<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
     <td valign="top">AI Searchが合計コストの70%前後を占める。<br>左記以外に、自動で追加されるMicrosoft Defender for Cloudが毎日130円程かかっており、月額4000円になるのが気になる。</td>
   </tr>
