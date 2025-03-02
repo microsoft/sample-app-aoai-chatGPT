@@ -103,8 +103,8 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 <table border="0">
   <tr>
     <th width="180">項目</th>
-    <th width="200">利用サービス</th>
-    <th width="500">コスト</th>
+    <th width="250">利用サービス</th>
+    <th width="450">コスト</th>
     <th width="300">考察</th>
   </tr>
   <tr>
