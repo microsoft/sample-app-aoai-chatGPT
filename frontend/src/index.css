@@ -1,3 +1,86 @@
+:root {
+  /* Basic */
+  --picis-white: #fff;
+  --picis-black: #000;
+
+  /* Grey */
+  --picis-grey-100: #f1f4f6;
+  --picis-grey-200: #eaeef1;
+  --picis-grey-300: #dfe4e7;
+  --picis-grey-400: #cbd3d8;
+  --picis-grey-500: #b2bfc6;
+  --picis-grey-600: #8a979f;
+  --picis-grey-700: #66747c;
+  --picis-grey-800: #4f5b62;
+  --picis-grey-900: #343e45;
+
+ /* Blue */
+  --picis-blue-100: #eafaff;
+  --picis-blue-200: #baeeff;
+  --picis-blue-300: #81dbf9;
+  --picis-blue-400: #46c7f3;
+  --picis-blue-500: #12acdf;
+  --picis-blue-600: #09c;
+  --picis-blue-700: #0079a2;
+  --picis-blue-800: #00526e;
+  --picis-blue-900: #093443;
+
+  /* Green */
+  --picis-green-100: #e3fcf5;
+  --picis-green-200: #bbf5e5;
+  --picis-green-300: #7cedce;
+  --picis-green-400: #3dd7ad;
+  --picis-green-500: #00c18c;
+  --picis-green-600: #009f73;
+  --picis-green-700: #007f5c;
+  --picis-green-800: #005e44;
+  --picis-green-900: #0a4434;
+
+  /* Red */
+  --picis-red-100: #ffeef0;
+  --picis-red-200: #ffd7da;
+  --picis-red-300: #fdacb1;
+  --picis-red-400: #f77b83;
+  --picis-red-500: #f54e5a;
+  --picis-red-600: #f32836;
+  --picis-red-700: #b2020f;
+  --picis-red-800: #750008;
+  --picis-red-900: #44090e;
+
+  /* Yellow */
+  --picis-yellow-100: #fff9ed;
+  --picis-yellow-200: #fff0ce;
+  --picis-yellow-300: #ffe09e;
+  --picis-yellow-400: #ffd475;
+  --picis-yellow-500: #ffc74d;
+  --picis-yellow-600: #ffb81d;
+  --picis-yellow-700: #c68e13;
+  --picis-yellow-800: #815c09;
+  --picis-yellow-900: #46340a;
+
+  /* Purple */
+  --picis-purple-100: #e9f1ff;
+  --picis-purple-200: #d4e4ff;
+  --picis-purple-300: #b5cbf0;
+  --picis-purple-400: #96b4e6;
+  --picis-purple-500: #7ca1e0;
+  --picis-purple-600: #5e8ad4;
+  --picis-purple-700: #4267a4;
+  --picis-purple-800: #2a4570;
+  --picis-purple-900: #192a47;
+
+  /* orange */
+  --picis-orange-100: #ffede5;
+  --picis-orange-200: #ffd5c2;
+  --picis-orange-300: #ffb695;
+  --picis-orange-400: #ff9769;
+  --picis-orange-500: #ff7233;
+  --picis-orange-600: #ff5205;
+  --picis-orange-700: #c34912;
+  --picis-orange-800: #8f3711;
+  --picis-orange-900: #552510;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -10,7 +93,8 @@ body {
 }
 
 html {
-  background: #f2f2f2;
+  background: var(--picis-grey-300);
+  /* background-image: linear-gradient(-36deg, var(--picis-blue-900) 26%, var(--picis-blue-800) 75%); */
   font-family:
     'Segoe UI',
     'Segoe UI Web (West European)',

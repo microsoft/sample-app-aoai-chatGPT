@@ -5,6 +5,12 @@
   gap: 20px;
 }
 
+*[aria-label="chat history panel"] {
+  background-color: var(--picis-grey-100);
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
 .chatRoot {
   flex: 1;
   display: flex;
@@ -12,7 +18,7 @@
   margin-bottom: 20px;
   margin-left: 20px;
   margin-right: 20px;
-  gap: 5px;
+  /* gap: 5px; */
 }
 
 .chatContainer {
@@ -21,12 +27,18 @@
   flex-direction: column;
   align-items: center;
   background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
-  box-shadow:
+  /* box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
-  border-radius: 8px;
+    0px 0px 2px rgba(0, 0, 0, 0.12); */
+  /* box-shadow: 0 0 0 1px var(--picis-grey-400); */
+  border-radius: 16px;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
+}
+
+.chatContainer:has(+ *[aria-label="chat history panel"]) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .chatEmptyState {
@@ -62,7 +74,7 @@
 }
 
 .chatIcon {
-  height: 62px;
+  height: 205px;
   width: auto;
 }
 
@@ -87,12 +99,12 @@
 .chatMessageUserMessage {
   position: relative;
   display: flex;
-  padding: 20px;
-  background: #edf5fd;
-  border-radius: 8px;
-  box-shadow:
+  padding: 12px 20px;
+  background: var(--picis-blue-100);
+  border-radius: 10px;
+  /* box-shadow:
     0px 2px 4px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+    0px 0px 2px rgba(0, 0, 0, 0.12); */
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
@@ -103,6 +115,19 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 80%;
+  position: relative;
+  margin-right: 20px;
+}
+
+.chatMessageUserMessage::before {
+  content: '';
+  display: block;
+  width: 25px;
+  height: 18px;
+  background: transparent url("data:image/svg+xml,%3Csvg height='18' width='25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9.298 10.669C7.176 11.25 5.5 13.167 5.5 15.542v.288c1.333.78 3.667 1.17 7 1.17s5.667-.39 7-1.17l-.01-.288c0-2.389-1.618-4.29-3.794-4.877L15 10.5c-.667.667-1.5 1-2.5 1s-1.833-.333-2.5-1zM9 5.5C8.307 2.135 10.757 1 12.5 1s4.193 1.135 3.5 4.5c-.109.528-.755 4.504-3.5 4.5C9.755 9.996 9.104 6.004 9 5.5z' fill='%2312acdf' fill-rule='evenodd'/%3E%3C/svg%3E") center center no-repeat;
+  position: absolute;
+  top: 0;
+  right: -30px;
 }
 
 .chatMessageGpt {
@@ -113,11 +138,12 @@
 
 .chatMessageError {
   padding: 20px;
-  border-radius: 8px;
-  box-shadow:
+  border-radius: 10px;
+  /* box-shadow:
     rgba(182, 52, 67, 1) 1px 1px 2px,
-    rgba(182, 52, 67, 1) 0px 0px 1px;
-  color: #242424;
+    rgba(182, 52, 67, 1) 0px 0px 1px; */
+  background: var(--picis-red-100);
+  color: var(--picis-red-900);
   flex: none;
   order: 0;
   flex-grow: 0;
@@ -126,7 +152,15 @@
 }
 
 .chatMessageErrorContent {
-  font-family: 'Segoe UI';
+  font-family:
+    'Segoe UI',
+    'Segoe UI Web (West European)',
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
@@ -161,9 +195,10 @@
   height: 40px;
   left: 7px;
   top: 13px;
-  color: #ffffff;
+  color: var(--picis-white);
   border-radius: 4px;
   z-index: 1;
+  background: var(--picis-blue-500);
 }
 
 .clearChatBroomNoCosmos {
@@ -193,9 +228,27 @@
   height: 40px;
   left: 7px;
   top: 66px;
-  color: #ffffff;
+  color: var(--picis-white);
   border-radius: 4px;
   z-index: 1;
+  background: var(--picis-blue-500);
+}
+
+.clearChatBroom[aria-disabled="true"],
+.newChatIcon[aria-disabled="true"] {
+  background: var(--picis-grey-100);
+}
+
+.clearChatBroom:not([aria-disabled="true"]):hover,
+.newChatIcon:not([aria-disabled="true"]):hover {
+  background: var(--picis-blue-600);
+}
+
+.clearChatBroom:not([aria-disabled="true"]):hover [class^='icon-'],
+.newChatIcon:not([aria-disabled="true"]):hover [class^='icon-'],
+.clearChatBroom:not([aria-disabled="true"]):hover [class*=' icon-'],
+.newChatIcon:not([aria-disabled="true"]):hover [class*=' icon-'] {
+  color: var(--picis-white);
 }
 
 .stopGeneratingContainer {

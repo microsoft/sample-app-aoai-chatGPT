@@ -22,24 +22,26 @@
 }
 
 .itemCell:hover {
-  background: #e6e6e6;
+  background: var(--picis-white);
 }
 
 .itemButton {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #d1d1d1;
+  width: 20px;
+  height: 20px;
+  /* border: 1px solid #d1d1d1; */
   border-radius: 5px;
-  background-color: white;
+  /* background-color: white; */
   margin: auto 2.5px;
   cursor: pointer;
+  color: var(--picis-blue-600);
 }
 
 .itemButton:hover {
-  background-color: #e6e6e6;
+  background-color: transparent;
+  color: var(--picis-blue-400);
 }
 
 .chatGroup {
@@ -59,8 +61,9 @@
 }
 
 .chatMonth {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
   margin-bottom: 5px;
   padding-left: 15px;
 }
@@ -70,6 +73,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {

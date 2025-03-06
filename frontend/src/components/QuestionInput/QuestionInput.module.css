@@ -5,11 +5,16 @@
   right: 0%;
   top: 0%;
   bottom: 0%;
-  background: #ffffff;
-  box-shadow:
+  background: var(--picis-grey-100);
+  /* box-shadow:
     0px 8px 16px rgba(0, 0, 0, 0.14),
-    0px 0px 2px rgba(0, 0, 0, 0.12);
+    0px 0px 2px rgba(0, 0, 0, 0.12); */
   border-radius: 8px;
+}
+
+.questionInputContainer div[class^='fieldGroup-'],
+.questionInputContainer div[class*=' fieldGroup-'] {
+  background: transparent;
 }
 
 .questionInputTextArea {
@@ -41,14 +46,15 @@
 }
 
 .questionInputBottomBorder {
-  position: absolute;
+  display: none;
+  /* position: absolute;
   width: 100%;
   height: 4px;
   left: 0%;
   bottom: 0%;
   background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%);
   border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
+  border-bottom-right-radius: 8px; */
 }
 
 .questionInputOptionsButton {
