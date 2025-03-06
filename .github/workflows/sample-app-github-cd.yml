@@ -73,6 +73,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'sample-app-github-cd'
+          app-name: 'admin-transcript-assistant'
           slot-name: 'Production'
           
