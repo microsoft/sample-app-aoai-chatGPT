@@ -73,6 +73,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'admin-transcript-assistant'
+          app-name: 'testapp012'
           slot-name: 'Production'
           
