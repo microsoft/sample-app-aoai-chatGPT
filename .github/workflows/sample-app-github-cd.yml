@@ -73,6 +73,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          app-name: 'testapp012'
+          app-name: 'Proposals-Assistant'
           slot-name: 'Production'
           
