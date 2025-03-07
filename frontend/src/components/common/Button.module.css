@@ -1,38 +1,52 @@
 .shareButtonRoot {
-  width: 86px;
+  width: 36px;
   height: 32px;
   border-radius: 4px;
-  background: radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0f6cbd 33.63%, #2d87c3 70.31%, #8dddd8 100%);
+  color: var(--picis-grey-900);
+  background: var(--picis-white);
   padding: 5px 12px;
 }
 
 .shareButtonRoot:hover {
-  background: linear-gradient(135deg, #0f6cbd 0%, #2d87c3 51.04%, #8dddd8 100%);
+  background: var(--picis-grey-100);
 }
 
 .shareButtonRoot span {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
-  color: #ffffff;
+  color: var(--picis-grey-900);
+}
+
+.shareButtonRoot i + span {
+  display: none !important;
 }
 
 .shareButtonRoot i,
 .shareButtonRoot:hover i {
-  color: #ffffff !important;
+  color: var(--picis-grey-900) !important;
 }
 
 .historyButtonRoot {
-  width: 180px;
-  border: 1px solid #d1d1d1;
+  width: 160px;
+  color: var(--picis-grey-900);
+  border: 1px solid var(--picis-grey-300);
+  background-color: var(--picis-white);
+  padding: 0;
+  min-width: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-radius: 4px;
 }
 
 .historyButtonRoot:hover {
-  border: 1px solid #d1d1d1;
+  background-color: var(--picis-grey-100);
+  border: 1px solid var(--picis-grey-300);
 }
 
 .historyButtonRoot:active {
-  border: 1px solid #d1d1d1;
+  background-color: var(--picis-grey-100);
+  border: 1px solid var(--picis-grey-300);
 }
 
 @media (max-width: 480px) {
