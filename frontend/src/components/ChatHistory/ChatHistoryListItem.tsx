@@ -188,7 +188,7 @@ export const ChatHistoryListItemCell: React.FC<ChatHistoryListItemCellProps> = (
       onMouseLeave={() => setIsHovered(false)}
       styles={{
         root: {
-          backgroundColor: isSelected ? '#e6e6e6' : 'transparent'
+          backgroundColor: isSelected ? '#fff' : 'transparent'
         }
       }}>
       {edit ? (

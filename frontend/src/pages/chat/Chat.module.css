@@ -5,10 +5,37 @@
   gap: 20px;
 }
 
+*[aria-label="chat history header"] span[role="heading"] {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  color: var(--picis-blue-700);
+  text-transform: uppercase;
+}
+
+*[aria-label="chat history header"] button:hover,
+*[aria-label="chat history header"] button:hover {
+  background-color: transparent;
+}
+
+*[aria-label="chat history header"] button i[class^='icon-'],
+*[aria-label="chat history header"] button i[class*=' icon-'] {
+  color: var(--picis-blue-600);
+}
+
 *[aria-label="chat history panel"] {
   background-color: var(--picis-grey-100);
   border-top-right-radius: 16px;
   border-bottom-right-radius: 16px;
+}
+
+*[aria-label="chat history panel content"] {
+  background-color: var(--picis-grey-100);
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+div:has([role="separator"])::before {
+  display: none;
 }
 
 .chatRoot {
@@ -47,6 +74,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: transparent url(../static/picis-chatbot-arrow.svg) bottom 15% center no-repeat;
 }
 
 .chatEmptyStateTitle {
@@ -393,6 +421,7 @@
 a {
   padding-left: 5px;
   padding-right: 5px;
+  color: var(--picis-blue-600);
 }
 
 .viewSourceButton {

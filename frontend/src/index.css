@@ -79,6 +79,40 @@
   --picis-orange-700: #c34912;
   --picis-orange-800: #8f3711;
   --picis-orange-900: #552510;
+
+  /* Buttons */
+
+  /* Button fonts */
+  --picis-btn-font-size: 12px;
+  --picis-btn-font-size-small: 10px;
+  --picis-btn-font-size-medium: 11px;
+  --picis-btn-font-color: #fff;
+
+  /* Button sizes */
+  --picis-btn-size-small: 16px;
+  --picis-btn-size-medium: 20px;
+  --picis-btn-size-medium-2: 24px;
+  --picis-btn-size-default: 32px;
+  --picis-btn-size-large: 40px;
+
+  /* Button colors */
+  --picis-btn-default-bck: var(--picis-grey-600);
+  --picis-btn-default-hover: var(--picis-grey-700);
+  --picis-btn-default-active: var(--picis-grey-900);
+  --picis-btn-blue-bck: var(--picis-blue-500);
+  --picis-btn-blue-hover: var(--picis-blue-700);
+  --picis-btn-blue-active: var(--picis-blue-800);
+  --picis-btn-green-bck: var(--picis-green-600);
+  --picis-btn-green-hover: var(--picis-green-700);
+  --picis-btn-green-active: var(--picis-green-800);
+  --picis-btn-disabled-bck: var(--picis-grey-300);
+  --picis-btn-disabled-text: var(--picis-grey-500);
+
+  /* Border radius */
+  --picis-btn-border-radius: 4px;
+
+  /* Transitions */
+  --picis-transition: all 0.1s ease-in;
 }
 
 * {
@@ -110,4 +144,54 @@ html {
 
 #root {
   height: 100%;
+}
+
+div[role="alertdialog"] .ms-Dialog-main {
+  border-radius: 6px;
+}
+
+div[role="alertdialog"] .ms-Dialog-main .ms-Dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 100px;
+  height: var(--picis-btn-size-default);
+  padding: 0 20px;
+
+  font-size: 12px;
+  line-height: var(--picis-btn-size-default);
+  color: var(--picis-white);
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  background-color: var(--picis-btn-default-bck);
+  border: 1px solid var(--picis-btn-default-bck);
+  border-radius: var(--picis-btn-border-radius);
+  outline: 0;
+
+  transition: var(--picis-transition);
+}
+
+div[role="alertdialog"] .ms-Dialog-main .ms-Dialog-actions button:hover {
+  color: var(--picis-white);
+  background-color: var(--picis-btn-default-hover);
+  border-color: var(--picis-btn-default-hover);
+}
+
+div[role="alertdialog"] .ms-Dialog-main .ms-Dialog-actions button.ms-Button--primary {
+  background-color: var(--picis-btn-blue-bck);
+  border-color: var(--picis-btn-blue-bck);
+}
+
+div[role="alertdialog"] .ms-Dialog-main .ms-Dialog-actions button.ms-Button--primary:hover {
+  color: var(--picis-white);
+  background-color: var(--picis-btn-blue-hover);
+  border-color: var(--picis-btn-blue-hover);
+}
+
+div[class^='calloutMain-'],
+div[class*=' calloutMain-'] {
+  border-radius: 6px;
 }

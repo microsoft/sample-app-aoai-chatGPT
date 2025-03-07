@@ -36,7 +36,7 @@
   /* background-color: white; */
   margin: auto 2.5px;
   cursor: pointer;
-  color: var(--picis-blue-600);
+  color: var(--picis-grey-500);
 }
 
 .itemButton:hover {
@@ -45,7 +45,7 @@
 }
 
 .chatGroup {
-  margin: auto 5px;
+  margin: auto 5px 10px;
   width: 100%;
 }
 
@@ -54,6 +54,11 @@
   justify-content: center;
   align-items: center;
   height: 50px;
+}
+
+.spinnerContainer *[class^='circle-'],
+.spinnerContainer *[class*=' circle-'] {
+  border-color: var(--picis-blue-500) var(--picis-blue-200) var(--picis-blue-200);
 }
 
 .chatList {

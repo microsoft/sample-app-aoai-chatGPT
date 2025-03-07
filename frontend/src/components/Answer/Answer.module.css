@@ -72,7 +72,8 @@
   display: flex;
   align-items: center;
   text-align: center;
-  color: #707070;
+  color: var(--picis-grey-600);
+  font-style: italic;
   flex: none;
   order: 1;
   flex-grow: 0;
@@ -93,14 +94,15 @@
   font-size: 12px;
   line-height: 16px;
 
-  color: #115ea3;
+  color: var(--picis-blue-600);
   display: flex;
   flex-direction: row;
   align-items: center;
   padding: 4px 6px;
   gap: 4px;
-  border: 1px solid #d1d1d1;
+  border: 1px solid var(--picis-grey-300);
   border-radius: 4px;
+  background-color: var(--picis-white);
 }
 
 .citationContainer:hover {
