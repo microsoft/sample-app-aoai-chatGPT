@@ -74,7 +74,6 @@ div:has([role="separator"])::before {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: transparent url(../static/picis-chatbot-arrow.svg) bottom 15% center no-repeat;
 }
 
 .chatEmptyStateTitle {
