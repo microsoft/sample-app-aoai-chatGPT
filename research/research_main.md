@@ -111,7 +111,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
   <tr>
     <td valign="top">ベクトルデータベース・検索</td>
     <td valign="top">AI Search</td>
-    <td valign="top">価格レベルbasic (15 GB/パーティション、最大 3 個のレプリカ、最大 3 個のパーティション、最大 9 個の検索ユニット)<br>Japan East $98.95/月 = 15,337円/月（155円/ドル）<br>
+    <td valign="top">Japan East 月額 $98.95 = 15,337円/月（155円/ドル）<br>価格レベルbasic (15 GB/パーティション、最大 3 個のレプリカ、最大 3 個のパーティション、最大 9 個の検索ユニット)<br>
 26ファイルを最大チャンク長512, オーバーラップ128でベクトル化し、検索インデックス内ドキュメント数227、ストレージ合計9.57MB使用。
 </td>
     <td valign="top">夜間や休日に停止できない月額固定費。<br>利用人数は関係ない。</td>
@@ -119,13 +119,13 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
   <tr>
     <td valign="top">Webアプリ</td>
     <td valign="top">App Service</td>
-    <td valign="top">Basic B1, 1vCPU, 1.75GBメモリ, 月額13.87 USD=2,150円/月</td>
+    <td valign="top">Japan East 月額 $13.87 = 2,150円/月<br>Basic B1, 1vCPU, 1.75GBメモリ</td>
     <td valign="top">夜間や休日に停止できない月額固定費。利用人数や利用頻度によってアップグレード。</td>
   </tr>
   <tr>
     <td valign="top">LLM・ベクトル化</td>
     <td valign="top">OpenAI Service</td>
-    <td valign="top">従量課金。gpt-4o利用の場合、1回の質問と回答で約15円（Embeddingモデル利用料含む）。</td>
+    <td valign="top">gpt-4o利用の場合、1回の質問と回答で約15円（Embeddingモデル利用料含む）。</td>
     <td valign="top">約15円の内訳は、Inputに13円〜14円かかっている。チャンクの設定でInputの価格を抑えられると予想する。</td>
   </tr>
     <tr>
