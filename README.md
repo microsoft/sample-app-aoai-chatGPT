@@ -359,6 +359,126 @@ Configure your settings using the table below.
     |AZURE_COSMOSDB_ENABLE_FEEDBACK|No|False|Whether or not to enable message feedback on chat history messages|
 
 
+#### Enable Azure OpenAI function calling via Azure Functions
+
+Refer to this article to learn more about [function calling with Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/function-calling).
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above.
+
+2. Add any additional configuration (described in previous sections) needed for chatting with data, if required.
+
+3. To enable function calling via remote Azure Functions, you will need to set up an Azure Function resource. Refer to this [instruction guide](https://learn.microsoft.com/azure/azure-functions/functions-create-function-app-portal?pivots=programming-language-python) to create an Azure Function resource.
+
+4. You will need to create the following Azure Functions to implement function calling logic:
+
+    * Create one function with routing, e.g. /tools, that will return a JSON array with the function definitions.
+    * Create a second function with routing, e.g. /tool, that will execute the functions with the given arguments.
+    The request body will be a JSON structure with the function name and arguments of the function to be executed.   
+    Use this sample as function request body to test your function call:
+
+        ```
+        {
+            "tool_name" : "get_current_weather",
+            "tool_arguments" : {"location":"Lamego"}
+        }
+        ```
+
+    * Create functions without routing to implement all the functions defined in the JSON definition.
+    
+    Sample code for the Azure Functions:
+
+    ```
+    import azure.functions as func
+    import logging
+    import json
+    import random
+
+    app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+
+    azure_openai_tools_json = """[{
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city name, e.g. San Francisco"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    }]"""
+
+    azure_openai_available_tools = ["get_current_weather"]
+
+    @app.route(route="tools")
+    def tools(req: func.HttpRequest) -> func.HttpResponse:
+        logging.info('tools function processed a request.')
+
+        return func.HttpResponse(
+            azure_openai_tools_json,
+            status_code=200
+        )
+
+    @app.route(route="tool")
+    def tool(req: func.HttpRequest) -> func.HttpResponse:
+        logging.info('tool function processed a request.')
+
+        tool_name = req.params.get('tool_name')
+        if not tool_name:
+            try:
+                req_body = req.get_json()
+            except ValueError:
+                pass
+            else:
+                tool_name = req_body.get('tool_name')
+
+        tool_arguments = req.params.get('tool_arguments')
+        if not tool_arguments:
+            try:
+                req_body = req.get_json()
+            except ValueError:
+                pass
+            else:
+                tool_arguments = req_body.get('tool_arguments')
+
+        if tool_name and tool_arguments:
+            if tool_name in azure_openai_available_tools:
+                logging.info('tool function: tool_name and tool_arguments are valid.')
+                result = globals()[tool_name](**tool_arguments)
+                return func.HttpResponse(
+                    result,
+                    status_code = 200
+                )
+
+        logging.info('tool function: tool_name or tool_arguments are invalid.')
+        return func.HttpResponse(
+                "The tool function we executed successfully but the tool name or arguments were invalid. ",
+                status_code=400
+        )
+
+    def get_current_weather(location: str) -> str:
+        logging.info('get_current_weather function processed a request.')
+        temperature = random.randint(10, 30)
+        weather = random.choice(["sunny", "cloudy", "rainy", "windy"])
+        return f"The current weather in {location} is {temperature}°C and {weather}."
+    ```
+
+4. Configure data source settings as described in the table below:
+
+    | App Setting | Required? | Default Value | Note |
+    | ----------- | --------- | ------------- | ---- |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_ENABLED | No |  |  |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOL_BASE_URL | Only if using function calling |  | The base URL of your Azure Function "tool", e.g. [https://<azure-function-name>.azurewebsites.net/api/tool]() |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOL_KEY | Only if using function calling |  | The function key used to access the Azure Function "tool" |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOLS_BASE_URL | Only if using function calling |  | The base URL of your Azure Function "tools", e.g. [https://<azure-function-name>.azurewebsites.net/api/tools]() |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOLS_KEY | Only if using function calling |  | The function key used to access the Azure Function "tools" |
+
+
 #### Common Customization Scenarios (e.g. updating the default chat logo and headers)
 
 The interface allows for easy adaptation of the UI by modifying certain elements, such as the title and logo, through the use of the following environment variables.
