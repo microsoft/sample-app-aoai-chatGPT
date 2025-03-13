@@ -35,7 +35,6 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-import requests
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -166,9 +165,10 @@ async def init_openai_client():
         # Remote function calls
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
-            response = requests.get(azure_functions_tools_url)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(azure_functions_tools_url)
             response_status_code = response.status_code
-            if response_status_code == requests.codes.ok:
+            if response_status_code == httpx.codes.OK:
                 azure_openai_tools.extend(json.loads(response.text))
                 for tool in azure_openai_tools:
                     azure_openai_available_tools.append(tool["function"]["name"])
@@ -190,7 +190,7 @@ async def init_openai_client():
         azure_openai_client = None
         raise e
 
-def openai_remote_azure_function_call(function_name, function_args):
+async def openai_remote_azure_function_call(function_name, function_args):
     if app_settings.azure_openai.function_call_azure_functions_enabled is not True:
         return
 
@@ -200,7 +200,8 @@ def openai_remote_azure_function_call(function_name, function_args):
         "tool_name": function_name,
         "tool_arguments": json.loads(function_args)
     }
-    response = requests.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
     response.raise_for_status()
 
     return response.text
@@ -291,18 +292,19 @@ def prepare_model_args(request_body, request_headers):
         "user": user_json
     }
 
-    if messages[-1]["role"] == "user":
-        if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
-            model_args["tools"] = azure_openai_tools
+    if len(messages) > 0:
+        if messages[-1]["role"] == "user":
+            if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
+                model_args["tools"] = azure_openai_tools
 
-        if app_settings.datasource:
-            model_args["extra_body"] = {
-                "data_sources": [
-                    app_settings.datasource.construct_payload_configuration(
-                        request=request
-                    )
-                ]
-            }
+            if app_settings.datasource:
+                model_args["extra_body"] = {
+                    "data_sources": [
+                        app_settings.datasource.construct_payload_configuration(
+                            request=request
+                        )
+                    ]
+                }
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -376,7 +378,7 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-def process_function_call(response):
+async def process_function_call(response):
     response_message = response.choices[0].message
     messages = []
 
@@ -386,7 +388,7 @@ def process_function_call(response):
             if tool_call.function.name not in azure_openai_available_tools:
                 continue
             
-            function_response = openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
+            function_response = await openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
 
             # adding assistant response to messages
             messages.append(
@@ -451,7 +453,7 @@ async def complete_chat_request(request_body, request_headers):
         non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
 
         if app_settings.azure_openai.function_call_azure_functions_enabled:
-            function_response = process_function_call(response)
+            function_response = await process_function_call(response)  # Add await here
 
             if function_response:
                 request_body["messages"].extend(function_response)
@@ -472,7 +474,7 @@ class AzureOpenaiFunctionCallStreamState():
         self.streaming_state = "INITIAL"    # Streaming state (INITIAL, STREAMING, COMPLETED)
 
 
-def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
+async def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
     if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
         response_message = completionChunk.choices[0].delta
         
@@ -502,7 +504,7 @@ def process_function_call_stream(completionChunk, function_call_stream_state, re
             function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
             
             for tool_call in function_call_stream_state.tool_calls:
-                tool_response = openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
+                tool_response = await openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
 
                 function_call_stream_state.function_messages.append({
                     "role": "assistant",
@@ -536,7 +538,7 @@ async def stream_chat_request(request_body, request_headers):
             function_call_stream_state = AzureOpenaiFunctionCallStreamState()
             
             async for completionChunk in response:
-                stream_state = process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
+                stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
                 
                 # No function call, asistant response
                 if stream_state == "INITIAL":
