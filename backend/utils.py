@@ -131,6 +131,22 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
                 }
                 response_obj["choices"][0]["messages"].append(messageObj)
                 return response_obj
+            if delta.tool_calls:
+                messageObj = {
+                    "role": "tool",
+                    "tool_calls": {
+                        "id": delta.tool_calls[0].id,
+                        "function": {
+                            "name" : delta.tool_calls[0].function.name,
+                            "arguments": delta.tool_calls[0].function.arguments
+                        },
+                        "type": delta.tool_calls[0].type
+                    }
+                }
+                if hasattr(delta, "context"):
+                    messageObj["context"] = json.dumps(delta.context)
+                response_obj["choices"][0]["messages"].append(messageObj)
+                return response_obj
             else:
                 if delta.content:
                     messageObj = {
