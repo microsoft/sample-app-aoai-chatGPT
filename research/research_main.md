@@ -126,7 +126,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
     <td valign="top">LLM・ベクトル化</td>
     <td valign="top">OpenAI Service</td>
     <td valign="top">gpt-4o利用の場合、1回の質問と回答で約15円（Embeddingモデル利用料含む）。</td>
-    <td valign="top">約15円の内訳は、Inputに13円〜14円かかっている。チャンクの設定でInputの価格を抑えられると予想する。</td>
+    <td valign="top">約15円の内訳は、Inputに13円〜14円かかっている。</td>
   </tr>
     <tr>
     <td valign="top">合計コスト</td>
