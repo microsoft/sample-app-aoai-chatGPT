@@ -99,4 +99,4 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |LLMのパラメーターの影響|LLM|||||
 
 ## 料金に関する考察
-[チャットボットの料金の分析](research/research_price.md)
+[チャットボットの料金の分析](./research_price.md)
