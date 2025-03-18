@@ -290,8 +290,6 @@ def prepare_model_args(request_body, request_headers):
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model
     }
-    
- 
 
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
