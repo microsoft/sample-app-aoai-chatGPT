@@ -16,7 +16,10 @@ Azureの環境と違い、Difyの環境には事例ファイルは11ファイル
 |回答内容|1社を回答|1社を回答|1社を回答。<br>回答短い。|回答できず|
 
 動画<br>
-https://github.com/user-attachments/assets/ce2174a6-a0e8-4312-97c2-acab1b2315e5
+
+
+https://github.com/user-attachments/assets/f08c5d5d-e103-4abf-a240-dfb45615bc48
+
 
 
 |gpt-4oの回答|
