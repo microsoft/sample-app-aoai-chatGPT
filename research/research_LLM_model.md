@@ -1,8 +1,10 @@
 
 
 ### LLMの違いによる回答の応答スピードと回答精度
-動画
+動画<br>
+
 https://github.com/user-attachments/assets/1a613c01-7558-4a8b-97a2-dc40434d385e
+
 
 プロンプト：アイシンの事例について教えてください。
 
