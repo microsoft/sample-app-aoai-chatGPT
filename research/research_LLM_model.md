@@ -17,6 +17,7 @@ Azureの環境と違い、Difyの環境には事例ファイルは11ファイル
 動画<br>
 https://github.com/user-attachments/assets/0e8817e9-9822-4d17-a5dd-771a7881271c
 
+
 |gpt-4oの回答|
 |:-----------|
 |株式会社トインクスの事例が参考になります。トインクスでは、SharePoint Online上に構築された社内ポータルサイトの検索性向上を目的に「Neuron Enterprise Search」を導入しました。この導入により、ファイルサーバだけでなく、SharePoint Online上のファイルやポータルサイトの情報を素早く見つけ出せるようになり、全社的な「情報共有・連携」を密にすることができました。|
