@@ -95,7 +95,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 |チャンキングの影響|前処理(チャンク設定)|||||
 |Embeddingモデルの影響|ベクトル化|||||
 |[セマンティック検索のtop-kの影響](./research-semantic-search.md)|検索||4|||
-|[LLMのモデルの違いによる影響](./research_LLM_model.md)|LLM|gpt-4o<br>gpt-4o-mini<br>gpt-4<br>gpt-3.5-turbo|2|gpt-4oが詳細に回答する|回答内容かコスト重視か検討|
+|[LLMのモデルの違いによる影響](./research_LLM_model.md)|LLM|gpt-4o<br>gpt-4o-mini<br>gpt-4<br>gpt-35-turbo|2|gpt-4oが詳細に回答する|回答内容かコスト重視か検討|
 |LLMのパラメーターの影響|LLM|||||
 
 
