@@ -92,8 +92,9 @@ gpt-4oの回答内容が箇条書きにならなかったですが、プロン�
 Difyでナレッジとして追加できるファイル形式は、TXT, MARKDOWN, MDX, PDF, HTML, XLSX, XLS, DOCX, CSV, MD, HTMとなっており、pptxを追加できません。<br>
 pdfをナレッジにする場合、DifyはPDFの操作や解析をPythonで利用されているライブラリであるpypdfium2で行います。pypdfium2は、Googleが提供するPDFiumライブラリに基づいています。<br>
 pypdfium2を使う場合、PDFファイルの日本語が文字化けすることがあります。
-例えば、添付の画像のような文字化けです。
-<img width="1243" alt="スクリーンショット 2025-03-21 21 53 35" src="https://github.com/user-attachments/assets/79905447-5950-4a18-9c1d-97421ae141c3" />
-
+例えば、添付の画像のような文字化けです。例えば、「SharePoint Online」が「㻿hare㻼oint 㻻nline」となっています。
+<br>
+<img width="1000" alt="スクリーンショット 2025-03-21 21 53 35" src="https://github.com/user-attachments/assets/79905447-5950-4a18-9c1d-97421ae141c3" />
+<br>
 
 
