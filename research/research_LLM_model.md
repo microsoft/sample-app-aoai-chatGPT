@@ -89,15 +89,11 @@ gpt-4oの回答内容が箇条書きにならなかったですが、プロン�
 |申し訳ありませんが、その情報は提供できません。他にお手伝いできることがあればお知らせください。|
 
 ### 2-3.番外編：PDFの文字化けについて
-Difyでナレッジとして追加できるファイル形式は、TXT, MARKDOWN, MDX, PDF, HTML, XLSX, XLS, DOCX, CSV, MD, HTMとなっており、pptxを追加できません。<br>
-pdfをナレッジにする場合、DifyはPDFの操作や解析をPythonのライブラリであるpypdfium2で行います。pypdfium2は、Googleが提供するPDFiumライブラリに基づいています。<br>
-pypdfium2を使う場合、PDFファイルの日本語が文字化けすることがあります。
-文字化けする例の画像を添付します。例えば、「SharePoint Online」が「㻿hare㻼oint 㻻nline」となっています。
+Difyでナレッジとして追加できるファイル形式は、TXT, MARKDOWN, MDX, PDF, HTML, XLSX, XLS, DOCX, CSV, MD, HTMとなっており、pptxを追加できません。pdfをナレッジにする場合、Difyはpdfの操作や解析をPythonのライブラリであるpypdfium2で行います。pypdfium2は、Googleが提供するPDFiumライブラリに基づいています。今回の実験を通して、pypdfium2を使う場合、pdfファイルの日本語が文字化けすることがあります。文字化けする例の画像を添付します。例えば、「SharePoint Online」が「㻿hare㻼oint 㻻nline」となっています。
 <br>
 <img width="1000" alt="スクリーンショット 2025-03-21 21 53 35" src="https://github.com/user-attachments/assets/79905447-5950-4a18-9c1d-97421ae141c3" />
 <br>
-「㻿hare㻼oint 㻻nline」を例にすると、いくつか試したところでは、「SharePoint Online」で検索ができるものの、検索した時のスコアは著しく低下しており、回答精度にも影響が出るようです。<br>
-PowerPointからpdfファイルを出力した場合にはpypdfium2で処理しても文字化しないことを確認しており、本実験のDifyで使ったファイルは文字化けはしていません。<br>
+「㻿hare㻼oint 㻻nline」を例にすると、いくつか試したところでは、「SharePoint Online」で検索ができるものの、検索した時のスコアは著しく低下し、回答精度にも影響が出るようです。PowerPointからpdfファイルを出力した場合にはpypdfium2で処理しても文字化しないことを確認しており、本実験のDifyで使ったファイルは文字化けはしていません。<br>
 Difyで文字化けするpdfファイルは、Azure AI Searchでは文字化けしていませんでした。また、同じファイルをApache PDFBoxでテキスト抽出したところ、文字化けはしませんでした。<br>
 この現象は、ChromiumにIssueとして報告しています。ChromiumはGoogleが主導するオープンソースのウェブブラウザプロジェクトであり、Google Chromeの基盤となっています。<br>
-AIの時代にはPDFの作り方やPDFを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にしたいと思います。
+AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にしたいと思います。
