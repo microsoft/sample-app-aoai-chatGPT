@@ -20,7 +20,7 @@ Difyの環境は、PCにDocker Composeでデプロイしています。
 |順番|~6秒|~5秒|〜8秒|~4秒|
 |回答内容|2社<br>詳細に回答|2社<br>簡潔に回答|2社<br>簡潔に回答|1社<br>簡潔に回答|
 
-動画<br>
+実験した時の動画<br>
 
 https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 
