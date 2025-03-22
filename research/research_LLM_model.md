@@ -87,3 +87,13 @@ gpt-4oの回答内容が箇条書きにならなかったですが、プロン�
 |gpt-3.5-turboの回答|
 |:-----------|
 |申し訳ありませんが、その情報は提供できません。他にお手伝いできることがあればお知らせください。|
+
+### 2-3.番外編：PDFの文字化けについて
+Difyでナレッジとして追加できるファイル形式は、TXT, MARKDOWN, MDX, PDF, HTML, XLSX, XLS, DOCX, CSV, MD, HTMとなっており、pptxを追加できません。<br>
+pdfをナレッジにする場合、DifyはPDFの操作や解析をPythonで利用されているライブラリであるpypdfium2で行います。pypdfium2は、Googleが提供するPDFiumライブラリに基づいています。<br>
+pypdfium2を使う場合、PDFファイルの日本語が文字化けすることがあります。
+例えば、添付の画像のような文字化けです。
+<img width="1243" alt="スクリーンショット 2025-03-21 21 53 35" src="https://github.com/user-attachments/assets/79905447-5950-4a18-9c1d-97421ae141c3" />
+
+
+
