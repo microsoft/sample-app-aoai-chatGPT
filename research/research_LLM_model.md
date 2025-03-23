@@ -61,18 +61,24 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 |gpt-35-turbo|0125 16K|¥74.7|¥224.2|
 
 上記だと実際の利用した時の料金が分かりにくいので、ある日の利用料金での比較を参考として示します。<br>
-1回質問して回答を得た時の各モデルの利用料金です。
+1回質問して回答を得た時の各モデルのコストです。コストは日本円で、小数点第3位を四捨五入しています。
 
 |モデル|種類|コスト（日本円）|
 |:---:|:--:|:---:|
-|gpt-4-turbo128K|Inp-glbl|3.13212975|
-|gpt-4-turbo128K|Outp-glbl|0.97327755|
-|gpt 4o 0513|Input global|1.96300065|
-|gpt 4o 0513|Output global|1.226688525|
-|gpt-35-turbo-16K-0125|Input-regional|0.1566064875|
-|gpt-35-turbo-16K-0125|Output-regional|0.013903965|
-|gpt-4o-mini-0718|Inp-glbl|0.03348164475|
-|gpt-4o-mini-0718|Outp-glbl|0.014800995|
+|gpt-4-turbo128K|Inp-glbl|3.13|
+|gpt-4-turbo128K|Outp-glbl|0.97|
+|gpt 4o 0513|Input global|1.96|
+|gpt 4o 0513|Output global|1.23|
+|gpt-35-turbo-16K-0125|Input-regional|0.16|
+|gpt-35-turbo-16K-0125|Output-regional|0.01|
+|gpt-4o-mini-0718|Inp-glbl|0.03|
+|gpt-4o-mini-0718|Outp-glbl|0.01|
+
+合計すると、下記のようになります。
+gpt-4(約４円/回) > gpt-4o(約3円/回) >> gpt-35-turbo(0.17円/回) > gpt-4o-mini(0.04円/回)<br>
+
+回答の質とコストのどちらを重視するかを検討し、gpt-4o、もしくは、gpt-4o-miniの利用が良さそうです。<br>
+その他の検討ポイントとして、セキュリティの観点からモデルが`global`か`regional`を検討する場合もあります。
 
 <br>
 <br>
