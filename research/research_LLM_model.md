@@ -78,7 +78,7 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 gpt-4(約４円/回) > gpt-4o(約3円/回) >> gpt-35-turbo(0.17円/回) > gpt-4o-mini(0.04円/回)<br>
 
 回答の質とコストのどちらを重視するかを検討し、gpt-4o、もしくは、gpt-4o-miniの利用が良さそうです。<br>
-その他の検討ポイントとして、セキュリティの観点からモデルが`global`か`regional`を検討する場合もあります。
+その他の検討ポイントとして、セキュリティの観点からモデルが`global`か`regional`を考慮する場合もあります。この点は、詳細はAzure OpenAI Serviceの説明をご覧ください。
 
 <br>
 <br>
