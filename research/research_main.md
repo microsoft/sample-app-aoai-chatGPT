@@ -35,7 +35,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 事例の26ファイル（pdfとpptx）をAzure Blob storageにアップロードしています。<br>
 <img src="./image/AzureAIArchitecture.svg" alt="Example SVG" width="800">
 <br>
-構築したチャットボットのパラメーターは以下です。<br>
+構築したチャットボットの主なパラメーターは以下です。<br>
 ### Search Serviceのスキルセット
 #### 前処理(チャンク設定)
 <!--
