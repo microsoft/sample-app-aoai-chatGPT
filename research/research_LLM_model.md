@@ -74,7 +74,7 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 |gpt-4o-mini-0718|Inp-glbl|0.03|
 |gpt-4o-mini-0718|Outp-glbl|0.01|
 
-合計すると、下記のようになります。
+合計すると、下記のようになります。<br>
 gpt-4(約４円/回) > gpt-4o(約3円/回) >> gpt-35-turbo(0.17円/回) > gpt-4o-mini(0.04円/回)<br>
 
 上記のコストは、今回の実験のプロンプトとそれに対する回答内容の場合であって、他のパラメーターやプロンプトの内容によって変動します。<br>
