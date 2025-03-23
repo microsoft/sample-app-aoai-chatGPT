@@ -52,6 +52,7 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 
 ### 1-4. 料金に関する考察
 今回利用した4つのgptモデルのカタログ価格は下記になります。価格は100万トークン当たりです。
+[価格の参照先](https://azure.microsoft.com/ja-jp/pricing/details/cognitive-services/openai-service/):3月末現在
 |モデル|モデルバージョン|Input|Output|
 |----|----------|-------|-----|
 |gpt-4o|2024-05-13|¥747.5|¥2,242.5|
@@ -59,8 +60,8 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 |gpt-4|Turbo 128K|¥1,495|¥4,485|
 |gpt-35-turbo|0125 16K|¥74.7|¥224.2|
 
-上記だと実際の利用した時の料金が分かりにくいので、ある日に4つのモデルに同じ質問を同じ回数行った時の利用料金をもとにした参考比較です。<br>
-gpt-4o Input(140円) > gpt-4 Input(100円) >> gpt-4o Output(40円) > gpt-4 Output(32円) >> pgt35-turbo Input(5円) > gpt-35-turbo Output(1.5円) > gpt-4o-mini Input(1.2円) > pgt-4o-mini Output(0.6円)
+上記だと実際の利用した時の料金が分かりにくいので、ある日に4つのモデルに同じ質問を同じ回数行った時の利用料金をもとにした参考比較を示します。<br>
+gpt-4o Input(140円) > gpt-4 Input(100円) >> gpt-4o Output(40円) > gpt-4 Output(32円) >> pgt-35-turbo Input(5円) > gpt-35-turbo Output(1.5円) > gpt-4o-mini Input(1.2円) > pgt-4o-mini Output(0.6円)
 
 <br>
 <br>
