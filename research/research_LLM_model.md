@@ -10,7 +10,7 @@ Azureではgptモデルを変更してデバッグするのは手間がかかる
 |:--|:------|
 |2|SharePoint Onlineの検索の事例を探してください|
 
-26ファイルの中で、SharePoint Onlineが出てくる事例は２つです。
+26ファイルの中で、SharePoint Onlineが出てくる事例は3つありますが、対象の事例は2つです。
 <br>
 <br>
 
