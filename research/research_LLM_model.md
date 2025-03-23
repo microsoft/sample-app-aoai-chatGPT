@@ -50,6 +50,13 @@ https://github.com/user-attachments/assets/2a60af8b-4480-4971-b37e-439c8d58a5c5
 |:-----------|
 |SharePoint Onlineの検索の事例として、Neuron ESを導入した大和ハウス工業株式会社の事例があります。Neuron ESはSharePoint Online上に構築された社内ポータルサイトの検索性向上を目的に導入され、営業職・技術職・事務職など部門や職種を問わず、幅広い業務におけるシームレスな検索体験を実現しています。詳細は以下のURLから参照できます。<br>[Neuron ES導入事例 - 大和ハウス工業株式会社](URL)|
 
+### 1-4. 料金に関する考察
+価格の順番のイメージです。
+gpt-4o Input > gpt-4 Input >> gpt-4o Output > gpt-4 Output >> pgt35-turbo Input > gpt-35-turbo Output > gpt-4o-mini Input > pgt-4o-mini Output
+
+ある日に4つのモデルに同じ質問を同じ回数行った時の利用料金をもとにした参考比較です。
+gpt-4o Input(140円) > gpt-4 Input(100円) >> gpt-4o Output(40円) > gpt-4 Output(32円) >> pgt35-turbo Input(5円) > gpt-35-turbo Output(1.5円) > gpt-4o-mini Input(1.2円) > pgt-4o-mini Output(0.6円)
+
 <br>
 <br>
 
