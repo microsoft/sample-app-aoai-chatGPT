@@ -115,6 +115,6 @@ Difyでナレッジとして追加できるファイル形式は、TXT, MARKDOWN
 <br><br>
 <img alt="スクリーンショット 2025-03-21 21 53 35" src="https://github.com/user-attachments/assets/79905447-5950-4a18-9c1d-97421ae141c3" />
 <br><br>
-「㻿hare㻼oint 㻻nline」を例にすると、「SharePoint Online」で検索ができるものの、検索時のスコアは著しく低下し、回答精度に影響が出るようです。PowerPointからpdfファイルを出力した場合にはpypdfium2で処理しても文字化けしないことを確認しており、本実験のDifyで使ったファイルは文字化けはしていません。<br>
+「㻿hare㻼oint 㻻nline」を例にすると、「SharePoint Online」で検索ができるものの、検索時のスコアは著しく低下し、回答精度に影響が出るようです。PowerPointからpdfファイルを出力した場合にはpypdfium2で処理しても文字化けしないことを確認しています。<br>
 pypdfium2で文字化けするpdfファイルは、Azure AI Searchでは文字化けしていませんでした。また、同じファイルをApache PDFBoxでテキスト抽出したところ、文字化けはしませんでした。この現象は、ChromiumにIssueとして報告しています。ChromiumはGoogleが主導するオープンソースのウェブブラウザプロジェクトであり、Google Chromeの基盤となっています。<br>
 AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にします。
