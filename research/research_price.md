@@ -24,8 +24,8 @@
   <tr>
     <td valign="top">LLM・ベクトル化</td>
     <td valign="top">OpenAI Service</td>
-    <td valign="top"><b>gpt-4o利用の場合、1回の質問と回答で約15円</b>（Embeddingモデル利用料含む）。</td>
-    <td valign="top">約15円の内訳は、Inputに13円〜14円かかっている。</td>
+    <td valign="top"><b>gpt-4o利用の場合、1回の質問と回答で約7円</b>（Embeddingモデル利用料含む）</td>
+    <td valign="top">約7円の内訳<br>gpt 4o 0513 Input global 6.76円/回<br>gpt 4o 0513 Output global	0.60円/回</td>
   </tr>
     <tr>
     <td valign="top">合計コスト</td>
