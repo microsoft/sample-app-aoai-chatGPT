@@ -22,13 +22,13 @@
   <tr>
     <td valign="top">LLM・ベクトル化</td>
     <td valign="top">OpenAI Service</td>
-    <td valign="top"><b>gpt-4o利用の場合、1回の質問と回答で約7円</b>（Embeddingモデル利用料含む）<br>LLMの利用料「7円/回×3回/人/日×5人×20日/月=2,100円」と試算。<br></td>
+    <td valign="top"><b>gpt-4o利用の場合、1回の質問と回答で約7円</b>（Embeddingモデル利用料含む）<br>LLMの利用料「7円/回×4回/人/日×5人×20日/月=2,800円」と試算。<br></td>
     <td valign="top">約7円の内訳<br>gpt 4o 0513 Input global 6.76円/回<br>gpt 4o 0513 Output global	0.60円/回</td>
   </tr>
     <tr>
     <td valign="top">合計コスト</td>
     <td valign="top">上記以外に<br>- Blob Storage（事例ファイルを保存）<br>- Cosmos DB（会話履歴の保存）<br>- Synapse Analysis（会話履歴の抽出）<br>を利用。</td>
-    <td valign="top"><b>月額約22,000円。</b><br>15,337円+2,150円+2,100円=19,587円<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
+    <td valign="top"><b>月額約23,300円。</b><br>15,337円+2,150円+2,800円=20,287円<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
     <td valign="top">AI Searchが合計コストの70%前後を占める。<br>左記以外に、自動で追加されるMicrosoft Defender for Cloudが毎日240円程かかっており、月額7200円になるのが気になる。</td>
   </tr>
 </table>
