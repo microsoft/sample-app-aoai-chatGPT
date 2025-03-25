@@ -132,3 +132,6 @@ Difyでは、ナレッジとして追加できるファイル形式は、TXT, MA
 「㻿hare㻼oint 㻻nline」を例にすると、「SharePoint Online」で検索ができるものの、検索時のスコアは著しく低下し、回答精度に影響が出るようです。PowerPointから出力したpdfファイルはpypdfium2で処理しても文字化けしないことを確認しています。<br>
 pypdfium2で文字化けするpdfファイルは、Azure AI Searchでは文字化けしていませんでした。また、同じファイルをApache PDFBoxでテキスト抽出したところ、文字化けはしませんでした。この現象は、ChromiumにIssueとして報告しています。ChromiumはGoogleが主導するオープンソースのウェブブラウザプロジェクトであり、Google Chromeの基盤となっています。<br>
 AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にします。
+
+<<br>
+[mainに戻る](./research_main.md)
