@@ -28,8 +28,8 @@
     <tr>
     <td valign="top">合計コスト</td>
     <td valign="top">上記以外に<br>- Blob Storage（事例ファイルを保存）<br>- Cosmos DB（会話履歴の保存）<br>- Synapse Analysis（会話履歴の抽出）<br>を利用。</td>
-    <td valign="top"><b>月額約23,300円。</b><br>15,337円+2,150円+2,800円=20,287円<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円</td>
-    <td valign="top">AI Searchが合計コストの70%前後を占める。<br>左記以外に、自動で追加されるMicrosoft Defender for Cloudが毎日240円程かかっており、月額7200円になるのが気になる。</td>
+    <td valign="top"><b>月額約30,800円。</b><br>15,337円+2,150円+2,800円=20,287円<br>Blob Storage：月額2~3円<br>Cosmos DB：月額6~9円<br>Synapse Analysis：2000円〜3000円<br>Defender:月額~7500円</td>
+    <td valign="top">AI Searchが合計コストの約50%を占める。<br>自動で追加されるMicrosoft Defender for Cloudが毎日240円程かかっており、月額~7500円になるのが気になる。</td>
   </tr>
 </table>
 
