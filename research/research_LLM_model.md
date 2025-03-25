@@ -133,5 +133,5 @@ Difyでは、ナレッジとして追加できるファイル形式は、TXT, MA
 pypdfium2で文字化けするpdfファイルは、Azure AI Searchでは文字化けしていませんでした。また、同じファイルをApache PDFBoxでテキスト抽出したところ、文字化けはしませんでした。この現象は、ChromiumにIssueとして報告しています。ChromiumはGoogleが主導するオープンソースのウェブブラウザプロジェクトであり、Google Chromeの基盤となっています。<br>
 AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にします。
 
-<<br>
+<br>
 [mainに戻る](./research_main.md)
