@@ -16,7 +16,7 @@
   <tr>
     <td valign="top">Webアプリ</td>
     <td valign="top">App Service</td>
-    <td valign="top">月額 $13.87 = 2,150円/月<br>Basic B1, 1vCPU, 1.75GBメモリ</td>
+    <td valign="top"><b>月額 $13.87 = 2,150円/月</b><br>Basic B1, 1vCPU, 1.75GBメモリ</td>
     <td valign="top">夜間や休日に停止できない月額固定費。利用人数や利用頻度によってアップグレード。</td>
   </tr>
   <tr>
