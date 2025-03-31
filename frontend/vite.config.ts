@@ -1,19 +1,18 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
-    build: {
-        outDir: "../static",
-        emptyOutDir: true,
-        sourcemap: true
-    },
-    server: {
-        proxy: {
-            "/ask": "http://localhost:5000",
-            "/chat": "http://localhost:5000"
-        }
-    },
-    assetsInclude: ['./src/assets/images/HuGo-banner-light/**.jpg']
-});
+  plugins: [react()],
+  build: {
+    outDir: '../static',
+    emptyOutDir: true,
+    sourcemap: true
+  },
+  server: {
+    proxy: {
+      '/ask': 'http://localhost:5000',
+      '/chat': 'http://localhost:5000'
+    }
+  }
+})

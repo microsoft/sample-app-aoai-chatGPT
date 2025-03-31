@@ -4,28 +4,36 @@ import html
 import json
 import os
 import re
-import requests
-from openai import AzureOpenAI
-import re
+import ssl
+import subprocess
 import tempfile
 import time
+import urllib.request
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, List, Dict, Optional, Generator, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
+import fitz
+import requests
+import base64
 
 import markdown
+import requests
 import tiktoken
-from azure.identity import DefaultAzureCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from langchain.text_splitter import TextSplitter, MarkdownTextSplitter, RecursiveCharacterTextSplitter, PythonCodeTextSplitter
+from openai import AzureOpenAI
 from tqdm import tqdm
-from typing import Any
 
+# Configure environment variables  
+load_dotenv() # take environment variables from .env.
 
 FILE_FORMAT_DICT = {
         "md": "markdown",
@@ -36,7 +44,12 @@ FILE_FORMAT_DICT = {
         "py": "python",
         "pdf": "pdf",
         "docx": "docx",
-        "pptx": "pptx"
+        "pptx": "pptx",
+        "png": "png",
+        "jpg": "jpg",
+        "jpeg": "jpeg",
+        "gif": "gif",
+        "webp": "webp"
     }
 
 RETRY_COUNT = 5
@@ -104,23 +117,35 @@ class PdfTextSplitter(TextSplitter):
 
         return caption
     
-    def mask_urls(self, text) -> Tuple[Dict[str, str], str]:
+    def mask_urls_and_imgs(self, text) -> Tuple[Dict[str, str], str]:
 
         def find_urls(string):
             regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^()\s<>]+|\(([^()\s<>]+|(\([^()\s<>]+\)))*\))+(?:\(([^()\s<>]+|(\([^()\s<>]+\)))*\)|[^()\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
             urls = re.findall(regex, string)
             return [x[0] for x in urls]
-        url_dict = {}
+        
+        def find_imgs(string):
+            regex = r'(<img\s+src="[^"]+"[^>]*>.*?</img>)'
+            imgs = re.findall(regex, string, re.DOTALL)
+            return imgs
+        
+        content_dict = {}
         masked_text = text
         urls = set(find_urls(text))
 
         for i, url in enumerate(urls):
             masked_text = masked_text.replace(url, f"##URL{i}##")
-            url_dict[f"##URL{i}##"] = url
-        return url_dict, masked_text
+            content_dict[f"##URL{i}##"] = url
+
+        imgs = set(find_imgs(text))
+        for i, img in enumerate(imgs):
+            masked_text = masked_text.replace(img, f"##IMG{i}##")
+            content_dict[f"##IMG{i}##"] = img
+
+        return content_dict, masked_text
 
     def split_text(self, text: str) -> List[str]:
-        url_dict, masked_text = self.mask_urls(text)
+        content_dict, masked_text = self.mask_urls_and_imgs(text)
         start_tag = self._table_tags["table_open"]
         end_tag = self._table_tags["table_close"]
         splits = masked_text.split(start_tag)
@@ -144,7 +169,7 @@ class PdfTextSplitter(TextSplitter):
                 table_caption_prefix = ""
             
 
-        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size, url_dict)]
+        final_final_chunks = [chunk for chunk, chunk_size in merge_chunks_serially(final_chunks, self._chunk_size, content_dict)]
 
         return final_final_chunks
 
@@ -240,6 +265,7 @@ class Document(object):
     url: Optional[str] = None
     metadata: Optional[Dict] = None
     contentVector: Optional[List[float]] = None
+    image_mapping: Optional[Dict] = None
 
 def cleanup_content(content: str) -> str:
     """Cleans up the given content using regexes
@@ -425,13 +451,22 @@ class PythonParser(BaseParser):
     def __init__(self) -> None:
         super().__init__()
 
+class ImageParser(BaseParser):
+    def parse(self, content: str, file_name: Optional[str] = None) -> Document:
+        return Document(content=content, title=file_name)
+
 class ParserFactory:
     def __init__(self):
         self._parsers = {
             "html": HTMLParser(),
             "text": TextParser(),
             "markdown": MarkdownParser(),
-            "python": PythonParser()
+            "python": PythonParser(),
+            "png": ImageParser(),
+            "jpg": ImageParser(),
+            "jpeg": ImageParser(),
+            "gif": ImageParser(),
+            "webp": ImageParser()
         }
 
     @property
@@ -541,19 +576,27 @@ def table_to_html(table):
         for cell in row_cells:
             tag = "th" if (cell.kind == "columnHeader" or cell.kind == "rowHeader") else "td"
             cell_spans = ""
-            if cell.column_span > 1: cell_spans += f" colSpan={cell.column_span}"
-            if cell.row_span > 1: cell_spans += f" rowSpan={cell.row_span}"
+            if cell.column_span and cell.column_span > 1: cell_spans += f" colSpan={cell.column_span}"
+            if cell.row_span and cell.row_span > 1: cell_spans += f" rowSpan={cell.row_span}"
             table_html += f"<{tag}{cell_spans}>{html.escape(cell.content)}</{tag}>"
         table_html +="</tr>"
     table_html += "</table>"
     return table_html
 
+def polygon_to_bbox(polygon, dpi=72):
+    x_coords = polygon[0::2]
+    y_coords = polygon[1::2]
+    x0, y0 = min(x_coords)*dpi, min(y_coords)*dpi
+    x1, y1 = max(x_coords)*dpi, max(y_coords)*dpi
+    return x0, y0, x1, y1
+
 def extract_pdf_content(file_path, form_recognizer_client, use_layout=False): 
     offset = 0
     page_map = []
     model = "prebuilt-layout" if use_layout else "prebuilt-read"
-    with open(file_path, "rb") as f:
-        poller = form_recognizer_client.begin_analyze_document(model, document = f)
+    
+    base64file = base64.b64encode(open(file_path, "rb").read()).decode()
+    poller = form_recognizer_client.begin_analyze_document(model, AnalyzeDocumentRequest(bytes_source=base64file))
     form_recognizer_results = poller.result()
 
     # (if using layout) mark all the positions of headers
@@ -567,11 +610,22 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
             roles_end[para_end] = paragraph.role
 
     for page_num, page in enumerate(form_recognizer_results.pages):
-        tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1]
-
-        # (if using layout) mark all positions of the table spans in the page
         page_offset = page.spans[0].offset
         page_length = page.spans[0].length
+
+        if use_layout:
+            tables_on_page = []
+            for table in form_recognizer_results.tables:
+                # If the table is empty, the span is empty, so we skip it
+                if len(table.spans) > 0:
+                    table_offset = table.spans[0].offset
+                    table_length = table.spans[0].length
+                    if page_offset <= table_offset and table_offset + table_length < page_offset + page_length:
+                        tables_on_page.append(table)
+        else:
+            tables_on_page = []
+
+        # (if using layout) mark all positions of the table spans in the page
         table_chars = [-1]*page_length
         for table_id, table in enumerate(tables_on_page):
             for span in table.spans:
@@ -607,19 +661,68 @@ def extract_pdf_content(file_path, form_recognizer_client, use_layout=False):
         offset += len(page_text)
 
     full_text = "".join([page_text for _, _, page_text in page_map])
-    return full_text
 
-def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
-    def unmask_urls(text, url_dict={}):
-        if "##URL" in text:
-            for key, value in url_dict.items():
+    # Extract any images
+    image_mapping = {}
+
+    if "figures" in form_recognizer_results.keys() and file_path.endswith(".pdf"):
+        document = fitz.open(file_path)
+
+        for figure in form_recognizer_results["figures"]:
+            bounding_box = figure.bounding_regions[0]
+
+            page_number = bounding_box['pageNumber'] - 1  # Page numbers in PyMuPDF start from 0
+            x0, y0, x1, y1 = polygon_to_bbox(bounding_box['polygon'])
+
+            page = document.load_page(page_number)
+            bbox = fitz.Rect(x0, y0, x1, y1)
+
+            # If either the width or height of the bounding box is less than 3 inches, we upscale by 2x
+            if bbox.width < 72*3 or bbox.height < 72*3:
+                zoom = 2.0
+            else:
+                zoom = 1.0 
+            mat = fitz.Matrix(zoom, zoom)
+            image = page.get_pixmap(matrix=mat, clip=bbox)
+
+            # Save the extracted image to a base64 string
+            image_data = image.tobytes(output='jpg')
+            image_base64 = base64.b64encode(image_data).decode("utf-8")
+            image_base64 = f"data:image/jpg;base64,{image_base64}"
+
+            # Identify the text that corresponds to the figure
+            replace_start = figure["spans"][0]["offset"]
+            replace_end = figure["spans"][0]["offset"] + figure["spans"][0]["length"]
+
+            # Sometimes the figure doesn't correspond to any text, in which case we skip it
+            if replace_start == replace_end:
+                continue
+            
+            # Now we get the image tag
+            original_text = form_recognizer_results.content[replace_start:replace_end]
+
+            if original_text not in full_text:
+                continue
+            
+            img_tag = image_content_to_tag(original_text)
+            
+            # We replace only the first occurrence of the original text
+            full_text = full_text.replace(original_text, img_tag, 1)
+            image_mapping[img_tag] = image_base64
+
+    return full_text, image_mapping
+
+def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, content_dict: Dict[str, str]={}) -> Generator[Tuple[str, int], None, None]:
+    def unmask_urls_and_imgs(text, content_dict={}):
+        if "##URL" in text or "##IMG" in text:
+            for key, value in content_dict.items():
                 text = text.replace(key, value)
         return text
     # TODO: solve for token overlap
     current_chunk = ""
     total_size = 0
     for chunked_content in chunked_content_list:
-        chunked_content = unmask_urls(chunked_content, url_dict)
+        chunked_content = unmask_urls_and_imgs(chunked_content, content_dict)
         chunk_size = TOKEN_ESTIMATOR.estimate_tokens(chunked_content)
         if total_size > 0:
             new_size = total_size + chunk_size
@@ -632,29 +735,62 @@ def merge_chunks_serially(chunked_content_list: List[str], num_tokens: int, url_
     if total_size > 0:
         yield current_chunk, total_size
 
+def get_payload_and_headers_cohere(
+    text, aad_token) -> Tuple[Dict, Dict]:
+    oai_headers =  {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {aad_token}",
+    }
 
+    cohere_body = { "texts": [text], "input_type": "search_document" }
+    return cohere_body, oai_headers
+    
 def get_embedding(text, embedding_model_endpoint=None, embedding_model_key=None, azure_credential=None):
     endpoint = embedding_model_endpoint if embedding_model_endpoint else os.environ.get("EMBEDDING_MODEL_ENDPOINT")
-    key = embedding_model_key if embedding_model_key else os.environ.get("EMBEDDING_MODEL_KEY")
     
+    FLAG_EMBEDDING_MODEL = os.getenv("FLAG_EMBEDDING_MODEL", "AOAI")
+    FLAG_COHERE = os.getenv("FLAG_COHERE", "ENGLISH")
+    FLAG_AOAI = os.getenv("FLAG_AOAI", "V3")
+
     if azure_credential is None and (endpoint is None or key is None):
         raise Exception("EMBEDDING_MODEL_ENDPOINT and EMBEDDING_MODEL_KEY are required for embedding")
 
     try:
-        endpoint_parts = endpoint.split("/openai/deployments/")
-        base_url = endpoint_parts[0]
-        deployment_id = endpoint_parts[1].split("/embeddings")[0]
+        if FLAG_EMBEDDING_MODEL == "AOAI":
+            endpoint_parts = endpoint.split("/openai/deployments/")
+            base_url = endpoint_parts[0]
+            deployment_id = endpoint_parts[1].split("/embeddings")[0]
+            api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
+            if azure_credential is not None:
+                api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
+            else:
+                api_key = embedding_model_key if embedding_model_key else os.getenv("AZURE_OPENAI_API_KEY")
+            
+            client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, api_key=api_key)
+            if FLAG_AOAI == "V2":
+                embeddings = client.embeddings.create(model=deployment_id, input=text)
+            elif FLAG_AOAI == "V3":   
+                embeddings = client.embeddings.create(model=deployment_id, 
+                                                      input=text, 
+                                                      dimensions=int(os.getenv("VECTOR_DIMENSION", 1536)))
+            
+            return embeddings.model_dump()['data'][0]['embedding']
+        
+        if FLAG_EMBEDDING_MODEL == "COHERE":
+            if FLAG_COHERE == "MULTILINGUAL":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_MULTILINGUAL_API_KEY")
+            elif FLAG_COHERE == "ENGLISH":
+                key = embedding_model_key if embedding_model_key else os.getenv("COHERE_ENGLISH_API_KEY")
+            data, headers = get_payload_and_headers_cohere(text, key)
 
-        api_version = endpoint_parts[1].split("api-version=")[1].split("&")[0]
-
-        if azure_credential is not None:
-            api_key = azure_credential.get_token("https://cognitiveservices.azure.com/.default").token
-        else:
-            api_key = key
-
-        client = AzureOpenAI(api_version=api_version, azure_endpoint=base_url, azure_ad_token=api_key)
-        embeddings = client.embeddings.create(model=deployment_id, input=text)
-        return embeddings.dict()['data'][0]['embedding']
+            body = str.encode(json.dumps(data))
+            req = urllib.request.Request(endpoint, body, headers)
+            response = urllib.request.urlopen(req)
+            result = response.read()
+            result_content = json.loads(result.decode('utf-8'))
+                        
+            return result_content["embeddings"][0]   
+        
 
     except Exception as e:
         raise Exception(f"Error getting embeddings with endpoint={endpoint} with error={e}")
@@ -672,7 +808,7 @@ def chunk_content_helper(
     doc = parser.parse(content, file_name=file_name)
     # if the original doc after parsing is < num_tokens return as it is
     doc_content_size = TOKEN_ESTIMATOR.estimate_tokens(doc.content)
-    if doc_content_size < num_tokens:
+    if doc_content_size < num_tokens or file_format in ["png", "jpg", "jpeg", "gif", "webp"]:
         yield doc.content, doc_content_size, doc
     else:
         if file_format == "markdown":
@@ -713,7 +849,8 @@ def chunk_content(
     use_layout = False,
     add_embeddings = False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    image_mapping = {}
 ) -> ChunkingResult:
     """Chunks the given content. If ignore_errors is true, returns None
         in case of an error
@@ -752,22 +889,28 @@ def chunk_content(
         for chunk, chunk_size, doc in chunked_context:
             if chunk_size >= min_chunk_size:
                 if add_embeddings:
-                    for _ in range(RETRY_COUNT):
+                    for i in range(RETRY_COUNT):
                         try:
                             doc.contentVector = get_embedding(chunk, azure_credential=azure_credential, embedding_model_endpoint=embedding_endpoint)
                             break
-                        except:
+                        except Exception as e:
+                            print(f"Error getting embedding for chunk with error={e}, retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
                             time.sleep(30)
                     if doc.contentVector is None:
                         raise Exception(f"Error getting embedding for chunk={chunk}")
                     
-
+                doc.image_mapping = {}
+                for key, value in image_mapping.items():
+                    if key in chunk:
+                        doc.image_mapping[key] = value
                 chunks.append(
                     Document(
                         content=chunk,
                         title=doc.title,
                         url=url,
-                        contentVector=doc.contentVector
+                        contentVector=doc.contentVector,
+                        metadata=doc.metadata,
+                        image_mapping=doc.image_mapping
                     )
                 )
             else:
@@ -791,6 +934,69 @@ def chunk_content(
         skipped_chunks=skipped_chunks,
     )
 
+def image_content_to_tag(image_content: str) -> str:
+    # We encode the images in an XML-like format to make the replacement very unlikely to conflict with other text
+    # This also lets us preserve the content with minimal escaping, just escaping the <img> tags
+    random_id = str(time.time()).replace(".", "")[-4:]
+    img_tag = f'<img src="IMG_{random_id}.jpg">{image_content.replace("<img>", "&lt;img&gt;").replace("</img>", "&lt;/img&gt;")}</img>'
+    return img_tag
+
+def get_caption(image_path, captioning_model_endpoint, captioning_model_key):
+    encoded_image = base64.b64encode(open(image_path, 'rb').read()).decode('ascii')
+    file_ext = image_path.split(".")[-1]
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": captioning_model_key,
+    }
+
+    payload = {
+        "messages": [
+            {
+            "role": "system",
+            "content": [
+                {
+                "type": "text",
+                "text": "You are a captioning model that helps uses find descriptive captions."
+                }
+            ]
+            },
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "Describe this image as if you were describing it to someone who can't see it. "
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/{file_ext};base64,{encoded_image}"
+                }
+                }
+            ]
+            }
+        ],
+        "temperature": 0
+    }
+
+    for i in range(RETRY_COUNT):
+        try:
+            response = requests.post(captioning_model_endpoint, headers=headers, json=payload)
+            response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+            break
+        except Exception as e:
+            print(f"Error getting caption with error={e}, retrying, current at {i + 1} retry, {RETRY_COUNT - (i + 1)} retries left")
+            time.sleep(15)
+
+    if response.status_code != 200:
+        raise Exception(f"Error getting caption with status_code={response.status_code}")
+    
+    caption = response.json()["choices"][0]["message"]["content"]
+    img_tag = image_content_to_tag(caption)
+    mapping = {img_tag: f"data:image/{file_ext};base64,{encoded_image}"}
+
+    return img_tag, mapping
+
 def chunk_file(
     file_path: str,
     ignore_errors: bool = True,
@@ -803,7 +1009,9 @@ def chunk_file(
     use_layout = False,
     add_embeddings=False,
     azure_credential = None,
-    embedding_endpoint = None
+    embedding_endpoint = None,
+    captioning_model_endpoint = None,
+    captioning_model_key = None
 ) -> ChunkingResult:
     """Chunks the given file.
     Args:
@@ -813,6 +1021,7 @@ def chunk_file(
     """
     file_name = os.path.basename(file_path)
     file_format = _get_file_format(file_name, extensions_to_process)
+    image_mapping = {}
     if not file_format:
         if ignore_errors:
             return ChunkingResult(
@@ -825,8 +1034,13 @@ def chunk_file(
     if file_format in ["pdf", "docx", "pptx"]:
         if form_recognizer_client is None:
             raise UnsupportedFormatError("form_recognizer_client is required for pdf files")
-        content = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
+        content, image_mapping = extract_pdf_content(file_path, form_recognizer_client, use_layout=use_layout)
         cracked_pdf = True
+    elif file_format in ["png", "jpg", "jpeg", "webp"]:
+        # Make call to LLM for a descriptive caption
+        if captioning_model_endpoint is None or captioning_model_key is None:
+            raise Exception("CAPTIONING_MODEL_ENDPOINT and CAPTIONING_MODEL_KEY are required for images")
+        content, image_mapping = get_caption(file_path, captioning_model_endpoint, captioning_model_key)
     else:
         try:
             with open(file_path, "r", encoding="utf8") as f:
@@ -851,7 +1065,8 @@ def chunk_file(
         use_layout=use_layout,
         add_embeddings=add_embeddings,
         azure_credential=azure_credential,
-        embedding_endpoint=embedding_endpoint
+        embedding_endpoint=embedding_endpoint,
+        image_mapping=image_mapping
     )
 
 
@@ -868,7 +1083,9 @@ def process_file(
         use_layout = False,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        captioning_model_endpoint = None,
+        captioning_model_key = None
     ):
 
     if not form_recognizer_client:
@@ -894,11 +1111,14 @@ def process_file(
             use_layout=use_layout,
             add_embeddings=add_embeddings,
             azure_credential=azure_credential,
-            embedding_endpoint=embedding_endpoint
+            embedding_endpoint=embedding_endpoint,
+            captioning_model_endpoint=captioning_model_endpoint,
+            captioning_model_key=captioning_model_key
         )
         for chunk_idx, chunk_doc in enumerate(result.chunks):
             chunk_doc.filepath = rel_file_path
             chunk_doc.metadata = json.dumps({"chunk_id": str(chunk_idx)})
+            chunk_doc.image_mapping = json.dumps(chunk_doc.image_mapping) if chunk_doc.image_mapping else None
     except Exception as e:
         print(e)
         if not ignore_errors:
@@ -961,7 +1181,9 @@ def chunk_directory(
         njobs=4,
         add_embeddings = False,
         azure_credential = None,
-        embedding_endpoint = None
+        embedding_endpoint = None,
+        captioning_model_endpoint = None,
+        captioning_model_key = None
 ):
     """
     Chunks the given directory recursively
@@ -1003,7 +1225,8 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=form_recognizer_client, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint,
+                                       captioning_model_endpoint=captioning_model_endpoint, captioning_model_key=captioning_model_key)
             if is_error:
                 num_files_with_errors += 1
                 continue
@@ -1019,7 +1242,8 @@ def chunk_directory(
                                        token_overlap=token_overlap,
                                        extensions_to_process=extensions_to_process,
                                        form_recognizer_client=None, use_layout=use_layout, add_embeddings=add_embeddings,
-                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint)
+                                       azure_credential=azure_credential, embedding_endpoint=embedding_endpoint,
+                                       captioning_model_endpoint=captioning_model_endpoint, captioning_model_key=captioning_model_key)
         with ProcessPoolExecutor(max_workers=njobs) as executor:
             futures = list(tqdm(executor.map(process_file_partial, files_to_process), total=len(files_to_process)))
             for result, is_error in futures:
@@ -1049,7 +1273,7 @@ class SingletonFormRecognizerClient:
             url = os.getenv("FORM_RECOGNIZER_ENDPOINT")
             key = os.getenv("FORM_RECOGNIZER_KEY")
             if url and key:
-                cls.instance = DocumentAnalysisClient(
+                cls.instance = DocumentIntelligenceClient(
                         endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
             else:
                 print("SingletonFormRecognizerClient: Skipping since credentials not provided. Assuming NO form recognizer extensions(like .pdf) in directory")
@@ -1061,4 +1285,4 @@ class SingletonFormRecognizerClient:
 
     def __setstate__(self, state):
         url, key = state
-        self.instance = DocumentAnalysisClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})
+        self.instance = DocumentIntelligenceClient(endpoint=url, credential=AzureKeyCredential(key), headers={"x-ms-useragent": "sample-app-aoai-chatgpt/1.0.0"})

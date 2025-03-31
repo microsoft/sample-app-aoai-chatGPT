@@ -18,28 +18,15 @@
           "-p 50505"
       ],
       "console": "integratedTerminal",
-      "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env",
-  },    
-  {
-      "name": "Python: Sample App Backend - watcher",
-      "type": "python",
+      "justMyCode": false
+    },
+    {
+      "type": "chrome",
       "request": "launch",
-      "module": "quart",
-      "cwd": "${workspaceFolder}",
-      "env": {
-          "QUART_APP": "app:app",
-          "QUART_ENV": "development",
-          "QUART_DEBUG": "0"
-      },
-      "args": [
-          "run",
-          "--reload",
-          "-p 50505"
-      ],
-      "console": "integratedTerminal",
-      "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env",
-  }
+      "name": "Frontend: Launch Chrome debugger",
+      "url": "http://127.0.0.1:50505",
+      "webRoot": "${workspaceFolder}/frontend",
+      "smartStep": true
+    }
   ]
 }

@@ -3,25 +3,25 @@ import { useContext } from "react";
 import { AskResponse, Citation } from "../../api";
 import { AppStateContext } from "../../state/AppProvider";
 
-
 export type ParsedAnswer = {
-    citations: Citation[];
-    documentLinks: { url: string; title: string; truncatedTitle: string }[];
-    markdownFormatText: string;
-};
+  citations: Citation[]
+  documentLinks: { url: string; title: string; truncatedTitle: string }[];
+  markdownFormatText: string,
+  generated_chart: string | null
+} | null
 
 export const enumerateCitations = (citations: Citation[]) => {
-    const filepathMap = new Map();
-    for (const citation of citations) {
-        const { filepath } = citation;
-        let part_i = 1
-        if (filepathMap.has(filepath)) {
-            part_i = filepathMap.get(filepath) + 1;
-        }
-        filepathMap.set(filepath, part_i);
-        citation.part_index = part_i;
+  const filepathMap = new Map()
+  for (const citation of citations) {
+    const { filepath } = citation
+    let part_i = 1
+    if (filepathMap.has(filepath)) {
+      part_i = filepathMap.get(filepath) + 1
     }
-    return citations;
+    filepathMap.set(filepath, part_i)
+    citation.part_index = part_i
+  }
+  return citations
 }
 
 const createCitationFilepath = (citation: Citation, index: number, filePathTruncationLimit?: number) => {
@@ -48,40 +48,42 @@ const createCitationFilepath = (citation: Citation, index: number, filePathTrunc
   };
 
 export function parseAnswer(answer: AskResponse): ParsedAnswer {
-    let answerText = answer.answer;
-    const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g);
+  if (typeof answer.answer !== "string") return null
+  let answerText = answer.answer
+  const citationLinks = answerText.match(/\[(doc\d\d?\d?)]/g)
 
-    const lengthDocN = "[doc".length;
+  const lengthDocN = '[doc'.length
 
-    let filteredCitations = [] as Citation[];
-    let citationReindex = 0;
-    citationLinks?.forEach(link => {
-        // Replacing the links/citations with number
-        let citationIndex = link.slice(lengthDocN, link.length - 1);
-        let citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation;
-        if (!filteredCitations.find((c) => c.id === citationIndex) && citation) {
-          answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `);
-          citation.id = citationIndex; // original doc index to de-dupe
-          citation.reindex_id = citationReindex.toString(); // reindex from 1 for display
-          filteredCitations.push(citation);
-        }
-    })
+  let filteredCitations = [] as Citation[]
+  let citationReindex = 0
+  citationLinks?.forEach(link => {
+    // Replacing the links/citations with number
+    const citationIndex = link.slice(lengthDocN, link.length - 1)
+    const citation = cloneDeep(answer.citations[Number(citationIndex) - 1]) as Citation
+    if (!filteredCitations.find(c => c.id === citationIndex) && citation) {
+      answerText = answerText.replaceAll(link, ` ^${++citationReindex}^ `)
+      citation.id = citationIndex // original doc index to de-dupe
+      citation.reindex_id = citationReindex.toString() // reindex from 1 for display
+      filteredCitations.push(citation)
+    }
+  })
 
-    filteredCitations = enumerateCitations(filteredCitations);
+  filteredCitations = enumerateCitations(filteredCitations)
     
-    answerText = replaceOutScopeMessage(answerText);
-    answerText = replaceCitationLinks(answerText, answer.citations);
+  answerText = replaceOutScopeMessage(answerText);
+  answerText = replaceCitationLinks(answerText, answer.citations);
 
-    return {
-        citations: filteredCitations,
-        documentLinks: filteredCitations.map((citation, index) => ({
-            url: citation.url ?? '#',
-            index,
-            title: createCitationFilepath(citation, index),
-            truncatedTitle: createCitationFilepath(citation, index, 100),
-          })),
-        markdownFormatText: answerText
-    };
+  return {
+    citations: filteredCitations,
+    documentLinks: filteredCitations.map((citation, index) => ({
+      url: citation.url ?? '#',
+      index,
+      title: createCitationFilepath(citation, index),
+      truncatedTitle: createCitationFilepath(citation, index, 100),
+    })),
+    markdownFormatText: answerText,
+    generated_chart: answer.generated_chart
+  }
 }
 
 function replaceCitationLinks(answerText: string, citations: Citation[]): string {  

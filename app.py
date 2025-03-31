@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import json
 import logging
@@ -7,48 +8,43 @@ import uuid
 import httpx
 from azure.identity.aio import (DefaultAzureCredential,
                                 get_bearer_token_provider)
-from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
-from quart import (Blueprint, Quart, abort, jsonify, make_response,
-                   render_template, request, send_from_directory)
+from quart import (Blueprint, Quart, abort, current_app, jsonify,
+                   make_response, render_template, request,
+                   send_from_directory)
 
 from backend.auth.auth_utils import (get_authenticated_user_details,
                                      ms_graph_authorisation_check)
 from backend.history.cosmosdbservice import CosmosConversationClient
+from backend.security.ms_defender_utils import get_msdefender_user_json
+from backend.settings import (
+    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION, app_settings)
 from backend.utils import (convert_to_pf_format, format_as_ndjson,
                            format_non_streaming_response,
                            format_pf_non_streaming_response,
-                           format_stream_response, generateFilterString,
-                           parse_multi_columns)
+                           format_stream_response)
 
 bp_module_name = "routes"
 bp = Blueprint(bp_module_name, __name__, static_folder="static", template_folder="static")
 
-# Current minimum Azure OpenAI version supported
-MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-02-15-preview"
+cosmos_db_ready = asyncio.Event()
 
-load_dotenv()
-
-# UI configuration (optional)
-UI_TITLE = os.environ.get("UI_TITLE") or "Contoso"
-UI_HUGO_URL = os.environ.get("UI_HUGO_URL") or "localhost:4200"
-UI_LOGO = os.environ.get("UI_LOGO")
-UI_CHAT_LOGO = os.environ.get("UI_CHAT_LOGO")
-UI_CHAT_TITLE = os.environ.get("UI_CHAT_TITLE") or "Start chatting"
-UI_CHAT_DESCRIPTION = (
-    os.environ.get("UI_CHAT_DESCRIPTION")
-    or "This chatbot is configured to answer your questions"
-)
-UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
-UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
-UI_CITATIONS_EXPANDED = os.environ.get("UI_CITATIONS_EXPANDED", "false").lower() == "true"
-UI_CITATIONS_AS_LINKS = os.environ.get("UI_CITATIONS_AS_LINKS", "false").lower() == "true"
-UI_OUT_OF_SCOPE_MESSAGE = os.environ.get("UI_OUT_OF_SCOPE_MESSAGE")
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    
+    @app.before_serving
+    async def init():
+        try:
+            app.cosmos_conversation_client = await init_cosmosdb_client()
+            cosmos_db_ready.set()
+        except Exception as e:
+            logging.exception("Failed to initialize CosmosDB client")
+            app.cosmos_conversation_client = None
+            raise e
+    
     return app
 
 anonymous_endpoints = []
@@ -65,18 +61,19 @@ def check_authorization():
     access_token = request.headers.get("X-Ms-Token-Aad-Access-Token")
 
     if access_token:
-        AUTH_SHAREPOINT = os.environ.get("AUTH_SHAREPOINT", "false").lower() == "true"
-        AUTH_SHAREPOINT_SITE_ID = os.environ.get("AUTH_SHAREPOINT_SITE_ID")
-        AUTH_SHAREPOINT_PAGE_ID = os.environ.get("AUTH_SHAREPOINT_PAGE_ID")
-        if AUTH_SHAREPOINT and not ms_graph_authorisation_check(
-            access_token, AUTH_SHAREPOINT_SITE_ID, AUTH_SHAREPOINT_PAGE_ID
+        if app_settings.auth_sharepoint.enabled and not ms_graph_authorisation_check(
+            access_token, app_settings.auth_sharepoint.site_id, app_settings.auth_sharepoint.page_id
         ):
             abort(401)
 
 @bp.route("/")
 @allow_anonymous
 async def index():
-    return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
+    return await render_template(
+        "index.html",
+        title=app_settings.ui.title,
+        favicon=app_settings.ui.favicon
+    )
 
 
 @bp.route("/favicon.ico")
@@ -98,279 +95,103 @@ if DEBUG.lower() == "true":
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
-# On Your Data Settings
-DATASOURCE_TYPE = os.environ.get("DATASOURCE_TYPE", "AzureCognitiveSearch")
-SEARCH_TOP_K = os.environ.get("SEARCH_TOP_K", 5)
-SEARCH_STRICTNESS = os.environ.get("SEARCH_STRICTNESS", 3)
-SEARCH_ENABLE_IN_DOMAIN = os.environ.get("SEARCH_ENABLE_IN_DOMAIN", "true")
 
-# ACS Integration Settings
-AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
-AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
-AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY", None)
-AZURE_SEARCH_USE_SEMANTIC_SEARCH = os.environ.get(
-    "AZURE_SEARCH_USE_SEMANTIC_SEARCH", "false"
-)
-AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG = os.environ.get(
-    "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG", "default"
-)
-AZURE_SEARCH_TOP_K = os.environ.get("AZURE_SEARCH_TOP_K", SEARCH_TOP_K)
-AZURE_SEARCH_ENABLE_IN_DOMAIN = os.environ.get(
-    "AZURE_SEARCH_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN
-)
-AZURE_SEARCH_CONTENT_COLUMNS = os.environ.get("AZURE_SEARCH_CONTENT_COLUMNS")
-AZURE_SEARCH_FILENAME_COLUMN = os.environ.get("AZURE_SEARCH_FILENAME_COLUMN")
-AZURE_SEARCH_TITLE_COLUMN = os.environ.get("AZURE_SEARCH_TITLE_COLUMN")
-AZURE_SEARCH_URL_COLUMN = os.environ.get("AZURE_SEARCH_URL_COLUMN")
-AZURE_SEARCH_VECTOR_COLUMNS = os.environ.get("AZURE_SEARCH_VECTOR_COLUMNS")
-AZURE_SEARCH_QUERY_TYPE = os.environ.get("AZURE_SEARCH_QUERY_TYPE")
-AZURE_SEARCH_PERMITTED_GROUPS_COLUMN = os.environ.get(
-    "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN"
-)
-AZURE_SEARCH_STRICTNESS = os.environ.get("AZURE_SEARCH_STRICTNESS", SEARCH_STRICTNESS)
-
-# AOAI Integration Settings
-AZURE_OPENAI_RESOURCE = os.environ.get("AZURE_OPENAI_RESOURCE")
-AZURE_OPENAI_MODEL = os.environ.get("AZURE_OPENAI_MODEL")
-AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_KEY = os.environ.get("AZURE_OPENAI_KEY")
-AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
-AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
-AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
-AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
-AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get(
-    "AZURE_OPENAI_SYSTEM_MESSAGE",
-    "You are an AI assistant that helps people find information.",
-)
-AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get(
-    "AZURE_OPENAI_PREVIEW_API_VERSION",
-    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION,
-)
-AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
-AZURE_OPENAI_MODEL_NAME = os.environ.get(
-    "AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo-16k"
-)  # Name of the model, e.g. 'gpt-35-turbo-16k' or 'gpt-4'
-AZURE_OPENAI_EMBEDDING_ENDPOINT = os.environ.get("AZURE_OPENAI_EMBEDDING_ENDPOINT")
-AZURE_OPENAI_EMBEDDING_KEY = os.environ.get("AZURE_OPENAI_EMBEDDING_KEY")
-AZURE_OPENAI_EMBEDDING_NAME = os.environ.get("AZURE_OPENAI_EMBEDDING_NAME", "")
-
-# CosmosDB Mongo vcore vector db Settings
-AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING"
-)  # This has to be secure string
-AZURE_COSMOSDB_MONGO_VCORE_DATABASE = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_DATABASE"
-)
-AZURE_COSMOSDB_MONGO_VCORE_CONTAINER = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_CONTAINER"
-)
-AZURE_COSMOSDB_MONGO_VCORE_INDEX = os.environ.get("AZURE_COSMOSDB_MONGO_VCORE_INDEX")
-AZURE_COSMOSDB_MONGO_VCORE_TOP_K = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_TOP_K", AZURE_SEARCH_TOP_K
-)
-AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS", AZURE_SEARCH_STRICTNESS
-)
-AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN", AZURE_SEARCH_ENABLE_IN_DOMAIN
-)
-AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS", ""
-)
-AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN"
-)
-AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN"
-)
-AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN"
-)
-AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS = os.environ.get(
-    "AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS"
-)
-
-SHOULD_STREAM = True if AZURE_OPENAI_STREAM.lower() == "true" else False
-
-# Chat History CosmosDB Integration Settings
-AZURE_COSMOSDB_DATABASE = os.environ.get("AZURE_COSMOSDB_DATABASE")
-AZURE_COSMOSDB_ACCOUNT = os.environ.get("AZURE_COSMOSDB_ACCOUNT")
-AZURE_COSMOSDB_CONVERSATIONS_CONTAINER = os.environ.get(
-    "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER"
-)
-AZURE_COSMOSDB_ACCOUNT_KEY = os.environ.get("AZURE_COSMOSDB_ACCOUNT_KEY")
-AZURE_COSMOSDB_ENABLE_FEEDBACK = (
-    os.environ.get("AZURE_COSMOSDB_ENABLE_FEEDBACK", "false").lower() == "true"
-)
-
-# Elasticsearch Integration Settings
-ELASTICSEARCH_ENDPOINT = os.environ.get("ELASTICSEARCH_ENDPOINT")
-ELASTICSEARCH_ENCODED_API_KEY = os.environ.get("ELASTICSEARCH_ENCODED_API_KEY")
-ELASTICSEARCH_INDEX = os.environ.get("ELASTICSEARCH_INDEX")
-ELASTICSEARCH_QUERY_TYPE = os.environ.get("ELASTICSEARCH_QUERY_TYPE", "simple")
-ELASTICSEARCH_TOP_K = os.environ.get("ELASTICSEARCH_TOP_K", SEARCH_TOP_K)
-ELASTICSEARCH_ENABLE_IN_DOMAIN = os.environ.get(
-    "ELASTICSEARCH_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN
-)
-ELASTICSEARCH_CONTENT_COLUMNS = os.environ.get("ELASTICSEARCH_CONTENT_COLUMNS")
-ELASTICSEARCH_FILENAME_COLUMN = os.environ.get("ELASTICSEARCH_FILENAME_COLUMN")
-ELASTICSEARCH_TITLE_COLUMN = os.environ.get("ELASTICSEARCH_TITLE_COLUMN")
-ELASTICSEARCH_URL_COLUMN = os.environ.get("ELASTICSEARCH_URL_COLUMN")
-ELASTICSEARCH_VECTOR_COLUMNS = os.environ.get("ELASTICSEARCH_VECTOR_COLUMNS")
-ELASTICSEARCH_STRICTNESS = os.environ.get("ELASTICSEARCH_STRICTNESS", SEARCH_STRICTNESS)
-ELASTICSEARCH_EMBEDDING_MODEL_ID = os.environ.get("ELASTICSEARCH_EMBEDDING_MODEL_ID")
-
-# Pinecone Integration Settings
-PINECONE_ENVIRONMENT = os.environ.get("PINECONE_ENVIRONMENT")
-PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-PINECONE_INDEX_NAME = os.environ.get("PINECONE_INDEX_NAME")
-PINECONE_TOP_K = os.environ.get("PINECONE_TOP_K", SEARCH_TOP_K)
-PINECONE_STRICTNESS = os.environ.get("PINECONE_STRICTNESS", SEARCH_STRICTNESS)
-PINECONE_ENABLE_IN_DOMAIN = os.environ.get(
-    "PINECONE_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN
-)
-PINECONE_CONTENT_COLUMNS = os.environ.get("PINECONE_CONTENT_COLUMNS", "")
-PINECONE_FILENAME_COLUMN = os.environ.get("PINECONE_FILENAME_COLUMN")
-PINECONE_TITLE_COLUMN = os.environ.get("PINECONE_TITLE_COLUMN")
-PINECONE_URL_COLUMN = os.environ.get("PINECONE_URL_COLUMN")
-PINECONE_VECTOR_COLUMNS = os.environ.get("PINECONE_VECTOR_COLUMNS")
-
-# Azure AI MLIndex Integration Settings - for use with MLIndex data assets created in Azure AI Studio
-AZURE_MLINDEX_NAME = os.environ.get("AZURE_MLINDEX_NAME")
-AZURE_MLINDEX_VERSION = os.environ.get("AZURE_MLINDEX_VERSION")
-AZURE_ML_PROJECT_RESOURCE_ID = os.environ.get(
-    "AZURE_ML_PROJECT_RESOURCE_ID"
-)  # /subscriptions/{sub ID}/resourceGroups/{rg name}/providers/Microsoft.MachineLearningServices/workspaces/{AML project name}
-AZURE_MLINDEX_TOP_K = os.environ.get("AZURE_MLINDEX_TOP_K", SEARCH_TOP_K)
-AZURE_MLINDEX_STRICTNESS = os.environ.get("AZURE_MLINDEX_STRICTNESS", SEARCH_STRICTNESS)
-AZURE_MLINDEX_ENABLE_IN_DOMAIN = os.environ.get(
-    "AZURE_MLINDEX_ENABLE_IN_DOMAIN", SEARCH_ENABLE_IN_DOMAIN
-)
-AZURE_MLINDEX_CONTENT_COLUMNS = os.environ.get("AZURE_MLINDEX_CONTENT_COLUMNS", "")
-AZURE_MLINDEX_FILENAME_COLUMN = os.environ.get("AZURE_MLINDEX_FILENAME_COLUMN")
-AZURE_MLINDEX_TITLE_COLUMN = os.environ.get("AZURE_MLINDEX_TITLE_COLUMN")
-AZURE_MLINDEX_URL_COLUMN = os.environ.get("AZURE_MLINDEX_URL_COLUMN")
-AZURE_MLINDEX_VECTOR_COLUMNS = os.environ.get("AZURE_MLINDEX_VECTOR_COLUMNS")
-AZURE_MLINDEX_QUERY_TYPE = os.environ.get("AZURE_MLINDEX_QUERY_TYPE")
-# Promptflow Integration Settings
-USE_PROMPTFLOW = os.environ.get("USE_PROMPTFLOW", "false").lower() == "true"
-PROMPTFLOW_ENDPOINT = os.environ.get("PROMPTFLOW_ENDPOINT")
-PROMPTFLOW_API_KEY = os.environ.get("PROMPTFLOW_API_KEY")
-PROMPTFLOW_RESPONSE_TIMEOUT = os.environ.get("PROMPTFLOW_RESPONSE_TIMEOUT", 30.0)
-# default request and response field names are input -> 'query' and output -> 'reply'
-PROMPTFLOW_REQUEST_FIELD_NAME = os.environ.get("PROMPTFLOW_REQUEST_FIELD_NAME", "query")
-PROMPTFLOW_RESPONSE_FIELD_NAME = os.environ.get(
-    "PROMPTFLOW_RESPONSE_FIELD_NAME", "reply"
-)
 # Frontend Settings via Environment Variables
-AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "true").lower() == "true"
-CHAT_HISTORY_ENABLED = (
-    AZURE_COSMOSDB_ACCOUNT
-    and AZURE_COSMOSDB_DATABASE
-    and AZURE_COSMOSDB_CONVERSATIONS_CONTAINER
-)
-SANITIZE_ANSWER = os.environ.get("SANITIZE_ANSWER", "false").lower() == "true"
 frontend_settings = {
-    "auth_enabled": AUTH_ENABLED,
-    "feedback_enabled": AZURE_COSMOSDB_ENABLE_FEEDBACK and CHAT_HISTORY_ENABLED,
+    "auth_enabled": app_settings.base_settings.auth_enabled,
+    "feedback_enabled": (
+        app_settings.chat_history and
+        app_settings.chat_history.enable_feedback
+    ),
     "ui": {
-        "title": UI_TITLE,
-        "hugo_url": UI_HUGO_URL,
-        "logo": UI_LOGO,
-        "chat_logo": UI_CHAT_LOGO or UI_LOGO,
-        "chat_title": UI_CHAT_TITLE,
-        "chat_description": UI_CHAT_DESCRIPTION,
-        "show_share_button": UI_SHOW_SHARE_BUTTON,
-        "citations_expanded": UI_CITATIONS_EXPANDED,
-        "citations_as_links": UI_CITATIONS_AS_LINKS,
-        "out_of_scope_message": UI_OUT_OF_SCOPE_MESSAGE,
+        "title": app_settings.ui.title,
+        "hugo_url": app_settings.ui.hugo_url,
+        "logo": app_settings.ui.logo,
+        "chat_logo": app_settings.ui.chat_logo or app_settings.ui.logo,
+        "chat_title": app_settings.ui.chat_title,
+        "chat_description": app_settings.ui.chat_description,
+        "show_share_button": app_settings.ui.show_share_button,
+        "show_chat_history_button": app_settings.ui.show_chat_history_button,
+        "citations_expanded": app_settings.ui.citations_expanded,
+        "citations_as_links": app_settings.ui.citations_as_links,
+        "out_of_scope_message": app_settings.ui.out_of_scope_message,
     },
-    "sanitize_answer": SANITIZE_ANSWER,
+    "sanitize_answer": app_settings.base_settings.sanitize_answer,
+    "oyd_enabled": app_settings.base_settings.datasource_type,
 }
 
 
-def should_use_data():
-    global DATASOURCE_TYPE
-    if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX:
-        DATASOURCE_TYPE = "AzureCognitiveSearch"
-        logging.debug("Using Azure Cognitive Search")
-        return True
-
-    if (
-        AZURE_COSMOSDB_MONGO_VCORE_DATABASE
-        and AZURE_COSMOSDB_MONGO_VCORE_CONTAINER
-        and AZURE_COSMOSDB_MONGO_VCORE_INDEX
-        and AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING
-    ):
-        DATASOURCE_TYPE = "AzureCosmosDB"
-        logging.debug("Using Azure CosmosDB Mongo vcore")
-        return True
-
-    if ELASTICSEARCH_ENDPOINT and ELASTICSEARCH_ENCODED_API_KEY and ELASTICSEARCH_INDEX:
-        DATASOURCE_TYPE = "Elasticsearch"
-        logging.debug("Using Elasticsearch")
-        return True
-
-    if PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX_NAME:
-        DATASOURCE_TYPE = "Pinecone"
-        logging.debug("Using Pinecone")
-        return True
-
-    if AZURE_MLINDEX_NAME and AZURE_MLINDEX_VERSION and AZURE_ML_PROJECT_RESOURCE_ID:
-        DATASOURCE_TYPE = "AzureMLIndex"
-        logging.debug("Using Azure ML Index")
-        return True
-
-    return False
+# Enable Microsoft Defender for Cloud Integration
+MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 
-SHOULD_USE_DATA = should_use_data()
-
+azure_openai_tools = []
+azure_openai_available_tools = []
 
 # Initialize Azure OpenAI Client
-def init_openai_client(use_data=SHOULD_USE_DATA):
+async def init_openai_client():
     azure_openai_client = None
+    
     try:
         # API version check
         if (
-            AZURE_OPENAI_PREVIEW_API_VERSION
+            app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
         ):
-            raise Exception(
-                f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'"
+            raise ValueError(
+                f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}' currently set to '{app_settings.azure_openai.preview_api_version}'"
             )
 
         # Endpoint
-        if not AZURE_OPENAI_ENDPOINT and not AZURE_OPENAI_RESOURCE:
-            raise Exception(
+        if (
+            not app_settings.azure_openai.endpoint and
+            not app_settings.azure_openai.resource
+        ):
+            raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
 
         endpoint = (
-            AZURE_OPENAI_ENDPOINT
-            if AZURE_OPENAI_ENDPOINT
-            else f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/"
+            app_settings.azure_openai.endpoint
+            if app_settings.azure_openai.endpoint
+            else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
         )
 
         # Authentication
-        aoai_api_key = AZURE_OPENAI_KEY
+        aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
-            logging.debug("No AZURE_OPENAI_KEY found, using Azure AD auth")
-            ad_token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-            )
+            logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
+            async with DefaultAzureCredential() as credential:
+                ad_token_provider = get_bearer_token_provider(
+                    credential,
+                    "https://cognitiveservices.azure.com/.default"
+                )
 
         # Deployment
-        deployment = AZURE_OPENAI_MODEL
+        deployment = app_settings.azure_openai.model
         if not deployment:
-            raise Exception("AZURE_OPENAI_MODEL is required")
+            raise ValueError("AZURE_OPENAI_MODEL is required")
 
         # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
 
+        # Remote function calls
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
+            async with httpx.AsyncClient() as client:
+                response = await client.get(azure_functions_tools_url)
+            response_status_code = response.status_code
+            if response_status_code == httpx.codes.OK:
+                azure_openai_tools.extend(json.loads(response.text))
+                for tool in azure_openai_tools:
+                    azure_openai_available_tools.append(tool["function"]["name"])
+            else:
+                logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
+
+        
         azure_openai_client = AsyncAzureOpenAI(
-            api_version=AZURE_OPENAI_PREVIEW_API_VERSION,
+            api_version=app_settings.azure_openai.preview_api_version,
             api_key=aoai_api_key,
             azure_ad_token_provider=ad_token_provider,
             default_headers=default_headers,
@@ -383,26 +204,43 @@ def init_openai_client(use_data=SHOULD_USE_DATA):
         azure_openai_client = None
         raise e
 
+async def openai_remote_azure_function_call(function_name, function_args):
+    if app_settings.azure_openai.function_call_azure_functions_enabled is not True:
+        return
 
-def init_cosmosdb_client():
+    azure_functions_tool_url = f"{app_settings.azure_openai.function_call_azure_functions_tool_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tool_key}"
+    headers = {'content-type': 'application/json'}
+    body = {
+        "tool_name": function_name,
+        "tool_arguments": json.loads(function_args)
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
+    response.raise_for_status()
+
+    return response.text
+
+async def init_cosmosdb_client():
     cosmos_conversation_client = None
-    if CHAT_HISTORY_ENABLED:
+    if app_settings.chat_history:
         try:
             cosmos_endpoint = (
-                f"https://{AZURE_COSMOSDB_ACCOUNT}.documents.azure.com:443/"
+                f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not AZURE_COSMOSDB_ACCOUNT_KEY:
-                credential = DefaultAzureCredential()
+            if not app_settings.chat_history.account_key:
+                async with DefaultAzureCredential() as cred:
+                    credential = cred
+                    
             else:
-                credential = AZURE_COSMOSDB_ACCOUNT_KEY
+                credential = app_settings.chat_history.account_key
 
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
-                database_name=AZURE_COSMOSDB_DATABASE,
-                container_name=AZURE_COSMOSDB_CONVERSATIONS_CONTAINER,
-                enable_message_feedback=AZURE_COSMOSDB_ENABLE_FEEDBACK,
+                database_name=app_settings.chat_history.database,
+                container_name=app_settings.chat_history.conversations_container,
+                enable_message_feedback=app_settings.chat_history.enable_feedback,
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -414,361 +252,73 @@ def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def get_configured_data_source():
-    data_source = {}
-    query_type = "simple"
-    if DATASOURCE_TYPE == "AzureCognitiveSearch":
-        # Set query type
-        if AZURE_SEARCH_QUERY_TYPE:
-            query_type = AZURE_SEARCH_QUERY_TYPE
-        elif (
-            AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true"
-            and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG
-        ):
-            query_type = "semantic"
-
-        # Set filter
-        filter = "(language/any(t: t eq 'EN')) and not (document_type/any(t: t eq 'LBL (Label)'))"
-        userToken = None
-        if AZURE_SEARCH_PERMITTED_GROUPS_COLUMN:
-            userToken = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
-            logging.debug(f"USER TOKEN is {'present' if userToken else 'not present'}")
-            if not userToken:
-                raise Exception(
-                    "Document-level access control is enabled, but user access token could not be fetched."
-                )
-
-            filter = generateFilterString(userToken)
-            logging.debug(f"FILTER: {filter}")
-
-        # Set authentication
-        authentication = {}
-        if AZURE_SEARCH_KEY:
-            authentication = {"type": "api_key", "api_key": AZURE_SEARCH_KEY}
-        else:
-            # If key is not provided, assume AOAI resource identity has been granted access to the search service
-            authentication = {"type": "system_assigned_managed_identity"}
-
-        data_source = {
-            "type": "azure_search",
-            "parameters": {
-                "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-                "authentication": authentication,
-                "index_name": AZURE_SEARCH_INDEX,
-                "fields_mapping": {
-                    "content_fields": (
-                        parse_multi_columns(AZURE_SEARCH_CONTENT_COLUMNS)
-                        if AZURE_SEARCH_CONTENT_COLUMNS
-                        else []
-                    ),
-                    "title_field": (
-                        AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None
-                    ),
-                    "url_field": (
-                        AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None
-                    ),
-                    "filepath_field": (
-                        AZURE_SEARCH_FILENAME_COLUMN
-                        if AZURE_SEARCH_FILENAME_COLUMN
-                        else None
-                    ),
-                    "vector_fields": (
-                        parse_multi_columns(AZURE_SEARCH_VECTOR_COLUMNS)
-                        if AZURE_SEARCH_VECTOR_COLUMNS
-                        else []
-                    ),
-                },
-                "in_scope": (
-                    True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False
-                ),
-                "top_n_documents": (
-                    int(AZURE_SEARCH_TOP_K) if AZURE_SEARCH_TOP_K else int(SEARCH_TOP_K)
-                ),
-                "query_type": query_type,
-                "semantic_configuration": (
-                    AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG
-                    if AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG
-                    else ""
-                ),
-                "role_information": AZURE_OPENAI_SYSTEM_MESSAGE,
-                "filter": filter,
-                "strictness": (
-                    int(AZURE_SEARCH_STRICTNESS)
-                    if AZURE_SEARCH_STRICTNESS
-                    else int(SEARCH_STRICTNESS)
-                ),
-            },
-        }
-    elif DATASOURCE_TYPE == "AzureCosmosDB":
-        query_type = "vector"
-
-        data_source = {
-            "type": "azure_cosmos_db",
-            "parameters": {
-                "authentication": {
-                    "type": "connection_string",
-                    "connection_string": AZURE_COSMOSDB_MONGO_VCORE_CONNECTION_STRING,
-                },
-                "index_name": AZURE_COSMOSDB_MONGO_VCORE_INDEX,
-                "database_name": AZURE_COSMOSDB_MONGO_VCORE_DATABASE,
-                "container_name": AZURE_COSMOSDB_MONGO_VCORE_CONTAINER,
-                "fields_mapping": {
-                    "content_fields": (
-                        parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS)
-                        if AZURE_COSMOSDB_MONGO_VCORE_CONTENT_COLUMNS
-                        else []
-                    ),
-                    "title_field": (
-                        AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN
-                        if AZURE_COSMOSDB_MONGO_VCORE_TITLE_COLUMN
-                        else None
-                    ),
-                    "url_field": (
-                        AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN
-                        if AZURE_COSMOSDB_MONGO_VCORE_URL_COLUMN
-                        else None
-                    ),
-                    "filepath_field": (
-                        AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN
-                        if AZURE_COSMOSDB_MONGO_VCORE_FILENAME_COLUMN
-                        else None
-                    ),
-                    "vector_fields": (
-                        parse_multi_columns(AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS)
-                        if AZURE_COSMOSDB_MONGO_VCORE_VECTOR_COLUMNS
-                        else []
-                    ),
-                },
-                "in_scope": (
-                    True
-                    if AZURE_COSMOSDB_MONGO_VCORE_ENABLE_IN_DOMAIN.lower() == "true"
-                    else False
-                ),
-                "top_n_documents": (
-                    int(AZURE_COSMOSDB_MONGO_VCORE_TOP_K)
-                    if AZURE_COSMOSDB_MONGO_VCORE_TOP_K
-                    else int(SEARCH_TOP_K)
-                ),
-                "strictness": (
-                    int(AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS)
-                    if AZURE_COSMOSDB_MONGO_VCORE_STRICTNESS
-                    else int(SEARCH_STRICTNESS)
-                ),
-                "query_type": query_type,
-                "role_information": AZURE_OPENAI_SYSTEM_MESSAGE,
-            },
-        }
-    elif DATASOURCE_TYPE == "Elasticsearch":
-        if ELASTICSEARCH_QUERY_TYPE:
-            query_type = ELASTICSEARCH_QUERY_TYPE
-
-        data_source = {
-            "type": "elasticsearch",
-            "parameters": {
-                "endpoint": ELASTICSEARCH_ENDPOINT,
-                "authentication": {
-                    "type": "encoded_api_key",
-                    "encoded_api_key": ELASTICSEARCH_ENCODED_API_KEY,
-                },
-                "index_name": ELASTICSEARCH_INDEX,
-                "fields_mapping": {
-                    "content_fields": (
-                        parse_multi_columns(ELASTICSEARCH_CONTENT_COLUMNS)
-                        if ELASTICSEARCH_CONTENT_COLUMNS
-                        else []
-                    ),
-                    "title_field": (
-                        ELASTICSEARCH_TITLE_COLUMN
-                        if ELASTICSEARCH_TITLE_COLUMN
-                        else None
-                    ),
-                    "url_field": (
-                        ELASTICSEARCH_URL_COLUMN if ELASTICSEARCH_URL_COLUMN else None
-                    ),
-                    "filepath_field": (
-                        ELASTICSEARCH_FILENAME_COLUMN
-                        if ELASTICSEARCH_FILENAME_COLUMN
-                        else None
-                    ),
-                    "vector_fields": (
-                        parse_multi_columns(ELASTICSEARCH_VECTOR_COLUMNS)
-                        if ELASTICSEARCH_VECTOR_COLUMNS
-                        else []
-                    ),
-                },
-                "in_scope": (
-                    True if ELASTICSEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False
-                ),
-                "top_n_documents": (
-                    int(ELASTICSEARCH_TOP_K)
-                    if ELASTICSEARCH_TOP_K
-                    else int(SEARCH_TOP_K)
-                ),
-                "query_type": query_type,
-                "role_information": AZURE_OPENAI_SYSTEM_MESSAGE,
-                "strictness": (
-                    int(ELASTICSEARCH_STRICTNESS)
-                    if ELASTICSEARCH_STRICTNESS
-                    else int(SEARCH_STRICTNESS)
-                ),
-            },
-        }
-    elif DATASOURCE_TYPE == "AzureMLIndex":
-        if AZURE_MLINDEX_QUERY_TYPE:
-            query_type = AZURE_MLINDEX_QUERY_TYPE
-
-        data_source = {
-            "type": "azure_ml_index",
-            "parameters": {
-                "name": AZURE_MLINDEX_NAME,
-                "version": AZURE_MLINDEX_VERSION,
-                "project_resource_id": AZURE_ML_PROJECT_RESOURCE_ID,
-                "fieldsMapping": {
-                    "content_fields": (
-                        parse_multi_columns(AZURE_MLINDEX_CONTENT_COLUMNS)
-                        if AZURE_MLINDEX_CONTENT_COLUMNS
-                        else []
-                    ),
-                    "title_field": (
-                        AZURE_MLINDEX_TITLE_COLUMN
-                        if AZURE_MLINDEX_TITLE_COLUMN
-                        else None
-                    ),
-                    "url_field": (
-                        AZURE_MLINDEX_URL_COLUMN if AZURE_MLINDEX_URL_COLUMN else None
-                    ),
-                    "filepath_field": (
-                        AZURE_MLINDEX_FILENAME_COLUMN
-                        if AZURE_MLINDEX_FILENAME_COLUMN
-                        else None
-                    ),
-                    "vector_fields": (
-                        parse_multi_columns(AZURE_MLINDEX_VECTOR_COLUMNS)
-                        if AZURE_MLINDEX_VECTOR_COLUMNS
-                        else []
-                    ),
-                },
-                "in_scope": (
-                    True if AZURE_MLINDEX_ENABLE_IN_DOMAIN.lower() == "true" else False
-                ),
-                "top_n_documents": (
-                    int(AZURE_MLINDEX_TOP_K)
-                    if AZURE_MLINDEX_TOP_K
-                    else int(SEARCH_TOP_K)
-                ),
-                "query_type": query_type,
-                "role_information": AZURE_OPENAI_SYSTEM_MESSAGE,
-                "strictness": (
-                    int(AZURE_MLINDEX_STRICTNESS)
-                    if AZURE_MLINDEX_STRICTNESS
-                    else int(SEARCH_STRICTNESS)
-                ),
-            },
-        }
-    elif DATASOURCE_TYPE == "Pinecone":
-        query_type = "vector"
-
-        data_source = {
-            "type": "pinecone",
-            "parameters": {
-                "environment": PINECONE_ENVIRONMENT,
-                "authentication": {"type": "api_key", "key": PINECONE_API_KEY},
-                "index_name": PINECONE_INDEX_NAME,
-                "fields_mapping": {
-                    "content_fields": (
-                        parse_multi_columns(PINECONE_CONTENT_COLUMNS)
-                        if PINECONE_CONTENT_COLUMNS
-                        else []
-                    ),
-                    "title_field": (
-                        PINECONE_TITLE_COLUMN if PINECONE_TITLE_COLUMN else None
-                    ),
-                    "url_field": PINECONE_URL_COLUMN if PINECONE_URL_COLUMN else None,
-                    "filepath_field": (
-                        PINECONE_FILENAME_COLUMN if PINECONE_FILENAME_COLUMN else None
-                    ),
-                    "vector_fields": (
-                        parse_multi_columns(PINECONE_VECTOR_COLUMNS)
-                        if PINECONE_VECTOR_COLUMNS
-                        else []
-                    ),
-                },
-                "in_scope": (
-                    True if PINECONE_ENABLE_IN_DOMAIN.lower() == "true" else False
-                ),
-                "top_n_documents": (
-                    int(PINECONE_TOP_K) if PINECONE_TOP_K else int(SEARCH_TOP_K)
-                ),
-                "strictness": (
-                    int(PINECONE_STRICTNESS)
-                    if PINECONE_STRICTNESS
-                    else int(SEARCH_STRICTNESS)
-                ),
-                "query_type": query_type,
-                "role_information": AZURE_OPENAI_SYSTEM_MESSAGE,
-            },
-        }
-    else:
-        raise Exception(
-            f"DATASOURCE_TYPE is not configured or unknown: {DATASOURCE_TYPE}"
-        )
-
-    if "vector" in query_type.lower() and DATASOURCE_TYPE != "AzureMLIndex":
-        embeddingDependency = {}
-        if AZURE_OPENAI_EMBEDDING_NAME:
-            embeddingDependency = {
-                "type": "deployment_name",
-                "deployment_name": AZURE_OPENAI_EMBEDDING_NAME,
-            }
-        elif AZURE_OPENAI_EMBEDDING_ENDPOINT and AZURE_OPENAI_EMBEDDING_KEY:
-            embeddingDependency = {
-                "type": "endpoint",
-                "endpoint": AZURE_OPENAI_EMBEDDING_ENDPOINT,
-                "authentication": {
-                    "type": "api_key",
-                    "key": AZURE_OPENAI_EMBEDDING_KEY,
-                },
-            }
-        elif DATASOURCE_TYPE == "Elasticsearch" and ELASTICSEARCH_EMBEDDING_MODEL_ID:
-            embeddingDependency = {
-                "type": "model_id",
-                "model_id": ELASTICSEARCH_EMBEDDING_MODEL_ID,
-            }
-        else:
-            raise Exception(
-                f"Vector query type ({query_type}) is selected for data source type {DATASOURCE_TYPE} but no embedding dependency is configured"
-            )
-        data_source["parameters"]["embedding_dependency"] = embeddingDependency
-
-    return data_source
-
-
-def prepare_model_args(request_body):
+def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
-    if not SHOULD_USE_DATA:
-        messages = [{"role": "system", "content": AZURE_OPENAI_SYSTEM_MESSAGE}]
+    if not app_settings.datasource:
+        messages = [
+            {
+                "role": "system",
+                "content": app_settings.azure_openai.system_message
+            }
+        ]
 
     for message in request_messages:
         if message:
-            messages.append({"role": message["role"], "content": message["content"]})
+            match message["role"]:
+                case "user":
+                    messages.append(
+                        {
+                            "role": message["role"],
+                            "content": message["content"]
+                        }
+                    )
+                case "assistant" | "function" | "tool":
+                    messages_helper = {}
+                    messages_helper["role"] = message["role"]
+                    if "name" in message:
+                        messages_helper["name"] = message["name"]
+                    if "function_call" in message:
+                        messages_helper["function_call"] = message["function_call"]
+                    messages_helper["content"] = message["content"]
+                    if "context" in message:
+                        context_obj = json.loads(message["context"])
+                        messages_helper["context"] = context_obj
+                    
+                    messages.append(messages_helper)
+
+
+    user_json = None
+    if (MS_DEFENDER_ENABLED):
+        authenticated_user_details = get_authenticated_user_details(request_headers)
+        conversation_id = request_body.get("conversation_id", None)
+        application_name = app_settings.ui.title
+        user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id, application_name)
 
     model_args = {
         "messages": messages,
-        "temperature": float(AZURE_OPENAI_TEMPERATURE),
-        "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
-        "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": (
-            parse_multi_columns(AZURE_OPENAI_STOP_SEQUENCE)
-            if AZURE_OPENAI_STOP_SEQUENCE
-            else None
-        ),
-        "stream": SHOULD_STREAM,
-        "model": AZURE_OPENAI_MODEL,
+        "temperature": app_settings.azure_openai.temperature,
+        "max_tokens": app_settings.azure_openai.max_tokens,
+        "top_p": app_settings.azure_openai.top_p,
+        "stop": app_settings.azure_openai.stop_sequence,
+        "stream": app_settings.azure_openai.stream,
+        "model": app_settings.azure_openai.model,
+        "user": user_json
     }
 
-    if SHOULD_USE_DATA:
-        model_args["extra_body"] = {"data_sources": [get_configured_data_source()]}
+    if len(messages) > 0:
+        if messages[-1]["role"] == "user":
+            if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
+                model_args["tools"] = azure_openai_tools
+
+            if app_settings.datasource:
+                model_args["extra_body"] = {
+                    "data_sources": [
+                        app_settings.datasource.construct_payload_configuration(
+                            request=request
+                        )
+                    ]
+                }
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -813,24 +363,24 @@ async def promptflow_request(request):
     try:
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {PROMPTFLOW_API_KEY}",
+            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
         }
         # Adding timeout for scenarios where response takes longer to come back
-        logging.debug(f"Setting timeout to {PROMPTFLOW_RESPONSE_TIMEOUT}")
+        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
         async with httpx.AsyncClient(
-            timeout=float(PROMPTFLOW_RESPONSE_TIMEOUT)
+            timeout=float(app_settings.promptflow.response_timeout)
         ) as client:
             pf_formatted_obj = convert_to_pf_format(
-                request, PROMPTFLOW_REQUEST_FIELD_NAME, PROMPTFLOW_RESPONSE_FIELD_NAME
+                request,
+                app_settings.promptflow.request_field_name,
+                app_settings.promptflow.response_field_name
             )
             # NOTE: This only support question and chat_history parameters
             # If you need to add more parameters, you need to modify the request body
             response = await client.post(
-                PROMPTFLOW_ENDPOINT,
+                app_settings.promptflow.endpoint,
                 json={
-                    f"{PROMPTFLOW_REQUEST_FIELD_NAME}": pf_formatted_obj[-1]["inputs"][
-                        PROMPTFLOW_REQUEST_FIELD_NAME
-                    ],
+                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
                     "chat_history": pf_formatted_obj[:-1],
                 },
                 headers=headers,
@@ -842,18 +392,55 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request):
+async def process_function_call(response):
+    response_message = response.choices[0].message
+    messages = []
+
+    if response_message.tool_calls:
+        for tool_call in response_message.tool_calls:
+            # Check if function exists
+            if tool_call.function.name not in azure_openai_available_tools:
+                continue
+            
+            function_response = await openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
+
+            # adding assistant response to messages
+            messages.append(
+                {
+                    "role": response_message.role,
+                    "function_call": {
+                        "name": tool_call.function.name,
+                        "arguments": tool_call.function.arguments,
+                    },
+                    "content": None,
+                }
+            )
+            
+            # adding function response to messages
+            messages.append(
+                {
+                    "role": "function",
+                    "name": tool_call.function.name,
+                    "content": function_response,
+                }
+            )  # extend conversation with function response
+        
+        return messages
+    
+    return None
+
+async def send_chat_request(request_body, request_headers):
     filtered_messages = []
-    messages = request.get("messages", [])
+    messages = request_body.get("messages", [])
     for message in messages:
         if message.get("role") != 'tool':
             filtered_messages.append(message)
             
-    request['messages'] = filtered_messages
-    model_args = prepare_model_args(request)
+    request_body['messages'] = filtered_messages
+    model_args = prepare_model_args(request_body, request_headers)
 
     try:
-        azure_openai_client = init_openai_client()
+        azure_openai_client = await init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
@@ -864,40 +451,138 @@ async def send_chat_request(request):
     return response, apim_request_id
 
 
-async def complete_chat_request(request_body):
-    if USE_PROMPTFLOW and PROMPTFLOW_ENDPOINT and PROMPTFLOW_API_KEY:
+async def complete_chat_request(request_body, request_headers):
+    if app_settings.base_settings.use_promptflow:
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
-            response, history_metadata, PROMPTFLOW_RESPONSE_FIELD_NAME
+            response,
+            history_metadata,
+            app_settings.promptflow.response_field_name,
+            app_settings.promptflow.citations_field_name
         )
     else:
-        response, apim_request_id = await send_chat_request(request_body)
+        response, apim_request_id = await send_chat_request(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
-        return format_non_streaming_response(response, history_metadata, apim_request_id)
+        non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            function_response = await process_function_call(response)  # Add await here
+
+            if function_response:
+                request_body["messages"].extend(function_response)
+
+                response, apim_request_id = await send_chat_request(request_body, request_headers)
+                history_metadata = request_body.get("history_metadata", {})
+                non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+
+    return non_streaming_response
+
+class AzureOpenaiFunctionCallStreamState():
+    def __init__(self):
+        self.tool_calls = []                # All tool calls detected in the stream
+        self.tool_name = ""                 # Tool name being streamed
+        self.tool_arguments_stream = ""     # Tool arguments being streamed
+        self.current_tool_call = None       # JSON with the tool name and arguments currently being streamed
+        self.function_messages = []         # All function messages to be appended to the chat history
+        self.streaming_state = "INITIAL"    # Streaming state (INITIAL, STREAMING, COMPLETED)
 
 
-async def stream_chat_request(request_body):
-    response, apim_request_id = await send_chat_request(request_body)
+async def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
+    if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
+        response_message = completionChunk.choices[0].delta
+        
+        # Function calling stream processing
+        if response_message.tool_calls and function_call_stream_state.streaming_state in ["INITIAL", "STREAMING"]:
+            function_call_stream_state.streaming_state = "STREAMING"
+            for tool_call_chunk in response_message.tool_calls:
+                # New tool call
+                if tool_call_chunk.id:
+                    if function_call_stream_state.current_tool_call:
+                        function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
+                        function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
+                        function_call_stream_state.tool_arguments_stream = ""
+                        function_call_stream_state.tool_name = ""
+                        function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
+
+                    function_call_stream_state.current_tool_call = {
+                        "tool_id": tool_call_chunk.id,
+                        "tool_name": tool_call_chunk.function.name if function_call_stream_state.tool_name == "" else function_call_stream_state.tool_name
+                    }
+                else:
+                    function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
+                
+        # Function call - Streaming completed
+        elif response_message.tool_calls is None and function_call_stream_state.streaming_state == "STREAMING":
+            function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
+            function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
+            
+            for tool_call in function_call_stream_state.tool_calls:
+                tool_response = await openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
+
+                function_call_stream_state.function_messages.append({
+                    "role": "assistant",
+                    "function_call": {
+                        "name" : tool_call["tool_name"],
+                        "arguments": tool_call["tool_arguments"]
+                    },
+                    "content": None
+                })
+                function_call_stream_state.function_messages.append({
+                    "tool_call_id": tool_call["tool_id"],
+                    "role": "function",
+                    "name": tool_call["tool_name"],
+                    "content": tool_response,
+                })
+            
+            function_call_stream_state.streaming_state = "COMPLETED"
+            return function_call_stream_state.streaming_state
+        
+        else:
+            return function_call_stream_state.streaming_state
+
+
+async def stream_chat_request(request_body, request_headers):
+    response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
     
-    async def generate():
-        async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+    async def generate(apim_request_id, history_metadata):
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+            # Maintain state during function call streaming
+            function_call_stream_state = AzureOpenaiFunctionCallStreamState()
+            
+            async for completionChunk in response:
+                stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
+                
+                # No function call, asistant response
+                if stream_state == "INITIAL":
+                    yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
-    return generate()
+                # Function call stream completed, functions were executed.
+                # Append function calls and results to history and send to OpenAI, to stream the final answer.
+                if stream_state == "COMPLETED":
+                    request_body["messages"].extend(function_call_stream_state.function_messages)
+                    function_response, apim_request_id = await send_chat_request(request_body, request_headers)
+                    async for functionCompletionChunk in function_response:
+                        yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
+                
+        else:
+            async for completionChunk in response:
+                yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+
+    return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
 
 
-async def conversation_internal(request_body):
+async def conversation_internal(request_body, request_headers):
     try:
-        if SHOULD_STREAM:
-            result = await stream_chat_request(request_body)
+        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
+            result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
             return response
         else:
-            result = await complete_chat_request(request_body)
+            result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
 
     except Exception as ex:
@@ -914,7 +599,7 @@ async def conversation():
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
 
-    return await conversation_internal(request_json)
+    return await conversation_internal(request_json, request.headers)
 
 
 @bp.route("/frontend_settings", methods=["GET"])
@@ -929,6 +614,7 @@ def get_frontend_settings():
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
+    await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -938,15 +624,14 @@ async def add_conversation():
 
     try:
         # make sure cosmos is configured
-        cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client:
+        if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
         if not conversation_id:
             title = await generate_title(request_json["messages"])
-            conversation_dict = await cosmos_conversation_client.create_conversation(
+            conversation_dict = await current_app.cosmos_conversation_client.create_conversation(
                 user_id=user_id, title=title
             )
             conversation_id = conversation_dict["id"]
@@ -957,7 +642,7 @@ async def add_conversation():
         ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
         if len(messages) > 0 and messages[-1]["role"] == "user":
-            createdMessageValue = await cosmos_conversation_client.create_message(
+            createdMessageValue = await current_app.cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
@@ -972,13 +657,11 @@ async def add_conversation():
         else:
             raise Exception("No user message found")
 
-        await cosmos_conversation_client.cosmosdb_client.close()
-
         # Submit request to Chat Completions for response
         request_body = await request.get_json()
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
-        return await conversation_internal(request_body)
+        return await conversation_internal(request_body, request.headers)
 
     except Exception as e:
         logging.exception("Exception in /history/generate")
@@ -987,6 +670,7 @@ async def add_conversation():
 
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
+    await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -996,8 +680,7 @@ async def update_conversation():
 
     try:
         # make sure cosmos is configured
-        cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client:
+        if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         # check for the conversation_id, if the conversation is not set, we will create a new one
@@ -1010,14 +693,14 @@ async def update_conversation():
         if len(messages) > 0 and messages[-1]["role"] == "assistant":
             if len(messages) > 1 and messages[-2].get("role", None) == "tool":
                 # write the tool message first
-                await cosmos_conversation_client.create_message(
+                await current_app.cosmos_conversation_client.create_message(
                     uuid=str(uuid.uuid4()),
                     conversation_id=conversation_id,
                     user_id=user_id,
                     input_message=messages[-2],
                 )
             # write the assistant message
-            await cosmos_conversation_client.create_message(
+            await current_app.cosmos_conversation_client.create_message(
                 uuid=messages[-1]["id"],
                 conversation_id=conversation_id,
                 user_id=user_id,
@@ -1027,7 +710,6 @@ async def update_conversation():
             raise Exception("No bot messages found")
 
         # Submit request to Chat Completions for response
-        await cosmos_conversation_client.cosmosdb_client.close()
         response = {"success": True}
         return jsonify(response), 200
 
@@ -1038,9 +720,9 @@ async def update_conversation():
 
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
+    await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-    cosmos_conversation_client = init_cosmosdb_client()
 
     ## check request for message_id
     request_json = await request.get_json()
@@ -1054,7 +736,7 @@ async def update_message():
             return jsonify({"error": "message_feedback is required"}), 400
 
         ## update the message in cosmos
-        updated_message = await cosmos_conversation_client.update_message_feedback(
+        updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
             user_id, message_id, message_feedback
         )
         if updated_message:
@@ -1084,6 +766,7 @@ async def update_message():
 
 @bp.route("/history/delete", methods=["DELETE"])
 async def delete_conversation():
+    await cosmos_db_ready.wait()
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -1097,21 +780,18 @@ async def delete_conversation():
             return jsonify({"error": "conversation_id is required"}), 400
 
         ## make sure cosmos is configured
-        cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client:
+        if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos first
-        deleted_messages = await cosmos_conversation_client.delete_messages(
+        deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
             conversation_id, user_id
         )
 
         ## Now delete the conversation
-        deleted_conversation = await cosmos_conversation_client.delete_conversation(
+        deleted_conversation = await current_app.cosmos_conversation_client.delete_conversation(
             user_id, conversation_id
         )
-
-        await cosmos_conversation_client.cosmosdb_client.close()
 
         return (
             jsonify(
@@ -1129,20 +809,19 @@ async def delete_conversation():
 
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
+    await cosmos_db_ready.wait()
     offset = request.args.get("offset", 0)
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
     ## make sure cosmos is configured
-    cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client:
+    if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
 
     ## get the conversations from cosmos
-    conversations = await cosmos_conversation_client.get_conversations(
+    conversations = await current_app.cosmos_conversation_client.get_conversations(
         user_id, offset=offset, limit=25
     )
-    await cosmos_conversation_client.cosmosdb_client.close()
     if not isinstance(conversations, list):
         return jsonify({"error": f"No conversations for {user_id} were found"}), 404
 
@@ -1153,6 +832,7 @@ async def list_conversations():
 
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
+    await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -1164,12 +844,11 @@ async def get_conversation():
         return jsonify({"error": "conversation_id is required"}), 400
 
     ## make sure cosmos is configured
-    cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client:
+    if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
 
     ## get the conversation object and the related messages from cosmos
-    conversation = await cosmos_conversation_client.get_conversation(
+    conversation = await current_app.cosmos_conversation_client.get_conversation(
         user_id, conversation_id
     )
     ## return the conversation id and the messages in the bot frontend format
@@ -1184,7 +863,7 @@ async def get_conversation():
         )
 
     # get the messages for the conversation from cosmos
-    conversation_messages = await cosmos_conversation_client.get_messages(
+    conversation_messages = await current_app.cosmos_conversation_client.get_messages(
         user_id, conversation_id
     )
 
@@ -1200,12 +879,12 @@ async def get_conversation():
         for msg in conversation_messages
     ]
 
-    await cosmos_conversation_client.cosmosdb_client.close()
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
 
 
 @bp.route("/history/rename", methods=["POST"])
 async def rename_conversation():
+    await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
@@ -1217,12 +896,11 @@ async def rename_conversation():
         return jsonify({"error": "conversation_id is required"}), 400
 
     ## make sure cosmos is configured
-    cosmos_conversation_client = init_cosmosdb_client()
-    if not cosmos_conversation_client:
+    if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
 
     ## get the conversation from cosmos
-    conversation = await cosmos_conversation_client.get_conversation(
+    conversation = await current_app.cosmos_conversation_client.get_conversation(
         user_id, conversation_id
     )
     if not conversation:
@@ -1240,16 +918,16 @@ async def rename_conversation():
     if not title:
         return jsonify({"error": "title is required"}), 400
     conversation["title"] = title
-    updated_conversation = await cosmos_conversation_client.upsert_conversation(
+    updated_conversation = await current_app.cosmos_conversation_client.upsert_conversation(
         conversation
     )
 
-    await cosmos_conversation_client.cosmosdb_client.close()
     return jsonify(updated_conversation), 200
 
 
 @bp.route("/history/delete_all", methods=["DELETE"])
 async def delete_all_conversations():
+    await cosmos_db_ready.wait()
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -1257,11 +935,10 @@ async def delete_all_conversations():
     # get conversations for user
     try:
         ## make sure cosmos is configured
-        cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client:
+        if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
-        conversations = await cosmos_conversation_client.get_conversations(
+        conversations = await current_app.cosmos_conversation_client.get_conversations(
             user_id, offset=0, limit=None
         )
         if not conversations:
@@ -1270,15 +947,14 @@ async def delete_all_conversations():
         # delete each conversation
         for conversation in conversations:
             ## delete the conversation messages from cosmos first
-            deleted_messages = await cosmos_conversation_client.delete_messages(
+            deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
                 conversation["id"], user_id
             )
 
             ## Now delete the conversation
-            deleted_conversation = await cosmos_conversation_client.delete_conversation(
+            deleted_conversation = await current_app.cosmos_conversation_client.delete_conversation(
                 user_id, conversation["id"]
             )
-        await cosmos_conversation_client.cosmosdb_client.close()
         return (
             jsonify(
                 {
@@ -1295,6 +971,7 @@ async def delete_all_conversations():
 
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
+    await cosmos_db_ready.wait()
     ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
@@ -1308,12 +985,11 @@ async def clear_messages():
             return jsonify({"error": "conversation_id is required"}), 400
 
         ## make sure cosmos is configured
-        cosmos_conversation_client = init_cosmosdb_client()
-        if not cosmos_conversation_client:
+        if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
 
         ## delete the conversation messages from cosmos
-        deleted_messages = await cosmos_conversation_client.delete_messages(
+        deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
             conversation_id, user_id
         )
 
@@ -1333,18 +1009,17 @@ async def clear_messages():
 
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
-    if not AZURE_COSMOSDB_ACCOUNT:
+    await cosmos_db_ready.wait()
+    if not app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
-        cosmos_conversation_client = init_cosmosdb_client()
-        success, err = await cosmos_conversation_client.ensure()
-        if not cosmos_conversation_client or not success:
+        success, err = await current_app.cosmos_conversation_client.ensure()
+        if not current_app.cosmos_conversation_client or not success:
             if err:
                 return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
-        await cosmos_conversation_client.cosmosdb_client.close()
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
         logging.exception("Exception in /history/ensure")
@@ -1355,7 +1030,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception} {AZURE_COSMOSDB_DATABASE} for account {AZURE_COSMOSDB_ACCOUNT}"
+                        "error": f"{cosmos_exception} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
                     }
                 ),
                 422,
@@ -1364,7 +1039,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception}: {AZURE_COSMOSDB_CONVERSATIONS_CONTAINER}"
+                        "error": f"{cosmos_exception}: {app_settings.chat_history.conversations_container}"
                     }
                 ),
                 422,
@@ -1373,9 +1048,9 @@ async def ensure_cosmos():
             return jsonify({"error": "CosmosDB is not working"}), 500
 
 
-async def generate_title(conversation_messages):
+async def generate_title(conversation_messages) -> str:
     ## make sure the messages are sorted by _ts descending
-    title_prompt = 'Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Respond with a json object in the format {{"title": string}}. Do not include any other commentary or description.'
+    title_prompt = "Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Do not include any other commentary or description."
 
     messages = [
         {"role": msg["role"], "content": msg["content"]}
@@ -1384,14 +1059,15 @@ async def generate_title(conversation_messages):
     messages.append({"role": "user", "content": title_prompt})
 
     try:
-        azure_openai_client = init_openai_client(use_data=False)
+        azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
-            model=AZURE_OPENAI_MODEL, messages=messages, temperature=1, max_tokens=64
+            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
-        title = json.loads(response.choices[0].message.content)["title"]
+        title = response.choices[0].message.content
         return title
     except Exception as e:
+        logging.exception("Exception while generating title", e)
         return messages[-2]["content"]
 
 

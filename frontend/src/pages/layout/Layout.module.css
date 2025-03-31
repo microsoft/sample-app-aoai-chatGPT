@@ -32,16 +32,16 @@
 }
 
 .headerIcon {
-    height: 32px;
-    width: auto;
-    margin-left: 36px;
+  height: 32px;
+  width: auto;
+  margin-left: 36px;
 }
 
 .shareButtonContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    margin-right: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-right: 20px;
 }
 
 .shareButton {
@@ -101,11 +101,11 @@
 }
 
 @media (max-width: 480px) {
-    .headerTitleContainer {
-        margin-left: 4px;
-    }
+  .headerTitleContainer {
+    margin-left: 4px;
+  }
 
-    .headerIcon {
-        margin-left: 26px;
-    }
+  .headerIcon {
+    margin-left: 26px;
+  }
 }

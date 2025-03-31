@@ -14,14 +14,15 @@
   padding-top: 1.1em;
   padding-bottom: 1.1em;
   margin-right: auto;
-  img {
-    transform: translateY(10%);
-    width: 80%;
-    height: auto;
-    transition: transform 0.5s;
-    transform-origin: center;
 
-  }
+}
+
+.homeLink img {
+  transform: translateY(10%);
+  width: 80%;
+  height: auto;
+  transition: transform 0.5s;
+  transform-origin: center;
 }
 
 .link {

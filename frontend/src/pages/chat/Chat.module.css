@@ -3,9 +3,20 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .chatRoot {
+  flex: 1;
+  display: flex;
+  margin-top: 0px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  gap: 5px;
   flex: 1;
   display: flex;
   margin-top: 0px;
@@ -30,6 +41,11 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 .chatEmptyStateMessageContainer {
   background: radial-gradient(108.78% 108.78% at 50.02% 19.78%, #ffffff 57.29%, #eef6fe 100%);
@@ -48,23 +64,32 @@
   line-height: 24px;
   margin-top: 36px;
   margin-bottom: 0px;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 36px;
+  display: flex;
+  align-items: flex-end;
+  text-align: center;
+  line-height: 24px;
+  margin-top: 36px;
+  margin-bottom: 0px;
 }
 
 .chatEmptyStateSubtitle {
-    margin-top: 20px;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 150%;
-    align-items: flex-end;
-    text-align: center;
-    letter-spacing: -0.01em;
-    color: #616161;
+  margin-top: 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  align-items: flex-end;
+  text-align: center;
+  letter-spacing: -0.01em;
+  color: #616161;
 }
 
 .chatIcon {
-    height: 62px;
-    width: auto;
+  height: 62px;
+  width: auto;
 }
 
 .chatMessageStream {
@@ -77,9 +102,21 @@
   display: flex;
   flex-direction: column;
   margin-top: 24px;
+  flex-grow: 1;
+  max-width: 1028px;
+  width: 100%;
+  overflow-y: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 24px;
 }
 
 .chatMessageUser {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
   display: flex;
   justify-content: flex-end;
   margin-bottom: 12px;
@@ -105,6 +142,9 @@
 }
 
 .chatMessageGpt {
+  margin-bottom: 12px;
+  max-width: 80%;
+  display: flex;
   margin-bottom: 12px;
   max-width: 80%;
   display: flex;
@@ -146,24 +186,32 @@
   max-width: 1028px;
   margin-bottom: 50px;
   margin-top: 8px;
+  position: sticky;
+  flex: 0 0 100px;
+  padding-top: 12px;
+  padding-bottom: 24px;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: calc(100% - 100px);
+  max-width: 1028px;
+  margin-bottom: 50px;
+  margin-top: 8px;
 }
 
-
-
 .clearChatBroom {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    left: 7px;
-    top: 13px;
-    color: #FFFFFF;
-    border-radius: 4px;
-    z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  left: 7px;
+  top: 13px;
+  color: #ffffff;
+  border-radius: 4px;
+  z-index: 1;
 }
 
 .clearChatContainer {
@@ -172,13 +220,14 @@
   /* height: 40px; */
   left: 7px;
   top: 40px;
-  p {
-    margin: 0;
-    font-size: 0.8rem;
-    text-align: center;
-    font-weight: 600;
-    color: #00000080
-  }
+}
+
+.clearChatContainer p {
+  margin: 0;
+  font-size: 0.8rem;
+  text-align: center;
+  font-weight: 600;
+  color: #00000080
 }
 
 .clearChatBroomNoCosmos {
@@ -198,19 +247,19 @@
 }
 
 .newChatIcon {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    left: 7px;
-    top: 66px;
-    color: #FFFFFF;
-    border-radius: 4px;
-    z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  left: 7px;
+  top: 66px;
+  color: #ffffff;
+  border-radius: 4px;
+  z-index: 1;
 }
 
 .stopGeneratingContainer {
@@ -232,6 +281,9 @@
 }
 
 .stopGeneratingIcon {
+  width: 14px;
+  height: 14px;
+  color: #424242;
   width: 14px;
   height: 14px;
   color: #424242;
@@ -272,9 +324,18 @@
 
 .citationPanelHeaderContainer {
   width: 100%;
+  width: 100%;
 }
 
 .citationPanelHeader {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  color: #000000;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
   font-style: normal;
   font-weight: 600;
   font-size: 18px;
@@ -289,9 +350,14 @@
   width: 18px;
   height: 18px;
   color: #424242;
+  width: 18px;
+  height: 18px;
+  color: #424242;
 }
 
 .citationPanelDismiss:hover {
+  background-color: #d1d1d1;
+  cursor: pointer;
   background-color: #d1d1d1;
   cursor: pointer;
 }
@@ -307,6 +373,8 @@
 }
 
 .citationPanelTitle:hover {
+  text-decoration: underline;
+  cursor: pointer;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -326,9 +394,22 @@
 a {
   padding-left: 5px;
   padding-right: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .viewSourceButton {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+  color: #115ea3;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 6px;
+  gap: 4px;
+  border: 1px solid #d1d1d1;
+  border-radius: 4px;
   font-style: normal;
   font-weight: 600;
   font-size: 12px;
@@ -345,31 +426,42 @@ a {
 .viewSourceButton:hover {
   text-decoration: underline;
   cursor: pointer;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.uploadedImageChat {
+  position: absolute;
+  right: -23px;
+  bottom: -35px;
+  max-width: 70%;
+  max-height: 70%;
+  border-radius: 4px;
 }
 
 @media (max-width: 480px) {
-    .chatInput {
-        width: 90%;
-        max-width: 90%;
-    }
+  .chatInput {
+    width: 90%;
+    max-width: 90%;
+  }
 
-    .newChatIcon {
-        left: 0px;
-    }
+  .newChatIcon {
+    left: 0px;
+  }
 
-    .clearChatBroom {
-        left: 0px;
-    }
+  .clearChatBroom {
+    left: 0px;
+  }
 
-    .clearChatBroomNoCosmos {
-        left: 0px;
-    }
+  .clearChatBroomNoCosmos {
+    left: 0px;
+  }
 
-    .chatEmptyStateTitle {
-        line-height: 36px;
-    }
+  .chatEmptyStateTitle {
+    line-height: 36px;
+  }
 
-    .citationPanel {
-        max-width: 100%;
-    }
+  .citationPanel {
+    max-width: 100%;
+  }
 }
