@@ -68,4 +68,4 @@ jobs:
         with:
           app-name: 'RFI-Responder'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F1E32A5ABE024D928610C38B362F7098 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C517092AD4BF4ACDAF27DEB6B24D15BD }}
