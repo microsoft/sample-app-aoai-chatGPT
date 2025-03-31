@@ -276,10 +276,9 @@ def prepare_model_args(request_body, request_headers):
 
     user_security_context = None
     if (MS_DEFENDER_ENABLED):
-        tenant_id = os.environ.get("AZURE_TENANT_ID")
         authenticated_user_details = get_authenticated_user_details(request_headers)
         application_name = app_settings.ui.title
-        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name, tenant_id)  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai
+        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai
     
 
     model_args = {
@@ -344,7 +343,6 @@ def prepare_model_args(request_body, request_headers):
         model_args["extra_body"] = {}
     if user_security_context:  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai     
                 model_args["extra_body"]["user_security_context"]= user_security_context.to_dict()
-    
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
 
     return model_args
