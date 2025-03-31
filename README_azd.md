@@ -55,14 +55,9 @@ If you have enabled Microsoft Defender for Cloud's threat protection for AI work
 To add security context to your alerts, run the following command:
 
 ```bash
-azd env set MS_DEFENDERFORCLOUD_ENABLED true
+azd env set MS_DEFENDER_ENABLED true
 ```
 
-In some cases, the user security context may generate alerts containing the "tenant ID" value in the alert description. While Azure deployments automatically include the tenant ID, local deployments do not. Therefore, you may need to manually add the tenant ID to the .env file:
-
-```bash
-AZURE_TENANT_ID = <your azure tenant id value> 
-```
 
 1. Run `azd auth login` to login to your Azure account.
 1. Run `azd up` to provision Azure resources and deploy this sample to those resources. This also runs a script to build the search index based on files in the `./data` folder.
