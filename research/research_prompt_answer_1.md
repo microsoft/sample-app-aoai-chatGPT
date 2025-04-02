@@ -23,7 +23,7 @@
 
 <table border="0">
   <tr>
-    <td align="left" width="100">No.1</td>
+    <td align="left" width="100">プロンプトNo.1</td>
     <td align="left">Neuronの導入事例を探してください</td>
   </tr>
   <tr>
