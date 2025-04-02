@@ -1,8 +1,5 @@
 # 構築したチャットbotに投げたプロンプトと回答結果（１～５）
-|No.|プロンプト|
-|:--|:-----|
-|1| Neuronの導入事例を探してください|
-
+### 1. Neuronの導入事例を探してください
 |項目|内容|
 |:--|:-----|
 |回答例1|1. 株式会社QES  
@@ -25,7 +22,7 @@
 - [清水建設株式会社の事例](https://www.brains-tech.co.jp/)
 - [株式会社再春館製薬所の事例](https://www.brains-tech.co.jp/) 
 - [三菱電機株式会社の事例](https://www.brains-tech.co.jp/)|
-|考察||
+
 
 ### 2. SharePoint Onlineの検索の事例を探してください
 SharePoint Onlineの検索に関するNeuron ESの導入事例について、以下の情報があります。
