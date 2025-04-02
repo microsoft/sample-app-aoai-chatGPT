@@ -23,13 +23,14 @@
 
 <table border="0">
   <tr>
-    <td align="left">No.1</td>
+    <td align="left" width="100">No.1</td>
     <td align="left">Neuronの導入事例を探してください</td>
   </tr>
   <tr>
     <td align="left">回答例1</td>
     <td align="left">
-Neuron ESの導入事例について、以下の情報があります。<br>
+Neuron ESの導入事例について、以下の情報があります。
+       
 1. 株式会社QES  
    - Neuron ESの導入により、業務効率化を図るために情報の検索時間を短縮し、社内情報の再利用を促進することができました。
    - 評価版の環境をそのまま本番利用し、スムーズな導入が実現しました。
