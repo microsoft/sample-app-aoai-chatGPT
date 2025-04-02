@@ -23,8 +23,8 @@
 
 <table border="0">
   <tr>
-    <th >No.1</th>
-    <th >Neuronの導入事例を探してください</th>
+    <td align="left">No.1</td>
+    <td align="left">Neuronの導入事例を探してください</td>
   </tr>
   <tr>
     <th >回答例1</th>
