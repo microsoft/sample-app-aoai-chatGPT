@@ -27,8 +27,8 @@
     <td align="left">Neuronの導入事例を探してください</td>
   </tr>
   <tr>
-    <th >回答例1</th>
-    <th >1. 株式会社QES  
+    <td align="left">回答例1</td>
+    <td align="left">1. 株式会社QES  
    - Neuron ESの導入により、業務効率化を図るために情報の検索時間を短縮し、社内情報の再利用を促進することができました。
    - 評価版の環境をそのまま本番利用し、スムーズな導入が実現しました。
 
@@ -47,7 +47,7 @@
 - [株式会社QESの事例](https://www.brains-tech.co.jp/)
 - [清水建設株式会社の事例](https://www.brains-tech.co.jp/)
 - [株式会社再春館製薬所の事例](https://www.brains-tech.co.jp/) 
-- [三菱電機株式会社の事例](https://www.brains-tech.co.jp/)|</th>
+- [三菱電機株式会社の事例](https://www.brains-tech.co.jp/)|</td>
   </tr>
 </table>
 
