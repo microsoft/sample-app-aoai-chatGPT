@@ -53,6 +53,10 @@ Neuron ESの導入事例について、以下の情報があります。
 - [三菱電機株式会社の事例](https://www.brains-tech.co.jp/)|
     </td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left"></td>
+  </tr>
 </table>
 
 
