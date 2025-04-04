@@ -35,12 +35,19 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
+from datetime import datetime
+from bs4 import BeautifulSoup, UnicodeDammit
+from urllib.request import urlopen, Request
+
+from backend.google import (
+    google_query,
+    public_query_prefix
+)
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
-
-
+    
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
@@ -203,7 +210,6 @@ async def openai_remote_azure_function_call(function_name, function_args):
     async with httpx.AsyncClient() as client:
         response = await client.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
     response.raise_for_status()
-
     return response.text
 
 async def init_cosmosdb_client():
@@ -236,7 +242,6 @@ async def init_cosmosdb_client():
         logging.debug("CosmosDB not configured")
 
     return cosmos_conversation_client
-
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
@@ -417,13 +422,50 @@ async def process_function_call(response):
 
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
+    public_query = False
     messages = request_body.get("messages", [])
-    for message in messages:
-        if message.get("role") != 'tool':
-            filtered_messages.append(message)
+    for i,message in enumerate(messages):
+        if message:
+            if message.get("role") != 'tool':
+                if message["role"] == "user" and message["content"].startswith(public_query_prefix) and i == len(messages)-1:
+                    public_query = True
+                    result = await google_query(message["content"])
+                    if result:
+                        query = result[1]
+                        sources = result[0]
+                            
+                        prompt =  f'''
+                            Provide me with the information I requested. Use the sources to provide an accurate response.
+                            Respond in markdown format. Cite the sources you used as a markdown link as you use them at the 
+                            end of each sentence by number of the source (example: [[1]](link.com)). Make sure the references
+                            are counted properly and are in order. Provide an accurate response and then stop. 
+                            Today's date is {datetime.now().strftime("%B %d, %Y")}.
+
+                            Example Input:
+                            What's the weather in San Francisco today?
+
+                            Example Response:
+                            It's 70 degrees and sunny in San Francisco today. [[1]](https://www.google.com/search?q=weather+san+francisco)
+
+                            Input:
+                            {query}
+
+                            Sources:
+                            {sources}
+
+                        '''
+                        message["content"] = prompt
+                elif message["content"].startswith(public_query_prefix):
+                    message = None
+                filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
+    if public_query:
+        # remove the datasource from the model args
+        model_args["extra_body"] = None
+        model_args["temperature"] = 0
+        model_args["top_p"] = None
 
     try:
         azure_openai_client = await init_openai_client()
@@ -1055,6 +1097,5 @@ async def generate_title(conversation_messages) -> str:
     except Exception as e:
         logging.exception("Exception while generating title", e)
         return messages[-2]["content"]
-
 
 app = create_app()
