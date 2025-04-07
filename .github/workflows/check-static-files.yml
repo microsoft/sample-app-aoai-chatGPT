@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: List changed frontend source files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v46
         id: changed-frontend-src-files
         with:
           files: |
@@ -22,7 +22,7 @@ jobs:
       - name: List changed frontend static files
         id: changed-frontend-static-files
         if: steps.changed-frontend-src-files.outputs.files_changed == 'true'
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v46
         with:
           files: |
             static
@@ -32,7 +32,7 @@ jobs:
         run: echo "There were changes to the frontend code, but no corresponding changes to static files.  Please build the project locally, commit the static file changes and push the changes to try again." && exit 1
 
       - name: List logo customizations
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v46
         id: changed-logo-files
         with:
           files: |
