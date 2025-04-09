@@ -138,4 +138,5 @@ pypdfium2で文字化けするpdfファイルは、Azure AI Searchでは文字�
 AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必要になりそうです。詳しい報告は、別の機会にします。
 
 <br>
+
 [mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/edit/branch-1/research/research_main.md)
