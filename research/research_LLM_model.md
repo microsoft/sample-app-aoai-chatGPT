@@ -139,4 +139,4 @@ AIの時代にはpdfの作り方やpdfを扱うライブラリにも配慮が必
 
 <br>
 
-[mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/edit/branch-1/research/research_main.md)
+[mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_main.md)
