@@ -98,6 +98,7 @@ async def preprocess_page_content_with_ai_model(content, query):
         model_args["stream"] = False
         model_args["extra_body"] = None
         model_args["temperature"] = 0
+        model_args["model"] = os.environ.get("GOOGLE_AZURE_OPENAI_MODEL_FOR_PREPROCESSING")
         azure_openai_client = await init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         parsed_response = raw_response.parse()
@@ -109,7 +110,7 @@ async def preprocess_page_content_with_ai_model(content, query):
 def download_page(url):
     try:
         req=Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        html = urlopen(req, timeout=10).read()
+        html = urlopen(req, timeout=20).read()
         soup = BeautifulSoup(UnicodeDammit.detwingle(html), features="html.parser")
         
         # get text
@@ -135,7 +136,7 @@ def fetch_google_results(query_parameters):
     query_parameters["key"] = google_api_key
     query_parameters["cx"] = google_cx
     query_parameters["fields"] = "items(title,link,snippet)"
-    query_parameters["lr"] = "lang_en"
+    #query_parameters["lr"] = "lang_en"
     response = httpx.get("https://www.googleapis.com/customsearch/v1", headers=headers, params=query_parameters)
     response.raise_for_status()
 

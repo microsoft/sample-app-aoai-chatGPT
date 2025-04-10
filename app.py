@@ -438,7 +438,8 @@ async def send_chat_request(request_body, request_headers):
                             Provide me with the information I requested. Use the sources to provide an accurate response.
                             Respond in markdown format. Cite the sources you used as a markdown link as you use them at the 
                             end of each sentence by number of the source (example: [[1]](link.com)). Make sure the references
-                            are counted properly and are in order. Provide an accurate response and then stop. 
+                            are counted properly and are in order. At the end of the response, include the list of the sources
+                            used to generate the report. Provide an accurate response and then stop. 
                             Today's date is {datetime.now().strftime("%B %d, %Y")}.
 
                             Example Input:
