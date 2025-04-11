@@ -70,12 +70,11 @@
 }
 
 .fileInput {
-  width: 0;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-  z-index: -1;
+  width: auto; /* Otomatik genişlik */
+  height: auto; /* Otomatik yükseklik */
+  opacity: 1; /* Tamamen görünür */
+  position: relative; /* Normal pozisyon */
+  z-index: 1; /* Katmanda öne çıkmasını sağla */
 }
 
 .fileLabel {
