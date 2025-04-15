@@ -170,5 +170,5 @@ Neuronを導入する顧客に共通する課題は以下の通りです：
     <td align="left"></td>
   </tr>
 </table>
-[No.1〜No.5](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_prompt_answer_1.md)
+
 [No.1〜No.5](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_prompt_answer_1.md)
