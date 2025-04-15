@@ -1,172 +1,173 @@
-# �\�z�����`���b�gbot�ɓ������v�����v�g�Ɖ񓚌��ʁi�U�`�P�O�j
+# 構築したチャットbotに投げたプロンプトと回答結果（６～１０）
 
 <table border="0">
   <tr>
-    <td align="left" width="110">�v�����v�g<br>No.6</td>
-    <td align="left">Neruon�̓��������T���Ă�������</td>
+    <td align="left" width="110">プロンプト<br>No.6</td>
+    <td align="left">Neruonの導入事例を探してください</td>
   </tr>
   <tr>
-    <td align="left">�񓚗�6</td>
+    <td align="left">回答例6</td>
     <td align="left">
-�ȉ��́ANeuron ES�̓���������Љ�Ă����Ƃ̃��X�g�ł��F
-1. ���c���H���݊������
-   - Neuron ES�̓����ɂ��A�ߋ������̗L�����p���\�ƂȂ�A�����W�ɂ����鎞�Ԃ̑啝�ȒZ�k�ƋƖ������̌�����������܂��� 1 �B
+以下は、Neuron ESの導入事例を紹介している企業のリストです：
+1. 千代田化工建設株式会社
+   - Neuron ESの導入により、過去資料の有効活用が可能となり、情報収集にかかる時間の大幅な短縮と業務効率の向上を実現しました 1 。
 
-2. ������ЃA�C�V��
-   - Neuron ES�̓����ɂ��A���|�I�Ȍ����X�s�[�h�ƃV���v���ȑ��쐫���]������A1000���Ԉȏ�̋Ɩ����ԍ팸���ʂ�B�����܂����B
+2. 株式会社アイシン
+   - Neuron ESの導入により、圧倒的な検索スピードとシンプルな操作性が評価され、1000時間以上の業務時間削減効果を達成しました。
 
-3. �������݊������
-   - Neuron ES�̓����ɂ��A�����Ώۂ��L���Ă����̃��C�Z���X���i�ŗ��p�ł��邱�Ƃ��m�F����A�_��ȋZ�p�Ή����]������܂����B
+3. 清水建設株式会社
+   - Neuron ESの導入により、検索対象を広げても一定のライセンス価格で利用できることが確認され、柔軟な技術対応が評価されました。
 
-4. �ۍg���V�X�e���Y�������
-   - Neuron ES�̓����ɂ��A�S�Ђ̃G���^�[�v���C�Y�T�[�`�Ƃ��ĎГ����̗L�����p�ƋƖ����������������܂����B
+4. 丸紅情報システムズ株式会社
+   - Neuron ESの導入により、全社のエンタープライズサーチとして社内情報の有効活用と業務効率化を実現しました。
 
-5. ��c�������
-   - Neuron ES�̓����ɂ��A���̐����ƌ����̌��������}���A���ɊǗ��n�̕����ł̋Ɩ����������サ�܂����B
-     �����̎���́A�e��Ƃ�Neuron ES�𓱓����邱�Ƃœ���ꂽ���ʂ��̓I�Ȏ��g�ݓ��e�������Ă��܂��B�ڍׂȏ��ɂ��ẮA�e�o�T���̃t�@�C�����Q�Ƃ��Ă��������B
+5. 坂田株式会社
+   - Neuron ESの導入により、情報の整理と検索の効率化が図られ、特に管理系の部署での業務効率が向上しました。
+     これらの事例は、各企業がNeuron ESを導入することで得られた効果や具体的な取り組み内容を示しています。詳細な情報については、各出典元のファイルを参照してください。
     </td>
   </tr>
   <tr>
-    <td align="left">�\�z</td>
-    <td align="left">typo�ł��������������Č�������</td>
+    <td align="left">予想</td>
+    <td align="left">typoでも正しく理解して検索する</td>
   </tr>
   <tr>
-    <td align="left">�l�@</td>
-    <td align="left">5�Ђ̎������</td>
+    <td align="left">考察</td>
+    <td align="left">5社の事例を回答</td>
   </tr>
    <tr>
-    <td align="left">NeuronES�Ō�������ꍇ</td>
+    <td align="left">NeuronESで検索する場合</td>
     <td align="left"></td>
   </tr>
 </table>
 
 <table border="0">
   <tr>
-    <td align="left" width="110">�v�����v�g<br>No.7</td>
-    <td align="left">Neuron�������Ɣ�ׂđI�΂�闝�R��3�����Ă�������</td>
+    <td align="left" width="110">プロンプト<br>No.7</td>
+    <td align="left">Neuronが競合と比べて選ばれる理由を3つ教えてください</td>
   </tr>
   <tr>
-    <td align="left">�񓚗�7</td>
+    <td align="left">回答例7</td>
     <td align="left">
-Neuron ES�������Ɣ�ׂđI�΂�闝�R�͈ȉ���3�ł��F
-1. ���|�I�Ȍ����X�s�[�h
-   - Neuron ES�́A���А��i�Ɣ�r���Ă��{�ȏ�̑����Ō������ʂ�\�����邱�Ƃ��ł��܂��B���̍����Ȍ������\�ɂ��A���[�U�[�̃X�g���X��啝�Ɍy�����܂� 1 2 �B
+Neuron ESが競合と比べて選ばれる理由は以下の3つです：
+1. 圧倒的な検索スピード
+   - Neuron ESは、他社製品と比較しても倍以上の速さで検索結果を表示することができます。この高速な検索性能により、ユーザーのストレスを大幅に軽減します 1 2 。
 
-2. �V���v���ł킩��₷�����쐫
-   - Neuron ES�́A�V���v����UI�Ƒ��슴�������ŁA���[�U�[�������I�ɗ��p�ł���݌v�ƂȂ��Ă��܂��B���̂��߁A���ʂȃg���[�j���O���󂯂Ȃ��Ă������Ɏg�����Ȃ����Ƃ��ł��܂� 1 �B
+2. シンプルでわかりやすい操作性
+   - Neuron ESは、シンプルなUIと操作感が特徴で、ユーザーが直感的に利用できる設計となっています。このため、特別なトレーニングを受けなくてもすぐに使いこなすことができます 1 。
 
-3. �����R�X�g�p�t�H�[�}���X
-   - Neuron ES�́A�����Ώۂ��L���Ă����̃��C�Z���X���i�ŗ��p�ł��邽�߁A�R�X�g�p�t�H�[�}���X�ɗD��Ă��܂��B�܂��A�_��ɑΉ��ł���Z�p�͂��]������Ă��܂� 3 2 �B
+3. 高いコストパフォーマンス
+   - Neuron ESは、検索対象を広げても一定のライセンス価格で利用できるため、コストパフォーマンスに優れています。また、柔軟に対応できる技術力も評価されています 3 2 。
 
-�����̗��R�ɂ��ANeuron ES�͑����̊�ƂőI�΂�Ă��܂��B
+これらの理由により、Neuron ESは多くの企業で選ばれています。
 </td>
   </tr>
   <tr>
-    <td align="left">�\�z</td>
-    <td align="left">3�̗��R���񓚂���</td>
+    <td align="left">予想</td>
+    <td align="left">3つの理由を回答する</td>
   </tr>
   <tr>
-    <td align="left">�l�@</td>
-    <td align="left">3�̗��R����</td>
+    <td align="left">考察</td>
+    <td align="left">3つの理由を回答</td>
   </tr>
    <tr>
-    <td align="left">NeuronES�Ō�������ꍇ</td>
+    <td align="left">NeuronESで検索する場合</td>
     <td align="left"></td>
   </tr>
 </table>
 
 <table border="0">
   <tr>
-    <td align="left" width="110">�v�����v�g<br>No.8</td>
-    <td align="left">Neuron�𓱓�����ڋq�ɋ��ʂ���ۑ�𕪐͂���</td>
+    <td align="left" width="110">プロンプト<br>No.8</td>
+    <td align="left">Neuronを導入する顧客に共通する課題を分析して</td>
   </tr>
   <tr>
-    <td align="left">�񓚗�8</td>
+    <td align="left">回答例8</td>
     <td align="left">
-Neuron�𓱓�����ڋq�ɋ��ʂ���ۑ�͈ȉ��̒ʂ�ł��F
-1. ���̌��������̒Ⴓ
-   - �����̊�Ƃ��A�K�v�ȏ���v���Ɍ����邱�Ƃ��ł��Ȃ��Ƃ����ۑ������Ă��܂��B�Ⴆ�΁A������Ѓf���\�[�ł́A�ߋ��̎�����Z�p�I�ȃ��|�[�g�̌��������Y���ɒ������邽�߁A���̐v���Ȍ��������߂��Ă��܂��� 1 �B
+Neuronを導入する顧客に共通する課題は以下の通りです：
+1. 情報の検索効率の低さ
+   - 多くの企業が、必要な情報を迅速に見つけることができないという課題を抱えています。例えば、株式会社デンソーでは、過去の資料や技術的なレポートの検索が生産性に直結するため、情報の迅速な検索が求められていました 1 。
 
-2. ���̐����ƊǗ��̓��
-   - ��񂪖c��ł���A�K�؂ɐ����E�Ǘ�����Ă��Ȃ����߁A�K�v�ȏ���������̂Ɏ��Ԃ�������Ƃ�����肪����܂��B������Ђ����т��ł́A�t�@�C���T�[�o���̗~����������f���������o�����Ƃ����߂��Ă��܂��� 2 �B
+2. 情報の整理と管理の難しさ
+   - 情報が膨大であり、適切に整理・管理されていないため、必要な情報を見つけるのに時間がかかるという問題があります。株式会社たけびしでは、ファイルサーバ内の欲しい資料を素早く見つけ出すことが求められていました 2 。
 
-3. �R�X�g�p�t�H�[�}���X�̌���
-   - �����̃G���^�[�v���C�Y�T�[�`���i�ł́A���C�Z���X��ێ�̔�p�������A�R�X�g�p�t�H�[�}���X���Ⴂ�Ƃ����ۑ肪����܂��B������Љ������쏊�ł́A�]���^�̃G���^�[�v���C�Y�T�[�`���i�̉ۑ���������A�g��W�J���\�ȍ����R�X�g�p�t�H�[�}���X�����߂��Ă��܂��� 3 �B
+3. コストパフォーマンスの向上
+   - 既存のエンタープライズサーチ製品では、ライセンスや保守の費用が高く、コストパフォーマンスが低いという課題があります。株式会社荻原製作所では、従来型のエンタープライズサーチ製品の課題を解消し、拡大展開が可能な高いコストパフォーマンスが求められていました 3 。
 
-�����̉ۑ�ɑ΂��āANeuron ES�͍����Ȍ������\�A�V���v���ȑ��쐫�A�����R�X�g�p�t�H�[�}���X��񋟂��邱�ƂŁA�ڋq�̃j�[�Y�ɉ����Ă��܂��B
+これらの課題に対して、Neuron ESは高速な検索性能、シンプルな操作性、高いコストパフォーマンスを提供することで、顧客のニーズに応えています。
 </td>
   </tr>
   <tr>
-    <td align="left">�\�z</td>
-    <td align="left">���ʂ���ۑ�𕪐͂��ĉ񓚂���</td>
+    <td align="left">予想</td>
+    <td align="left">共通する課題を分析して回答する</td>
   </tr>
   <tr>
-    <td align="left">�l�@</td>
-    <td align="left">3�̋��ʉۑ����</td>
+    <td align="left">考察</td>
+    <td align="left">3つの共通課題を回答</td>
   </tr>
    <tr>
-    <td align="left">NeuronES�Ō�������ꍇ</td>
+    <td align="left">NeuronESで検索する場合</td>
     <td align="left"></td>
   </tr>
 </table>
 
 <table border="0">
   <tr>
-    <td align="left" width="110">�v�����v�g<br>No.9</td>
-    <td align="left">�V�i�v�X�̓��������T���Ă�������</td>
+    <td align="left" width="110">プロンプト<br>No.9</td>
+    <td align="left">シナプスの導入事例を探してください</td>
   </tr>
   <tr>
-    <td align="left">�񓚗�9</td>
+    <td align="left">回答例9</td>
     <td align="left">
-���݂̂Ƃ���A�V�i�v�X�̓�������Ɋւ����̓I�ȏ��͒񋟂���Ă��܂���B�������̏�񌹂��̓I�Ȏ��Ⴊ�K�v�ł���΁A�ʂ̕��@�ł̒����������߂��܂��B
+現在のところ、シナプスの導入事例に関する具体的な情報は提供されていません。もし他の情報源や具体的な事例が必要であれば、別の方法での調査をお勧めします。
     </td>
   </tr>
   <tr>
-    <td align="left">�\�z</td>
-    <td align="left">�m��Ȃ��L�[���[�h�͂��̎|���񓚂���</td>
+    <td align="left">予想</td>
+    <td align="left">知らないキーワードはその旨を回答する</td>
   </tr>
   <tr>
-    <td align="left">�l�@</td>
-    <td align="left">�m��Ȃ��L�[���[�h�͂��̎|����</td>
+    <td align="left">考察</td>
+    <td align="left">知らないキーワードはその旨を回答</td>
   </tr>
    <tr>
-    <td align="left">NeuronES�Ō�������ꍇ</td>
+    <td align="left">NeuronESで検索する場合</td>
     <td align="left"></td>
   </tr>
 </table>
 
 <table border="0">
   <tr>
-    <td align="left" width="110">�v�����v�g<br>No.10</td>
-    <td align="left">�����Ƃ�������ۑ�ɂ��ċ�����</td>
+    <td align="left" width="110">プロンプト<br>No.10</td>
+    <td align="left">製造業が抱える課題について教えて</td>
   </tr>
   <tr>
-    <td align="left">�񓚗�10</td>
+    <td align="left">回答例10</td>
     <td align="left">
-�����Ƃ�������ۑ�͈ȉ��̒ʂ�ł��F
+製造業が抱える課題は以下の通りです：
 
-1. ���̌��������̒Ⴓ
-   - �����Ƃł́A�ߋ��̎�����Z�p�I�ȃ��|�[�g�̌��������Y���ɒ������܂����A�c��ȃf�[�^�̒�����K�v�ȏ���v���Ɍ����邱�Ƃ�����Ƃ����ۑ肪����܂��B�Ⴆ�΁A������Ѓf���\�[�ł́A�ߋ��̎�����ގ��E�d�������f�[�^����ʂɑ��݂��A�����I�Ȍ��������߂��Ă��܂��� 1 �B
+1. 情報の検索効率の低さ
+   - 製造業では、過去の資料や技術的なレポートの検索が生産性に直結しますが、膨大なデータの中から必要な情報を迅速に見つけることが難しいという課題があります。例えば、株式会社デンソーでは、過去の資料や類似・重複したデータが大量に存在し、効率的な検索が求められていました 1 。
 
-2. ���̐����ƊǗ��̓��
-   - �����Ƃł́A�����̃t�@�C���T�[�o�ɖc��Ȏ������ۑ�����Ă���A���ꂼ��̏ꏊ�ɉ�������̂���c������̂�����ł��B�����Ζ�������Ђł́A�����̃t�@�C���T�[�o����K�v�ȏ���T���o���̂�����ł���A���̐����ƊǗ����ۑ�ƂȂ��Ă��܂��� 2 �B
+2. 情報の整理と管理の難しさ
+   - 製造業では、複数のファイルサーバに膨大な資料が保存されており、それぞれの場所に何があるのかを把握するのが困難です。鹿島石油株式会社では、複数のファイルサーバから必要な情報を探し出すのが困難であり、情報の整理と管理が課題となっていました 2 。
 
-3. �v���ȑΉ��͂̕K�v��
-   - �����Ƃł́A���Ƀg���u���Ή���Z�p�I�Ȗ������ɂ����āA�v���ȑΉ������߂��܂��B�ߋ��̃g���u���񍐎�����d�l���Ȃǂ�v���ɔ����ł��邩�ǂ������Ɩ�����ё���ɒ������邽�߁A�v���ȑΉ��͂��K�v�ł� 3 2 �B
+3. 迅速な対応力の必要性
+   - 製造業では、特にトラブル対応や技術的な問題解決において、迅速な対応が求められます。過去のトラブル報告資料や仕様書などを迅速に発見できるかどうかが業務および操作に直結するため、迅速な対応力が必要です 3 2 。
 
-�����̉ۑ�ɑ΂��āANeuron ES�̂悤�ȃG���^�[�v���C�Y�T�[�`�V�X�e������������邱�ƂŁA���̌������������サ�A���̐����ƊǗ����e�ՂɂȂ�A�v���ȑΉ��͂���������邱�Ƃ����҂���܂��B
+これらの課題に対して、Neuron ESのようなエンタープライズサーチシステムが導入されることで、情報の検索効率が向上し、情報の整理と管理が容易になり、迅速な対応力が強化されることが期待されます。
 </td>
   </tr>
   <tr>
-    <td align="left">�\�z</td>
-    <td align="left">�����Ƃ̉ۑ�ɂ��ĉ񓚂���</td>
+    <td align="left">予想</td>
+    <td align="left">製造業の課題について回答する</td>
   </tr>
   <tr>
-    <td align="left">�l�@</td>
-    <td align="left">3�̉ۑ����</td>
+    <td align="left">考察</td>
+    <td align="left">3つの課題を回答</td>
   </tr>
    <tr>
-    <td align="left">NeuronES�Ō�������ꍇ</td>
+    <td align="left">NeuronESで検索する場合</td>
     <td align="left"></td>
   </tr>
 </table>
+[No.1〜No.5](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_prompt_answer_1.md)
