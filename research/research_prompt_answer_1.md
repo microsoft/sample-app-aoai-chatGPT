@@ -203,3 +203,5 @@ SharePoint Online（SPO）を検索対象にしたNeuron ESの導入事例につ
     <td align="left"></td>
   </tr>
 </table>
+
+[No.6〜No.10](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_prompt_answer_2.md)
