@@ -31,12 +31,17 @@
     <td align="left">typoでも正しく理解して検索する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
-    <td align="left">5社の事例を回答</td>
+    <td align="left">結果</td>
+    <td align="left">5社の事例を回答しているが、「坂田株式会社」は無い。</td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">正しいスペルのNeuronとほぼ同じ結果で、26社の事例があるのに5社しか回答しないが、スペルミスは許容すると考えられる。5社の事例を回答しているが、「坂田株式会社」は無いので誤った情報を回答している。</td>
+  </tr>
+
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">スペルミスは許容する。</td>
   </tr>
 </table>
 
@@ -66,12 +71,17 @@ Neuron ESが競合と比べて選ばれる理由は以下の3つです：
     <td align="left">3つの理由を回答する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
+    <td align="left">結果</td>
     <td align="left">3つの理由を回答</td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">3つの理由を回答しているが、26の事例全てを読み込んだ上での3つの回答ではない。</td>
+  </tr>
+
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">検索してヒットした事例を読み込み、自分で3つにまとめる。</td>
   </tr>
 </table>
 
