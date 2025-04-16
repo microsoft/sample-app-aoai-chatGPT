@@ -37,12 +37,16 @@ Neuron ESの導入事例について、以下の情報があります。
     <td align="left">数社の事例を回答する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
+    <td align="left">結果</td>
     <td align="left">4社のみ回答</td>
+  </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">26社の事例があるのに4社しか回答しない。</td>
   </tr>
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">「Neuron　事例」で検索すると26件がヒットする。</td>
   </tr>
 </table>
 
@@ -74,12 +78,17 @@ SharePoint Onlineの検索に関するNeuron ESの導入事例について、以
     <td align="left">2社の事例を回答する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
-    <td align="left">2社の事例</td>
+    <td align="left">結果</td>
+    <td align="left">2社の事例を回答</td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">事例記事の中に「SharePoint」が出てくるのは3つあるが、SharePoint Onlineを検索対象としている2社の事例を回答している。</td>
+  </tr>
+
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">「SharePoint 事例」で検索すると3件がヒットする。内容を読んでSharePoint Onlineの事例であるのは2社だとわかる。生成AIの方が、「SharePoint Onlineの検索」の文脈を捉えている例と考えられる。</td>
   </tr>
 </table>
 
@@ -111,12 +120,16 @@ SharePoint Online（SPO）を検索対象にしたNeuron ESの導入事例につ
     <td align="left">「SPO」を「SharePoint Online」として回答する（あいまい検索できる）</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
+    <td align="left">結果</td>
     <td align="left">2社の事例を回答</td>
+  </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">類義語登録もしていないが、SPOでSharePoint Onlineの検索の2社の事例を回答している。</td>
   </tr>
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">「SPO」の部分一致でSharePointが含まれる事例を3件ヒットする。</td>
   </tr>
 </table>
 
@@ -152,12 +165,17 @@ SharePoint Online（SPO）を検索対象にしたNeuron ESの導入事例につ
     <td align="left">10社分の事例を回答する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
-    <td align="left">5社回答, 1社はNeuronが含まれる</td>
+    <td align="left">結果</td>
+    <td align="left">5社回答, 1社はブレインズテクノロジーを導入企業とした誤った情報が含まれる、</td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">10社の事例を回答できない。事例記事の中に「ブレインズテクノロジーから一言」という文章があり、それを事例企業と誤認識している。</td>
+  </tr>
+
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></t
+    <td align="left">10社の指定はできず、26社をヒットする。</t
   </tr>
 </table>
 
@@ -195,12 +213,17 @@ SharePoint Online（SPO）を検索対象にしたNeuron ESの導入事例につ
     <td align="left">カタカナになっても検索する</td>
   </tr>
   <tr>
-    <td align="left">考察</td>
+    <td align="left">結果</td>
     <td align="left">4社の事例を回答</td>
   </tr>
+  <tr>
+    <td align="left">考察</td>
+    <td align="left">類義語登録はしていないが、カタカナになっても、NeuronESの時と同じ4社の事例を回答している。脳神経細胞の「ニューロン」についての回答はしない。</td>
+  </tr>
+
    <tr>
     <td align="left">NeuronESで検索する場合</td>
-    <td align="left"></td>
+    <td align="left">類義語登録が必要。</td>
   </tr>
 </table>
 
