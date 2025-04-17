@@ -180,8 +180,12 @@ Neuronを導入する顧客に共通する課題は以下の通りです：<br>
     <td align="left">製造業の課題について回答する</td>
   </tr>
   <tr>
+    <td align="left">結果</td>
+    <td align="left">3つの課題を回答。</td>
+  </tr>
+  <tr>
     <td align="left">考察</td>
-    <td align="left">3つの課題を回答</td>
+    <td align="left">各課題に事例を挙げており、下書きにもなる。ただし、課題は3つだけなのか、他にもあるが3つしか答えていないのか、わからない。</td>
   </tr>
    <tr>
     <td align="left">NeuronESで検索する場合</td>
