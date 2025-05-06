@@ -166,11 +166,11 @@ class _AzureOpenAISettings(BaseSettings):
     @model_validator(mode="after")
     def ensure_endpoint(self) -> Self:
         if self.endpoint:
-            return Self
+            return self
         
         elif self.resource:
             self.endpoint = f"https://{self.resource}.openai.azure.com"
-            return Self
+            return self
         
         raise ValidationError("AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required")
         
@@ -319,6 +319,7 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
     @model_validator(mode="after")
     def set_query_type(self) -> Self:
         self.query_type = to_snake(self.query_type)
+        return self
 
     def _set_filter_string(self, request: Request) -> str:
         if self.permitted_groups_column:
