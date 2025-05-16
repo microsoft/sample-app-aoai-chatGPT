@@ -99,7 +99,7 @@ NeuronESの事例について回答してくれるAIアシスタントを`sample
 | [Embeddingモデルの影響](./research_embedding.md) |ベクトル化| text-embedding-3-small<br>text-embedding-3-large | 1, 5       | チャンク長が同一の場合、基本検索性能はほぼ同等だが、カタカナ検索ではtext-embedding-3-largeがわずかに優位                | リソース効率とコストを考慮すると、基本的な検索にはsmallモデルで十分だが、日本語の表記揺れに対応する必要がある場合はlargeモデルの採用を検討 |
 | [セマンティック検索のtop-kの影響](./research_top_k.md)  |検索| top k = 5 or 10 or 15                            | 1,4,10     | Top-k=5は簡潔で高精度、Top-k=10は詳細で包括的、Top-k=15はシステムによる最適化・統合が発生 | 期待する情報量と詳細度に応じてTop-k値を使い分ける必要があり、中間値（k=10）が必ずしも最適解ではない                     |
 | [LLMのモデルの違いによる影響](./research_LLM_model.md) |LLM| gpt-4o<br>gpt-4o-mini<br>gpt-4<br>gpt-35-turbo   | 2          | gpt-4oが詳細に回答する                                                                 | 回答内容かコスト重視か検討                                                              |
-| LLMのパラメーターの影響                              |LLM|                                                  |            |                                                                                |                                                                            |
+| [LLMのパラメーターの影響](./research_LLM_parameter.md)                              |LLM|                                                  |            |                                                                                |                                                                            |
 
 
 ## 料金に関するまとめ
