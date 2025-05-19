@@ -3,22 +3,20 @@ name: Azure Static Web Apps CI/CD
 on:
   push:
     branches:
-      - main
-      - meu-chatbot
+      - main      # ou sua branch, ex: meu-chatbot
 
 jobs:
   build_and_deploy_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Build And Deploy
-        id: swa
+      - id: swa
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token:                   ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "frontend"
-          api_location: ""       # ou "api" se você tiver Azure Functions
-          
+          app_location: "frontend"     # sua pasta de front-end
+          api_location: ""             # deixe vazio se não tiver Azure Functions
+          # output_location removido de propósito
