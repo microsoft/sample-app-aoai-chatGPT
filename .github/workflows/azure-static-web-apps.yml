@@ -21,4 +21,4 @@ jobs:
           action: "upload"
           app_location: "frontend"
           api_location: "api"       # ou "api" se você tiver Azure Functions
-          output_location: "src"
+          output_location: "dist"
