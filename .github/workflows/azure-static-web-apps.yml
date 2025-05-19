@@ -1,9 +1,9 @@
-name: Azure Static Web Apps CI/CD
-
 on:
   push:
     branches:
-      - main    # substitua "main" pela sua branch, se for outra
+     - meu-chatbot
+     - main
+
 
 jobs:
   build_and_deploy_job:
