@@ -20,5 +20,5 @@ jobs:
           repo_token:                   ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "frontend"
-          api_location: ""       # ou "api" se você tiver Azure Functions
-          # output_location removido
+          api_location: "api"       # ou "api" se você tiver Azure Functions
+          output_location: "src"
