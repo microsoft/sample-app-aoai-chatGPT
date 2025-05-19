@@ -19,4 +19,3 @@ jobs:
           action: "upload"
           app_location: "frontend"     # sua pasta de front-end
           api_location: ""             # deixe vazio se não tiver Azure Functions
-          # output_location removido de propósito
