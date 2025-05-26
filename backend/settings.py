@@ -41,11 +41,11 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Contoso"
-    logo: Optional[str] = None
-    chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
-    chat_description: str = "This chatbot is configured to answer your questions"
+    title: str = "DSI Asistan"
+    logo: Optional[str] = '/assets/dsi-icon.svg'
+    chat_logo: Optional[str] = '/assets/dsi-icon.svg'
+    chat_title: str = "Devlet Su İşleri Genel Müdürlüğü"
+    chat_description: str = "Bu asistan teknik şartnamelere ve mevzuatlara uygun cevap vermektedir."
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
     show_chat_history_button: bool = True
