@@ -21,7 +21,7 @@
     - 検索にヒットしたファイルから必要な情報をまとめられる
 ### 結果
   - [結果一覧はこちら](https://docs.google.com/spreadsheets/d/1LjRzi9FyqdQk4g7WxtzFOkEurJ3RssDoZNCg97mQdBs/edit?gid=0#gid=0)
-  - ざっくり結果まとめ
+  - 結果まとめ
     - TEMPERATURE
       - 0.7から回答内容が怪しくなり、1.2の時点で明確に回答の分量が増加。1.5にすると文章が崩壊。
     - TOP_P
