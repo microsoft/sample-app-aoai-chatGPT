@@ -1,15 +1,21 @@
-import json
+from typing import Dict, Any
+from dataclasses import dataclass, asdict, field
+import os
 
-def get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id, application_name):
-    auth_provider = authenticated_user_details.get('auth_provider')
+
+@dataclass
+class UserSecurityContext:
+    application_name: str = field(default=None)    
+    end_user_id: str = field(default=None)
+    end_user_tenant_id: str = field(default=None)
+    source_ip: str = field(default=None)
+    def to_dict(self) -> Dict[str, Any]:
+        return {k: v for k, v in asdict(self).items() if v is not None}
+            
+
+def get_msdefender_user_json(authenticated_user_details, request_headers, application_name) -> UserSecurityContext:
     source_ip = request_headers.get('Remote-Addr', '')
-    header_names = ['User-Agent', 'X-Forwarded-For', 'Forwarded', 'X-Real-IP', 'True-Client-IP', 'CF-Connecting-IP']
-    user_args = {
-        "EndUserId": authenticated_user_details.get('user_principal_id'),
-        "EndUserIdType": "EntraId" if auth_provider == "aad" else auth_provider,
-        "SourceIp": source_ip.split(':')[0], #remove port
-        "SourceRequestHeaders": {header: request_headers[header] for header in header_names if header in request_headers},
-        "ConversationId": conversation_id,
-        "ApplicationName": application_name,
-    }
-    return json.dumps(user_args)
+    end_user_id = authenticated_user_details.get('user_principal_id')
+    source_ip= source_ip.split(':')[0]
+    return UserSecurityContext(end_user_id=end_user_id, source_ip=source_ip, application_name=application_name, end_user_tenant_id=None)
+

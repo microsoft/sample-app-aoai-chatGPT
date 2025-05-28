@@ -50,6 +50,15 @@ Run the following commands based on what you want to customize:
 * `azd env set AZURE_FORMRECOGNIZER_SERVICE_RESOURCE_GROUP {Name of existing resource group that Form Recognizer service is provisioned to}`.
 * `azd env set AZURE_FORMRECOGNIZER_SKU_NAME {Name of Form Recognizer SKU}`. Defaults to 'S0'.
 
+If you have enabled Microsoft Defender for Cloud's threat protection for AI workloads on your Azure OpenAI resource and want to add user context to alerts, you can do so by using the azd commands below. If you haven't set up threat protection yet, please follow this guide: [Microsoft Defender for Cloud documentation](https://learn.microsoft.com/azure/defender-for-cloud/gain-end-user-context-ai).
+
+To add security context to your alerts, run the following command:
+
+```bash
+azd env set MS_DEFENDER_ENABLED true
+```
+
+
 1. Run `azd auth login` to login to your Azure account.
 1. Run `azd up` to provision Azure resources and deploy this sample to those resources. This also runs a script to build the search index based on files in the `./data` folder.
 1. After the application has been successfully deployed you will see a URL printed to the console.  Click that URL to interact with the application in your browser.

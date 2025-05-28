@@ -274,12 +274,12 @@ def prepare_model_args(request_body, request_headers):
                     messages.append(messages_helper)
 
 
-    user_json = None
+    user_security_context = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
-        conversation_id = request_body.get("conversation_id", None)
         application_name = app_settings.ui.title
-        user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id, application_name)
+        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai
+    
 
     model_args = {
         "messages": messages,
@@ -288,8 +288,7 @@ def prepare_model_args(request_body, request_headers):
         "top_p": app_settings.azure_openai.top_p,
         "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
-        "model": app_settings.azure_openai.model,
-        "user": user_json
+        "model": app_settings.azure_openai.model
     }
 
     if len(messages) > 0:
@@ -340,6 +339,10 @@ def prepare_model_args(request_body, request_headers):
                         "embedding_dependency"
                     ]["authentication"][field] = "*****"
 
+    if model_args.get("extra_body") is None:
+        model_args["extra_body"] = {}
+    if user_security_context:  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai     
+                model_args["extra_body"]["user_security_context"]= user_security_context.to_dict()
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
 
     return model_args
