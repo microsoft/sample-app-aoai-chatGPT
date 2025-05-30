@@ -59,6 +59,7 @@
   text-align: center;
   letter-spacing: -0.01em;
   color: #616161;
+  max-width: 800px;
 }
 
 .chatIcon {
