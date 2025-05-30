@@ -85,6 +85,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         value={question}
         onChange={onQuestionChange}
         onKeyDown={onEnterPress}
+        rows={8}
       />
       {!OYD_ENABLED && (
         <div className={styles.fileInputContainer}>
