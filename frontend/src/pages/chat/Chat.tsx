@@ -793,7 +793,13 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}</h2>
+                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}
+                  {"Hi there! I'm HK — named after Harry King McCann, our founder. I'm here to help you respond to RFIs and make the process a whole lot easier. To get started, it’d be great to know a few things:"}
+                  <li>{"Who’s the prospective client?"}</li>
+                  <li>{"What category are they in, and what challenge are they facing?"}</li>
+                  <li>{"What’s our strategy to win? Are there specific parts of McCann’s story or capabilities you’d like me to highlight?"} </li>
+                  {"It also really helps if you're clear about the specific question you want me to answer — plus the tone, style, and length you're aiming for. That way, I can tailor it just right. And if you want to tweak what I give you, no problem at all! Just keep the convo going with me — we’ll shape it together into something great."}
+                </h2>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">
