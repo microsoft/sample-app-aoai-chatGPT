@@ -49,7 +49,7 @@
 |:----------------|:----------------|:----------------|:----------------|:----------------|:----------------|:----------------|
 |結果    | 選ばれる理由を3つ回答 | 選ばれる理由を3つ回答 | 選ばれる理由の回答ではなく、導入後の効果が回答に混ざる。 | 選ばれる理由の回答ではなく、導入後の効果が回答に混ざる。 | 選ばれる理由の回答ではなく、導入後の効果が回答に混ざる。 | 選ばれる理由の回答ではなく、導入後の効果が回答に混ざる。 | 
 
-  - [結果一覧はこちら](https://docs.google.com/spreadsheets/d/1LjRzi9FyqdQk4g7WxtzFOkEurJ3RssDoZNCg97mQdBs/edit?gid=0#gid=0)
+  - [結果一覧はこちら](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/LLM%E3%83%8F%E3%82%9A%E3%83%A9%E3%83%A1%E3%83%BC%E3%82%BF%E5%AE%9F%E9%A8%93%E7%B5%90%E6%9E%9C%E6%95%B4%E7%90%86%20.csv)
   - 結果まとめ
     - TEMPERATURE
       - 0.5から回答内容が怪しくなり、1.2の時点で明確に回答の分量が増加。1.5にすると文章が崩壊。
@@ -60,4 +60,4 @@
       - どのパラメータ設定でも回答内容・referencesの再現性は確認できなかった。
 
 </br>
-[mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/research/research_main.md)
+[mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/researc/research_main.md)
