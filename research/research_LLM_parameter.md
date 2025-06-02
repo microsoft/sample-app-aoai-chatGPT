@@ -58,6 +58,6 @@
     - 共通
       - 全体を通して、回答内容が微妙に感じる回答は一部あるが、文章が崩壊しない限りは日本語の文法としておかしな点は無い。
       - どのパラメータ設定でも回答内容・referencesの再現性は確認できなかった。
-
 </br>
+
 [mainに戻る](https://github.com/brains-technology/sample-app-aoai-chatGPT/blob/branch-1/researc/research_main.md)
