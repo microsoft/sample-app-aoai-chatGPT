@@ -793,7 +793,7 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <h2 className={styles.chatEmptyStateSubtitle}>{ui?.chat_description}
+                <h2 className={styles.chatEmptyStateSubtitle}>
                   {"Hi there! I'm HK — named after Harry King McCann, our founder. I'm here to help you respond to RFIs and make the process a whole lot easier. To get started, it’d be great to know a few things:"}
                   <li>{"Who’s the prospective client?"}</li>
                   <li>{"What category are they in, and what challenge are they facing?"}</li>
