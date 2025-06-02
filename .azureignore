@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.vscode/
+*.log
+*.zip
+*.db
+*.ipynb
+node_modules/
