@@ -1,5 +1,7 @@
 import copy
 import json
+import aiofiles
+import uuid
 import os
 import logging
 import uuid
@@ -40,6 +42,9 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 def create_app():
     app = Quart(__name__)
@@ -77,6 +82,31 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
+@bp.route("/upload", methods=["POST"])
+async def upload_file():
+    files = await request.files
+    if "file" not in files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    # Generate a unique filename
+    filename = f"{uuid.uuid4().hex}_{file.filename}"
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+    # Save the file asynchronously
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(await file.read())
+
+    # Return a URL for the uploaded file
+    file_url = f"/uploads/{filename}"
+    return jsonify({"url": file_url}), 200
+
+@bp.route("/uploads/<filename>")
+async def uploaded_file(filename):
+    return await send_from_directory(UPLOAD_FOLDER, filename)
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
