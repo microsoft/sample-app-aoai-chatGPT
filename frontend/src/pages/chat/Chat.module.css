@@ -51,6 +51,8 @@
 
 .chatEmptyStateSubtitle {
   margin-top: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
   font-style: normal;
   font-weight: 400;
   font-size: 16px;
