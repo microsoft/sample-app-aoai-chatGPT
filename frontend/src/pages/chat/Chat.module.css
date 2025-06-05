@@ -371,6 +371,20 @@ a {
   border-radius: 4px;
 }
 
+.copyButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.copyButton:hover {
+  background: #e6f0fa;
+}
+
 @media (max-width: 480px) {
   .chatInput {
     width: 90%;

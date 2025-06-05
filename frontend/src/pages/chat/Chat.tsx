@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useLayoutEffect } from 'react'
-import { CommandBarButton, IconButton, Dialog, DialogType, Stack } from '@fluentui/react'
+import { CommandBarButton, IconButton, Dialog, DialogType, Stack, TooltipHost } from '@fluentui/react'
 import { SquareRegular, ShieldLockRegular, ErrorCircleRegular } from '@fluentui/react-icons'
 
 import ReactMarkdown from 'react-markdown'
@@ -65,6 +65,7 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [logo, setLogo] = useState('')
   const [answerId, setAnswerId] = useState<string>('')
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -757,6 +758,18 @@ const Chat = () => {
     )
   }
 
+  const handleCopyToClipboard = async (content: string, messageId: string) => {
+    try {
+      // Remove references like [doc1][doc2]
+      const cleaned = content.replace(/\s(\[doc\d+\])+/g, '');
+      await navigator.clipboard.writeText(cleaned)
+      setCopiedMessageId(messageId)
+      setTimeout(() => setCopiedMessageId(null), 1500)
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
+  
   return (
     <div className={styles.container} role="main">
       {showAuthMessage ? (
@@ -812,7 +825,17 @@ const Chat = () => {
                         </div>
                       </div>
                     ) : answer.role === 'assistant' ? (
-                      <div className={styles.chatMessageGpt}>
+                      <div className={styles.chatMessageGpt} style={{ position: 'relative' }}>
+                        <TooltipHost content={copiedMessageId === answer.id ? 'Copied!' : 'Copy to clipboard'}>
+                          <IconButton
+                            iconProps={{ iconName: copiedMessageId === answer.id ? 'CheckMark' : 'Copy' }}
+                            aria-label="Copy assistant message"
+                            className={styles.copyButton}
+                            style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}
+                            onClick={() => typeof answer.content === 'string' && handleCopyToClipboard(answer.content, answer.id)}
+                            disabled={typeof answer.content !== 'string'}
+                          />
+                        </TooltipHost>
                         {typeof answer.content === "string" && <Answer
                           answer={{
                             answer: answer.content,
