@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Sample App Backend",
+      "type": "python",
+      "request": "launch",
+      "module": "quart",
+      "cwd": "${workspaceFolder}",
+      "env": {
+          "QUART_APP": "app:app",
+          "QUART_ENV": "development",
+          "QUART_DEBUG": "0"
+      },
+      "args": [
+          "run",
+          "--no-reload",
+          "-p 50505"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Frontend: Launch Chrome debugger",
+      "url": "http://127.0.0.1:50505",
+      "webRoot": "${workspaceFolder}/frontend",
+      "smartStep": true
+    }
+  ]
+}

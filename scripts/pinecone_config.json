@@ -1,0 +1,10 @@
+[
+    {
+        "data_path": "<path to data>",
+        "environment": "<Pinecone environment name>",
+        "api_key": "<Pinecone API key>",
+        "index_name": "<Pinecone vector index>",
+        "chunk_size": 1024,
+        "token_overlap": 128
+    }
+]

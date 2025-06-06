@@ -1,0 +1,51 @@
+name: Check changes to static files
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  changed_files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: List changed frontend source files
+        uses: tj-actions/changed-files@v46
+        id: changed-frontend-src-files
+        with:
+          files: |
+             frontend/src/**/*.tsx
+             frontend/src/**/*.css
+
+      - name: List changed frontend static files
+        id: changed-frontend-static-files
+        if: steps.changed-frontend-src-files.outputs.files_changed == 'true'
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            static
+
+      - name: Check changed static files
+        if: steps.changed-frontend-src-files.outputs.files_changed == 'true' && steps.changed-frontend-static-files.outputs.files_changed == 'false'
+        run: echo "There were changes to the frontend code, but no corresponding changes to static files.  Please build the project locally, commit the static file changes and push the changes to try again." && exit 1
+
+      - name: List logo customizations
+        uses: tj-actions/changed-files@v46
+        id: changed-logo-files
+        with:
+          files: |
+             frontend/public/favicon.ico
+             frontend/src/assets
+
+      - name: Comment on logo customizations
+        if: steps.changed-logo-files.outputs.any_changed == 'true'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            "Hello contributor, it appears that your pull request contains some customizations to branding. We are unable to approve your PR at this time. If you believe this message to be in error, please correct these unsupported changes and try again, or reach out to one of the maintainers of the repo to discuss the changes."
+        
+      - name: Fail on logo customizations
+        if: steps.changed-logo-files.outputs.any_changed == 'true'
+        run: echo "Logos are customized, which is not a supported change." && exit 1

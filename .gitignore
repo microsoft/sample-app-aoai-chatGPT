@@ -1,0 +1,7 @@
+.venv
+frontend/node_modules
+.env
+# static
+.azure/
+__pycache__/
+.ipynb_checkpoints/

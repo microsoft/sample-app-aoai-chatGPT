@@ -1,0 +1,687 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "HostingPlanName": {
+            "type": "string",
+            "defaultValue": "[guid(resourceGroup().id)]",
+            "metadata": {
+                "description": "Name of App Service plan"
+            }
+        },
+        "HostingPlanSku": {
+            "type": "string",
+            "defaultValue": "B3",
+            "allowedValues": [
+                "F1",
+                "D1",
+                "B1",
+                "B2",
+                "B3",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+            ],
+            "metadata": {
+                "description": "The pricing tier for the App Service plan"
+            }
+        },
+        "WebsiteName": {
+            "type": "string",
+            "defaultValue": "[guid(resourceGroup().id)]",
+            "metadata": {
+                "description": "Name of Web App"
+            }
+        },
+        "ApplicationInsightsName": {
+            "type": "string",
+            "defaultValue": "[guid(resourceGroup().id)]",
+            "metadata": {
+                "description": "Name of Application Insights"
+            }
+        },
+        "AzureSearchService": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of Azure Search Service"
+            }
+        },
+        "AzureSearchIndex": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of Azure Search Index"
+            }
+        },
+        "AzureSearchKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Search Admin Key"
+            }
+        },
+        "AzureSearchUseSemanticSearch": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Use semantic search"
+            }
+        },
+        "AzureSearchSemanticSearchConfig": {
+            "type": "string",
+            "defaultValue": "default",
+            "metadata": {
+                "description": "Semantic search config"
+            }
+        },
+        "AzureSearchIndexIsPrechunked": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Is the index prechunked"
+            }
+        },
+        "AzureSearchTopK": {
+            "type": "int",
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Top K results"
+            }
+        },
+        "AzureSearchEnableInDomain": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable in domain"
+            }
+        },
+        "AzureSearchContentColumns": {
+            "type": "string",
+            "defaultValue": "content",
+            "metadata": {
+                "description": "Content columns"
+            }
+        },
+        "AzureSearchFilenameColumn": {
+            "type": "string",
+            "defaultValue": "filename",
+            "metadata": {
+                "description": "Filename column"
+            }
+        },
+        "AzureSearchTitleColumn": {
+            "type": "string",
+            "defaultValue": "title",
+            "metadata": {
+                "description": "Title column"
+            }
+        },
+        "AzureSearchUrlColumn": {
+            "type": "string",
+            "defaultValue": "url",
+            "metadata": {
+                "description": "Url column"
+            }
+        },
+        "AzureOpenAIResource": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of Azure OpenAI Resource"
+            }
+        },
+        "AzureOpenAIModel": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure OpenAI Model Deployment Name"
+            }
+        },
+        "AzureOpenAIModelName": {
+            "type": "string",
+            "defaultValue": "gpt-35-turbo",
+            "metadata": {
+                "description": "Azure OpenAI Model Name"
+            }
+        },
+        "AzureOpenAIKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Azure OpenAI Key"
+            }
+        },
+        "AzureOpenAITemperature": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "Azure OpenAI Temperature"
+            }
+        },
+        "AzureOpenAITopP": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Azure OpenAI Top P"
+            }
+        },
+        "AzureOpenAIMaxTokens": {
+            "type": "int",
+            "defaultValue": 1000,
+            "metadata": {
+                "description": "Azure OpenAI Max Tokens"
+            }
+        },
+        "AzureOpenAIStopSequence": {
+            "type": "string",
+            "defaultValue": "\n",
+            "metadata": {
+                "description": "Azure OpenAI Stop Sequence"
+            }
+        },
+        "AzureOpenAISystemMessage": {
+            "type": "string",
+            "defaultValue": "You are an AI assistant that helps people find information.",
+            "metadata": {
+                "description": "Azure OpenAI System Message"
+            }
+        },
+        "AzureOpenAIStream": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Whether or not to stream responses from Azure OpenAI"
+            }
+        },
+        "AzureSearchQueryType": {
+            "type": "string",
+            "defaultValue": "simple",
+            "allowedValues": [
+                "simple",
+                "semantic",
+                "vector",
+                "vectorSimpleHybrid",
+                "vectorSemanticHybrid"
+            ],
+            "metadata": {
+                "description": "Azure Search Query Type"
+            }
+        },
+        "AzureSearchVectorFields": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Search Vector Fields"
+            }
+        },
+        "AzureSearchPermittedGroupsField": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Search Permitted Groups Field"
+            }
+        },
+        "AzureSearchStrictness": {
+            "type": "int",
+            "defaultValue": 3,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "metadata": {
+                "description": "Azure Search Strictness"
+            }
+        },
+        "AzureOpenAIEmbeddingName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure OpenAI Embedding Deployment Name"
+            }
+        },
+        "WebAppEnableChatHistory": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable chat history by deploying a Cosmos DB instance"
+            }
+        },
+        "ElasticsearchEndpoint": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Endpoint to use to connect to an Elasticsearch cluster"
+            }
+        },
+        "ElasticsearchEncodedApiKey": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Encoded API key credentials to use to connect to an Elasticsearch cluster"
+            }
+        },
+        "ElasticsearchIndex": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index to use for retrieving grounding data"
+            }
+        },
+        "ElasticsearchQueryType": {
+            "type": "string",
+            "defaultValue": "simple",
+            "metadata": {
+                "description": "Type of query to use for Elasticsearch data"
+            }
+        },
+        "ElasticsearchContentColumns": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index content columns"
+            }
+        },
+        "ElasticsearchFilenameColumn": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index filename column"
+            }
+        },
+        "ElasticsearchTitleColumn": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index title column"
+            }
+        },
+        "ElasticsearchUrlColumn": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index url column"
+            }
+        },
+        "ElasticsearchVectorColumns": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Elasticsearch index vector columns"
+            }
+        },
+        "ElasticsearchTopK": {
+            "type": "int",
+            "defaultValue": 5,
+            "metadata": {
+                "description": "Top K results"
+            }
+        },
+        "ElasticsearchEnableInDomain": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Enable in domain"
+            }
+        },
+        "ElasticsearchStrictness": {
+            "type": "int",
+            "defaultValue": 3,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "metadata": {
+                "description": "Elasticsearch strictness"
+            }
+        },
+        "ElasticsearchEmbeddingModelId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The model ID for a model deployed on Elasticsearch to use for generating embeddings for queries."
+            }
+        }
+    },
+    "variables": {
+        "WebAppImageName": "DOCKER|sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:latest",
+        "cosmosdb_account_name": "[format('db-{0}', parameters('WebsiteName'))]",
+        "cosmosdb_database_name": "db_conversation_history",
+        "cosmosdb_container_name": "conversations",
+        "roleDefinitionId": "00000000-0000-0000-0000-000000000002", // Cosmos DB Built-in Data Contributor Role
+        "roleAssignmentId": "[guid(variables('roleDefinitionId'), parameters('WebsiteName'), resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name')))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('HostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('HostingPlanSku')]"
+            },
+            "properties": {
+                "name": "[parameters('HostingPlanName')]",
+                "reserved": true
+            },
+            "kind": "linux"
+        },
+        {
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('WebsiteName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('HostingPlanName'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[parameters('HostingPlanName')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('Microsoft.Insights/components', parameters('ApplicationInsightsName')), '2015-05-01').InstrumentationKey]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_SERVICE",
+                            "value": "[parameters('AzureSearchService')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_INDEX",
+                            "value": "[parameters('AzureSearchIndex')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_KEY",
+                            "value": "[parameters('AzureSearchKey')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_USE_SEMANTIC_SEARCH",
+                            "value": "[parameters('AzureSearchUseSemanticSearch')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG",
+                            "value": "[parameters('AzureSearchSemanticSearchConfig')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_INDEX_IS_PRECHUNKED",
+                            "value": "[parameters('AzureSearchIndexIsPrechunked')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_TOP_K",
+                            "value": "[parameters('AzureSearchTopK')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_ENABLE_IN_DOMAIN",
+                            "value": "[parameters('AzureSearchEnableInDomain')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_CONTENT_COLUMNS",
+                            "value": "[parameters('AzureSearchContentColumns')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_FILENAME_COLUMN",
+                            "value": "[parameters('AzureSearchFilenameColumn')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_TITLE_COLUMN",
+                            "value": "[parameters('AzureSearchTitleColumn')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_URL_COLUMN",
+                            "value": "[parameters('AzureSearchUrlColumn')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_RESOURCE",
+                            "value": "[parameters('AzureOpenAIResource')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_MODEL",
+                            "value": "[parameters('AzureOpenAIModel')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_KEY",
+                            "value": "[parameters('AzureOpenAIKey')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_MODEL_NAME",
+                            "value": "[parameters('AzureOpenAIModelName')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_TEMPERATURE",
+                            "value": "[parameters('AzureOpenAITemperature')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_TOP_P",
+                            "value": "[parameters('AzureOpenAITopP')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_MAX_TOKENS",
+                            "value": "[parameters('AzureOpenAIMaxTokens')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_STOP_SEQUENCE",
+                            "value": "[parameters('AzureOpenAIStopSequence')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_SYSTEM_MESSAGE",
+                            "value": "[parameters('AzureOpenAISystemMessage')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_STREAM",
+                            "value": "[parameters('AzureOpenAIStream')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_QUERY_TYPE",
+                            "value": "[parameters('AzureSearchQueryType')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_VECTOR_COLUMNS",
+                            "value": "[parameters('AzureSearchVectorFields')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN",
+                            "value": "[parameters('AzureSearchPermittedGroupsField')]"
+                        },
+                        {
+                            "name": "AZURE_SEARCH_STRICTNESS",
+                            "value": "[parameters('AzureSearchStrictness')]"
+                        },
+                        {
+                            "name": "AZURE_OPENAI_EMBEDDING_NAME",
+                            "value": "[parameters('AzureOpenAIEmbeddingName')]"
+                        },
+                        {
+                            "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                            "value": "true"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_ACCOUNT",
+                            "value": "[if(parameters('WebAppEnableChatHistory'), variables('cosmosdb_account_name'), '')]"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_DATABASE",
+                            "value": "[variables('cosmosdb_database_name')]"
+                        },
+                        {
+                            "name": "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER",
+                            "value": "[variables('cosmosdb_container_name')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENDPOINT",
+                            "value": "[parameters('ElasticsearchEndpoint')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENCODED_API_KEY",
+                            "value": "[parameters('ElasticsearchEncodedApiKey')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_INDEX",
+                            "value": "[parameters('ElasticsearchIndex')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_QUERY_TYPE",
+                            "value": "[parameters('ElasticsearchQueryType')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_TOP_K",
+                            "value": "[parameters('ElasticsearchTopK')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_ENABLE_IN_DOMAIN",
+                            "value": "[parameters('ElasticsearchEnableInDomain')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_CONTENT_COLUMNS",
+                            "value": "[parameters('ElasticsearchContentColumns')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_FILENAME_COLUMN",
+                            "value": "[parameters('ElasticsearchFilenameColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_TITLE_COLUMN",
+                            "value": "[parameters('ElasticsearchTitleColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_URL_COLUMN",
+                            "value": "[parameters('ElasticsearchUrlColumn')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_VECTOR_COLUMNS",
+                            "value": "[parameters('ElasticsearchVectorColumns')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_STRICTNESS",
+                            "value": "[parameters('ElasticsearchStrictness')]"
+                        },
+                        {
+                            "name": "ELASTICSEARCH_EMBEDDING_MODEL_ID",
+                            "value": "[parameters('ElasticsearchEmbeddingModelId')]"
+                        },
+                        {
+                            "name": "UWSGI_PROCESSES",
+                            "value": "2"
+                        },
+                        {
+                            "name": "UWSGI_THREADS",
+                            "value": "2"
+                        }                        
+                    ],
+                    "linuxFxVersion": "[variables('WebAppImageName')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2020-02-02",
+            "name": "[parameters('ApplicationInsightsName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-link:', resourceId('Microsoft.Web/sites', parameters('ApplicationInsightsName')))]": "Resource"
+            },
+            "properties": {
+                "Application_Type": "web"
+            },
+            "kind": "web"
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2023-04-15",
+            "name": "[variables('cosmosdb_account_name')]",
+            "location": "[resourceGroup().location]",
+            "kind": "GlobalDocumentDB",
+            "properties": {
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session"
+                },
+                "locations": [
+                    {
+                        "locationName": "[resourceGroup().location]",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "databaseAccountOfferType": "Standard",
+                "capabilities": [
+                    {
+                        "name": "EnableServerless"
+                    }
+                ]
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables('cosmosdb_database_name')]"
+                }
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'), '/conversations')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosdb_account_name'), variables('cosmosdb_database_name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "conversations",
+                    "indexingPolicy": {
+                        "indexingMode": "consistent",
+                        "automatic": true,
+                        "includedPaths": [
+                            {
+                                "path": "/*"
+                            }
+                        ],
+                        "excludedPaths": [
+                            {
+                                "path": "/\"_etag\"/?"
+                            }
+                        ]
+                    },
+                    "partitionKey": {
+                        "paths": [
+                            "/userId"
+                        ],
+                        "kind": "Hash"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[parameters('WebAppEnableChatHistory')]",
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+            "apiVersion": "2021-04-15",
+            "name": "[format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleAssignmentId'))]",
+            "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[0], split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[1])]",
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('WebsiteName')), '2021-02-01', 'Full').identity.principalId]",
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ]
+        }
+    ]
+}

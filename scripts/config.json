@@ -1,0 +1,14 @@
+[
+    {
+        "data_path": "<path to data>",
+        "location": "<azure region, e.g. 'westus2'>",
+        "subscription_id": "<subscription id>",
+        "resource_group": "<resource group name>",
+        "search_service_name": "<search service name to use or create>",
+        "index_name": "<index name to use or create>",
+        "chunk_size": 1024,
+        "token_overlap": 128,
+        "semantic_config_name": "default",
+        "language": "<Language to support for example use 'en' for English. Checked supported languages here under lucene - https://learn.microsoft.com/en-us/azure/search/index-add-language-analyzers"
+    }
+]
