@@ -8,15 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
-      packages: write   # needed to push to GHCR
-
+      packages: write
+    outputs:
+      IMAGE_TAG: ${{ steps.set_tag.outputs.IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v3
 
-      # Login to GHCR
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -24,24 +23,33 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push Docker image
       - name: Build and push Docker image
+        id: set_tag
         run: |
           IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/intranettchatbot:${{ github.run_id }}
-          echo "Building Docker image: $IMAGE_TAG"
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           docker push $IMAGE_TAG
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-
+          echo "::set-output name=IMAGE_TAG::$IMAGE_TAG"
   deploy:
     runs-on: ubuntu-latest
-    needs: build  # ensures deploy runs after build completes
-
+    needs: build
     steps:
-      - name: Deploy Docker image to Azure Web App
-        uses: azure/webapps-deploy@v2
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          app-name: intranettchatbot
-          slot-name: Production
-          images: ${{ env.IMAGE_TAG }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Update Web App container
+        run: |
+          az webapp config container set \
+            --name intranettchatbot \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --docker-custom-image-name ${{ needs.build.outputs.IMAGE_TAG }} \
+            --docker-registry-server-url https://ghcr.io \
+            --docker-registry-server-user ${{ github.actor }} \
+            --docker-registry-server-password ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restart Azure Web App
+        run: |
+          az webapp restart --name intranettchatbot --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+
