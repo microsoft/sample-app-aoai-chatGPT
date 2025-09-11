@@ -1,7 +1,7 @@
 name: Docker Image Build and Push to GHCR
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
