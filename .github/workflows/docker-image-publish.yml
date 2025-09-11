@@ -1,32 +1,19 @@
-name: Docker Image Publish
+name: Deploy Docker Image to Azure Web App
 
 on:
-  push:
-    branches:
-    - main
-
+  workflow_run:
+    workflows: ["Docker Image Build"]
+    types:
+      - completed
 jobs:
-
-  build:
-
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Azure Container Registry Login
-      uses: Azure/docker-login@v2
-      with:
-        # Container registry username
-        username: ${{ secrets.SAMPLEAPP_ACR_USERNAME }}
-        # Container registry password
-        password: ${{ secrets.SAMPLEAPP_ACR_PASSWORD }}
-        # Container registry server url
-        login-server: sampleappaoaichatgpt.azurecr.io
-        
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run:         
-        docker build . --file WebApp.Dockerfile --tag sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
-        docker tag sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:latest;
-        docker push sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER;
-        docker push sampleappaoaichatgpt.azurecr.io/sample-app-aoai-chatgpt:latest;
-      
+      - name: Deploy Docker image to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: intranettchatbot 
+          slot-name: Production
+          images: ghcr.io/${{ github.repository }}/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
