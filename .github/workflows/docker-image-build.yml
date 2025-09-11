@@ -27,9 +27,7 @@ jobs:
       # Build and push  Docker image
       - name: Build and push Docker image
         run: |
-          OWNER=${{ github.repository_owner }}
-          OWNER_LOWER=$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')
-          IMAGE_TAG=ghcr.io/$OWNER_LOWER/intranettchatbot:$(date +'%Y-%m-%d')-$GITHUB_RUN_NUMBER
+          IMAGE_TAG: ghcr.io/${{ github.repository_owner.toLower() }}/intranettchatbot:${{ github.run_id }}
           echo "Building Docker image: $IMAGE_TAG"
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           docker push $IMAGE_TAG
