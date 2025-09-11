@@ -52,11 +52,11 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
 
   const clearAllDialogContentProps = {
     type: DialogType.close,
-    title: !clearingError ? 'Are you sure you want to clear all chat history?' : 'Error deleting all of chat history',
-    closeButtonAriaLabel: 'Close',
+    title: !clearingError ? 'Er du sikker på at du vil slette all chatthistorikk?' : 'Feil ved sletting av all chatthistorikk',
+    closeButtonAriaLabel: 'Lukker',
     subText: !clearingError
-      ? 'All chat history will be permanently removed.'
-      : 'Please try again. If the problem persists, please contact the site administrator.'
+      ? 'All chatthistorikk vil bli permanent fjernet.'
+      : 'Vennligst prøv igjen. Hvis problemet vedvarer, kontakt nettstedets administrator.'
   }
 
   const modalProps = {
@@ -67,7 +67,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
   }
 
   const menuItems: IContextualMenuItem[] = [
-    { key: 'clearAll', text: 'Clear all chat history', iconProps: { iconName: 'Delete' } }
+    { key: 'clearAll', text: 'Slett all chatthistorikk', iconProps: { iconName: 'Delete' } }
   ]
 
   const handleHistoryClick = () => {
@@ -123,9 +123,9 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
           <Stack horizontal styles={commandBarButtonStyle}>
             <CommandBarButton
               iconProps={{ iconName: 'More' }}
-              title={'Clear all chat history'}
+              title={'Slett all chatthistorikk'}
               onClick={onShowContextualMenu}
-              aria-label={'clear all chat history'}
+              aria-label={'cSlett all chatthistorikk'}
               styles={commandBarStyle}
               role="button"
               id="moreButton"
@@ -139,9 +139,9 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
             />
             <CommandBarButton
               iconProps={{ iconName: 'Cancel' }}
-              title={'Hide'}
+              title={'Skjul'}
               onClick={handleHistoryClick}
-              aria-label={'hide button'}
+              aria-label={'Skjul button'}
               styles={commandBarStyle}
               role="button"
             />
@@ -179,12 +179,12 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                         {appStateContext?.state.isCosmosDBAvailable?.status && (
                           <span>{appStateContext?.state.isCosmosDBAvailable?.status}</span>
                         )}
-                        {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Error loading chat history</span>}
+                        {!appStateContext?.state.isCosmosDBAvailable?.status && <span>Feil ved lasting av chatthistorikk</span>}
                       </Text>
                     </StackItem>
                     <StackItem>
                       <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                        <span>Chat history can't be saved at this time</span>
+                        <span>Chatthistorikk kan ikke lagres for øyeblikket</span>
                       </Text>
                     </StackItem>
                   </Stack>
@@ -207,7 +207,7 @@ export function ChatHistoryPanel(_props: ChatHistoryPanelProps) {
                   </StackItem>
                   <StackItem>
                     <Text style={{ alignSelf: 'center', fontWeight: '400', fontSize: 14 }}>
-                      <span style={{ whiteSpace: 'pre-wrap' }}>Loading chat history</span>
+                      <span style={{ whiteSpace: 'pre-wrap' }}>Laster chatthistorikk</span>
                     </Text>
                   </StackItem>
                 </Stack>

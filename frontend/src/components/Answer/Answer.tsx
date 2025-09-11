@@ -154,7 +154,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   const UnhelpfulFeedbackContent = () => {
     return (
       <>
-        <div>Why wasn't this response helpful?</div>
+        <div>Hvorfor var ikke dette svaret nyttig?</div>
         <Stack tokens={{ childrenGap: 4 }}>
           <Checkbox
             label="Citations are missing"
@@ -183,7 +183,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             onChange={updateFeedbackList}></Checkbox>
         </Stack>
         <div onClick={() => setShowReportInappropriateFeedback(true)} style={{ color: '#115EA3', cursor: 'pointer' }}>
-          Report inappropriate content
+          Rapporter upassende innhold
         </div>
       </>
     )
@@ -193,7 +193,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     return (
       <>
         <div>
-          The content is <span style={{ color: 'red' }}>*</span>
+          Innholdet er <span style={{ color: 'red' }}>*</span>
         </div>
         <Stack tokens={{ childrenGap: 4 }}>
           <Checkbox
@@ -324,7 +324,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
           )}
           <Stack.Item className={styles.answerDisclaimerContainer}>
-            <span className={styles.answerDisclaimer}>AI-generated content may be incorrect</span>
+            <span className={styles.answerDisclaimer}>Innhold generert av AI kan være feil</span>
           </Stack.Item>
           {!!answer.exec_results?.length && (
             <Stack.Item onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? toggleIsRefAccordionOpen() : null)}>
@@ -337,7 +337,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     tabIndex={0}
                     role="button">
                     <span>
-                      Show Intents
+                      Vis intensjoner
                     </span>
                   </Text>
                   <FontIcon
@@ -398,14 +398,14 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           showCloseButton: true
         }}>
         <Stack tokens={{ childrenGap: 4 }}>
-          <div>Your feedback will improve this experience.</div>
+          <div>Tilbakemeldingen vår vil forbedre denne opplevelsen.</div>
 
           {!showReportInappropriateFeedback ? <UnhelpfulFeedbackContent /> : <ReportInappropriateFeedbackContent />}
 
-          <div>By pressing submit, your feedback will be visible to the application owner.</div>
+          <div>Ved å trykke på send inn, vil tilbakemeldingen din være synlig for eieren av applikasjonen.</div>
 
           <DefaultButton disabled={negativeFeedbackList.length < 1} onClick={onSubmitNegativeFeedback}>
-            Submit
+            Send inn
           </DefaultButton>
         </Stack>
       </Dialog>
