@@ -27,7 +27,7 @@ jobs:
       # Build and push  Docker image
       - name: Build and push Docker image
         run: |
-          IMAGE_TAG: ghcr.io/${{ github.repository_owner.toLower() }}/intranettchatbot:${{ github.run_id }}
+          IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/intranettchatbot:${{ github.run_id }}
           echo "Building Docker image: $IMAGE_TAG"
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           docker push $IMAGE_TAG
