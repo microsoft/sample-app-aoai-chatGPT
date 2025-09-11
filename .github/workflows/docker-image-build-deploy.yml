@@ -1,4 +1,4 @@
-name: Docker Image Build and Push to GHCR
+name: Build, Push and Deploy Docker Image
 
 on:
   push:
@@ -24,23 +24,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push  Docker image
+      # Build and push Docker image
       - name: Build and push Docker image
         run: |
           IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/intranettchatbot:${{ github.run_id }}
           echo "Building Docker image: $IMAGE_TAG"
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           docker push $IMAGE_TAG
-          echo "Image pushed: $IMAGE_TAG"
-          
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
   deploy:
-      runs-on: ubuntu-latest
-  
-      steps:
-        - name: Deploy Docker image to Azure Web App
-          uses: azure/webapps-deploy@v2
-          with:
-            app-name: intranettchatbot 
-            slot-name: Production
-            images: ghcr.io/${{ github.repository_owner }}/intranettchatbot:${{ github.run_id }}
-            publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+    runs-on: ubuntu-latest
+    needs: build  # ensures deploy runs after build completes
+
+    steps:
+      - name: Deploy Docker image to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: intranettchatbot
+          slot-name: Production
+          images: ${{ env.IMAGE_TAG }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
