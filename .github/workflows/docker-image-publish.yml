@@ -2,7 +2,7 @@ name: Deploy Docker Image to Azure Web App
 
 on:
   workflow_run:
-    workflows: ["Docker Image Build and Push to GHCR."]
+    workflows: ["Docker Image Build and Push to GHCR"]
     types:
       - completed
 jobs:
