@@ -27,13 +27,13 @@ jobs:
       # Build and tag Docker image
       - name: Build Docker image
         run: |
-          IMAGE_TAG=ghcr.io/${{ github.repository }}/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          IMAGE_TAG=ghcr.io/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           echo "Image built: $IMAGE_TAG"
 
       # Push Docker image to GHCR
       - name: Push Docker image to GHCR
         run: |
-          IMAGE_TAG=ghcr.io/${{ github.repository }}/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          IMAGE_TAG=ghcr.io/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
           docker push $IMAGE_TAG
           echo "Image pushed: $IMAGE_TAG"
