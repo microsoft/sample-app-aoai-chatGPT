@@ -2,7 +2,7 @@ name: Deploy Docker Image to Azure Web App
 
 on:
   workflow_run:
-    workflows: ["Docker Image Build"]
+    workflows: ["Docker Image Build and Push to GHCR."]
     types:
       - completed
 jobs:
@@ -15,5 +15,5 @@ jobs:
         with:
           app-name: intranettchatbot 
           slot-name: Production
-          images: ghcr.io/${{ github.repository }}/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          images: ghcr.io/${{ github.repository_owner.toLower() }}/intranettchatbot:${{ github.run_id }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
