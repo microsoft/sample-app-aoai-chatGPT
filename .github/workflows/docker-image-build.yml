@@ -27,7 +27,7 @@ jobs:
       # Build and push  Docker image
       - name: Build and push Docker image
         run: |
-          IMAGE_TAG=ghcr.io/intranettchatbot:$(date +'%Y-%m-%d')_$GITHUB_RUN_NUMBER
+          IMAGE_TAG=ghcr.io/intranettchatbot:$(date +'%Y-%m-%d')-$GITHUB_RUN_NUMBER
           docker build . --file WebApp.Dockerfile --tag $IMAGE_TAG
           docker push $IMAGE_TAG
           echo "Image pushed: $IMAGE_TAG"
