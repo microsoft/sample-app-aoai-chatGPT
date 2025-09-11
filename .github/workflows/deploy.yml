@@ -1,0 +1,45 @@
+name: Build and Deploy Chatbot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout your repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Setup Node (for frontend build)
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # 3. Setup Python (for backend)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # 4. Login to Azure using Service Principal
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 5. Build the Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t intranettchatbot:latest -f WebApp.Dockerfile .
+
+      # 6. Deploy Docker image to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-container-deploy@v2
+        with:
+          app-name: IntranettChatbot 
+          images: intranettchatbot:latest
