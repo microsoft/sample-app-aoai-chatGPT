@@ -12,7 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
-import Contoso from '../../assets/Contoso.svg'
+import Contoso from '../../assets/orkland_kommune_logo_shield.svg'
 import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
@@ -40,9 +40,9 @@ import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 
 const enum messageStatus {
-  NotRunning = 'Not Running',
-  Processing = 'Processing',
-  Done = 'Done'
+  NotRunning = 'Kjører Ikke',
+  Processing = 'Behandler',
+  Done = 'Ferdig'
 }
 
 const Chat = () => {
@@ -69,7 +69,7 @@ const Chat = () => {
   const errorDialogContentProps = {
     type: DialogType.close,
     title: errorMsg?.title,
-    closeButtonAriaLabel: 'Close',
+    closeButtonAriaLabel: 'Lukke',
     subText: errorMsg?.subtitle
   }
 
@@ -90,9 +90,9 @@ const Chat = () => {
       appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail &&
       hideErrorDialog
     ) {
-      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
+      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. vennligst kontakt nettstedets administrator.`
       setErrorMsg({
-        title: 'Chat history is not enabled',
+        title: 'Chat-historikk er ikke aktivert',
         subtitle: subtitle
       })
       toggleErrorDialog()
@@ -275,7 +275,7 @@ const Chat = () => {
     } catch (e) {
       if (!abortController.signal.aborted) {
         let errorMessage =
-          'An error occurred. Please try again. If the problem persists, please contact the site administrator.'
+          'En feil oppstod. Vennligst prøv igjen. Hvis problemet vedvarer, kontakt nettstedets administrator'
         if (result.error?.message) {
           errorMessage = result.error.message
         } else if (typeof result.error === 'string') {
@@ -344,7 +344,7 @@ const Chat = () => {
       setMessages(request.messages)
     }
     let result = {} as ChatResponse
-    var errorResponseMessage = 'Please try again. If the problem persists, please contact the site administrator.'
+    var errorResponseMessage = 'Vennligst prøv igjen. Hvis problemet vedvarer, kontakt nettstedets administrator.'
     try {
       const response = conversationId
         ? await historyGenerate(request, abortController.signal, conversationId)
@@ -356,7 +356,7 @@ const Chat = () => {
         let errorChatMsg: ChatMessage = {
           id: uuid(),
           role: ERROR,
-          content: `There was an error generating a response. Chat history can't be saved at this time. ${errorResponseMessage}`,
+          content: `Det oppstod en feil under generering av svar. Chat-historikk kan ikke lagres på dette tidspunktet. ${errorResponseMessage}`,
           date: new Date().toISOString()
         }
         let resultConversation
@@ -465,7 +465,7 @@ const Chat = () => {
       }
     } catch (e) {
       if (!abortController.signal.aborted) {
-        let errorMessage = `An error occurred. ${errorResponseMessage}`
+        let errorMessage = `En feil oppstod. ${errorResponseMessage}`
         if (result.error?.message) {
           errorMessage = result.error.message
         } else if (typeof result.error === 'string') {
@@ -540,8 +540,8 @@ const Chat = () => {
       let response = await historyClear(appStateContext?.state.currentChat.id)
       if (!response.ok) {
         setErrorMsg({
-          title: 'Error clearing current chat',
-          subtitle: 'Please try again. If the problem persists, please contact the site administrator.'
+          title: 'Feil ved sletting av nåværende chat.',
+          subtitle: 'En feil oppstod. Vennligst prøv igjen. Hvis problemet fortsetter, kontakt nettstedets administrator.'
         })
         toggleErrorDialog()
       } else {
@@ -933,7 +933,7 @@ const Chat = () => {
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Skriv inn et nytt spørsmål…"
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
@@ -1007,7 +1007,7 @@ const Chat = () => {
                 {appStateContext?.state?.answerExecResult[answerId]?.map((execResult: ExecResults, index) => (
                   <Stack className={styles.exectResultList} verticalAlign="space-between">
                     <><span>Intent:</span> <p>{execResult.intent}</p></>
-                    {execResult.search_query && <><span>Search Query:</span>
+                    {execResult.search_query && <><span>Søkespørsmål:</span>
                       <SyntaxHighlighter
                         style={nord}
                         wrapLines={true}
@@ -1016,8 +1016,8 @@ const Chat = () => {
                         PreTag="p">
                         {execResult.search_query}
                       </SyntaxHighlighter></>}
-                    {execResult.search_result && <><span>Search Result:</span> <p>{execResult.search_result}</p></>}
-                    {execResult.code_generated && <><span>Code Generated:</span>
+                    {execResult.search_result && <><span>Søkeresultat:</span> <p>{execResult.search_result}</p></>}
+                    {execResult.code_generated && <><span>Generert kode:</span>
                       <SyntaxHighlighter
                         style={nord}
                         wrapLines={true}
