@@ -12,7 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import styles from './Chat.module.css'
-import Contoso from '../../assets/orkland_kommune_logo_shield.svg'
+import Contoso from '../../assets/Contoso.svg'
 import { XSSAllowTags } from '../../constants/sanatizeAllowables'
 
 import {
