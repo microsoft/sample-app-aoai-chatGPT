@@ -836,7 +836,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: "Genererer Svar...",
                           citations: [],
                           generated_chart: null
                         }}
@@ -856,13 +856,13 @@ const Chat = () => {
                   horizontal
                   className={styles.stopGeneratingContainer}
                   role="button"
-                  aria-label="Stop generating"
+                  aria-label="Stopp generering"
                   tabIndex={0}
                   onClick={stopGenerating}
                   onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? stopGenerating() : null)}>
                   <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true" />
                   <span className={styles.stopGeneratingText} aria-hidden="true">
-                    Stop generating
+                    Stopp generering
                   </span>
                 </Stack>
               )}
@@ -890,7 +890,7 @@ const Chat = () => {
                     iconProps={{ iconName: 'Add' }}
                     onClick={newChat}
                     disabled={disabledButton()}
-                    aria-label="start a new chat button"
+                    aria-label="Knapp for å starte en ny chat"
                   />
                 )}
                 <CommandBarButton
