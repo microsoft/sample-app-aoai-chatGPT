@@ -95,7 +95,7 @@ const Chat = () => {
         title: 'Chat-historikk er ikke aktivert',
         subtitle: subtitle
       })
-      toggleErrorDialog()
+      //toggleErrorDialog() not used. didn't find where to disable the use of cosmosDB - asoh
     }
   }, [appStateContext?.state.isCosmosDBAvailable])
 
