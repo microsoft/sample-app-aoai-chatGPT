@@ -41,7 +41,7 @@ class _UiSettings(BaseSettings):
         env_ignore_empty=True
     )
 
-    title: str = "Intranett"
+    title: str = "Kommune Karlsen"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
     chat_title: str = "Begynn å chatte"

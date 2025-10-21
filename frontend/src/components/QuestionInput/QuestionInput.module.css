@@ -46,7 +46,7 @@
   height: 4px;
   left: 0%;
   bottom: 0%;
-  background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #0f6cbd 33.63%, #8dddd8 100%);
+  background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #18864a 33.63%, #8dddd8 100%);
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
@@ -57,9 +57,17 @@
   height: 30px;
 }
 
+@media (max-width: 600px) {
+  .questionInputContainer {
+    left: 10%;
+    right: 2.5%;
+  }
+}
+
 @media (max-width: 480px) {
   .questionInputContainer {
     left: 16.5%;
+    right: 0%;
   }
 }
 

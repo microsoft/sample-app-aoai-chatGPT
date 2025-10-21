@@ -5,7 +5,7 @@
 }
 
 .header {
-  background-color: #f2f2f2;
+  background-color: #fff;
 }
 
 .headerContainer {
@@ -24,7 +24,7 @@
 .headerTitle {
   font-style: normal;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 35px;
   line-height: 28px;
   display: flex;
   align-items: flex-end;
@@ -32,9 +32,9 @@
 }
 
 .headerIcon {
-  height: 32px;
+  height: 125px;
   width: auto;
-  margin-left: 36px;
+  margin: 5px;
 }
 
 .shareButtonContainer {
@@ -42,6 +42,7 @@
   flex-direction: row;
   justify-content: center;
   margin-right: 20px;
+  display: none; /* not in use - asoh */
 }
 
 .shareButton {
@@ -106,6 +107,9 @@
   }
 
   .headerIcon {
-    margin-left: 26px;
+    height: 90px
+  }
+  .headerTitle{
+    font-size: 25px;
   }
 }

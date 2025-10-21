@@ -2,9 +2,8 @@ import { useContext, useEffect, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { Dialog, Stack, TextField } from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
-
 import { CosmosDBStatus } from '../../api'
-import Contoso from '../../assets/Contoso.svg'
+import Contoso from '../../assets/kommune_karlsen.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 
