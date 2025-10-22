@@ -31,6 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - name: Debug Azure creds
+        run: echo "${{ secrets.AZURE_CREDENTIALS }}" | jq .
+        
       - name: Azure Login
         uses: azure/login@v1
         with:
