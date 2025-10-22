@@ -42,7 +42,6 @@ jobs:
           app-name: intranettchatbot
           slot-name: Production
           images: ghcr.io/${{ github.repository_owner }}/intranettchatbot:${{ github.run_id }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 
       - name: Restart Azure Web App
         run: |
