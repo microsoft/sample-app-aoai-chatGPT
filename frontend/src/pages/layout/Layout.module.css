@@ -24,7 +24,7 @@
 .headerTitle {
   font-style: normal;
   font-weight: 600;
-  font-size: 35px;
+  font-size: 25px;
   line-height: 28px;
   display: flex;
   align-items: flex-end;
@@ -32,7 +32,7 @@
 }
 
 .headerIcon {
-  height: 125px;
+  height: 75px;
   width: auto;
   margin: 5px;
 }
@@ -100,6 +100,16 @@
   align-items: center;
   color: #242424;
 }
+
+@media (max-width: 600px) {
+  .headerTitle{
+    font-size: 35px;
+  }
+  .headerIcon {
+  height: 125px;
+}
+}
+
 
 @media (max-width: 480px) {
   .headerTitleContainer {
