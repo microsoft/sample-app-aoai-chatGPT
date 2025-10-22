@@ -1,7 +1,18 @@
-.venv
-frontend/node_modules
-.env
-# static
-.azure/
+# Python
+.venv/
 __pycache__/
 .ipynb_checkpoints/
+
+# Environment files
+.env
+
+# Node / Frontend
+frontend/node_modules/
+
+# Build outputs
+/static/
+/dist/
+/build/
+
+# Azure / deployment artifacts
+.azure/
