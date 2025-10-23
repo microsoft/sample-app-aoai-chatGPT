@@ -3,6 +3,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow: hidden;
+  height: 100%;
 }
 
 .chatRoot {
@@ -13,6 +15,7 @@
   margin-left: 0px;
   margin-right: 0px;
   gap: 0px;
+  height: 100px;
 }
 
 .chatContainer {
