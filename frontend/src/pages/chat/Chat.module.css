@@ -176,12 +176,12 @@
   justify-content: center;
   align-items: center;
   position: absolute;
-  width: 35px;
-  height: 35px;
-  left: 7px;
-  top: 70px;
+  width: 45px;
+  height: 55px;
+  left: auto;
+  top: 40%;
   color: #ffffff;
-  border-radius: 4px;
+  border-radius: 8px 0px 0px 8px;
   z-index: 1;
 }
 
