@@ -359,4 +359,4 @@ def prepare_model_args(request_body, request_headers):
         embeddingDependency = model_args_clean["extra_body"]["data_sources"][0][
             "parameters"
         ].get("embedding_dependency", {})
-        if "authentication
+        if "authentication" in embeddingDependency:
