@@ -422,7 +422,7 @@ def prepare_model_args(request_body, request_headers):
 
              # Sanitize embeddingDependency authentication
              embeddingDependency = ds_params.get("embedding_dependency", {})
-             
+
              # --- CORRECTED INDENTATION BLOCK ---
              if "authentication" in embeddingDependency:
                  # Ensure embeddingDependency["authentication"] is a dict
@@ -830,7 +830,7 @@ async def add_conversation():
         if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
             logging.warning("Chat history not configured, skipping /history/generate.")
             # Still need to call conversation_internal, but without saving
-            request_body = await request.get_json()
+            request_body = request_json # Use the json we already got
             return await conversation_internal(request_body, request.headers)
 
         history_metadata = {}
