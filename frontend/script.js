@@ -87,9 +87,6 @@ async function sendMessage() {
             const messageData = { role, content };
             if (role === 'assistant' && msg.dataset.messageId) {
                  messageData.id = msg.dataset.messageId; // Include ID for assistant messages
-                 // You might also need context if your backend uses it for history
-                 // const contextNode = contentDiv.querySelector('.message-sources');
-                 // if (contextNode) messageData.context = { citations: [...] }; // Reconstruct if needed
             }
             return messageData;
         }).filter(msg => msg.content); // Filter out messages without content
@@ -101,7 +98,6 @@ async function sendMessage() {
 
         const requestBody = {
             messages: history
-            // Add other parameters your backend might expect, e.g., conversation_id
             // conversation_id: currentConversationId // Example if you implement conversation tracking
         };
 
