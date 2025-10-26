@@ -356,7 +356,21 @@ def prepare_model_args(request_body, request_headers):
                 model_args_clean["extra_body"]["data_sources"][0]["parameters"][
                     "authentication"
                 ][field] = "*****"
-        embeddingDependency = model_args_clean["extra_body"]["data_sources"][0][
+embeddingDependency = model_args_clean["extra_body"]["data_sources"][0][
             "parameters"
         ].get("embedding_dependency", {})
+
+        # Check if 'authentication' key exists in the dictionary
         if "authentication" in embeddingDependency:
+            # This 'for' loop MUST be indented under the 'if' above
+            for field in embeddingDependency["authentication"]:
+                # This 'if' MUST be indented under the 'for' loop above
+                if field in secret_params:
+                    # This assignment MUST be indented under the 'if' above
+                    model_args_clean["extra_body"]["data_sources"][0]["parameters"][
+                        "embedding_dependency"
+                    ]["authentication"][field] = "*****"
+
+    # The code continues here, back at the original indentation level
+    if model_args.get("extra_body") is None:
+        # ... (rest of the code) ...
