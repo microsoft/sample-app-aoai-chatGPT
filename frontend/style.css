@@ -50,11 +50,11 @@ body, html {
 
 /* --- Header --- */
 .chat-header {
-    /* Deep Teal Header */
-    background-color: #00695C; /* Teal 700 */
+    /* Deep Blue Header */
+    background-color: #005A9C; /* NEW: Main Blue */
     color: white;
     padding: 12px 20px;
-    border-bottom: 1px solid #004D40; /* Darker Teal 900 */
+    border-bottom: 1px solid #004070; /* NEW: Darker Blue */
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     z-index: 10;
     flex-shrink: 0;
@@ -111,7 +111,7 @@ body, html {
 }
 .message.user .message-content {
     /* User messages match header */
-    background-color: #00695C; /* Teal 700 */
+    background-color: #005A9C; /* NEW: Main Blue */
     color: white;
     border-bottom-right-radius: 6px;
 }
@@ -145,9 +145,9 @@ body, html {
     .message-actions:hover {
         opacity: 1;
     }
-    .action-btn:hover { color: #00695C; } /* Teal hover */
-    .action-btn.good:hover { color: #558b2f; } /* Dark Green */
-    .action-btn.bad:hover { color: #c62828; } /* Dark Red */
+    .action-btn:hover { color: #005A9C; } /* NEW: Blue hover */
+    .action-btn.good:hover { color: #558b2f; } /* Dark Green (Kept for semantic meaning) */
+    .action-btn.bad:hover { color: #c62828; } /* Dark Red (Kept for semantic meaning) */
 }
 
 /* --- Typing Indicator --- */
@@ -187,13 +187,13 @@ body, html {
     font-size: 0.9em;
     font-weight: 500;
     cursor: pointer;
-    color: #004D40; /* Dark Teal text */
+    color: #004070; /* NEW: Dark Blue text */
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 .prompt-btn:hover {
-    background-color: #E0F2F1; /* Very light teal hover */
-    border-color: #80CBC4; /* Lighter teal border */
+    background-color: #e6f0f8; /* NEW: Very light blue hover */
+    border-color: #79addc; /* NEW: Lighter blue border */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 }
@@ -250,8 +250,8 @@ body, html {
 
 #jurisdiction-select:focus {
     outline: none;
-    border-color: #4DB6AC; /* Teal focus border */
-    box-shadow: 0 0 0 0.2rem rgba(0, 105, 92, 0.25); /* Teal focus glow */
+    border-color: #4d94d1; /* NEW: Blue focus border */
+    box-shadow: 0 0 0 0.2rem rgba(0, 90, 156, 0.25); /* NEW: Blue focus glow */
 }
 
 
@@ -282,12 +282,12 @@ body, html {
 }
 #user-input:focus {
     outline: none;
-    border-color: #4DB6AC; /* Teal focus */
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075), 0 0 0 0.25rem rgba(0, 105, 92, 0.25);
+    border-color: #4d94d1; /* NEW: Blue focus */
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075), 0 0 0 0.25rem rgba(0, 90, 156, 0.25); /* NEW: Blue focus glow */
 }
 
 #send-button {
-    background-color: #00695C; /* Teal send button */
+    background-color: #005A9C; /* NEW: Blue send button */
     color: white;
     border: none;
     border-radius: 50%;
@@ -303,11 +303,11 @@ body, html {
     margin-bottom: 2px;
 }
 #send-button:disabled {
-    background-color: #80CBC4; /* Lighter disabled teal */
+    background-color: #79addc; /* NEW: Lighter disabled blue */
     cursor: not-allowed;
 }
 #send-button:not(:disabled):hover {
-    background-color: #004D40; /* Darker teal hover */
+    background-color: #004070; /* NEW: Darker blue hover */
 }
 #send-button i {
     transform: translateX(1px);
@@ -342,7 +342,7 @@ body, html {
     margin-right: 4px;
 }
 .message-sources a {
-    color: #004D40; /* Darker teal links */
+    color: #004070; /* NEW: Darker blue links */
     text-decoration: none;
     word-break: break-all;
 }
@@ -353,7 +353,7 @@ body, html {
     font-size: 0.75em;
     vertical-align: super;
     margin: 0 1px;
-    color: #004D40; /* Darker teal markers */
+    color: #004070; /* NEW: Darker blue markers */
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
