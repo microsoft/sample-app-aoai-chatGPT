@@ -4,6 +4,8 @@ const sendButton = document.getElementById('send-button');
 const suggestedPrompts = document.getElementById('suggested-prompts');
 const jurisdictionSelect = document.getElementById('jurisdiction-select');
 let typingIndicator; // To keep track of the indicator element
+let currentConversationId = null; // To store the current conversation ID
+let messageHistory = []; // To store message history for the backend
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSendButtonState();
     initializeTypingIndicator(); // Prepare indicator element
     addEventListeners();
+    // Optional: Load chat history or start new conversation
+    // startNewConversation(); 
 });
 
 // --- Event Listeners ---
@@ -63,49 +67,30 @@ async function sendMessage() {
     const selectedJurisdiction = jurisdictionSelect.value; // Get selected jurisdiction
 
     if (messageText) {
-        displayMessage(messageText, 'user');
+        displayMessage(messageText, 'user'); // Display user message immediately
         userInput.value = '';
         adjustInputHeight();
         updateSendButtonState();
         showTypingIndicator();
 
-        // --- Send messageText AND selectedJurisdiction to the backend API ---
-        // Construct message history (basic example, adjust if needed)
-        const history = Array.from(chatMessages.querySelectorAll('.message:not(.typing-indicator)')).map(msg => {
-            const role = msg.classList.contains('user') ? 'user' : 'assistant';
-            let content = '';
-            // Extract text content, excluding sources and actions
-            const contentDiv = msg.querySelector('.message-content');
-            if (contentDiv) {
-                content = Array.from(contentDiv.childNodes)
-                    .filter(node => node.nodeType === Node.TEXT_NODE || (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('message-sources')))
-                    .map(node => node.textContent)
-                    .join('')
-                    .trim();
-            }
-            // Add ID if it's a bot message (needed for history update)
-            const messageData = { role, content };
-            if (role === 'assistant' && msg.dataset.messageId) {
-                 messageData.id = msg.dataset.messageId; // Include ID for assistant messages
-            }
-            return messageData;
-        }).filter(msg => msg.content); // Filter out messages without content
-
-        // Add the new user message to the history being sent
+        // Add user message to local history
         // Prepend jurisdiction context to the user message content
         const currentMessage = { role: 'user', content: `(Jurisdiction: ${selectedJurisdiction}) ${messageText}` };
-        history.push(currentMessage);
+        messageHistory.push(currentMessage);
 
         const requestBody = {
-            messages: history
-            // conversation_id: currentConversationId // Example if you implement conversation tracking
+            messages: messageHistory,
+            conversation_id: currentConversationId // Pass current conversation ID (can be null)
+            // stream: false // Explicitly ask for non-streaming? Backend seems to handle it.
         };
 
-        console.log("Sending request to /conversation:", JSON.stringify(requestBody, null, 2)); // Log the request
+        console.log("Sending request to /history/generate (or /conversation):", JSON.stringify(requestBody, null, 2)); // Log the request
 
         try {
-            // Call your backend API endpoint (usually /conversation)
-            const response = await fetch('/conversation', { // Assumes backend API route is /conversation
+            // Call your backend API endpoint. 
+            // The original app uses /history/generate to *start* or *continue* a conversation (it includes the call to conversation_internal)
+            // Let's use that, as it handles history creation.
+            const response = await fetch('/history/generate', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -126,40 +111,59 @@ async function sendMessage() {
                 }
                 displayMessage(`Error: ${errorText}`, 'bot');
                 console.error("API Error:", response.status, errorText);
+                messageHistory.pop(); // Remove user message from history if API call failed
                 return;
             }
 
             // Handle the response from the backend
             const responseData = await response.json();
-            console.log("Received response from /conversation:", responseData); // Log the response
+            console.log("Received response from backend:", responseData); // Log the response
 
             // Assuming responseData structure based on the Python backend:
-            // { choices: [ { message: { content: "...", context: { citations: [...] } } } ] }
+            // { id: "...", choices: [ { message: { role: "assistant", content: "...", context: { citations: [...] } } } ], ... }
             let botText = "Sorry, I couldn't get a valid response.";
             let sources = [];
             let responseMessageId = Date.now().toString(); // Use timestamp as fallback ID
+            let botMessage = {};
 
             if (responseData.choices && responseData.choices.length > 0 && responseData.choices[0].message) {
-               botText = responseData.choices[0].message.content || botText;
+               const message = responseData.choices[0].message;
+               botText = message.content || botText;
                responseMessageId = responseData.id || responseMessageId; // Use ID from response if available
 
+               // Add bot response to local history
+               botMessage = { role: 'assistant', content: botText, id: responseMessageId };
+               
                // Extract sources if backend provides them in the expected format
-               if (responseData.choices[0].message.context && responseData.choices[0].message.context.citations) {
-                   sources = responseData.choices[0].message.context.citations.map(cit => ({
+               if (message.context && message.context.citations) {
+                   sources = message.context.citations.map(cit => ({
                        title: cit.title || cit.filepath || cit.url || 'Unknown Source', // Adjust based on backend format
                        url: cit.url || '#'
                    }));
+                   // Add context to bot message for history (if needed, though backend might re-add)
+                   botMessage.context = message.context;
                }
             } else if (responseData.error) {
                  botText = `Error from backend: ${responseData.error}`;
+                 botMessage = { role: 'assistant', content: botText, id: responseMessageId };
+            }
+            
+            messageHistory.push(botMessage); // Add bot's response to history
+            
+            // Update conversation ID if it was just created
+            if (responseData.history_metadata && responseData.history_metadata.conversation_id) {
+                currentConversationId = responseData.history_metadata.conversation_id;
+                console.log("Started new conversation, ID:", currentConversationId);
             }
 
             displayMessage({ id: responseMessageId, text: botText, sources: sources }, 'bot'); // Display response with sources
 
         } catch (error) {
             hideTypingIndicator();
-            displayMessage(`Error calling backend: ${error.message}`, 'bot');
+            const errorText = `Error calling backend: ${error.message}`;
+            displayMessage(errorText, 'bot');
             console.error('Fetch Error:', error);
+            messageHistory.pop(); // Remove user message from history if fetch failed
         }
     }
 }
@@ -171,7 +175,7 @@ function displayMessage(data, type) {
     messageDiv.classList.add('message', type);
     // Use ID from data if available (for assistant messages), otherwise generate one
     const messageId = (type === 'bot' && data.id) ? data.id : Date.now();
-    messageDiv.dataset.messageId = messageId;
+    messageDiv.dataset.messageId = messageId; // Set data-message-id attribute
 
     const contentDiv = document.createElement('div');
     contentDiv.classList.add('message-content');
@@ -206,10 +210,11 @@ function displayMessage(data, type) {
         sources.forEach((source, index) => {
             // Assume source is an object like { url: "...", title: "..." }
             const sourceNum = index + 1;
-            const title = source.title || source.url || `Source ${sourceNum}`; // Use title, URL, or number as fallback
+            // Escape title to prevent XSS
+            const title = (source.title || source.url || `Source ${sourceNum}`).replace(/</g, "&lt;").replace(/>/g, "&gt;");
             const url = source.url || '#';
             // Add ID to list item for linking
-            sourcesListHtml += `<li id="source-${sourceNum}-${messageId}"><a href="${url}" target="_blank" title="${title}"> ${title}</a></li>`; // Removed [num] from link text, added before via CSS
+            sourcesListHtml += `<li id="source-${sourceNum}-${messageId}"><a href="${url}" target="_blank" title="${title}"> ${title}</a></li>`;
         });
         sourcesListHtml += '</ol>';
         sourcesDiv.innerHTML = sourcesListHtml;
@@ -219,7 +224,7 @@ function displayMessage(data, type) {
     messageDiv.appendChild(contentDiv);
 
     // Add action buttons for bot messages
-    if (type === 'bot') {
+    if (type === 'bot' && !messageText.startsWith("Error:")) { // Don't add actions to error messages
         const actionsDiv = document.createElement('div');
         actionsDiv.classList.add('message-actions');
         actionsDiv.innerHTML = `
@@ -355,15 +360,20 @@ function copyMessageToClipboard(messageDiv) {
 
 async function handleFeedback(button) {
     const messageDiv = button.closest('.message.bot');
-    if (!messageDiv || !messageDiv.dataset.messageId) return;
+    if (!messageDiv || !messageDiv.dataset.messageId) {
+        console.error("Feedback button clicked, but message ID not found.");
+        return;
+    }
 
     const messageId = messageDiv.dataset.messageId;
-    const feedbackType = button.classList.contains('good') ? 'like' : 'dislike'; // Use like/dislike?
+    // Map feedback to "like" or "dislike" as expected by the backend
+    const feedbackType = button.classList.contains('good') ? 'like' : 'dislike';
     console.log(`Feedback received: ${feedbackType} for message ${messageId}`); // Placeholder
 
     // --- Send feedback (messageId, feedbackType) to the backend ---
     try {
-         const response = await fetch('/history/message_feedback', { // Assumes backend route
+         // Use the correct backend route /history/message_feedback
+         const response = await fetch('/history/message_feedback', { 
              method: 'POST',
              headers: {
                  'Content-Type': 'application/json'
