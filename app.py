@@ -422,14 +422,20 @@ def prepare_model_args(request_body, request_headers):
 
              # Sanitize embeddingDependency authentication
              embeddingDependency = ds_params.get("embedding_dependency", {})
+             
+             # --- CORRECTED INDENTATION BLOCK ---
              if "authentication" in embeddingDependency:
                  # Ensure embeddingDependency["authentication"] is a dict
                  if isinstance(embeddingDependency["authentication"], dict):
+                     # This 'for' loop MUST be indented under the 'if' above
                      for field in embeddingDependency["authentication"]:
+                         # This 'if' MUST be indented under the 'for' loop above
                          if field in secret_params:
+                             # This assignment MUST be indented under the 'if' above
                              embeddingDependency["authentication"][field] = "*****"
                  else:
-                      logging.warning("embeddingDependency authentication is not a dictionary, cannot sanitize.")
+                     logging.warning("embeddingDependency authentication is not a dictionary, cannot sanitize.")
+             # --- End Corrected Block ---
 
     # Ensure extra_body exists before adding user context
     if model_args.get("extra_body") is None:
@@ -820,9 +826,12 @@ async def add_conversation():
     conversation_id = request_json.get("conversation_id", None)
 
     try:
-        if not current_app.cosmos_conversation_client:
-            logging.error("CosmosDB client not available in /history/generate")
-            raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check for 'enabled' attribute
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+            logging.warning("Chat history not configured, skipping /history/generate.")
+            # Still need to call conversation_internal, but without saving
+            request_body = await request.get_json()
+            return await conversation_internal(request_body, request.headers)
 
         history_metadata = {}
         messages = request_json.get("messages", [])
@@ -862,9 +871,6 @@ async def add_conversation():
         logging.exception("Exception in /history/generate")
         return jsonify({"error": str(e)}), 500
 
-# (Keep remaining history routes: update, message_feedback, delete, list, read, rename, delete_all, clear, ensure)
-# (Keep generate_title function)
-
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
     await cosmos_db_ready.wait()
@@ -884,9 +890,11 @@ async def update_conversation():
     conversation_id = request_json.get("conversation_id", None)
 
     try:
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/update")
-             raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check for 'enabled' attribute
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Chat history not configured, skipping /history/update.")
+             return jsonify({"success": True, "message": "History not enabled"}), 200 # Acknowledge, but do nothing
+        
         if not conversation_id:
             raise Exception("conversation_id is required in request body")
 
@@ -916,7 +924,8 @@ async def update_conversation():
             logging.info(f"Saved assistant message {assistant_uuid} to conversation {conversation_id}")
         else:
             logging.warning("No assistant message found at the end of messages array in /history/update")
-            raise Exception("No valid assistant message found to update history")
+            # Don't raise an error, just acknowledge
+            return jsonify({"success": True, "message": "No assistant message to update"}), 200
 
         return jsonify({"success": True}), 200
 
@@ -948,9 +957,11 @@ async def update_message():
             return jsonify({"error": "message_id is required"}), 400
         if not message_feedback:
             return jsonify({"error": "message_feedback is required"}), 400
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/message_feedback")
-             raise Exception("CosmosDB is not configured or not working")
+        
+        # FIX: Use getattr to safely check for 'enable_feedback'
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enable_feedback', False):
+             logging.warning("Feedback submitted, but chat history or feedback is not enabled.")
+             return jsonify({"error": "Feedback is not enabled"}), 400
 
         updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
             user_id, message_id, message_feedback
@@ -988,9 +999,11 @@ async def delete_conversation():
     try:
         if not conversation_id:
             return jsonify({"error": "conversation_id is required"}), 400
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/delete")
-             raise Exception("CosmosDB is not configured or not working")
+        
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to delete conversation, but history is not enabled.")
+             raise Exception("Chat history is not configured or not working")
 
         # delete messages first
         await current_app.cosmos_conversation_client.delete_messages(conversation_id, user_id)
@@ -1018,14 +1031,15 @@ async def list_conversations():
     user_id = authenticated_user["user_principal_id"]
 
     try:
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/list")
-             raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to list history, but history is not enabled.")
+             return jsonify([]), 200 # Return empty list
 
         conversations = await current_app.cosmos_conversation_client.get_conversations(
             user_id, offset=offset, limit=25 # Limit to 25 conversations per request
         )
-        return jsonify(conversations), 200 # Returns empty list [] if none found, not 404
+        return jsonify(conversations), 200 # Returns empty list [] if none found
 
     except Exception as e:
         logging.exception("Exception in /history/list")
@@ -1055,9 +1069,10 @@ async def get_conversation():
         return jsonify({"error": "conversation_id is required"}), 400
 
     try:
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/read")
-             raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to read history, but history is not enabled.")
+             return jsonify({"error": "Chat history is not configured"}), 404
 
         conversation = await current_app.cosmos_conversation_client.get_conversation(user_id, conversation_id)
         if not conversation:
@@ -1111,9 +1126,10 @@ async def rename_conversation():
         return jsonify({"error": "title is required"}), 400
 
     try:
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/rename")
-             raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to rename history, but history is not enabled.")
+             raise Exception("Chat history is not configured or not working")
 
         conversation = await current_app.cosmos_conversation_client.get_conversation(user_id, conversation_id)
         if not conversation:
@@ -1140,9 +1156,10 @@ async def delete_all_conversations():
     user_id = authenticated_user["user_principal_id"]
 
     try:
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/delete_all")
-             raise Exception("CosmosDB is not configured or not working")
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to delete all history, but history is not enabled.")
+             raise Exception("Chat history is not configured or not working")
 
         # Get all conversation IDs first
         conversations = await current_app.cosmos_conversation_client.get_conversations(user_id, offset=0, limit=None) # Get all
@@ -1190,9 +1207,11 @@ async def clear_messages():
     try:
         if not conversation_id:
             return jsonify({"error": "conversation_id is required"}), 400
-        if not current_app.cosmos_conversation_client:
-             logging.error("CosmosDB client not available in /history/clear")
-             raise Exception("CosmosDB is not configured or not working")
+        
+        # FIX: Use getattr to safely check
+        if not current_app.cosmos_conversation_client or not getattr(app_settings.chat_history, 'enabled', False):
+             logging.warning("Attempted to clear history, but history is not enabled.")
+             raise Exception("Chat history is not configured or not working")
 
         await current_app.cosmos_conversation_client.delete_messages(conversation_id, user_id)
         logging.info(f"Cleared messages for conversation {conversation_id} for user {user_id}")
