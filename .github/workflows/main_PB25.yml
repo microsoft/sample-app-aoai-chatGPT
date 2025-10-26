@@ -8,6 +8,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,7 +23,9 @@ jobs:
     - name: Log in to registry
       uses: docker/login-action@v2
       with:
+        # Corrected: Login server name
         registry: glgacr.azurecr.io
+        # Corrected: Use your ACR secrets
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
@@ -30,8 +33,11 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
+        # Corrected: Pushes to the correct image name 'sample-app-aoai-chatgpt'
+        # Uses github.sha (commit hash) as the unique tag
         tags: glgacr.azurecr.io/sample-app-aoai-chatgpt:${{ github.sha }}
-        file: ./WebApp.Dockerfile # Assuming Dockerfile is at the root
+        # Corrected: Points to your actual Dockerfile name
+        file: ./WebApp.Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -40,7 +46,8 @@ jobs:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-    steps:
+    steps: # Steps within the deploy job
+      # --- ADDED THIS MISSING STEP ---
       # Action 1: Log in to Azure first using the Service Principal credentials
       - name: Login to Azure
         uses: azure/login@v1
@@ -54,5 +61,7 @@ jobs:
         with:
           app-name: 'PB25'
           slot-name: 'production'
+          # This publish profile secret allows the action to deploy to your specific App Service
           publish-profile: ${{ secrets.AzureAppService_PublishProfile_adee204dfce442d18ffe6eca69cdda8e }}
+          # Corrected: Tells App Service to use the image pushed in the build step
           images: 'glgacr.azurecr.io/sample-app-aoai-chatgpt:${{ github.sha }}'
