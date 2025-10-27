@@ -205,16 +205,17 @@ def conversation():
         # Call Azure OpenAI
         max_retries = 3
         retry_count = 0
-        result_dict = None
+        result = None
         
         while retry_count < max_retries:
             try:
                 if app_settings.datasource:
                     result, status_code = conversation_with_data(request_json)
-                    result_dict = result if isinstance(result, dict) else result.get_json()
                 else:
                     # Direct Azure OpenAI call without data source
                     result_dict = call_azure_openai_direct(request_json)
+                    result = jsonify(result_dict)
+                    status_code = 200
                 break
             except Exception as e:
                 retry_count += 1
@@ -222,42 +223,10 @@ def conversation():
                     logging.error(f"Error in /conversation after {max_retries} retries: {str(e)}")
                     return jsonify({"error": str(e)}), 500
 
-        if result_dict is None:
+        if result is None:
             return jsonify({"error": "Exceeded maximum retries"}), 500
 
-        # Format response for frontend
-        response_obj = {
-            "id": result_dict.get("id"),
-            "model": result_dict.get("model"),
-            "created": result_dict.get("created"),
-            "object": result_dict.get("object"),
-            "choices": [{
-                "message": result_dict["choices"][0]["message"]
-            }],
-            "history_metadata": result_dict.get("history_metadata", {}),
-        }
-
-        # Save to Cosmos DB if enabled
-        if cosmos_conversation_client and user_id:
-            conversation_id = request_json.get("conversation_id")
-            try:
-                if conversation_id:
-                    cosmos_conversation_client.upsert_conversation(
-                        conversation_id=conversation_id,
-                        messages=request_json.get("messages", []),
-                    )
-                else:
-                    # Create new conversation
-                    conversation_dict = cosmos_conversation_client.create_conversation(
-                        user_id=user_id,
-                        title=request_json.get("messages", [{}])[0].get("content", "")[:50],
-                    )
-                    conversation_id = conversation_dict["id"]
-                    response_obj["conversation_id"] = conversation_id
-            except Exception as e:
-                logging.error(f"Error saving to Cosmos DB: {str(e)}")
-
-        return jsonify(response_obj), 200
+        return result, status_code
 
     except Exception as e:
         logging.exception("Exception in /conversation")
