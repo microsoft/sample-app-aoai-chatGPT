@@ -65,7 +65,15 @@ async def serve_index():
     # Serves your index.html from static/
     return await send_from_directory("static", "index.html")
 # --- END REPLACEMENT ---
+# --- ADD THESE TWO NEW FUNCTIONS AFTER serve_index ---
+@bp.route("/script.js")
+async def serve_script():
+    return await send_from_directory("static", "script.js")
 
+@bp.route("/style.css")
+async def serve_style():
+    return await send_from_directory("static", "style.css")
+# --- END ADDITION ---
 
 @bp.route("/favicon.ico")
 async def favicon():
