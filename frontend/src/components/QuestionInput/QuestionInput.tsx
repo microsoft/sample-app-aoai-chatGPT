@@ -38,19 +38,20 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         
         // Calculate new height based on content
         const scrollHeight = textarea.scrollHeight
-        const padding = 0 // Top and bottom padding for the container
-        const newHeight = Math.min(Math.max(scrollHeight + padding, MIN_HEIGHT), MAX_HEIGHT)
+        const newHeight = Math.min(Math.max(scrollHeight, MIN_HEIGHT), MAX_HEIGHT)
         
         setContainerHeight(newHeight)
         
         // Set textarea height
+         requestAnimationFrame(() => {
         if (newHeight >= MAX_HEIGHT) {
-          textarea.style.height = `${MAX_HEIGHT - padding}px`
+          textarea.style.height = `${MAX_HEIGHT}px`
           textarea.style.overflowY = 'auto'
         } else {
           textarea.style.height = `${scrollHeight}px`
           textarea.style.overflowY = 'hidden'
         }
+      })
       }
     }
   }, [question])
