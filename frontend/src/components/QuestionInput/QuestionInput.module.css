@@ -2,7 +2,7 @@
   min-height: 60px;
   max-height: 200px;
   position: absolute;
-  left: 6.5%;
+  left: 5%;
   right: 2.5%;
   bottom: 0%;
   background: #ffffff;
@@ -55,8 +55,8 @@
   position: absolute;
   width: 100%;
   height: 4px;
-  left: 0%;
-  bottom: 0%;
+  left: 0;
+  bottom: 0;
   background: radial-gradient(106.04% 106.06% at 100.1% 90.19%, #18864a 33.63%, #8dddd8 100%);
   border-bottom-left-radius: 0px;
   border-bottom-right-radius: 8px;
@@ -66,20 +66,6 @@
   cursor: pointer;
   width: 27px;
   height: 30px;
-}
-
-@media (max-width: 600px) {
-  .questionInputContainer {
-    left: 10%;
-
-  }
-}
-
-@media (max-width: 480px) {
-  .questionInputContainer {
-    left: 16.5%;
-    right: 0%;
-  }
 }
 
 .fileInputContainer {
@@ -112,4 +98,18 @@
 
 .uploadedImage {
   margin-right: 70px;
+}
+
+@media (max-width: 600px) {
+  .questionInputContainer {
+    left: 8%;
+
+  }
+}
+
+@media (max-width: 480px) {
+  .questionInputContainer {
+    left: 10%;
+    right: 0%;
+  }
 }

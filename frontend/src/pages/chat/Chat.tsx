@@ -935,14 +935,15 @@ const Chat = () => {
                 clearOnSend
                 placeholder="Skriv inn et nytt spørsmål…"
                 disabled={isLoading}
-                onSend={(question, id) => {
-                  appStateContext?.state.isCosmosDBAvailable?.cosmosDB
-                    ? makeApiRequestWithCosmosDB(question, id)
-                    : makeApiRequestWithoutCosmosDB(question, id)
+                onSend={(question) => {
+                  const id = appStateContext?.state.currentChat?.id;
+                  if (appStateContext?.state.isCosmosDBAvailable?.cosmosDB) {
+                    makeApiRequestWithCosmosDB(question, id);
+                  } else {
+                    makeApiRequestWithoutCosmosDB(question, id);
+                  }
                 }}
-                conversationId={
-                  appStateContext?.state.currentChat?.id ? appStateContext?.state.currentChat?.id : undefined
-                }
+                conversationId={appStateContext?.state.currentChat?.id ?? undefined}
               />
             </Stack>
           </div>
