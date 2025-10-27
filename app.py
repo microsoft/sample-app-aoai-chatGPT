@@ -42,10 +42,21 @@ cosmos_db_ready = asyncio.Event()
 
 
 def create_app():
-    app = Quart(__name__)
+    # ---- MODIFICATION START ----
+    # Configure Quart to serve files from the 'static' folder directly from the root URL path
+    app = Quart(__name__, static_folder='static', static_url_path='/')
+    # ---- MODIFICATION END ----
+
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    
+
+    # ---- ADD THIS ROUTE ----
+    # Explicitly serve index.html for the root path '/'
+    @app.route("/")
+    async def serve_index_explicitly():
+         return await app.send_static_file('index.html')
+    # ---- END ADDITION ----
+
     @app.before_serving
     async def init():
         try:
@@ -55,7 +66,7 @@ def create_app():
             logging.exception("Failed to initialize CosmosDB client")
             app.cosmos_conversation_client = None
             raise e
-    
+
     return app
 
 
