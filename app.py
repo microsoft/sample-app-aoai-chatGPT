@@ -59,13 +59,12 @@ def create_app():
     return app
 
 
+# --- REPLACE THE ORIGINAL @bp.route("/") FUNCTION WITH THIS ---
 @bp.route("/")
-async def index():
-    return await render_template(
-        "index.html",
-        title=app_settings.ui.title,
-        favicon=app_settings.ui.favicon
-    )
+async def serve_index():
+    # Serves your index.html from static/
+    return await send_from_directory("static", "index.html")
+# --- END REPLACEMENT ---
 
 
 @bp.route("/favicon.ico")
