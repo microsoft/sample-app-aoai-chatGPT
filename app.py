@@ -16,7 +16,6 @@ from backend.settings import (
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
-    generateFilteredMessages,
     format_non_streaming_response,
     convert_to_pf_format,
     format_pf_non_streaming_response,
