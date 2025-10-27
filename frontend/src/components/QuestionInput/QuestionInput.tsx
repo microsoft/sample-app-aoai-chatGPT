@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useState, useRef, useEffect } from 'react'
 import { FontIcon, Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
 
@@ -19,34 +19,68 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
-  const [base64Image, setBase64Image] = useState<string | null>(null);
+  const [base64Image, setBase64Image] = useState<string | null>(null)
+  const [containerHeight, setContainerHeight] = useState<number>(60)
+  const textareaRef = useRef<HTMLDivElement>(null)
 
   const appStateContext = useContext(AppStateContext)
-  const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false;
+  const OYD_ENABLED = appStateContext?.state.frontendSettings?.oyd_enabled || false
+
+  const MIN_HEIGHT = 60
+  const MAX_HEIGHT = 200
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current.querySelector('textarea')
+      if (textarea) {
+        // Reset height to get accurate scrollHeight
+        textarea.style.height = 'auto'
+        
+        // Calculate new height based on content
+        const scrollHeight = textarea.scrollHeight
+        const newHeight = Math.min(Math.max(scrollHeight, MIN_HEIGHT), MAX_HEIGHT)
+        
+        setContainerHeight(newHeight)
+        
+        // Set textarea height
+         requestAnimationFrame(() => {
+        if (newHeight >= MAX_HEIGHT) {
+          textarea.style.height = `${MAX_HEIGHT}px`
+          textarea.style.overflowY = 'auto'
+        } else {
+          textarea.style.height = `${scrollHeight}px`
+          textarea.style.overflowY = 'hidden'
+        }
+      })
+      }
+    }
+  }, [question])
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
 
     if (file) {
-      await convertToBase64(file);
+      await convertToBase64(file)
     }
-  };
+  }
 
   const convertToBase64 = async (file: Blob) => {
     try {
-      const resizedBase64 = await resizeImage(file, 800, 800);
-      setBase64Image(resizedBase64);
+      const resizedBase64 = await resizeImage(file, 800, 800)
+      setBase64Image(resizedBase64)
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error:', error)
     }
-  };
+  }
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
       return
     }
 
-    const questionTest: ChatMessage["content"] = base64Image ? [{ type: "text", text: question }, { type: "image_url", image_url: { url: base64Image } }] : question.toString();
+    const questionTest: ChatMessage["content"] = base64Image 
+      ? [{ type: "text", text: question }, { type: "image_url", image_url: { url: base64Image } }] 
+      : question.toString()
 
     if (conversationId && questionTest !== undefined) {
       onSend(questionTest, conversationId)
@@ -58,6 +92,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     if (clearOnSend) {
       setQuestion('')
+      setContainerHeight(MIN_HEIGHT)
     }
   }
 
@@ -75,17 +110,28 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const sendQuestionDisabled = disabled || !question.trim()
 
   return (
-    <Stack horizontal className={styles.questionInputContainer}>
-      <TextField
-        className={styles.questionInputTextArea}
-        placeholder={placeholder}
-        multiline
-        resizable={false}
-        borderless
-        value={question}
-        onChange={onQuestionChange}
-        onKeyDown={onEnterPress}
-      />
+    <Stack 
+      horizontal 
+      className={styles.questionInputContainer}
+      style={{ height: `${containerHeight}px` }}
+    >
+      <div ref={textareaRef} style={{ width: '100%' }}>
+        <TextField
+          className={styles.questionInputTextArea}
+          placeholder={placeholder}
+          multiline
+          resizable={false}
+          borderless
+          value={question}
+          onChange={onQuestionChange}
+          onKeyDown={onEnterPress}
+          styles={{
+            field: {
+              maxHeight: MAX_HEIGHT - 30,
+            }
+          }}
+        />
+      </div>
       {!OYD_ENABLED && (
         <div className={styles.fileInputContainer}>
           <input
@@ -102,7 +148,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
               aria-label='Upload Image'
             />
           </label>
-        </div>)}
+        </div>
+      )}
       {base64Image && <img className={styles.uploadedImage} src={base64Image} alt="Uploaded Preview" />}
       <div
         className={styles.questionInputSendButtonContainer}
@@ -110,7 +157,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
         tabIndex={0}
         aria-label="Ask question button"
         onClick={sendQuestion}
-        onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? sendQuestion() : null)}>
+        onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? sendQuestion() : null)}
+      >
         {sendQuestionDisabled ? (
           <SendRegular className={styles.questionInputSendButtonDisabled} />
         ) : (
