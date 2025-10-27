@@ -21,8 +21,6 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
 bp = Flask(__name__, static_folder="static")
 bp.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -33,11 +31,6 @@ if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
-
-# Enable Flask instrumentation for OpenTelemetry
-FlaskInstrumentor().instrument_app(bp)
-# Enable requests instrumentation for OpenTelemetry
-RequestsInstrumentor().instrument()
 
 # Initialize Azure Cosmos DB client
 cosmos_conversation_client = None
