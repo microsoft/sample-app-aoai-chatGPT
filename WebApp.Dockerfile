@@ -1,45 +1,28 @@
-# Start from the Python base image
-FROM python:3.11-alpine
+# Start from the official Python 3.11 image
+FROM python:3.11-slim
 
-# Install system dependencies needed by some Python packages
-# Keeping the original dependencies just in case
-RUN apk add --no-cache --virtual .build-deps \
-    build-base \
-    libffi-dev \
-    openssl-dev \
-    curl \
-    && apk add --no-cache \
-    libpq
-
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy and install Python requirements first (for better caching)
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt \
-    && rm -rf /root/.cache
+# Copy the requirements file first and install dependencies
+# This leverages Docker layer caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the Python backend code and necessary files
-COPY ./backend ./backend
+# --- THIS IS THE CRITICAL PART WE WERE MISSING ---
+# Copy the entire backend application code
 COPY app.py .
-COPY gunicorn.conf.py .
+COPY backend/ ./backend/
+# ------------------------------------------------
 
-# Copy the original static assets (like favicon, images if any)
-# These will be available at /static/ on the web server
-COPY ./static ./static
+# Create the static UI directory and copy your new frontend files into it
+RUN mkdir -p /usr/src/app/static/ui
+COPY frontend/index.html /usr/src/app/static/ui/
+COPY frontend/script.js /usr/src/app/static/ui/
+COPY frontend/style.css /usr/src/app/static/ui/
 
-# Copy your new frontend files (index.html, index.css/style.css, script.js)
-# into a subfolder within the static directory.
-# These will be available at /static/ui/ on the web server.
-# The backend might need configuration to serve index.html from here as the root.
-COPY ./frontend ./static/ui
+# Expose the port the app runs on (matches WEBSITES_PORT)
+EXPOSE 8000
 
-# Expose the port Gunicorn will run on
-EXPOSE 80
-
-# Command to run the Python backend application using Gunicorn
-# This command remains the same as it starts your Python API backend
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "app:app"]
-# Note: Changed from "-b 0.0.0.0:80" to use the config file like the original repo likely did.
-# If gunicorn.conf.py doesn't exist or isn't right, use:
-# CMD ["gunicorn", "-b", "0.0.0.0:80", "app:app"]
+# Define the command to run the app
+CMD ["gunicorn", "--workers", "3", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "app:app"]
