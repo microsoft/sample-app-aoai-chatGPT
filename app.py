@@ -17,6 +17,7 @@ from quart import (
     render_template,
     current_app,
 )
+from quart_cors import cors  # <<< --- NEW IMPORT TO FIX CORS
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -51,6 +52,11 @@ cosmos_db_ready = asyncio.Event()
 def create_app():
     # Configure Quart to serve files from the 'static' folder directly from the root URL path
     app = Quart(__name__, static_folder='static', static_url_path='/')
+
+    # === NEW CORS CONFIGURATION ===
+    # This handles the OPTIONS preflight request and fixes the 405 error
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PUT"], allow_headers=["*"])
+    # === END NEW CORS CONFIGURATION ===
 
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -267,19 +273,104 @@ def prepare_model_args(request_body, request_headers):
     # Make sure this function correctly handles messages, tools, datasources etc.
     request_messages = request_body.get("messages", [])
     messages = []
-    # (Existing message processing logic...)
-    # Return the model_args dictionary
-    # Example minimal return for debugging:
-    return {
-         "messages": request_messages, # Pass through for now
-         "model": app_settings.azure_openai.model, # Ensure model is included
-         "stream": app_settings.azure_openai.stream, # Ensure stream setting is included
-         # Add other necessary args like temperature, max_tokens etc.
-         "temperature": app_settings.azure_openai.temperature,
-         "max_tokens": app_settings.azure_openai.max_tokens,
-         "top_p": app_settings.azure_openai.top_p,
-         "stop": app_settings.azure_openai.stop_sequence,
-     }
+    if not app_settings.datasource:
+        messages = [
+            {
+                "role": "system",
+                "content": app_settings.azure_openai.system_message
+            }
+        ]
+
+    for message in request_messages:
+        if message:
+            match message["role"]:
+                case "user":
+                    messages.append(
+                        {
+                            "role": message["role"],
+                            "content": message["content"]
+                        }
+                    )
+                case "assistant" | "function" | "tool":
+                    messages_helper = {}
+                    messages_helper["role"] = message["role"]
+                    if "name" in message:
+                        messages_helper["name"] = message["name"]
+                    if "function_call" in message:
+                        messages_helper["function_call"] = message["function_call"]
+                    messages_helper["content"] = message["content"]
+                    if "context" in message:
+                        # Assuming context is already an object or None from the request
+                        messages_helper["context"] = message["context"]
+                    
+                    messages.append(messages_helper)
+
+    user_security_context = None
+    if (MS_DEFENDER_ENABLED):
+        authenticated_user_details = get_authenticated_user_details(request_headers)
+        application_name = app_settings.ui.title
+        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )
+
+    model_args = {
+        "messages": messages,
+        "temperature": app_settings.azure_openai.temperature,
+        "max_tokens": app_settings.azure_openai.max_tokens,
+        "top_p": app_settings.azure_openai.top_p,
+        "stop": app_settings.azure_openai.stop_sequence,
+        "stream": app_settings.azure_openai.stream,
+        "model": app_settings.azure_openai.model
+    }
+
+    if len(messages) > 0:
+        if messages[-1]["role"] == "user":
+            if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
+                model_args["tools"] = azure_openai_tools
+
+            if app_settings.datasource:
+                model_args["extra_body"] = {
+                    "data_sources": [
+                        app_settings.datasource.construct_payload_configuration(
+                            request=request
+                        )
+                    ]
+                }
+
+    model_args_clean = copy.deepcopy(model_args)
+    if model_args_clean.get("extra_body"):
+        secret_params = [
+            "key",
+            "connection_string",
+            "embedding_key",
+            "encoded_api_key",
+            "api_key",
+        ]
+        # Cleanse datasource parameters
+        if "data_sources" in model_args_clean["extra_body"]:
+            for ds in model_args_clean["extra_body"]["data_sources"]:
+                if "parameters" in ds:
+                    for secret_param in secret_params:
+                        if ds["parameters"].get(secret_param):
+                            ds["parameters"][secret_param] = "*****"
+                    # Cleanse authentication
+                    authentication = ds["parameters"].get("authentication", {})
+                    for field in authentication:
+                        if field in secret_params:
+                            authentication[field] = "*****"
+                    # Cleanse embedding dependency
+                    embeddingDependency = ds["parameters"].get("embedding_dependency", {})
+                    if "authentication" in embeddingDependency:
+                        for field in embeddingDependency["authentication"]:
+                            if field in secret_params:
+                                embeddingDependency["authentication"][field] = "*****"
+
+    if model_args.get("extra_body") is None:
+        model_args["extra_body"] = {}
+    if user_security_context:
+            model_args["extra_body"]["user_security_context"]= user_security_context.to_dict()
+    logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
+
+    return model_args
+
 
 # --- Your existing promptflow_request function ---
 async def promptflow_request(request):
@@ -295,14 +386,13 @@ async def process_function_call(response):
 
 # --- Your existing send_chat_request function ---
 async def send_chat_request(request_body, request_headers):
-    # ... (Keep your existing implementation) ...
     # Ensure this calls init_openai_client() and handles exceptions
     try:
         azure_openai_client = await init_openai_client()
         if not azure_openai_client:
              raise Exception("Azure OpenAI client failed to initialize.")
         model_args = prepare_model_args(request_body, request_headers) # Get prepared args
-        logging.debug(f"Sending request to OpenAI with args: {model_args}")
+        logging.debug(f"Sending request to OpenAI with args: {json.dumps(model_args, default=str)}") # Use default=str for logging complex objects
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id")
@@ -314,7 +404,6 @@ async def send_chat_request(request_body, request_headers):
 
 # --- Your existing complete_chat_request function ---
 async def complete_chat_request(request_body, request_headers):
-    # ... (Keep your existing implementation) ...
     # This should call send_chat_request or promptflow_request
      if app_settings.base_settings.use_promptflow:
           # ... (promptflow logic) ...
@@ -323,14 +412,28 @@ async def complete_chat_request(request_body, request_headers):
           response, apim_request_id = await send_chat_request(request_body, request_headers)
           history_metadata = request_body.get("history_metadata", {})
           non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
-          # ... (function call processing logic) ...
+          
+          if app_settings.azure_openai.function_call_azure_functions_enabled:
+              function_response = await process_function_call(response)  # Add await here
+              if function_response:
+                  request_body["messages"].extend(function_response)
+                  # Make a second call for the final response
+                  response, apim_request_id = await send_chat_request(request_body, request_headers)
+                  history_metadata = request_body.get("history_metadata", {})
+                  non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+
           return non_streaming_response
 
 
 # --- Your existing AzureOpenaiFunctionCallStreamState class ---
 class AzureOpenaiFunctionCallStreamState():
-    # ... (Keep your existing implementation) ...
-    pass # Placeholder
+    def __init__(self):
+        self.tool_calls = []              # All tool calls detected in the stream
+        self.tool_name = ""               # Tool name being streamed
+        self.tool_arguments_stream = ""   # Tool arguments being streamed
+        self.current_tool_call = None     # JSON with the tool name and arguments currently being streamed
+        self.function_messages = []       # All function messages to be appended to the chat history
+        self.streaming_state = "INITIAL"  # Streaming state (INITIAL, STREAMING, COMPLETED)
 
 
 # --- Your existing process_function_call_stream function ---
@@ -341,14 +444,20 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
 
 # --- Your existing stream_chat_request function ---
 async def stream_chat_request(request_body, request_headers):
-    # ... (Keep your existing implementation) ...
     # This should call send_chat_request
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
+    
     async def generate(apim_request_id, history_metadata):
         # (Existing streaming and function call logic)
-        async for completionChunk in response:
-             yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+        if app_settings.azure_openai.function_call_azure_functions_enabled:
+             # ... (your existing function call streaming logic) ...
+             pass
+        else:
+            # Standard streaming
+            async for completionChunk in response:
+                yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+
     return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
 
 # --- Your existing conversation_internal function ---
@@ -373,7 +482,6 @@ async def conversation_internal(request_body, request_headers):
 # --- Your existing conversation route ---
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
-    # ... (Keep your existing implementation) ...
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -383,7 +491,6 @@ async def conversation():
 # --- Your existing frontend_settings route ---
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
-    # ... (Keep your existing implementation) ...
      try:
          return jsonify(frontend_settings), 200
      except Exception as e:
@@ -392,7 +499,7 @@ def get_frontend_settings():
 
 
 # === NEW ROUTE FOR FILE UPLOAD SAS URL ===
-@bp.route("/api/get-upload-url", methods=["POST"])
+@bp.route("/api/get-upload-url", methods=["POST"]) # Already accepts POST, OPTIONS handled by quart-cors
 async def get_upload_url():
     request_body = await request.get_json()
     file_name = request_body.get("fileName")
@@ -414,14 +521,6 @@ async def get_upload_url():
         logging.info(f"Generating SAS URL for: {container_name}/{file_name}")
         # Create the BlobServiceClient object asynchronously
         blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
-
-        # Ensure container exists (optional, but good practice) - consider doing this at startup if possible
-        # try:
-        #     async with blob_service_client.get_container_client(container_name) as container_client:
-        #         await container_client.get_container_properties()
-        # except Exception:
-        #     logging.warning(f"Container '{container_name}' may not exist. Attempting SAS generation anyway.")
-            # Optionally create container: await blob_service_client.create_container(container_name)
 
         # Generate SAS token
         sas_token = generate_blob_sas(
