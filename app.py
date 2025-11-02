@@ -66,17 +66,17 @@ def create_app():
     # Explicitly serve index.html for the root path '/'
     @app.route("/")
     async def serve_index_explicitly():
-          return await app.send_static_file('index.html')
+        return await app.send_static_file('index.html')
 
     @app.before_serving
     async def init():
-          try:
-                app.cosmos_conversation_client = await init_cosmosdb_client()
-                cosmos_db_ready.set()
-          except Exception as e:
-                logging.exception("Failed to initialize CosmosDB client")
-                app.cosmos_conversation_client = None
-                # raise e # Don't raise, let app start and report error
+        try:
+            app.cosmos_conversation_client = await init_cosmosdb_client()
+            cosmos_db_ready.set()
+        except Exception as e:
+            logging.exception("Failed to initialize CosmosDB client")
+            app.cosmos_conversation_client = None
+            # raise e # Don't raise, let app start and report error
 
     return app
 
@@ -168,12 +168,12 @@ async def init_openai_client():
         if not aoai_api_key:
             logging.info("No AZURE_OPENAI_KEY found, attempting Azure Entra ID auth using DefaultAzureCredential")
             async with DefaultAzureCredential() as credential:
-                  ad_token_provider = get_bearer_token_provider(
-                      credential,
-                      "https://cognitiveservices.azure.com/.default"
-                  )
+                ad_token_provider = get_bearer_token_provider(
+                    credential,
+                    "https://cognitiveservices.azure.com/.default"
+                )
         else:
-              logging.debug("Using AZURE_OPENAI_KEY for authentication.")
+            logging.debug("Using AZURE_OPENAI_KEY for authentication.")
 
 
         # Deployment
@@ -188,14 +188,14 @@ async def init_openai_client():
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
             async with httpx.AsyncClient() as client:
-                  response = await client.get(azure_functions_tools_url)
+                response = await client.get(azure_functions_tools_url)
             response_status_code = response.status_code
             if response_status_code == httpx.codes.OK:
-                  azure_openai_tools.extend(json.loads(response.text))
-                  for tool in azure_openai_tools:
-                        azure_openai_available_tools.append(tool["function"]["name"])
+                azure_openai_tools.extend(json.loads(response.text))
+                for tool in azure_openai_tools:
+                    azure_openai_available_tools.append(tool["function"]["name"])
             else:
-                  logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
+                logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
 
         
         logging.info(f"Initializing Azure OpenAI client for endpoint {endpoint} and deployment {deployment}")
@@ -241,25 +241,25 @@ async def init_cosmosdb_client():
             
             credential = None
             if not app_settings.chat_history.account_key:
-                  logging.info("No Cosmos DB account key found, attempting Azure Entra ID auth using DefaultAzureCredential.")
-                  async with DefaultAzureCredential() as cred:
-                        credential = cred
-                  logging.info("Using DefaultAzureCredential for Cosmos DB.")
+                logging.info("No Cosmos DB account key found, attempting Azure Entra ID auth using DefaultAzureCredential.")
+                async with DefaultAzureCredential() as cred:
+                    credential = cred
+                logging.info("Using DefaultAzureCredential for Cosmos DB.")
             else:
-                  logging.debug("Using Cosmos DB account key for authentication.")
-                  credential = app_settings.chat_history.account_key
+                logging.debug("Using Cosmos DB account key for authentication.")
+                credential = app_settings.chat_history.account_key
 
             if not app_settings.chat_history.database:
-                  raise ValueError("CosmosDB database name (CHAT_HISTORY__DATABASE) is required but not configured.")
+                raise ValueError("CosmosDB database name (CHAT_HISTORY__DATABASE) is required but not configured.")
             if not app_settings.chat_history.conversations_container:
-                  raise ValueError("CosmosDB container name (CHAT_HISTORY__CONVERSATIONS_CONTAINER) is required but not configured.")
+                raise ValueError("CosmosDB container name (CHAT_HISTORY__CONVERSATIONS_CONTAINER) is required but not configured.")
 
             cosmos_conversation_client = CosmosConversationClient(
-                  cosmosdb_endpoint=cosmos_endpoint,
-                  credential=credential,
-                  database_name=app_settings.chat_history.database,
-                  container_name=app_settings.chat_history.conversations_container,
-                  enable_message_feedback=app_settings.chat_history.enable_feedback,
+                cosmosdb_endpoint=cosmos_endpoint,
+                credential=credential,
+                database_name=app_settings.chat_history.database,
+                container_name=app_settings.chat_history.conversations_container,
+                enable_message_feedback=app_settings.chat_history.enable_feedback,
             )
             logging.info("CosmosDB client initialized successfully.")
         except Exception as e:
@@ -286,26 +286,26 @@ def prepare_model_args(request_body, request_headers):
     for message in request_messages:
         if message:
             match message["role"]:
-                  case "user":
-                        messages.append(
-                            {
-                                "role": message["role"],
-                                "content": message["content"]
-                            }
-                        )
-                  case "assistant" | "function" | "tool":
-                        messages_helper = {}
-                        messages_helper["role"] = message["role"]
-                        if "name" in message:
-                            messages_helper["name"] = message["name"]
-                        if "function_call" in message:
-                            messages_helper["function_call"] = message["function_call"]
-                        messages_helper["content"] = message["content"]
-                        if "context" in message:
-                            # Assuming context is an object from the request
-                            messages_helper["context"] = message.get("context")
-                        
-                        messages.append(messages_helper)
+                case "user":
+                    messages.append(
+                        {
+                            "role": message["role"],
+                            "content": message["content"]
+                        }
+                    )
+                case "assistant" | "function" | "tool":
+                    messages_helper = {}
+                    messages_helper["role"] = message["role"]
+                    if "name" in message:
+                        messages_helper["name"] = message["name"]
+                    if "function_call" in message:
+                        messages_helper["function_call"] = message["function_call"]
+                    messages_helper["content"] = message["content"]
+                    if "context" in message:
+                        # Assuming context is an object from the request
+                        messages_helper["context"] = message.get("context")
+                    
+                    messages.append(messages_helper)
 
 
     user_security_context = None
@@ -328,16 +328,16 @@ def prepare_model_args(request_body, request_headers):
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
             if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
-                  model_args["tools"] = azure_openai_tools
+                model_args["tools"] = azure_openai_tools
 
             if app_settings.datasource:
-                  model_args["extra_body"] = {
-                      "data_sources": [
-                          app_settings.datasource.construct_payload_configuration(
-                              request=request
-                          )
-                      ]
-                  }
+                model_args["extra_body"] = {
+                    "data_sources": [
+                        app_settings.datasource.construct_payload_configuration(
+                            request=request
+                        )
+                    ]
+                }
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -350,23 +350,23 @@ def prepare_model_args(request_body, request_headers):
         ]
         if "data_sources" in model_args_clean["extra_body"]:
             for ds in model_args_clean["extra_body"]["data_sources"]:
-                  if "parameters" in ds:
-                        for secret_param in secret_params:
-                            if ds["parameters"].get(secret_param):
-                                ds["parameters"][secret_param] = "*****"
-                        authentication = ds["parameters"].get("authentication", {})
-                        for field in authentication:
+                if "parameters" in ds:
+                    for secret_param in secret_params:
+                        if ds["parameters"].get(secret_param):
+                            ds["parameters"][secret_param] = "*****"
+                    authentication = ds["parameters"].get("authentication", {})
+                    for field in authentication:
+                        if field in secret_params:
+                            authentication[field] = "*****"
+                    embeddingDependency = ds["parameters"].get("embedding_dependency", {})
+                    if "authentication" in embeddingDependency:
+                        for field in embeddingDependency["authentication"]:
                             if field in secret_params:
-                                authentication[field] = "*****"
-                        embeddingDependency = ds["parameters"].get("embedding_dependency", {})
-                        if "authentication" in embeddingDependency:
-                            for field in embeddingDependency["authentication"]:
-                                if field in secret_params:
-                                    embeddingDependency["authentication"][field] = "*****"
+                                embeddingDependency["authentication"][field] = "*****"
 
     if model_args.get("extra_body") is None:
         model_args["extra_body"] = {}
-    if user_security_context:  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai      
+    if user_security_context:  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai    
             model_args["extra_body"]["user_security_context"]= user_security_context.to_dict()
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
 
@@ -436,19 +436,19 @@ async def promptflow_request(request):
             timeout=float(app_settings.promptflow.response_timeout)
         ) as client:
             pf_formatted_obj = convert_to_pf_format(
-                  request,
-                  app_settings.promptflow.request_field_name,
-                  app_settings.promptflow.response_field_name
+                request,
+                app_settings.promptflow.request_field_name,
+                app_settings.promptflow.response_field_name
             )
             # NOTE: This only support question and chat_history parameters
             # If you need to add more parameters, you need to modify the request body
             response = await client.post(
-                  app_settings.promptflow.endpoint,
-                  json={
-                      app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
-                      "chat_history": pf_formatted_obj[:-1],
-                  },
-                  headers=headers,
+                app_settings.promptflow.endpoint,
+                json={
+                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
+                    "chat_history": pf_formatted_obj[:-1],
+                },
+                headers=headers,
             )
         resp = response.json()
         resp["id"] = request["messages"][-1]["id"]
@@ -465,29 +465,29 @@ async def process_function_call(response):
         for tool_call in response_message.tool_calls:
             # Check if function exists
             if tool_call.function.name not in azure_openai_available_tools:
-                  continue
+                continue
             
             function_response = await openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
 
             # adding assistant response to messages
             messages.append(
-                  {
-                      "role": response_message.role,
-                      "function_call": {
-                          "name": tool_call.function.name,
-                          "arguments": tool_call.function.arguments,
-                      },
-                      "content": None,
-                  }
+                {
+                    "role": response_message.role,
+                    "function_call": {
+                        "name": tool_call.function.name,
+                        "arguments": tool_call.function.arguments,
+                    },
+                    "content": None,
+                }
             )
             
             # adding function response to messages
             messages.append(
-                  {
-                      "role": "function",
-                      "name": tool_call.function.name,
-                      "content": function_response,
-                  }
+                {
+                    "role": "function",
+                    "name": tool_call.function.name,
+                    "content": function_response,
+                }
             )  # extend conversation with function response
         
         return messages
@@ -507,7 +507,7 @@ async def send_chat_request(request_body, request_headers):
     try:
         azure_openai_client = await init_openai_client()
         if not azure_openai_client:
-              raise Exception("Azure OpenAI client failed to initialize.")
+            raise Exception("Azure OpenAI client failed to initialize.")
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
@@ -537,11 +537,11 @@ async def complete_chat_request(request_body, request_headers):
             function_response = await process_function_call(response)  # Add await here
 
             if function_response:
-                  request_body["messages"].extend(function_response)
+                request_body["messages"].extend(function_response)
 
-                  response, apim_request_id = await send_chat_request(request_body, request_headers)
-                  history_metadata = request_body.get("history_metadata", {})
-                  non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
+                response, apim_request_id = await send_chat_request(request_body, request_headers)
+                history_metadata = request_body.get("history_metadata", {})
+                non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
 
     return non_streaming_response
 
@@ -563,21 +563,21 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
         if response_message.tool_calls and function_call_stream_state.streaming_state in ["INITIAL", "STREAMING"]:
             function_call_stream_state.streaming_state = "STREAMING"
             for tool_call_chunk in response_message.tool_calls:
-                  # New tool call
-                  if tool_call_chunk.id:
-                        if function_call_stream_state.current_tool_call:
-                            function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
-                            function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
-                            function_call_stream_state.tool_arguments_stream = ""
-                            function_call_stream_state.tool_name = ""
-                            function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
-
-                        function_call_stream_state.current_tool_call = {
-                            "tool_id": tool_call_chunk.id,
-                            "tool_name": tool_call_chunk.function.name if function_call_stream_state.tool_name == "" else function_call_stream_state.tool_name
-                        }
-                  else:
+                # New tool call
+                if tool_call_chunk.id:
+                    if function_call_stream_state.current_tool_call:
                         function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
+                        function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
+                        function_call_stream_state.tool_arguments_stream = ""
+                        function_call_stream_state.tool_name = ""
+                        function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
+
+                    function_call_stream_state.current_tool_call = {
+                        "tool_id": tool_call_chunk.id,
+                        "tool_name": tool_call_chunk.function.name if function_call_stream_state.tool_name == "" else function_call_stream_state.tool_name
+                    }
+                else:
+                    function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
                 
         # Function call - Streaming completed
         elif response_message.tool_calls is None and function_call_stream_state.streaming_state == "STREAMING":
@@ -585,22 +585,22 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
             function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
             
             for tool_call in function_call_stream_state.tool_calls:
-                  tool_response = await openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
+                tool_response = await openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
 
-                  function_call_stream_state.function_messages.append({
-                      "role": "assistant",
-                      "function_call": {
-                          "name" : tool_call["tool_name"],
-                          "arguments": tool_call["tool_arguments"]
-                      },
-                      "content": None
-                  })
-                  function_call_stream_state.function_messages.append({
-                      "tool_call_id": tool_call["tool_id"],
-                      "role": "function",
-                      "name": tool_call["tool_name"],
-                      "content": tool_response,
-                  })
+                function_call_stream_state.function_messages.append({
+                    "role": "assistant",
+                    "function_call": {
+                        "name" : tool_call["tool_name"],
+                        "arguments": tool_call["tool_arguments"]
+                    },
+                    "content": None
+                })
+                function_call_stream_state.function_messages.append({
+                    "tool_call_id": tool_call["tool_id"],
+                    "role": "function",
+                    "name": tool_call["tool_name"],
+                    "content": tool_response,
+                })
             
             function_call_stream_state.streaming_state = "COMPLETED"
             return function_call_stream_state.streaming_state
@@ -619,23 +619,23 @@ async def stream_chat_request(request_body, request_headers):
             function_call_stream_state = AzureOpenaiFunctionCallStreamState()
             
             async for completionChunk in response:
-                  stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
-                  
-                  # No function call, asistant response
-                  if stream_state == "INITIAL":
-                        yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+                stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
+                
+                # No function call, asistant response
+                if stream_state == "INITIAL":
+                    yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
-                  # Function call stream completed, functions were executed.
-                  # Append function calls and results to history and send to OpenAI, to stream the final answer.
-                  if stream_state == "COMPLETED":
-                        request_body["messages"].extend(function_call_stream_state.function_messages)
-                        function_response, apim_request_id = await send_chat_request(request_body, request_headers)
-                        async for functionCompletionChunk in function_response:
-                            yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
+                # Function call stream completed, functions were executed.
+                # Append function calls and results to history and send to OpenAI, to stream the final answer.
+                if stream_state == "COMPLETED":
+                    request_body["messages"].extend(function_call_stream_state.function_messages)
+                    function_response, apim_request_id = await send_chat_request(request_body, request_headers)
+                    async for functionCompletionChunk in function_response:
+                        yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
                 
         else:
             async for completionChunk in response:
-                  yield format_stream_response(completionChunk, history_metadata, apim_request_id)
+                yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
     return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
 
@@ -743,7 +743,7 @@ async def add_conversation():
     user_id = authenticated_user["user_principal_id"]
 
     ## check request for conversation_id
-    request_json = await request.get_json()
+    request_json = await request.get_json()  # Get the request body ONCE
     conversation_id = request_json.get("conversation_id", None)
     
     # --- START OF NEW CODE BLOCK (v2: Multi-file support) ---
@@ -835,15 +835,14 @@ Now, please answer my original question: {original_message}
         ## Format the incoming message object in the "chat/completions" messages format
         ## then write it to the conversation history in cosmos
         
-        # We already retrieved 'messages' above, and it's been modified if a file was attached.
-        # messages = request_json["messages"] # This line is no longer needed here
+        # We already have 'messages' from the file processing block above
         
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await current_app.cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
-                input_message=messages[-1],
+                input_message=messages[-1], # Save the modified message
             )
             if createdMessageValue == "Conversation not found":
                 raise Exception(
@@ -856,8 +855,10 @@ Now, please answer my original question: {original_message}
 
         # Submit request to Chat Completions for response
         
-        # BUG FIX: Don't re-read the request body. Use the 'request_json' we already have.
-        request_body = request_json 
+        # *** BUG FIX WAS HERE ***
+        # Use the 'request_json' variable we've been modifying all along.
+        # DO NOT call 'await request.get_json()' again.
+        request_body = request_json  
         
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
@@ -892,19 +893,19 @@ async def update_conversation():
         messages = request_json["messages"]
         if len(messages) > 0 and messages[-1]["role"] == "assistant":
             if len(messages) > 1 and messages[-2].get("role", None) == "tool":
-                  # write the tool message first
-                  await current_app.cosmos_conversation_client.create_message(
-                      uuid=str(uuid.uuid4()),
-                      conversation_id=conversation_id,
-                      user_id=user_id,
-                      input_message=messages[-2],
-                  )
+                # write the tool message first
+                await current_app.cosmos_conversation_client.create_message(
+                    uuid=str(uuid.uuid4()),
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    input_message=messages[-2],
+                )
             # write the assistant message
             await current_app.cosmos_conversation_client.create_message(
-                  uuid=messages[-1]["id"],
-                  conversation_id=conversation_id,
-                  user_id=user_id,
-                  input_message=messages[-1],
+                uuid=messages[-1]["id"],
+                conversation_id=conversation_id,
+                user_id=user_id,
+                input_message=messages[-1],
             )
         else:
             raise Exception("No bot messages found")
@@ -1148,12 +1149,12 @@ async def delete_all_conversations():
         for conversation in conversations:
             ## delete the conversation messages from cosmos first
             deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
-                  conversation["id"], user_id
+                conversation["id"], user_id
             )
 
             ## Now delete the conversation
             deleted_conversation = await current_app.cosmos_conversation_client.delete_conversation(
-                  user_id, conversation["id"]
+                user_id, conversation["id"]
             )
         return (
             jsonify(
@@ -1217,7 +1218,7 @@ async def ensure_cosmos():
         success, err = await current_app.cosmos_conversation_client.ensure()
         if not current_app.cosmos_conversation_client or not success:
             if err:
-                  return jsonify({"error": err}), 422
+                return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
         return jsonify({"message": "CosmosDB is configured and working"}), 200
