@@ -1,7 +1,7 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# This workflow builds and deploys your DOCKER container (your Python backend)
+# This file is NOT the cause of the "build (14.x)" error.
 
-name: Build and deploy container app to Azure Web App - PB25
+name: Build and deploy Backend to Azure Web App - PB25
 
 on:
   push:
@@ -15,28 +15,26 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4 # Modern version
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3 # Modern version
 
-    - name: Log in to registry
-      uses: docker/login-action@v2
+    - name: Log in to Azure Container Registry (glgacr)
+      uses: docker/login-action@v3 # Modern version
       with:
-        # Corrected: Login server name
         registry: glgacr.azurecr.io
-        # Corrected: Use your ACR secrets
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
     - name: Build and push container image to registry
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5 # Modern version
       with:
         push: true
-        # Corrected: Pushes to the correct image name 'sample-app-aoai-chatgpt'
+        # Pushes to the correct image name 'sample-app-aoai-chatgpt'
         # Uses github.sha (commit hash) as the unique tag
         tags: glgacr.azurecr.io/sample-app-aoai-chatgpt:${{ github.sha }}
-        # Corrected: Points to your actual Dockerfile name
+        # Points to your Dockerfile
         file: ./WebApp.Dockerfile
 
   deploy:
@@ -46,22 +44,18 @@ jobs:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-    steps: # Steps within the deploy job
-      # --- ADDED THIS MISSING STEP ---
-      # Action 1: Log in to Azure first using the Service Principal credentials
+    steps:
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2 # Modern version
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }} # Assumes your secret is named AZURE_CREDENTIALS
 
-      # Action 2: Deploy the image to the App Service
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3 # Modern version
         with:
           app-name: 'PB25'
           slot-name: 'production'
-          # This publish profile secret allows the action to deploy to your specific App Service
           publish-profile: ${{ secrets.AzureAppService_PublishProfile_adee204dfce442d18ffe6eca69cdda8e }}
-          # Corrected: Tells App Service to use the image pushed in the build step
+          # Tells App Service to use the new image we just pushed
           images: 'glgacr.azurecr.io/sample-app-aoai-chatgpt:${{ github.sha }}'
