@@ -15,3 +15,5 @@ uvicorn
 quart-cors
 six
 pypdf
+python-docx
+azure-ai-vision-sdk
