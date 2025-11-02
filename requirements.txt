@@ -16,4 +16,4 @@ quart-cors
 six
 pypdf
 python-docx
-azure-ai-vision-sdk
+azure-ai-vision-imageanalysis
