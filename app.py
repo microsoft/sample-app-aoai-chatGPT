@@ -637,7 +637,7 @@ async def get_upload_url():
         logging.error("AZURE_STORAGE_CONNECTION_STRING is not set in environment variables.")
         return jsonify({"error": "Azure Storage connection string not configured"}), 500
 
-    container_name = "uploads" # Ensure this container exists in your glgaistorage
+    container_name = "chatuploads" # Ensure this container exists in your glgaistorage
     blob_service_client = None 
     try:
         logging.info(f"Generating SAS URL for: {container_name}/{file_name}")
