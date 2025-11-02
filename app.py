@@ -1111,7 +1111,7 @@ async def rename_conversation():
                     "error": f"Conversation {conversation_id} was not found. It either does not exist or the logged in user does not have access to it."
                 }
             ),
-            404,
+            4Code
         )
 
     ## update the title
@@ -1273,3 +1273,4 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
