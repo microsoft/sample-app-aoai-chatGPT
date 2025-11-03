@@ -18,6 +18,7 @@ from quart import (
     render_template,
     current_app,
 )
+from quart_cors import cors  # --- ADDED THIS IMPORT ---
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -59,6 +60,10 @@ cosmos_db_ready = asyncio.Event()
 def create_app():
     # Configure Quart to serve files from the 'static' folder directly from the root URL path
     app = Quart(__name__, static_folder='static', static_url_path='/')
+
+    # --- THIS LINE FIXES THE NEW CORS ERROR ---
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
+    # --- END OF CORS FIX ---
 
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -721,18 +726,8 @@ async def get_upload_url():
         if blob_service_client:
             await blob_service_client.close()
 
-# === This route handles the CORS preflight "OPTIONS" request ===
-@bp.route("/api/get-upload-url", methods=["OPTIONS"])
-async def get_upload_url_options():
-    logging.debug("Handling OPTIONS preflight request for /api/get-upload-url")
-    response = await make_response(jsonify({"message": "OK"}))
-    # This origin MUST match your frontend app URL
-    response.headers['Access-Control-Allow-Origin'] = 'https://white-stone-09b65ea1e.3.azurestaticapps.net'
-    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-    response.status_code = 204  # 204 No Content is standard for preflight
-    return response
-# === END OF NEW ROUTE ===
+# --- REMOVED MANUAL OPTIONS ROUTE ---
+# quart-cors now handles this automatically.
 
 
 ## Conversation History API ##
@@ -1111,7 +1106,7 @@ async def rename_conversation():
                     "error": f"Conversation {conversation_id} was not found. It either does not exist or the logged in user does not have access to it."
                 }
             ),
-            4Code
+            404,
         )
 
     ## update the title
