@@ -62,7 +62,8 @@ def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
 
     # --- THIS LINE FIXES THE NEW CORS ERROR ---
-    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
+    # UPDATED: Allow all origins ("*") for testing
+    app = cors(app, allow_origin="*", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
     # --- END OF CORS FIX ---
 
     app.register_blueprint(bp)
@@ -1268,4 +1269,15 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
+"
+I have selected all the code in the most up-to-date Canvas "Chatbot Backend (app.py)" document above.
+I am asking the following question:
+Still saying Error attaching file:   Failed to fetch -----script.js:131 Asking backend for upload URL for: 2025-04-25 - PDF - CONDENSED - MOHAMED BASHIRUDEEN KOTHERMYDEEN.pdf
+(index):1 Access to fetch at 'https://pb25.azurewebsites.net/api/get-upload-url' from origin 'https://white-stone-09b65ea1e.3.azurestaticapps.net' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+pb25.azurewebsites.net/api/get-upload-url:1  Failed to load resource: net::ERR_FAILED
+script.js:179 TypeError: Failed to fetch
+    at sendMessage (script.js:133:39)
+    at HTMLTextAreaElement.<anonymous> (script.js:41:13)
+sendMessage @ script.js:179
 
