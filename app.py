@@ -61,19 +61,16 @@ def create_app():
     # Configure Quart to serve files from the 'static' folder directly from the root URL path
     app = Quart(__name__, static_folder='static', static_url_path='/')
 
-   #
-# Your 'app = Quart(__name__)' line should be right above this
-#
-app = cors(
-    app,
-    allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net",
-    allow_credentials=True,  # <-- This is the most critical line
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type"] # Add any other headers you might need
-)
-#
-# The rest of your app.py routes (@app.route...) go below this
-#
+    # --- THIS IS THE CORRECT CORS CONFIGURATION ---
+    # It MUST be inside the create_app function, right after 'app' is created.
+    app = cors(
+        app,
+        allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net",
+        allow_credentials=True,  # <-- This is the most critical line
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"] # Add any other headers you might need
+    )
+    # --- END OF CORS FIX ---
 
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -592,7 +589,7 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
                     }
                 else:
                     function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
-                
+        
         # Function call - Streaming completed
         elif response_message.tool_calls is None and function_call_stream_state.streaming_state == "STREAMING":
             function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
@@ -1277,6 +1274,3 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
-
-"
-
