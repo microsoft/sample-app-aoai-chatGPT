@@ -61,10 +61,19 @@ def create_app():
     # Configure Quart to serve files from the 'static' folder directly from the root URL path
     app = Quart(__name__, static_folder='static', static_url_path='/')
 
-    # --- THIS LINE FIXES THE CORS ERROR ---
-    # Corrected the typo: "httpsF://" is now "https://"
-    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
-    # --- END OF CORS FIX ---
+   #
+# Your 'app = Quart(__name__)' line should be right above this
+#
+app = cors(
+    app,
+    allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net",
+    allow_credentials=True,  # <-- This is the most critical line
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"] # Add any other headers you might need
+)
+#
+# The rest of your app.py routes (@app.route...) go below this
+#
 
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
