@@ -62,8 +62,8 @@ def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
 
     # --- THIS LINE FIXES THE CORS ERROR ---
-    # It allows your frontend to make requests to this backend
-    app = cors(app, allow_origin="httpsF://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
+    # Corrected the typo: "httpsF://" is now "https://"
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
     # --- END OF CORS FIX ---
 
     app.register_blueprint(bp)
@@ -1268,4 +1268,6 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
+"
 
