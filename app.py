@@ -37,16 +37,18 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- *** CORRECTED MICROSOFT GRAPH IMPORTS (FIX 1) *** ---
-from msgraph import GraphServiceClient
-# This is the correct request body class for the /search/query endpoint
-from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
-from msgraph.generated.models import (
-    SearchQuery,
-    SearchRequest,
-    EntityType
-)
-# --- *** END OF FIX 1 *** ---
+# --- *** SIMPLIFIED MICROSOFT GRAPH IMPORTS (FIX FOR IMPORT ERROR) *** ---
+try:
+    from msgraph import GraphServiceClient
+    from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
+    from msgraph.generated.models.search_request import SearchRequest
+    from msgraph.generated.models.search_query import SearchQuery
+    from msgraph.generated.models.entity_type import EntityType
+    GRAPH_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Microsoft Graph SDK import failed: {e}. Outlook search will be disabled.")
+    GRAPH_AVAILABLE = False
+# --- *** END OF SIMPLIFIED IMPORTS *** ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -68,25 +70,27 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # --- NEW: TOOL DEFINITION FOR THE AI ---
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_outlook",
-            "description": "Searches the user's Outlook emails for a specific query.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "search_query": {
-                        "type": "string",
-                        "description": "The search query to use in Outlook (e.g., 'from:jason perez subject:pleadings')."
-                    }
+tools = []
+if GRAPH_AVAILABLE:
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "search_outlook",
+                "description": "Searches the user's Outlook emails for a specific query.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "search_query": {
+                            "type": "string",
+                            "description": "The search query to use in Outlook (e.g., 'from:jason perez subject:pleadings')."
+                        }
+                    },
+                    "required": ["search_query"],
                 },
-                "required": ["search_query"],
-            },
-        }
-    },
-]
+            }
+        },
+    ]
 # --- END TOOL DEFINITION ---
 
 def create_app():
@@ -333,7 +337,7 @@ def prepare_model_args(request_body, request_headers):
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
             # Check if we should use our new Graph tools
-            if not app_settings.azure_openai.function_call_azure_functions_enabled:
+            if not app_settings.azure_openai.function_call_azure_functions_enabled and GRAPH_AVAILABLE:
                 model_args["tools"] = tools
                 model_args["tool_choice"] = "auto" # Let the AI decide when to use tools
             # This handles the other, legacy function call mechanism
@@ -425,13 +429,15 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
 # --- NEW: FUNCTION TO SEARCH OUTLOOK ---
 async def search_outlook(search_query: str) -> str:
     """Searches Outlook messages using Microsoft Graph."""
+    if not GRAPH_AVAILABLE:
+        return "Microsoft Graph SDK is not available. Outlook search is disabled."
+    
     logging.info(f"Attempting to search Outlook for: {search_query}")
     try:
         # Use DefaultAzureCredential, which will use the App Service's Managed Identity
         credential = DefaultAzureCredential()
         graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
         
-        # --- *** CORRECTED CLASS NAME (FIX 1) *** ---
         # Define the search request
         request_body = QueryPostRequestBody(
             requests=[
@@ -445,7 +451,6 @@ async def search_outlook(search_query: str) -> str:
                 )
             ]
         )
-        # --- *** END OF FIX 1 *** ---
         
         # Make the search API call
         results = await graph_client.search.query.post(request_body)
@@ -481,7 +486,7 @@ async def search_outlook(search_query: str) -> str:
             
         return "Found the following emails:\n\n" + "\n---\n".join(formatted_results)
 
-    except Exception as e:  # <-- FIXED: Now properly aligned with 'try'
+    except Exception as e:
         logging.error(f"Error searching Outlook: {e}")
         return f"An error occurred while searching Outlook: {str(e)}"
 
