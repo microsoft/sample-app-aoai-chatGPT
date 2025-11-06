@@ -89,7 +89,6 @@ tools = [
 ]
 # --- END TOOL DEFINITION ---
 
-
 def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
     
@@ -134,14 +133,12 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
-
 
 # Frontend Settings via Environment Variables
 frontend_settings = {
@@ -163,10 +160,8 @@ frontend_settings = {
     "oyd_enabled": app_settings.base_settings.datasource_type,
 }
 
-
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
-
 
 azure_openai_tools = []
 azure_openai_available_tools = []
@@ -207,7 +202,6 @@ async def init_openai_client():
                 )
         else:
             logging.debug("Using AZURE_OPENAI_KEY for authentication.")
-
 
         # Deployment
         deployment = app_settings.azure_openai.model
@@ -303,7 +297,6 @@ async def init_cosmosdb_client():
         logging.warning("Chat history is not configured. Chat history will not be saved.")
 
     return cosmos_conversation_client
-
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
@@ -488,7 +481,7 @@ async def search_outlook(search_query: str) -> str:
             
         return "Found the following emails:\n\n" + "\n---\n".join(formatted_results)
 
-    except Exception as e:
+    except Exception as e:  # <-- FIXED: Now properly aligned with 'try'
         logging.error(f"Error searching Outlook: {e}")
         return f"An error occurred while searching Outlook: {str(e)}"
 
@@ -1300,6 +1293,5 @@ async def generate_title(conversation_messages) -> str:
         if messages and len(messages) > 1 and messages[-2]:
              return messages[-2]["content"][:30] # Return first 30 chars of last user message
         return "Chat"
-
 
 app = create_app()
