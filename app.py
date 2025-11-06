@@ -39,6 +39,7 @@ from azure.ai.vision.imageanalysis.models import VisualFeatures
 
 # --- *** CORRECTED MICROSOFT GRAPH IMPORTS *** ---
 from msgraph import GraphServiceClient
+# Note: The import paths are now corrected to be relative to the 'generated' package
 from msgraph.generated.models.search_request_body import SearchRequestBody
 from msgraph.generated.models.search_query import SearchQuery
 from msgraph.generated.models.search_request import SearchRequest
@@ -91,6 +92,8 @@ tools = [
 def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
     
+    # --- THIS LINE FIXES THE CORS ERROR ---
+    # It allows your frontend to talk to your backend
     app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
 
     app.register_blueprint(bp)
@@ -111,7 +114,7 @@ def create_app():
 
     return app
 
-# --- (Static file routes are unchanged) ---
+# --- Serve Static Files ---
 @bp.route("/")
 async def serve_index():
     return await send_from_directory("static", "index.html")
@@ -133,10 +136,15 @@ async def assets(path):
     return await send_from_directory("static/assets", path)
 
 
+# Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
+
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
+
+
+# Frontend Settings via Environment Variables
 frontend_settings = {
     "auth_enabled": app_settings.base_settings.auth_enabled,
     "feedback_enabled": (
@@ -155,13 +163,20 @@ frontend_settings = {
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
     "oyd_enabled": app_settings.base_settings.datasource_type,
 }
+
+
+# Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
+
+
 azure_openai_tools = []
 azure_openai_available_tools = []
 
+# Initialize Azure OpenAI Client
 async def init_openai_client():
     azure_openai_client = None
     try:
+        # API version check
         if (
             app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
@@ -169,6 +184,8 @@ async def init_openai_client():
             raise ValueError(
                 f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'"
             )
+
+        # Endpoint
         if (
             not app_settings.azure_openai.endpoint and
             not app_settings.azure_openai.resource
@@ -176,7 +193,10 @@ async def init_openai_client():
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
+
         endpoint = app_settings.azure_openai.endpoint or f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
+
+        # Authentication
         aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
@@ -188,10 +208,17 @@ async def init_openai_client():
                 )
         else:
             logging.debug("Using AZURE_OPENAI_KEY for authentication.")
+
+
+        # Deployment
         deployment = app_settings.azure_openai.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL deployment name is required")
+
+        # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
+
+        # Remote function calls
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
             async with httpx.AsyncClient() as client:
@@ -204,6 +231,7 @@ async def init_openai_client():
             else:
                 logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
 
+        
         logging.info(f"Initializing Azure OpenAI client for endpoint {endpoint} and deployment {deployment}")
         azure_openai_client = AsyncAzureOpenAI(
             api_version=app_settings.azure_openai.preview_api_version,
@@ -212,11 +240,28 @@ async def init_openai_client():
             default_headers=default_headers,
             azure_endpoint=endpoint,
         )
+
         return azure_openai_client
     except Exception as e:
         logging.exception("Exception during Azure OpenAI client initialization", exc_info=e)
         azure_openai_client = None
         raise e
+
+async def openai_remote_azure_function_call(function_name, function_args):
+    if app_settings.azure_openai.function_call_azure_functions_enabled is not True:
+        return
+
+    azure_functions_tool_url = f"{app_settings.azure_openai.function_call_azure_functions_tool_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tool_key}"
+    headers = {'content-type': 'application/json'}
+    body = {
+        "tool_name": function_name,
+        "tool_arguments": json.loads(function_args)
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
+    response.raise_for_status()
+
+    return response.text
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
@@ -227,6 +272,7 @@ async def init_cosmosdb_client():
                 f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
             logging.info(f"Cosmos DB endpoint: {cosmos_endpoint}")
+            
             credential = None
             if not app_settings.chat_history.account_key:
                 logging.info("No Cosmos DB account key found, attempting Azure Entra ID auth using DefaultAzureCredential.")
@@ -236,10 +282,12 @@ async def init_cosmosdb_client():
             else:
                 logging.debug("Using Cosmos DB account key for authentication.")
                 credential = app_settings.chat_history.account_key
+
             if not app_settings.chat_history.database:
                 raise ValueError("CosmosDB database name (CHAT_HISTORY__DATABASE) is required but not configured.")
             if not app_settings.chat_history.conversations_container:
                 raise ValueError("CosmosDB container name (CHAT_HISTORY__CONVERSATIONS_CONTAINER) is required but not configured.")
+
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
@@ -254,7 +302,9 @@ async def init_cosmosdb_client():
             raise e
     else:
         logging.warning("Chat history is not configured. Chat history will not be saved.")
+
     return cosmos_conversation_client
+
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
@@ -269,6 +319,7 @@ def prepare_model_args(request_body, request_headers):
     for message in request_messages:
         if message:
             match message["role"]:
+                # Pass all valid message roles to the model
                 case "user" | "assistant" | "function" | "tool":
                     messages.append(message)
 
@@ -289,11 +340,14 @@ def prepare_model_args(request_body, request_headers):
     }
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
+            # Check if we should use our new Graph tools
             if not app_settings.azure_openai.function_call_azure_functions_enabled:
                 model_args["tools"] = tools
-                model_args["tool_choice"] = "auto"
+                model_args["tool_choice"] = "auto" # Let the AI decide when to use tools
+            # This handles the other, legacy function call mechanism
             elif app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
                 model_args["tools"] = azure_openai_tools
+                
             if app_settings.datasource:
                 model_args["extra_body"] = {
                     "data_sources": [
@@ -303,6 +357,7 @@ def prepare_model_args(request_body, request_headers):
                     ]
                 }
     
+    # Clean sensitive data from logs
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
         secret_params = ["key", "connection_string", "embedding_key", "encoded_api_key", "api_key"]
@@ -322,7 +377,7 @@ def prepare_model_args(request_body, request_headers):
                             if field in secret_params:
                                 embeddingDependency["authentication"][field] = "*****"
     if model_args_clean.get("tools"):
-        model_args_clean["tools"] = "[REDACTED]"
+        model_args_clean["tools"] = "[REDACTED]" # Don't log all tool definitions
     if model_args.get("extra_body") is None:
         model_args["extra_body"] = {}
     if user_security_context:
@@ -330,7 +385,10 @@ def prepare_model_args(request_body, request_headers):
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
     return model_args
 
+# --- HELPER FUNCTIONS FOR FILE EXTRACTION ---
+
 def extract_text_from_pdf(file_bytes: bytes) -> str:
+    """Extracts text from PDF bytes."""
     logging.info("Extracting text from PDF...")
     text = ""
     with io.BytesIO(file_bytes) as f:
@@ -340,6 +398,7 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
+    """Extracts text from .docx bytes."""
     logging.info("Extracting text from DOCX...")
     text = ""
     with io.BytesIO(file_bytes) as f:
@@ -349,6 +408,7 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     return text
 
 async def extract_text_from_image(file_bytes: bytes) -> str:
+    """Extracts text from image bytes using Azure AI Vision."""
     logging.info("Extracting text from image...")
     try:
         vision_endpoint = os.environ["AZURE_AI_VISION_ENDPOINT"]
@@ -370,12 +430,16 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
     else:
         return "[No text found in image]"
 
+# --- NEW: FUNCTION TO SEARCH OUTLOOK ---
 async def search_outlook(search_query: str) -> str:
     """Searches Outlook messages using Microsoft Graph."""
     logging.info(f"Attempting to search Outlook for: {search_query}")
     try:
+        # Use DefaultAzureCredential, which will use the App Service's Managed Identity
         credential = DefaultAzureCredential()
         graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
+        
+        # Define the search request
         request_body = SearchRequestBody(
             requests=[
                 SearchRequest(
@@ -384,31 +448,50 @@ async def search_outlook(search_query: str) -> str:
                         query_string=search_query
                     ),
                     from_=0,
-                    size=5
+                    size=5  # Get top 5 results
                 )
             ]
         )
+        
+        # Make the search API call
         results = await graph_client.search.query.post(request_body)
+        
         if not results or not results.value:
             return "No results found in Outlook."
         
+        # Format the results
         formatted_results = []
         for hit_container in results.value:
             if hit_container.hits:
                 for hit in hit_container.hits:
                     if hit.resource:
+                        # Make sure all fields exist before accessing
+                        subject = getattr(hit.resource, 'subject', 'N/A')
+                        from_address = "N/A"
+                        if hasattr(hit.resource, 'from_') and hit.resource.from_ and hasattr(hit.resource.from_, 'email_address') and hit.resource.from_.email_address:
+                            from_address = getattr(hit.resource.from_.email_address, 'address', 'N/A')
+                        received_date = getattr(hit.resource, 'received_date_time', 'N/A')
+                        snippet = getattr(hit, 'summary', 'N/A')
+                        web_link = getattr(hit.resource, 'web_link', '#')
+
                         formatted_results.append(
-                            f"Subject: {hit.resource.subject}\n"
-                            f"From: {hit.resource.from_.email_address.address}\n"
-                            f"Date: {hit.resource.received_date_time}\n"
-                            f"Snippet: {hit.summary}\n"
-                            f"URL: {hit.resource.web_link}\n"
+                            f"Subject: {subject}\n"
+                            f"From: {from_address}\n"
+                            f"Date: {received_date}\n"
+                            f"Snippet: {snippet}\n"
+                            f"URL: {web_link}\n"
                         )
+        
+        if not formatted_results:
+            return "No results found in Outlook."
+            
         return "Found the following emails:\n\n" + "\n---\n".join(formatted_results)
+
     except Exception as e:
         logging.error(f"Error searching Outlook: {e}")
         return f"An error occurred while searching Outlook: {str(e)}"
 
+# --- (promptflow_request is unchanged) ---
 async def promptflow_request(request):
     try:
         headers = {
@@ -438,6 +521,7 @@ async def promptflow_request(request):
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
+# --- (process_function_call is unchanged) ---
 async def process_function_call(response):
     response_message = response.choices[0].message
     messages = []
@@ -466,6 +550,7 @@ async def process_function_call(response):
         return messages
     return None
 
+# --- (send_chat_request is unchanged) ---
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
     messages = request_body.get("messages", [])
@@ -486,6 +571,7 @@ async def send_chat_request(request_body, request_headers):
         raise e
     return response, apim_request_id
 
+# --- UPDATED: complete_chat_request ---
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
         response = await promptflow_request(request_body)
@@ -500,13 +586,16 @@ async def complete_chat_request(request_body, request_headers):
         response, apim_request_id = await send_chat_request(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
         
+        # --- NEW TOOL-CALLING LOGIC ---
         if response.choices[0].message.tool_calls:
             logging.info("AI requested a tool call.")
+            
+            # Add AI's "tool call" request to history
+            request_body["messages"].append(response.choices[0].message)
+
             tool_call = response.choices[0].message.tool_calls[0]
             function_name = tool_call.function.name
             function_args = json.loads(tool_call.function.arguments)
-            
-            request_body["messages"].append(response.choices[0].message)
             
             if function_name == "search_outlook":
                 function_result = await search_outlook(**function_args)
@@ -524,6 +613,7 @@ async def complete_chat_request(request_body, request_headers):
             
             logging.info("Sending tool results back to AI for summary.")
             response, apim_request_id = await send_chat_request(request_body, request_headers)
+        # --- END NEW LOGIC ---
 
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             function_response = await process_function_call(response)
@@ -535,6 +625,7 @@ async def complete_chat_request(request_body, request_headers):
         non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
         return non_streaming_response
 
+# --- (AzureOpenaiFunctionCallStreamState is unchanged) ---
 class AzureOpenaiFunctionCallStreamState():
     def __init__(self):
         self.tool_calls = []
@@ -544,6 +635,7 @@ class AzureOpenaiFunctionCallStreamState():
         self.function_messages = []
         self.streaming_state = "INITIAL"
 
+# --- (process_function_call_stream is unchanged) ---
 async def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
     if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
         response_message = completionChunk.choices[0].delta
@@ -587,21 +679,24 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
         else:
             return function_call_stream_state.streaming_state
 
+# --- UPDATED: stream_chat_request ---
 async def stream_chat_request(request_body, request_headers):
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
     async def generate(apim_request_id, history_metadata):
-        full_delta = {"tool_calls": []}
+        full_delta = {"role": "assistant", "content": None, "tool_calls": []}
         tool_call_ids = {}
         
         async for completionChunk in response:
             if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
                 delta = completionChunk.choices[0].delta
                 
+                # --- NEW STREAMING TOOL-CALL LOGIC ---
                 if delta.tool_calls:
                     logging.debug("Streaming tool call...")
                     for tool_call_chunk in delta.tool_calls:
                         if tool_call_chunk.id:
+                            # Start of a new tool call
                             tool_call_ids[tool_call_chunk.index] = tool_call_chunk.id
                             full_delta["tool_calls"].append({
                                 "id": tool_call_chunk.id,
@@ -615,14 +710,16 @@ async def stream_chat_request(request_body, request_headers):
                                 full_delta["tool_calls"][tc_index]["function"]["name"] += tool_call_chunk.function.name
                             if tool_call_chunk.function.arguments:
                                 full_delta["tool_calls"][tc_index]["function"]["arguments"] += tool_call_chunk.function.arguments
-                    
+                # --- END NEW LOGIC ---
+
                 finish_reason = completionChunk.choices[0].finish_reason
                 if finish_reason == "tool_calls":
                     logging.info("Tool call stream finished. Executing tools.")
                     
-                    assistant_message = {"role": "assistant", "content": None, "tool_calls": full_delta["tool_calls"]}
-                    request_body["messages"].append(assistant_message)
+                    # Add AI's tool call request to history
+                    request_body["messages"].append(full_delta)
                     
+                    # Call all the tools the AI requested
                     for tool_call in full_delta["tool_calls"]:
                         function_name = tool_call["function"]["name"]
                         function_args = json.loads(tool_call["function"]["arguments"])
@@ -647,8 +744,10 @@ async def stream_chat_request(request_body, request_headers):
                         yield format_stream_response(second_chunk, history_metadata, second_apim_request_id)
                 
                 elif finish_reason is None and not delta.tool_calls:
+                    # This is a normal text chunk, stream it back
                     yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
+                # This handles legacy function calls (if enabled)
                 if app_settings.azure_openai.function_call_azure_functions_enabled:
                     function_call_stream_state = AzureOpenaiFunctionCallStreamState()
                     stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
@@ -662,12 +761,13 @@ async def stream_chat_request(request_body, request_headers):
                         async for functionCompletionChunk in function_response:
                             yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
         
-        else:
+        else: # Fallback for non-streaming or promptflow
             async for completionChunk in response:
                 yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
     return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
 
+# --- (conversation_internal is unchanged) ---
 async def conversation_internal(request_body, request_headers):
     try:
         if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
@@ -686,6 +786,7 @@ async def conversation_internal(request_body, request_headers):
         else:
             return jsonify({"error": str(ex)}), 500
 
+# --- (conversation route is unchanged) ---
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
     if not request.is_json:
@@ -693,6 +794,7 @@ async def conversation():
     request_json = await request.get_json()
     return await conversation_internal(request_json, request.headers)
 
+# --- (frontend_settings route is unchanged) ---
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
@@ -728,6 +830,7 @@ async def login():
         return jsonify({"error": str(e)}), 500
 # --- *** END NEW LOGIN ENDPOINT *** ---
 
+# --- (get_upload_url route is unchanged) ---
 @bp.route("/api/get-upload-url", methods=["POST"])
 async def get_upload_url():
     request_body = await request.get_json()
@@ -765,13 +868,17 @@ async def get_upload_url():
 
 # --- (Removed manual OPTIONS route, quart-cors handles it) ---
 
+# --- UPDATED: /history/generate ---
+# Now includes file reading logic and uses the corrected bug-fix
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-    request_json = await request.get_json()
+    request_json = await request.get_json()  # Get the request body ONCE
     conversation_id = request_json.get("conversation_id", None)
+    
+    # --- START OF FILE PROCESSING BLOCK (v2: Multi-file support) ---
     
     messages = request_json.get("messages", [])
     
@@ -817,6 +924,7 @@ Now, please answer my original question: {original_message}
             except Exception as e:
                 logging.error(f"Failed to process attached file: {e}")
                 return jsonify({"error": f"Failed to read the attached file: {str(e)}"}), 500
+    # --- END OF FILE PROCESSING BLOCK ---
 
     try:
         if not current_app.cosmos_conversation_client:
@@ -847,7 +955,10 @@ Now, please answer my original question: {original_message}
         else:
             raise Exception("No user message found")
         
+        # *** THIS IS THE BUG FIX ***
+        # Use the 'request_json' variable we've been modifying all along.
         request_body = request_json  
+        
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
         return await conversation_internal(request_body, request.headers)
@@ -855,6 +966,7 @@ Now, please answer my original question: {original_message}
         logging.exception("Exception in /history/generate")
         return jsonify({"error": str(e)}), 500
 
+# --- (All other /history/ routes are unchanged) ---
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
     await cosmos_db_ready.wait()
