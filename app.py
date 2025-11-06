@@ -38,12 +38,14 @@ from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
 # --- *** CORRECTED MICROSOFT GRAPH IMPORTS *** ---
+# The models are directly under the .models package
 from msgraph import GraphServiceClient
-# Note: The import paths are now corrected to be relative to the 'generated' package
-from msgraph.generated.models.search_request_body import SearchRequestBody
-from msgraph.generated.models.search_query import SearchQuery
-from msgraph.generated.models.search_request import SearchRequest
-from msgraph.generated.models.entity_type import EntityType
+from msgraph.generated.models import (
+    SearchRequestBody,
+    SearchQuery,
+    SearchRequest,
+    EntityType
+)
 # --- *** END OF FIX *** ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -692,7 +694,7 @@ async def stream_chat_request(request_body, request_headers):
                 delta = completionChunk.choices[0].delta
                 
                 # --- NEW STREAMING TOOL-CALL LOGIC ---
-                if delta.tool_calls:
+                if delta and delta.tool_calls:
                     logging.debug("Streaming tool call...")
                     for tool_call_chunk in delta.tool_calls:
                         if tool_call_chunk.id:
@@ -732,6 +734,15 @@ async def stream_chat_request(request_body, request_headers):
                         except json.JSONDecodeError:
                             logging.error(f"Failed to decode tool arguments: {tool_call['function']['arguments']}")
                             function_result = f"Error: Invalid arguments provided for {function_name}."
+                            # We must add a tool result message for each tool call
+                            request_body["messages"].append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tool_call["id"],
+                                    "name": function_name,
+                                    "content": function_result,
+                                }
+                            )
                             continue # Skip this tool call
 
                         if function_name == "search_outlook":
@@ -753,7 +764,7 @@ async def stream_chat_request(request_body, request_headers):
                     async for second_chunk in second_response:
                         yield format_stream_response(second_chunk, history_metadata, second_apim_request_id)
                 
-                elif finish_reason is None and not delta.tool_calls:
+                elif finish_reason is None and (not delta or not delta.tool_calls):
                     # This is a normal text chunk, stream it back
                     yield format_stream_response(completionChunk, history_metadata, apim_request_id)
 
@@ -1281,6 +1292,10 @@ async def generate_title(conversation_messages) -> str:
         return title
     except Exception as e:
         logging.exception("Exception while generating title", e)
-        return messages[-2]["content"]
+        # Fallback to a safe value
+        if messages and len(messages) > 1 and messages[-2]:
+             return messages[-2]["content"][:30] # Return first 30 chars of last user message
+        return "Chat"
+
 
 app = create_app()
