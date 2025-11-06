@@ -38,10 +38,10 @@ from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
 # --- *** CORRECTED MICROSOFT GRAPH IMPORTS *** ---
-# The models are directly under the .models package
 from msgraph import GraphServiceClient
+# This is the correct request body class for the /search/query endpoint
+from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
 from msgraph.generated.models import (
-    SearchRequestBody,
     SearchQuery,
     SearchRequest,
     EntityType
@@ -441,8 +441,9 @@ async def search_outlook(search_query: str) -> str:
         credential = DefaultAzureCredential()
         graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
         
+        # --- *** CORRECTED CLASS NAME *** ---
         # Define the search request
-        request_body = SearchRequestBody(
+        request_body = QueryPostRequestBody(
             requests=[
                 SearchRequest(
                     entity_types=[EntityType.Message],
@@ -454,6 +455,7 @@ async def search_outlook(search_query: str) -> str:
                 )
             ]
         )
+        # --- *** END OF FIX *** ---
         
         # Make the search API call
         results = await graph_client.search.query.post(request_body)
@@ -876,8 +878,8 @@ async def get_upload_url():
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
         )
-        sas_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}?{sas_token}"
-        blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}"
+        sas_url = f"https{"://"}{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}?{sas_token}"
+        blob_url = f"https{"://"}{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}"
         logging.info(f"Successfully generated SAS URL for {file_name}")
         return jsonify({"sasUrl": sas_url, "blobUrl": blob_url})
     except Exception as e:
