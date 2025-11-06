@@ -37,7 +37,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- *** CORRECTED MICROSOFT GRAPH IMPORTS *** ---
+# --- *** CORRECTED MICROSOFT GRAPH IMPORTS (FIX 1) *** ---
 from msgraph import GraphServiceClient
 # This is the correct request body class for the /search/query endpoint
 from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
@@ -46,7 +46,7 @@ from msgraph.generated.models import (
     SearchRequest,
     EntityType
 )
-# --- *** END OF FIX *** ---
+# --- *** END OF FIX 1 *** ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -86,7 +86,6 @@ tools = [
             },
         }
     },
-    # We can add more tools here later (e.g., search_box)
 ]
 # --- END TOOL DEFINITION ---
 
@@ -94,8 +93,6 @@ tools = [
 def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
     
-    # --- THIS LINE FIXES THE CORS ERROR ---
-    # It allows your frontend to talk to your backend
     app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
 
     app.register_blueprint(bp)
@@ -441,7 +438,7 @@ async def search_outlook(search_query: str) -> str:
         credential = DefaultAzureCredential()
         graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
         
-        # --- *** CORRECTED CLASS NAME *** ---
+        # --- *** CORRECTED CLASS NAME (FIX 1) *** ---
         # Define the search request
         request_body = QueryPostRequestBody(
             requests=[
@@ -455,7 +452,7 @@ async def search_outlook(search_query: str) -> str:
                 )
             ]
         )
-        # --- *** END OF FIX *** ---
+        # --- *** END OF FIX 1 *** ---
         
         # Make the search API call
         results = await graph_client.search.query.post(request_body)
@@ -867,10 +864,9 @@ async def get_upload_url():
         return jsonify({"error": "Azure Storage connection string not configured"}), 500
     container_name = "chatuploads"
     blob_service_client = None 
-try:
+    try:
         logging.info(f"Generating SAS URL for: {container_name}/{file_name}")
         blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
-
         sas_token = generate_blob_sas(
             account_name=blob_service_client.account_name,
             container_name=container_name,
@@ -879,13 +875,12 @@ try:
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
         )
-
-        # --- *** THIS IS THE SYNTAX FIX *** ---
-        # Removed the incorrect f-string formatting
+        
+        # --- *** THIS IS THE SYNTAX FIX (FIX 2) *** ---
         base_url = f"https://{blob_service_client.account_name}.blob.core.windows.net"
         sas_url = f"{base_url}/{container_name}/{file_name}?{sas_token}"
         blob_url = f"{base_url}/{container_name}/{file_name}"
-        # --- *** END OF FIX *** ---
+        # --- *** END OF FIX 2 *** ---
 
         logging.info(f"Successfully generated SAS URL for {file_name}")
         return jsonify({"sasUrl": sas_url, "blobUrl": blob_url})
