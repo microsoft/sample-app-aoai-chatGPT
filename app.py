@@ -37,13 +37,13 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- NEW MICROSOFT GRAPH IMPORTS ---
+# --- *** CORRECTED MICROSOFT GRAPH IMPORTS *** ---
 from msgraph import GraphServiceClient
-from msgraph.generated.models.search.search_request_body import SearchRequestBody
-from msgraph.generated.models.search.search_query import SearchQuery
-from msgraph.generated.models.search.search_request import SearchRequest
-from msgraph.generated.models.search.entity_type import EntityType
-# --- END NEW IMPORTS ---
+from msgraph.generated.models.search_request_body import SearchRequestBody
+from msgraph.generated.models.search_query import SearchQuery
+from msgraph.generated.models.search_request import SearchRequest
+from msgraph.generated.models.entity_type import EntityType
+# --- *** END OF FIX *** ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -91,8 +91,6 @@ tools = [
 def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
     
-    # --- THIS LINE FIXES THE CORS ERROR ---
-    # We explicitly allow *only* your frontend to talk to this backend.
     app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
 
     app.register_blueprint(bp)
