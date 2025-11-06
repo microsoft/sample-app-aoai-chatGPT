@@ -17,3 +17,4 @@ six
 pypdf
 python-docx
 azure-ai-vision-imageanalysis
+msgraph-sdk==1.0.0
