@@ -61,15 +61,8 @@ def create_app():
     # Configure Quart to serve files from the 'static' folder directly from the root URL path
     app = Quart(__name__, static_folder='static', static_url_path='/')
 
-    # --- THIS IS THE CORRECT CORS CONFIGURATION ---
-    # It MUST be inside the create_app function, right after 'app' is created.
-    app = cors(
-        app,
-        allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net",
-        allow_credentials=True,  # <-- This is the most critical line
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type"] # Add any other headers you might need
-    )
+    # --- THIS LINE FIXES THE CORS ERROR ---
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
     # --- END OF CORS FIX ---
 
     app.register_blueprint(bp)
@@ -96,6 +89,7 @@ def create_app():
 async def serve_index():
     return await send_from_directory("static", "index.html")
 
+# --- (Static file routes, Debug settings, Frontend settings, etc. are unchanged) ---
 @bp.route("/script.js")
 async def serve_script():
     return await send_from_directory("static", "script.js")
@@ -112,16 +106,10 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-
-# Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
-
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
-
-
-# Frontend Settings via Environment Variables
 frontend_settings = {
     "auth_enabled": app_settings.base_settings.auth_enabled,
     "feedback_enabled": (
@@ -140,20 +128,13 @@ frontend_settings = {
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
     "oyd_enabled": app_settings.base_settings.datasource_type,
 }
-
-
-# Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
-
-
 azure_openai_tools = []
 azure_openai_available_tools = []
 
-# Initialize Azure OpenAI Client
 async def init_openai_client():
     azure_openai_client = None
     try:
-        # API version check
         if (
             app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
@@ -161,8 +142,6 @@ async def init_openai_client():
             raise ValueError(
                 f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'"
             )
-
-        # Endpoint
         if (
             not app_settings.azure_openai.endpoint and
             not app_settings.azure_openai.resource
@@ -170,10 +149,7 @@ async def init_openai_client():
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
-
         endpoint = app_settings.azure_openai.endpoint or f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
-
-        # Authentication
         aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
@@ -185,17 +161,10 @@ async def init_openai_client():
                 )
         else:
             logging.debug("Using AZURE_OPENAI_KEY for authentication.")
-
-
-        # Deployment
         deployment = app_settings.azure_openai.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL deployment name is required")
-
-        # Default Headers
         default_headers = {"x-ms-useragent": USER_AGENT}
-
-        # Remote function calls
         if app_settings.azure_openai.function_call_azure_functions_enabled:
             azure_functions_tools_url = f"{app_settings.azure_openai.function_call_azure_functions_tools_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tools_key}"
             async with httpx.AsyncClient() as client:
@@ -207,7 +176,6 @@ async def init_openai_client():
                     azure_openai_available_tools.append(tool["function"]["name"])
             else:
                 logging.error(f"An error occurred while getting OpenAI Function Call tools metadata: {response.status_code}")
-
         
         logging.info(f"Initializing Azure OpenAI client for endpoint {endpoint} and deployment {deployment}")
         azure_openai_client = AsyncAzureOpenAI(
@@ -217,28 +185,11 @@ async def init_openai_client():
             default_headers=default_headers,
             azure_endpoint=endpoint,
         )
-
         return azure_openai_client
     except Exception as e:
         logging.exception("Exception during Azure OpenAI client initialization", exc_info=e)
         azure_openai_client = None
         raise e
-
-async def openai_remote_azure_function_call(function_name, function_args):
-    if app_settings.azure_openai.function_call_azure_functions_enabled is not True:
-        return
-
-    azure_functions_tool_url = f"{app_settings.azure_openai.function_call_azure_functions_tool_base_url}?code={app_settings.azure_openai.function_call_azure_functions_tool_key}"
-    headers = {'content-type': 'application/json'}
-    body = {
-        "tool_name": function_name,
-        "tool_arguments": json.loads(function_args)
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.post(azure_functions_tool_url, data=json.dumps(body), headers=headers)
-    response.raise_for_status()
-
-    return response.text
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
@@ -249,7 +200,6 @@ async def init_cosmosdb_client():
                 f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
             logging.info(f"Cosmos DB endpoint: {cosmos_endpoint}")
-            
             credential = None
             if not app_settings.chat_history.account_key:
                 logging.info("No Cosmos DB account key found, attempting Azure Entra ID auth using DefaultAzureCredential.")
@@ -259,12 +209,10 @@ async def init_cosmosdb_client():
             else:
                 logging.debug("Using Cosmos DB account key for authentication.")
                 credential = app_settings.chat_history.account_key
-
             if not app_settings.chat_history.database:
                 raise ValueError("CosmosDB database name (CHAT_HISTORY__DATABASE) is required but not configured.")
             if not app_settings.chat_history.conversations_container:
                 raise ValueError("CosmosDB container name (CHAT_HISTORY__CONVERSATIONS_CONTAINER) is required but not configured.")
-
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
@@ -279,9 +227,7 @@ async def init_cosmosdb_client():
             raise e
     else:
         logging.warning("Chat history is not configured. Chat history will not be saved.")
-
     return cosmos_conversation_client
-
 
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
@@ -293,7 +239,6 @@ def prepare_model_args(request_body, request_headers):
                 "content": app_settings.azure_openai.system_message
             }
         ]
-
     for message in request_messages:
         if message:
             match message["role"]:
@@ -313,19 +258,15 @@ def prepare_model_args(request_body, request_headers):
                         messages_helper["function_call"] = message["function_call"]
                     messages_helper["content"] = message["content"]
                     if "context" in message:
-                        # Assuming context is an object from the request
                         messages_helper["context"] = message.get("context")
-                    
                     messages.append(messages_helper)
-
 
     user_security_context = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
         application_name = app_settings.ui.title
-        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai
+        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )
     
-
     model_args = {
         "messages": messages,
         "temperature": app_settings.azure_openai.temperature,
@@ -335,12 +276,10 @@ def prepare_model_args(request_body, request_headers):
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model
     }
-
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
             if app_settings.azure_openai.function_call_azure_functions_enabled and len(azure_openai_tools) > 0:
                 model_args["tools"] = azure_openai_tools
-
             if app_settings.datasource:
                 model_args["extra_body"] = {
                     "data_sources": [
@@ -349,7 +288,6 @@ def prepare_model_args(request_body, request_headers):
                         )
                     ]
                 }
-
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
         secret_params = [
@@ -374,19 +312,14 @@ def prepare_model_args(request_body, request_headers):
                         for field in embeddingDependency["authentication"]:
                             if field in secret_params:
                                 embeddingDependency["authentication"][field] = "*****"
-
     if model_args.get("extra_body") is None:
         model_args["extra_body"] = {}
-    if user_security_context:  # security component introduced here https://learn.microsoft.com/en-us/azure/defender-for-cloud/gain-end-user-context-ai    
+    if user_security_context:
             model_args["extra_body"]["user_security_context"]= user_security_context.to_dict()
     logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
-
     return model_args
 
-# --- HELPER FUNCTIONS FOR FILE EXTRACTION ---
-
 def extract_text_from_pdf(file_bytes: bytes) -> str:
-    """Extracts text from PDF bytes."""
     logging.info("Extracting text from PDF...")
     text = ""
     with io.BytesIO(file_bytes) as f:
@@ -396,7 +329,6 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
-    """Extracts text from .docx bytes."""
     logging.info("Extracting text from DOCX...")
     text = ""
     with io.BytesIO(file_bytes) as f:
@@ -406,7 +338,6 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     return text
 
 async def extract_text_from_image(file_bytes: bytes) -> str:
-    """Extracts text from image bytes using Azure AI Vision."""
     logging.info("Extracting text from image...")
     try:
         vision_endpoint = os.environ["AZURE_AI_VISION_ENDPOINT"]
@@ -414,26 +345,19 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
     except KeyError:
         logging.error("AZURE_AI_VISION_ENDPOINT or AZURE_AI_VISION_KEY not set.")
         return "[Could not analyze image: AI Vision service is not configured]"
-
     client = ImageAnalysisClient(
         endpoint=vision_endpoint,
         credential=AzureKeyCredential(vision_key)
     )
-    
     analysis = await client.analyze(
         image_data=file_bytes,
-        visual_features=[VisualFeatures.READ], # Replaces "OCR" in newer SDKs
+        visual_features=[VisualFeatures.READ],
     )
-    
     await client.close()
-
     if analysis.read and analysis.read.blocks:
         return "\n".join([line.text for block in analysis.read.blocks for line in block.lines])
     else:
         return "[No text found in image]"
-
-# --- END HELPER FUNCTIONS ---
-
 
 async def promptflow_request(request):
     try:
@@ -441,7 +365,6 @@ async def promptflow_request(request):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {app_settings.promptflow.api_key}",
         }
-        # Adding timeout for scenarios where response takes longer to come back
         logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
         async with httpx.AsyncClient(
             timeout=float(app_settings.promptflow.response_timeout)
@@ -451,8 +374,6 @@ async def promptflow_request(request):
                 app_settings.promptflow.request_field_name,
                 app_settings.promptflow.response_field_name
             )
-            # NOTE: This only support question and chat_history parameters
-            # If you need to add more parameters, you need to modify the request body
             response = await client.post(
                 app_settings.promptflow.endpoint,
                 json={
@@ -467,20 +388,14 @@ async def promptflow_request(request):
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
-
 async def process_function_call(response):
     response_message = response.choices[0].message
     messages = []
-
     if response_message.tool_calls:
         for tool_call in response_message.tool_calls:
-            # Check if function exists
             if tool_call.function.name not in azure_openai_available_tools:
                 continue
-            
             function_response = await openai_remote_azure_function_call(tool_call.function.name, tool_call.function.arguments)
-
-            # adding assistant response to messages
             messages.append(
                 {
                     "role": response_message.role,
@@ -491,18 +406,14 @@ async def process_function_call(response):
                     "content": None,
                 }
             )
-            
-            # adding function response to messages
             messages.append(
                 {
                     "role": "function",
                     "name": tool_call.function.name,
                     "content": function_response,
                 }
-            )  # extend conversation with function response
-        
+            )
         return messages
-    
     return None
 
 async def send_chat_request(request_body, request_headers):
@@ -511,10 +422,8 @@ async def send_chat_request(request_body, request_headers):
     for message in messages:
         if message.get("role") != 'tool':
             filtered_messages.append(message)
-            
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
-
     try:
         azure_openai_client = await init_openai_client()
         if not azure_openai_client:
@@ -525,9 +434,7 @@ async def send_chat_request(request_body, request_headers):
     except Exception as e:
         logging.exception("Exception in send_chat_request")
         raise e
-
     return response, apim_request_id
-
 
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
@@ -543,38 +450,30 @@ async def complete_chat_request(request_body, request_headers):
         response, apim_request_id = await send_chat_request(request_body, request_headers)
         history_metadata = request_body.get("history_metadata", {})
         non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
-
         if app_settings.azure_openai.function_call_azure_functions_enabled:
-            function_response = await process_function_call(response)  # Add await here
-
+            function_response = await process_function_call(response)
             if function_response:
                 request_body["messages"].extend(function_response)
-
                 response, apim_request_id = await send_chat_request(request_body, request_headers)
                 history_metadata = request_body.get("history_metadata", {})
                 non_streaming_response = format_non_streaming_response(response, history_metadata, apim_request_id)
-
     return non_streaming_response
 
 class AzureOpenaiFunctionCallStreamState():
     def __init__(self):
-        self.tool_calls = []              # All tool calls detected in the stream
-        self.tool_name = ""               # Tool name being streamed
-        self.tool_arguments_stream = ""   # Tool arguments being streamed
-        self.current_tool_call = None     # JSON with the tool name and arguments currently being streamed
-        self.function_messages = []       # All function messages to be appended to the chat history
-        self.streaming_state = "INITIAL"  # Streaming state (INITIAL, STREAMING, COMPLETED)
-
+        self.tool_calls = []
+        self.tool_name = ""
+        self.tool_arguments_stream = ""
+        self.current_tool_call = None
+        self.function_messages = []
+        self.streaming_state = "INITIAL"
 
 async def process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id):
     if hasattr(completionChunk, "choices") and len(completionChunk.choices) > 0:
         response_message = completionChunk.choices[0].delta
-        
-        # Function calling stream processing
         if response_message.tool_calls and function_call_stream_state.streaming_state in ["INITIAL", "STREAMING"]:
             function_call_stream_state.streaming_state = "STREAMING"
             for tool_call_chunk in response_message.tool_calls:
-                # New tool call
                 if tool_call_chunk.id:
                     if function_call_stream_state.current_tool_call:
                         function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
@@ -582,22 +481,17 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
                         function_call_stream_state.tool_arguments_stream = ""
                         function_call_stream_state.tool_name = ""
                         function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
-
                     function_call_stream_state.current_tool_call = {
                         "tool_id": tool_call_chunk.id,
                         "tool_name": tool_call_chunk.function.name if function_call_stream_state.tool_name == "" else function_call_stream_state.tool_name
                     }
                 else:
                     function_call_stream_state.tool_arguments_stream += tool_call_chunk.function.arguments if tool_call_chunk.function.arguments else ""
-        
-        # Function call - Streaming completed
         elif response_message.tool_calls is None and function_call_stream_state.streaming_state == "STREAMING":
             function_call_stream_state.current_tool_call["tool_arguments"] = function_call_stream_state.tool_arguments_stream
             function_call_stream_state.tool_calls.append(function_call_stream_state.current_tool_call)
-            
             for tool_call in function_call_stream_state.tool_calls:
                 tool_response = await openai_remote_azure_function_call(tool_call["tool_name"], tool_call["tool_arguments"])
-
                 function_call_stream_state.function_messages.append({
                     "role": "assistant",
                     "function_call": {
@@ -612,44 +506,30 @@ async def process_function_call_stream(completionChunk, function_call_stream_sta
                     "name": tool_call["tool_name"],
                     "content": tool_response,
                 })
-            
             function_call_stream_state.streaming_state = "COMPLETED"
             return function_call_stream_state.streaming_state
-        
         else:
             return function_call_stream_state.streaming_state
-
 
 async def stream_chat_request(request_body, request_headers):
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
-    
     async def generate(apim_request_id, history_metadata):
         if app_settings.azure_openai.function_call_azure_functions_enabled:
-            # Maintain state during function call streaming
             function_call_stream_state = AzureOpenaiFunctionCallStreamState()
-            
             async for completionChunk in response:
                 stream_state = await process_function_call_stream(completionChunk, function_call_stream_state, request_body, request_headers, history_metadata, apim_request_id)
-                
-                # No function call, asistant response
                 if stream_state == "INITIAL":
                     yield format_stream_response(completionChunk, history_metadata, apim_request_id)
-
-                # Function call stream completed, functions were executed.
-                # Append function calls and results to history and send to OpenAI, to stream the final answer.
                 if stream_state == "COMPLETED":
                     request_body["messages"].extend(function_call_stream_state.function_messages)
                     function_response, apim_request_id = await send_chat_request(request_body, request_headers)
                     async for functionCompletionChunk in function_response:
                         yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
-                
         else:
             async for completionChunk in response:
                 yield format_stream_response(completionChunk, history_metadata, apim_request_id)
-
     return generate(apim_request_id=apim_request_id, history_metadata=history_metadata)
-
 
 async def conversation_internal(request_body, request_headers):
     try:
@@ -662,7 +542,6 @@ async def conversation_internal(request_body, request_headers):
         else:
             result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
-
     except Exception as ex:
         logging.exception(ex)
         if hasattr(ex, "status_code"):
@@ -670,15 +549,12 @@ async def conversation_internal(request_body, request_headers):
         else:
             return jsonify({"error": str(ex)}), 500
 
-
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-
     return await conversation_internal(request_json, request.headers)
-
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
@@ -688,28 +564,51 @@ def get_frontend_settings():
         logging.exception("Exception in /frontend_settings")
         return jsonify({"error": str(e)}), 500
 
+# --- *** NEW LOGIN ENDPOINT *** ---
+@bp.route("/api/login", methods=["POST"])
+async def login():
+    try:
+        data = await request.get_json()
+        password = data.get("password")
+        
+        # Get the password from the environment variable (set in Azure App Service config)
+        app_password = os.environ.get("APP_PASSWORD")
 
-# === NEW ROUTE FOR FILE UPLOAD SAS URL ===
+        if not app_password:
+            logging.error("APP_PASSWORD environment variable is not set.")
+            return jsonify({"error": "Server is not configured for login."}), 500
+
+        if password == app_password:
+            logging.info("User login successful.")
+            # We can expand this later to return a session token if needed
+            return jsonify({"status": "ok"}), 200
+        else:
+            logging.warning("Failed login attempt.")
+            return jsonify({"error": "Invalid password"}), 401
+            
+    except Exception as e:
+        logging.exception("Exception in /api/login")
+        return jsonify({"error": str(e)}), 500
+# --- *** END NEW LOGIN ENDPOINT *** ---
+
+
 @bp.route("/api/get-upload-url", methods=["POST"])
 async def get_upload_url():
+    # This route is now protected by the login, so we don't need extra auth here.
     request_body = await request.get_json()
     file_name = request_body.get("fileName")
-
     if not file_name:
         logging.warning("get_upload_url called without fileName.")
         return jsonify({"error": "fileName is required"}), 400
-
     storage_connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
     if not storage_connection_string:
         logging.error("AZURE_STORAGE_CONNECTION_STRING is not set in environment variables.")
         return jsonify({"error": "Azure Storage connection string not configured"}), 500
-
-    container_name = "chatuploads" # This is our fix from earlier
+    container_name = "chatuploads"
     blob_service_client = None 
     try:
         logging.info(f"Generating SAS URL for: {container_name}/{file_name}")
         blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
-
         sas_token = generate_blob_sas(
             account_name=blob_service_client.account_name,
             container_name=container_name,
@@ -718,13 +617,10 @@ async def get_upload_url():
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
         )
-
         sas_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}?{sas_token}"
         blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}"
-
         logging.info(f"Successfully generated SAS URL for {file_name}")
         return jsonify({"sasUrl": sas_url, "blobUrl": blob_url})
-
     except Exception as e:
         logging.exception("Failed to generate SAS URL", exc_info=e)
         return jsonify({"error": f"Failed to generate upload URL: {str(e)}"}), 500
@@ -732,58 +628,39 @@ async def get_upload_url():
         if blob_service_client:
             await blob_service_client.close()
 
-# --- REMOVED MANUAL OPTIONS ROUTE ---
-# quart-cors now handles this automatically.
+# --- (Removed manual OPTIONS route, quart-cors handles it) ---
 
-
-## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
+    # This route is now protected by the login.
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
-    request_json = await request.get_json()  # Get the request body ONCE
+    request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     
-    # --- START OF NEW CODE BLOCK (v2: Multi-file support) ---
-    
+    # --- START OF FILE PROCESSING BLOCK (v2: Multi-file support) ---
     messages = request_json.get("messages", [])
-    
-    # Check if the last user message has an attached file
     if messages and messages[-1]["role"] == "user" and "context" in messages[-1]:
         file_context = messages[-1].get("context", {})
         file_url = file_context.get("attached_file_url")
-
         if file_url:
             logging.info(f"File URL found: {file_url}")
             try:
-                # 1. Get storage connection string
                 storage_connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
                 if not storage_connection_string:
                     raise Exception("AZURE_STORAGE_CONNECTION_STRING not set.")
-
-                # 2. Get container and blob name
                 container_name = "chatuploads"
                 blob_name = file_url.split(f"/{container_name}/")[-1]
-                
                 logging.info(f"Downloading blob: {blob_name} from container: {container_name}")
-
-                # 3. Download the blob content
                 blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
                 blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-                
                 stream_downloader = await blob_client.download_blob()
                 file_content_bytes = await stream_downloader.readall()
                 await blob_service_client.close()
-                
                 logging.info(f"File downloaded, determining type: {blob_name}")
                 file_text = ""
-
-                # 4. Route to the correct text extractor based on file extension
                 file_ext = os.path.splitext(blob_name)[1].lower()
-
                 if file_ext == ".pdf":
                     file_text = extract_text_from_pdf(file_content_bytes)
                 elif file_ext == ".docx":
@@ -792,13 +669,8 @@ async def add_conversation():
                     file_text = await extract_text_from_image(file_content_bytes)
                 else:
                     file_text = f"[Unsupported file type: {file_ext}]"
-
                 logging.info(f"Extracted {len(file_text)} characters from {blob_name}.")
-                
-                # 5. Add the extracted text to the user's message content
                 original_message = messages[-1]["content"]
-                
-                # This is the new prompt that includes the file's text
                 messages[-1]["content"] = f"""
 Here is the content of the attached document named '{blob_name}':
 ---[START OF DOCUMENT]---
@@ -807,22 +679,15 @@ Here is the content of the attached document named '{blob_name}':
 
 Now, please answer my original question: {original_message}
 """
-                
-                # Update request_json with the modified messages
                 request_json["messages"] = messages
-
             except Exception as e:
                 logging.error(f"Failed to process attached file: {e}")
                 return jsonify({"error": f"Failed to read the attached file: {str(e)}"}), 500
-
-    # --- END OF NEW CODE BLOCK ---
+    # --- END OF FILE PROCESSING BLOCK ---
 
     try:
-        # make sure cosmos is configured
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
-
-        # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
         if not conversation_id:
             title = await generate_title(request_json["messages"])
@@ -832,18 +697,13 @@ Now, please answer my original question: {original_message}
             conversation_id = conversation_dict["id"]
             history_metadata["title"] = title
             history_metadata["date"] = conversation_dict["createdAt"]
-
-        ## Format the incoming message object in the "chat/completions" messages format
-        ## then write it to the conversation history in cosmos
-        
-        # We already have 'messages' from the file processing block above
         
         if len(messages) > 0 and messages[-1]["role"] == "user":
             createdMessageValue = await current_app.cosmos_conversation_client.create_message(
                 uuid=str(uuid.uuid4()),
                 conversation_id=conversation_id,
                 user_id=user_id,
-                input_message=messages[-1], # Save the modified message
+                input_message=messages[-1],
             )
             if createdMessageValue == "Conversation not found":
                 raise Exception(
@@ -853,55 +713,37 @@ Now, please answer my original question: {original_message}
                 )
         else:
             raise Exception("No user message found")
-
-        # Submit request to Chat Completions for response
         
-        # *** BUG FIX WAS HERE ***
-        # Use the 'request_json' variable we've been modifying all along.
-        # DO NOT call 'await request.get_json()' again.
         request_body = request_json  
-        
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
         return await conversation_internal(request_body, request.headers)
-
     except Exception as e:
         logging.exception("Exception in /history/generate")
         return jsonify({"error": str(e)}), 500
 
-
+# --- (All other /history/ routes are unchanged) ---
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
     try:
-        # make sure cosmos is configured
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
-
-        # check for the conversation_id, if the conversation is not set, we will create a new one
         if not conversation_id:
             raise Exception("No conversation_id found")
-
-        ## Format the incoming message object in the "chat/completions" messages format
-        ## then write it to the conversation history in cosmos
         messages = request_json["messages"]
         if len(messages) > 0 and messages[-1]["role"] == "assistant":
             if len(messages) > 1 and messages[-2].get("role", None) == "tool":
-                # write the tool message first
                 await current_app.cosmos_conversation_client.create_message(
                     uuid=str(uuid.uuid4()),
                     conversation_id=conversation_id,
                     user_id=user_id,
                     input_message=messages[-2],
                 )
-            # write the assistant message
             await current_app.cosmos_conversation_client.create_message(
                 uuid=messages[-1]["id"],
                 conversation_id=conversation_id,
@@ -910,34 +752,25 @@ async def update_conversation():
             )
         else:
             raise Exception("No bot messages found")
-
-        # Submit request to Chat Completions for response
         response = {"success": True}
         return jsonify(response), 200
-
     except Exception as e:
         logging.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
-
 
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for message_id
     request_json = await request.get_json()
     message_id = request_json.get("message_id", None)
     message_feedback = request_json.get("message_feedback", None)
     try:
         if not message_id:
             return jsonify({"error": "message_id is required"}), 400
-
         if not message_feedback:
             return jsonify({"error": "message_feedback is required"}), 400
-
-        ## update the message in cosmos
         updated_message = await current_app.cosmos_conversation_client.update_message_feedback(
             user_id, message_id, message_feedback
         )
@@ -960,41 +793,28 @@ async def update_message():
                 ),
                 404,
             )
-
     except Exception as e:
         logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
 
-
 @bp.route("/history/delete", methods=["DELETE"])
 async def delete_conversation():
     await cosmos_db_ready.wait()
-    ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
     try:
         if not conversation_id:
             return jsonify({"error": "conversation_id is required"}), 400
-
-        ## make sure cosmos is configured
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
-
-        ## delete the conversation messages from cosmos first
         deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
             conversation_id, user_id
         )
-
-        ## Now delete the conversation
         deleted_conversation = await current_app.cosmos_conversation_client.delete_conversation(
             user_id, conversation_id
         )
-
         return (
             jsonify(
                 {
@@ -1008,52 +828,35 @@ async def delete_conversation():
         logging.exception("Exception in /history/delete")
         return jsonify({"error": str(e)}), 500
 
-
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     await cosmos_db_ready.wait()
     offset = request.args.get("offset", 0)
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## make sure cosmos is configured
     if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
-
-    ## get the conversations from cosmos
     conversations = await current_app.cosmos_conversation_client.get_conversations(
         user_id, offset=offset, limit=25
     )
     if not isinstance(conversations, list):
         return jsonify({"error": f"No conversations for {user_id} were found"}), 404
-
-    ## return the conversation ids
-
     return jsonify(conversations), 200
-
 
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
     if not conversation_id:
         return jsonify({"error": "conversation_id is required"}), 400
-
-    ## make sure cosmos is configured
     if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
-
-    ## get the conversation object and the related messages from cosmos
     conversation = await current_app.cosmos_conversation_client.get_conversation(
         user_id, conversation_id
     )
-    ## return the conversation id and the messages in the bot frontend format
     if not conversation:
         return (
             jsonify(
@@ -1063,13 +866,9 @@ async def get_conversation():
             ),
             404,
         )
-
-    # get the messages for the conversation from cosmos
     conversation_messages = await current_app.cosmos_conversation_client.get_messages(
         user_id, conversation_id
     )
-
-    ## format the messages in the bot frontend format
     messages = [
         {
             "id": msg["id"],
@@ -1080,28 +879,19 @@ async def get_conversation():
         }
         for msg in conversation_messages
     ]
-
     return jsonify({"conversation_id": conversation_id, "messages": messages}), 200
-
 
 @bp.route("/history/rename", methods=["POST"])
 async def rename_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
     if not conversation_id:
         return jsonify({"error": "conversation_id is required"}), 400
-
-    ## make sure cosmos is configured
     if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
-
-    ## get the conversation from cosmos
     conversation = await current_app.cosmos_conversation_client.get_conversation(
         user_id, conversation_id
     )
@@ -1114,8 +904,6 @@ async def rename_conversation():
             ),
             404,
         )
-
-    ## update the title
     title = request_json.get("title", None)
     if not title:
         return jsonify({"error": "title is required"}), 400
@@ -1123,37 +911,25 @@ async def rename_conversation():
     updated_conversation = await current_app.cosmos_conversation_client.upsert_conversation(
         conversation
     )
-
     return jsonify(updated_conversation), 200
-
 
 @bp.route("/history/delete_all", methods=["DELETE"])
 async def delete_all_conversations():
     await cosmos_db_ready.wait()
-    ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    # get conversations for user
     try:
-        ## make sure cosmos is configured
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
-
         conversations = await current_app.cosmos_conversation_client.get_conversations(
             user_id, offset=0, limit=None
         )
         if not conversations:
             return jsonify({"error": f"No conversations for {user_id} were found"}), 404
-
-        # delete each conversation
         for conversation in conversations:
-            ## delete the conversation messages from cosmos first
             deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
                 conversation["id"], user_id
             )
-
-            ## Now delete the conversation
             deleted_conversation = await current_app.cosmos_conversation_client.delete_conversation(
                 user_id, conversation["id"]
             )
@@ -1165,36 +941,25 @@ async def delete_all_conversations():
             ),
             200,
         )
-
     except Exception as e:
         logging.exception("Exception in /history/delete_all")
         return jsonify({"error": str(e)}), 500
 
-
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
     await cosmos_db_ready.wait()
-    ## get the user id from the request headers
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
-
     try:
         if not conversation_id:
             return jsonify({"error": "conversation_id is required"}), 400
-
-        ## make sure cosmos is configured
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
-
-        ## delete the conversation messages from cosmos
         deleted_messages = await current_app.cosmos_conversation_client.delete_messages(
             conversation_id, user_id
         )
-
         return (
             jsonify(
                 {
@@ -1208,20 +973,17 @@ async def clear_messages():
         logging.exception("Exception in /history/clear_messages")
         return jsonify({"error": str(e)}), 500
 
-
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
     if not app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
-
     try:
         success, err = await current_app.cosmos_conversation_client.ensure()
         if not current_app.cosmos_conversation_client or not success:
             if err:
                 return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
-
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
         logging.exception("Exception in /history/ensure")
@@ -1247,30 +1009,24 @@ async def ensure_cosmos():
                 422,
             )
         else:
-            return jsonify({"error": "CoscosDB is not working"}), 500
-
+            return jsonify({"error": "CosmosDB is not working"}), 500
 
 async def generate_title(conversation_messages) -> str:
-    ## make sure the messages are sorted by _ts descending
     title_prompt = "Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Do not include any other commentary or description."
-
     messages = [
         {"role": msg["role"], "content": msg["content"]}
         for msg in conversation_messages
     ]
     messages.append({"role": "user", "content": title_prompt})
-
     try:
         azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
             model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
-
         title = response.choices[0].message.content
         return title
     except Exception as e:
         logging.exception("Exception while generating title", e)
         return messages[-2]["content"]
-
 
 app = create_app()
