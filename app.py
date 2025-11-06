@@ -706,10 +706,14 @@ async def stream_chat_request(request_body, request_headers):
                         
                         if tool_call_chunk.function:
                             tc_index = tool_call_chunk.index
-                            if tool_call_chunk.function.name:
-                                full_delta["tool_calls"][tc_index]["function"]["name"] += tool_call_chunk.function.name
-                            if tool_call_chunk.function.arguments:
-                                full_delta["tool_calls"][tc_index]["function"]["arguments"] += tool_call_chunk.function.arguments
+                            # Check if the tool call exists at this index
+                            if tc_index < len(full_delta["tool_calls"]):
+                                if tool_call_chunk.function.name:
+                                    full_delta["tool_calls"][tc_index]["function"]["name"] += tool_call_chunk.function.name
+                                if tool_call_chunk.function.arguments:
+                                    full_delta["tool_calls"][tc_index]["function"]["arguments"] += tool_call_chunk.function.arguments
+                            else:
+                                logging.warning(f"Tool call index {tc_index} out of bounds.")
                 # --- END NEW LOGIC ---
 
                 finish_reason = completionChunk.choices[0].finish_reason
@@ -722,8 +726,14 @@ async def stream_chat_request(request_body, request_headers):
                     # Call all the tools the AI requested
                     for tool_call in full_delta["tool_calls"]:
                         function_name = tool_call["function"]["name"]
-                        function_args = json.loads(tool_call["function"]["arguments"])
-                        
+                        function_args = {}
+                        try:
+                            function_args = json.loads(tool_call["function"]["arguments"])
+                        except json.JSONDecodeError:
+                            logging.error(f"Failed to decode tool arguments: {tool_call['function']['arguments']}")
+                            function_result = f"Error: Invalid arguments provided for {function_name}."
+                            continue # Skip this tool call
+
                         if function_name == "search_outlook":
                             function_result = await search_outlook(**function_args)
                         else:
