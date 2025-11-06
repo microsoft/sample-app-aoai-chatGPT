@@ -867,9 +867,10 @@ async def get_upload_url():
         return jsonify({"error": "Azure Storage connection string not configured"}), 500
     container_name = "chatuploads"
     blob_service_client = None 
-    try:
+try:
         logging.info(f"Generating SAS URL for: {container_name}/{file_name}")
         blob_service_client = BlobServiceClient.from_connection_string(storage_connection_string)
+
         sas_token = generate_blob_sas(
             account_name=blob_service_client.account_name,
             container_name=container_name,
@@ -878,8 +879,14 @@ async def get_upload_url():
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
         )
-        sas_url = f"https{"://"}{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}?{sas_token}"
-        blob_url = f"https{"://"}{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file_name}"
+
+        # --- *** THIS IS THE SYNTAX FIX *** ---
+        # Removed the incorrect f-string formatting
+        base_url = f"https://{blob_service_client.account_name}.blob.core.windows.net"
+        sas_url = f"{base_url}/{container_name}/{file_name}?{sas_token}"
+        blob_url = f"{base_url}/{container_name}/{file_name}"
+        # --- *** END OF FIX *** ---
+
         logging.info(f"Successfully generated SAS URL for {file_name}")
         return jsonify({"sasUrl": sas_url, "blobUrl": blob_url})
     except Exception as e:
