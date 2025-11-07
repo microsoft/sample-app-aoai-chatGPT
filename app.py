@@ -47,15 +47,33 @@ from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
 # --- END FIX ---
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- CORRECTED MICROSOFT GRAPH IMPORTS (v7) ---
-from msgraph import GraphServiceClient
-from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
-from msgraph.generated.models import (
-    SearchQuery,
-    SearchRequest
-)
-from msgraph.generated.models.search import EntityType
-# --- END OF FIX ---
+# --- MICROSOFT GRAPH IMPORTS - TEMPORARY FIX ---
+try:
+    from msgraph import GraphServiceClient
+    # Try to import the search components with a more flexible approach
+    try:
+        from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
+        from msgraph.generated.models.search_request import SearchRequest
+        from msgraph.generated.models.search_query import SearchQuery
+        from msgraph.generated.models.entity_type import EntityType
+        GRAPH_AVAILABLE = True
+        logging.info("Microsoft Graph SDK loaded successfully")
+    except ImportError:
+        # Fallback - these might be in different locations
+        try:
+            from msgraph.generated.models import SearchRequest, SearchQuery
+            from msgraph.generated.models.entity_type import EntityType
+            from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
+            GRAPH_AVAILABLE = True
+            logging.info("Microsoft Graph SDK loaded with alternate imports")
+        except ImportError as e:
+            logging.warning(f"Could not import Graph search components: {e}")
+            GRAPH_AVAILABLE = False
+except ImportError as e:
+    logging.warning(f"Microsoft Graph SDK not available: {e}")
+    GRAPH_AVAILABLE = False
+    GraphServiceClient = None
+# --- END MICROSOFT GRAPH IMPORTS ---
 # --- END OF FIX ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -89,25 +107,31 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # --- NEW: TOOL DEFINITION FOR THE AI ---
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "search_outlook",
-            "description": "Searches the user's Outlook emails for a specific query.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "search_query": {
-                        "type": "string",
-                        "description": "The search query to use in Outlook (e.g., 'from:jason perez subject:pleadings')."
-                    }
+# --- TOOL DEFINITION FOR THE AI ---
+if GRAPH_AVAILABLE:
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "search_outlook",
+                "description": "Searches the user's Outlook emails for a specific query.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "search_query": {
+                            "type": "string",
+                            "description": "The search query to use in Outlook (e.g., 'from:jason perez subject:pleadings')."
+                        }
+                    },
+                    "required": ["search_query"],
                 },
-                "required": ["search_query"],
-            },
-        }
-    },
-]
+            }
+        },
+    ]
+else:
+    tools = []
+    logging.warning("Outlook search tool not available due to Graph SDK issues")
+# --- END TOOL DEFINITION ---
 # --- END TOOL DEFINITION ---
 
 
@@ -568,6 +592,9 @@ class GraphTokenCredential(AsyncTokenCredential):
 # --- UPDATED: FUNCTION TO SEARCH OUTLOOK ---
 async def search_outlook(search_query: str) -> str:
     """Searches Outlook messages using Microsoft Graph."""
+    if not GRAPH_AVAILABLE:
+        return "Outlook search is currently unavailable. The Microsoft Graph SDK could not be loaded."
+    
     logging.info(f"Attempting to search Outlook for: {search_query}")
     try:
         # --- AUTH REPLACEMENT ---
