@@ -149,8 +149,7 @@ def create_app():
         else:
             raise ValueError("SESSION_SECRET_KEY is not set in a production environment.")
     
-    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"], supports_credentials=True)
-
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"], allow_credentials=True)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
