@@ -97,7 +97,7 @@ ENTRA_CLIENT_SECRET = os.environ.get("ENTRA_CLIENT_SECRET")
 ENTRA_TENANT_ID = os.environ.get("ENTRA_TENANT_ID")
 AUTHORITY = f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}"
 # These are the permissions we requested in the App Registration
-SCOPES = ["Mail.Read", "offline_access", "openid", "profile"]
+SCOPES = ["Mail.Read"]
 # This is the endpoint MS Graph uses to get user info
 GRAPH_ENDPOINT_ME = "https://graph.microsoft.com/v1.0/me"
 
