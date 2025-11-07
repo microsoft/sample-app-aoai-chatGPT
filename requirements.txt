@@ -17,4 +17,4 @@ six
 pypdf
 python-docx
 azure-ai-vision-imageanalysis
-msgraph-sdk # Added for Outlook search
+msgraph-sdk
