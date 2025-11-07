@@ -17,8 +17,16 @@ from quart import (
     send_from_directory,
     render_template,
     current_app,
+    session,  # --- NEW: For session management
+    redirect,  # --- NEW: For auth redirects
+    url_for,  # --- NEW: For building URLs
 )
 from quart_cors import cors  # --- THIS IS THE CORS FIX IMPORT ---
+
+# --- NEW: MSAL (Microsoft Authentication Library) ---
+import msal
+from azure.core.credentials import AccessToken
+from azure.core.credentials_async import AsyncTokenCredential
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -63,6 +71,17 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+# --- NEW: AZURE AD AUTH CONFIGURATION ---
+ENTRA_CLIENT_ID = os.environ.get("ENTRA_CLIENT_ID")
+ENTRA_CLIENT_SECRET = os.environ.get("ENTRA_CLIENT_SECRET")
+ENTRA_TENANT_ID = os.environ.get("ENTRA_TENANT_ID")
+AUTHORITY = f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}"
+# These are the permissions we requested in the App Registration
+SCOPES = ["Mail.Read", "offline_access", "openid", "profile"]
+# This is the endpoint MS Graph uses to get user info
+GRAPH_ENDPOINT_ME = "https://graph.microsoft.com/v1.0/me"
+
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
@@ -93,7 +112,18 @@ tools = [
 def create_app():
     app = Quart(__name__, static_folder='static', static_url_path='/')
     
-    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
+    # --- NEW: SESSION SECRET KEY ---
+    # This is CRITICAL for session management to work.
+    app.secret_key = os.environ.get("SESSION_SECRET_KEY")
+    if not app.secret_key:
+        logging.warning("WARNING: SESSION_SECRET_KEY is not set. Sessions will not be secure.")
+        # For local dev, we can use a placeholder, but this is NOT secure.
+        if DEBUG:
+            app.secret_key = "super_secret_dev_key_replace_me"
+        else:
+            raise ValueError("SESSION_SECRET_KEY is not set in a production environment.")
+    
+    app = cors(app, allow_origin="https://white-stone-09b65ea1e.3.azurestaticapps.net", allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"], supports_credentials=True)
 
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -147,7 +177,10 @@ USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
 # Frontend Settings via Environment Variables
 frontend_settings = {
-    "auth_enabled": app_settings.base_settings.auth_enabled,
+    # --- AUTH CHANGE ---
+    # We are now the auth provider. Set auth_enabled to true.
+    # The simple password is gone, replaced by Entra ID.
+    "auth_enabled": True, 
     "feedback_enabled": (
         app_settings.chat_history and
         app_settings.chat_history.enable_feedback
@@ -328,11 +361,27 @@ def prepare_model_args(request_body, request_headers):
                 case "user" | "assistant" | "function" | "tool":
                     messages.append(message)
 
+    # --- AUTH REPLACEMENT ---
+    # Get user details from the SESSION instead of headers
     user_security_context = None
     if (MS_DEFENDER_ENABLED):
-        authenticated_user_details = get_authenticated_user_details(request_headers)
-        application_name = app_settings.ui.title
-        user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name )
+        if "user" in session:
+            session_user = session["user"]
+            authenticated_user_details = {
+                # Use 'id' from Graph as OID, 'userPrincipalName' as UPN
+                "user_principal_id": session_user.get("userPrincipalName"), 
+                "user_name": session_user.get("displayName"),
+                "user_oid": session_user.get("id")
+            }
+            application_name = app_settings.ui.title
+            user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name)
+        else:
+            # Fallback for any case where session might not be present but defender is on
+            logging.warning("MS Defender is on, but no user in session. Using default header auth.")
+            authenticated_user_details = get_authenticated_user_details(request_headers)
+            application_name = app_settings.ui.title
+            user_security_context = get_msdefender_user_json(authenticated_user_details, request_headers, application_name)
+    # --- END AUTH REPLACEMENT ---
     
     model_args = {
         "messages": messages,
@@ -444,32 +493,106 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
     else:
         return "[No text found in image]"
 
-# --- NEW: FUNCTION TO SEARCH OUTLOOK ---
+# --- NEW: MSAL HELPER FUNCTIONS ---
+
+def _build_msal_app():
+    """Builds an MSAL confidential client app."""
+    if not all([ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET, AUTHORITY]):
+        raise ValueError("Missing Entra ID configuration for MSAL.")
+    return msal.ConfidentialClientApplication(
+        ENTRA_CLIENT_ID,
+        authority=AUTHORITY,
+        client_credential=ENTRA_CLIENT_SECRET
+    )
+
+def _get_token_from_cache():
+    """Gets the user's token from the session cache."""
+    token = session.get("token_cache")
+    if not token:
+        logging.warning("No token cache found in session.")
+        return None
+    
+    # Check if the access token is expired
+    if "access_token" not in token or token.get("expires_in", 0) < datetime.datetime.now().timestamp():
+        logging.info("Access token is expired or missing. Attempting refresh.")
+        try:
+            msal_app = _build_msal_app()
+            refresh_token = token.get("refresh_token")
+            if not refresh_token:
+                logging.warning("No refresh token found. Cannot refresh.")
+                return None
+                
+            new_token = msal_app.acquire_token_by_refresh_token(
+                refresh_token,
+                scopes=SCOPES
+            )
+            
+            if "access_token" in new_token:
+                logging.info("Token successfully refreshed.")
+                # Update session with new token info
+                session["token_cache"] = new_token
+                session["user"] = new_token.get("id_token_claims")
+                return new_token
+            else:
+                logging.error(f"Failed to refresh token: {new_token.get('error_description')}")
+                # Clear bad cache
+                session.pop("token_cache", None)
+                session.pop("user", None)
+                return None
+
+        except Exception as e:
+            logging.exception(f"Exception during token refresh: {e}")
+            return None
+    
+    return token
+
+# --- NEW: ASYNC CREDENTIAL CLASS FOR GRAPH ---
+# This class allows the GraphServiceClient to get the token from our session
+class GraphTokenCredential(AsyncTokenCredential):
+    async def get_token(self, *scopes, **kwargs) -> AccessToken:
+        token_cache = _get_token_from_cache()
+        if not token_cache:
+            logging.error("GraphTokenCredential: No valid token cache found.")
+            raise Exception("User is not authenticated or token is expired.")
+        
+        access_token = token_cache.get("access_token")
+        expires_on = token_cache.get("expires_in", 0)
+        
+        if not access_token:
+            raise Exception("No access token found in cache.")
+
+        return AccessToken(access_token, int(expires_on))
+
+# --- UPDATED: FUNCTION TO SEARCH OUTLOOK ---
 async def search_outlook(search_query: str) -> str:
     """Searches Outlook messages using Microsoft Graph."""
     logging.info(f"Attempting to search Outlook for: {search_query}")
     try:
-        # --- COPILOT FIX: Use async credential correctly ---
-        async with DefaultAzureCredential() as credential:
-            graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
+        # --- AUTH REPLACEMENT ---
+        # Use our custom credential class that reads from the user's session
+        credential = GraphTokenCredential()
+        if not credential:
+            return "Error: Could not get user authentication token. Please log in again."
             
-            # Define the search request
-            request_body = QueryPostRequestBody(
-                requests=[
-                    SearchRequest(
-                        entity_types=[EntityType.Message],
-                        query=SearchQuery(
-                            query_string=search_query
-                        ),
-                        from_=0,
-                        size=5  # Get top 5 results
-                    )
-                ]
-            )
-            
-            # Make the search API call
-            results = await graph_client.search.query.post(request_body)
-        # --- END FIX ---
+        graph_client = GraphServiceClient(credentials=credential)
+        
+        # Define the search request
+        request_body = QueryPostRequestBody(
+            requests=[
+                SearchRequest(
+                    entity_types=[EntityType.Message],
+                    query=SearchQuery(
+                        query_string=search_query
+                    ),
+                    from_=0,
+                    size=5  # Get top 5 results
+                )
+            ]
+        )
+        
+        # Make the search API call
+        results = await graph_client.search.query.post(request_body)
+        # --- END AUTH REPLACEMENT ---
         
         if not results or not results.value:
             return "No results found in Outlook."
@@ -506,6 +629,9 @@ async def search_outlook(search_query: str) -> str:
         # --- COPILOT FIX: Correct logging.exception call ---
         logging.exception(f"Error searching Outlook for query: {search_query}")
         # --- END FIX ---
+        # Provide a more user-friendly error
+        if "User is not authenticated" in str(e):
+            return "Authentication error: Could not search Outlook. Your session may be expired. Please try logging out and back in."
         return f"An error occurred while searching Outlook: {str(e)}"
 
 # --- (promptflow_request is unchanged) ---
@@ -796,7 +922,7 @@ async def stream_chat_request(request_body, request_headers):
                         function_response, apim_request_id = await send_chat_request(request_body, request_headers)
                         async for functionCompletionChunk in function_response:
                             yield format_stream_response(functionCompletionChunk, history_metadata, apim_request_id)
-        
+            
         else: # Fallback for non-streaming or promptflow
             async for completionChunk in response:
                 yield format_stream_response(completionChunk, history_metadata, apim_request_id)
@@ -827,6 +953,12 @@ async def conversation_internal(request_body, request_headers):
 # --- (conversation route is unchanged) ---
 @bp.route("/conversation", methods=["POST"])
 async def conversation():
+    # --- AUTH CHECK ---
+    # Protect the conversation endpoint
+    if "user" not in session:
+         return jsonify({"error": "User not authenticated"}), 401
+    # --- END AUTH CHECK ---
+
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -843,38 +975,110 @@ def get_frontend_settings():
         # --- END FIX ---
         return jsonify({"error": str(e)}), 500
 
-# --- *** NEW LOGIN ENDPOINT *** ---
-@bp.route("/api/login", methods=["POST"])
+# --- *** NEW AUTHENTICATION ENDPOINTS *** ---
+
+@bp.route("/auth/login")
 async def login():
+    """Redirects the user to the Microsoft login page."""
     try:
-        data = await request.get_json()
-        password = data.get("password")
-        
-        # Get the password from the environment variable (set in Azure App Service config)
-        app_password = os.environ.get("APP_PASSWORD")
-
-        if not app_password:
-            logging.error("APP_PASSWORD environment variable is not set.")
-            return jsonify({"error": "Server is not configured for login."}), 500
-
-        if password == app_password:
-            logging.info("User login successful.")
-            # We can expand this later to return a session token if needed
-            return jsonify({"status": "ok"}), 200
-        else:
-            logging.warning("Failed login attempt.")
-            return jsonify({"error": "Invalid password"}), 401
-            
+        session["flow"] = _build_msal_app().initiate_auth_code_flow(
+            scopes=SCOPES,
+            # Use the frontend URL for the final redirect
+            redirect_uri=url_for("routes.auth_redirect", _external=True)
+        )
+        return redirect(session["flow"]["auth_uri"])
     except Exception as e:
-        # --- COPILOT FIX: Correct logging.exception call ---
-        logging.exception("Exception in /api/login")
-        # --- END FIX ---
+        logging.exception("Exception in /auth/login")
         return jsonify({"error": str(e)}), 500
-# --- *** END NEW LOGIN ENDPOINT *** ---
+
+@bp.route("/auth/redirect")
+async def auth_redirect():
+    """Handles the redirect back from Microsoft after login."""
+    try:
+        # Complete the auth flow
+        result = _build_msal_app().acquire_token_by_auth_code_flow(
+            session.get("flow", {}), request.args
+        )
+        
+        if "error" in result:
+            logging.warning(f"Login error: {result.get('error')} - {result.get('error_description')}")
+            return redirect(url_for("routes.serve_index", _external=True, error=result.get("error_description")))
+
+        # Store the token and user info in the session
+        session["token_cache"] = result
+        session["user"] = result.get("id_token_claims")
+        
+        # Get user's name from Graph to be extra sure
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {result['access_token']}"}
+            graph_response = await client.get(GRAPH_ENDPOINT_ME, headers=headers)
+            if graph_response.status_code == 200:
+                user_info = graph_response.json()
+                session["user"]["displayName"] = user_info.get("displayName")
+                session["user"]["userPrincipalName"] = user_info.get("userPrincipalName")
+                # 'id' is the OID
+                session["user"]["id"] = user_info.get("id") 
+            else:
+                logging.warning(f"Could not fetch user /me data from Graph: {graph_response.text}")
+                
+        logging.info(f"User {session['user'].get('preferred_username')} successfully logged in.")
+        
+        # Redirect back to the root of the frontend app
+        return redirect(frontend_settings["ui"].get("logo", "/")) # Redirect to frontend root
+
+    except Exception as e:
+        logging.exception("Exception in /auth/redirect")
+        # Redirect to frontend with an error
+        return redirect(url_for("routes.serve_index", _external=True, error=str(e)))
+
+
+@bp.route("/auth/logout")
+def logout():
+    """Logs the user out and clears the session."""
+    user = session.get("user", {}).get("preferred_username", "Unknown")
+    session.clear()  # Clear the server-side session
+    
+    # Redirect to Microsoft's logout page to clear their session too
+    # After logout, Microsoft will redirect back to our frontend root
+    frontend_root = url_for("routes.serve_index", _external=True)
+    logout_uri = f"{AUTHORITY}/oauth2/v2.0/logout?post_logout_redirect_uri={frontend_root}"
+    
+    logging.info(f"User {user} logged out.")
+    return redirect(logout_uri)
+
+@bp.route("/auth/status", methods=["GET"])
+async def auth_status():
+    """Checks if the user is currently logged in."""
+    if "user" not in session:
+        return jsonify({"isAuthenticated": False}), 401
+    
+    # Check if token is valid (or can be refreshed)
+    token = _get_token_from_cache()
+    if not token:
+        # Token expired and couldn't be refreshed
+        session.clear()
+        return jsonify({"isAuthenticated": False, "error": "Token expired"}), 401
+
+    # User is authenticated
+    return jsonify({
+        "isAuthenticated": True,
+        "user": {
+            "name": session["user"].get("displayName", session["user"].get("preferred_username"))
+        }
+    })
+
+# --- *** END NEW AUTHENTICATION ENDPOINTS *** ---
+
+# --- *** REMOVED SIMPLE PASSWORD /api/login ENDPOINT *** ---
 
 # --- (get_upload_url route is unchanged) ---
 @bp.route("/api/get-upload-url", methods=["POST"])
 async def get_upload_url():
+    # --- AUTH CHECK ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    # --- END AUTH CHECK ---
+
     request_body = await request.get_json()
     file_name = request_body.get("fileName")
     if not file_name:
@@ -918,12 +1122,19 @@ async def get_upload_url():
 # --- (Removed manual OPTIONS route, quart-cors handles it) ---
 
 # --- UPDATED: /history/generate ---
-# Now includes file reading logic and uses the corrected bug-fix
+# Now uses session-based auth
 @bp.route("/history/generate", methods=["POST"])
 async def add_conversation():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id") # Use 'id' from Graph /me (OID)
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()  # Get the request body ONCE
     conversation_id = request_json.get("conversation_id", None)
     
@@ -1020,12 +1231,18 @@ Now, please answer my original question: {original_message}
         # --- END FIX ---
         return jsonify({"error": str(e)}), 500
 
-# --- (All other /history/ routes are unchanged, but logging is fixed) ---
+# --- (All other /history/ routes are updated for session auth) ---
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     try:
@@ -1059,8 +1276,14 @@ async def update_conversation():
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     message_id = request_json.get("message_id", None)
     message_feedback = request_json.get("message_feedback", None)
@@ -1098,8 +1321,14 @@ async def update_message():
 @bp.route("/history/delete", methods=["DELETE"])
 async def delete_conversation():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     try:
@@ -1135,8 +1364,15 @@ async def list_conversations():
     except ValueError:
         offset = 0
     # --- END FIX ---
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     if not current_app.cosmos_conversation_client:
         raise Exception("CosmosDB is not configured or not working")
     conversations = await current_app.cosmos_conversation_client.get_conversations(
@@ -1149,8 +1385,14 @@ async def list_conversations():
 @bp.route("/history/read", methods=["POST"])
 async def get_conversation():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     if not conversation_id:
@@ -1187,8 +1429,14 @@ async def get_conversation():
 @bp.route("/history/rename", methods=["POST"])
 async def rename_conversation():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     if not conversation_id:
@@ -1219,8 +1467,14 @@ async def rename_conversation():
 @bp.route("/history/delete_all", methods=["DELETE"])
 async def delete_all_conversations():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     try:
         if not current_app.cosmos_conversation_client:
             raise Exception("CosmosDB is not configured or not working")
@@ -1251,8 +1505,14 @@ async def delete_all_conversations():
 @bp.route("/history/clear", methods=["POST"])
 async def clear_messages():
     await cosmos_db_ready.wait()
-    authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-    user_id = authenticated_user["user_principal_id"]
+    # --- AUTH REPLACEMENT ---
+    if "user" not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    user_id = session["user"].get("id")
+    if not user_id:
+        return jsonify({"error": "User session is invalid"}), 401
+    # --- END AUTH REPLACEMENT ---
+    
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
     try:
