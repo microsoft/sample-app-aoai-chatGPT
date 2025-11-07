@@ -34,19 +34,19 @@ from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 import docx  # For Word documents
 from pypdf import PdfReader  # For PDF documents
 from azure.core.credentials import AzureKeyCredential
-from azure.ai.vision.imageanalysis import ImageAnalysisClient
+# --- COPILOT FIX: Use the correct Async Client ---
+from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
+# --- END FIX ---
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- *** CORRECTED MICROSOFT GRAPH IMPORTS (FIX 1) *** ---
+# --- CORRECTED MICROSOFT GRAPH IMPORTS ---
 from msgraph import GraphServiceClient
-# This is the correct request body class for the /search/query endpoint
 from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
 from msgraph.generated.models import (
     SearchQuery,
     SearchRequest,
     EntityType
 )
-# --- *** END OF FIX 1 *** ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -108,7 +108,9 @@ def create_app():
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
         except Exception as e:
+            # --- COPILOT FIX: Correct logging.exception call ---
             logging.exception("Failed to initialize CosmosDB client")
+            # --- END FIX ---
             app.cosmos_conversation_client = None
 
     return app
@@ -242,7 +244,9 @@ async def init_openai_client():
 
         return azure_openai_client
     except Exception as e:
-        logging.exception("Exception during Azure OpenAI client initialization", exc_info=e)
+        # --- COPILOT FIX: Correct logging.exception call ---
+        logging.exception("Exception during Azure OpenAI client initialization")
+        # --- END FIX ---
         azure_openai_client = None
         raise e
 
@@ -296,7 +300,9 @@ async def init_cosmosdb_client():
             )
             logging.info("CosmosDB client initialized successfully.")
         except Exception as e:
-            logging.exception("Exception during CosmosDB client initialization", exc_info=e)
+            # --- COPILOT FIX: Correct logging.exception call ---
+            logging.exception("Exception during CosmosDB client initialization")
+            # --- END FIX ---
             cosmos_conversation_client = None
             raise e
     else:
@@ -393,7 +399,10 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     with io.BytesIO(file_bytes) as f:
         reader = PdfReader(f)
         for page in reader.pages:
-            text += page.extract_text() + "\n"
+            # --- COPILOT FIX: Check for None from extract_text() ---
+            page_text = page.extract_text() or ""
+            text += page_text + "\n"
+            # --- END FIX ---
     return text
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
@@ -415,15 +424,21 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
     except KeyError:
         logging.error("AZURE_AI_VISION_ENDPOINT or AZURE_AI_VISION_KEY not set.")
         return "[Could not analyze image: AI Vision service is not configured]"
+
+    # --- COPILOT FIX: Use the correct Async Client ---
     client = ImageAnalysisClient(
         endpoint=vision_endpoint,
         credential=AzureKeyCredential(vision_key)
     )
-    analysis = await client.analyze(
-        image_data=file_bytes,
-        visual_features=[VisualFeatures.READ],
-    )
-    await client.close()
+    
+    # Use the client in an async context
+    async with client:
+        analysis = await client.analyze(
+            image_data=file_bytes,
+            visual_features=[VisualFeatures.READ],
+        )
+    # --- END FIX ---
+
     if analysis.read and analysis.read.blocks:
         return "\n".join([line.text for block in analysis.read.blocks for line in block.lines])
     else:
@@ -434,28 +449,27 @@ async def search_outlook(search_query: str) -> str:
     """Searches Outlook messages using Microsoft Graph."""
     logging.info(f"Attempting to search Outlook for: {search_query}")
     try:
-        # Use DefaultAzureCredential, which will use the App Service's Managed Identity
-        credential = DefaultAzureCredential()
-        graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
-        
-        # --- *** CORRECTED CLASS NAME (FIX 1) *** ---
-        # Define the search request
-        request_body = QueryPostRequestBody(
-            requests=[
-                SearchRequest(
-                    entity_types=[EntityType.Message],
-                    query=SearchQuery(
-                        query_string=search_query
-                    ),
-                    from_=0,
-                    size=5  # Get top 5 results
-                )
-            ]
-        )
-        # --- *** END OF FIX 1 *** ---
-        
-        # Make the search API call
-        results = await graph_client.search.query.post(request_body)
+        # --- COPILOT FIX: Use async credential correctly ---
+        async with DefaultAzureCredential() as credential:
+            graph_client = GraphServiceClient(credentials=credential, scopes=["https://graph.microsoft.com/.default"])
+            
+            # Define the search request
+            request_body = QueryPostRequestBody(
+                requests=[
+                    SearchRequest(
+                        entity_types=[EntityType.Message],
+                        query=SearchQuery(
+                            query_string=search_query
+                        ),
+                        from_=0,
+                        size=5  # Get top 5 results
+                    )
+                ]
+            )
+            
+            # Make the search API call
+            results = await graph_client.search.query.post(request_body)
+        # --- END FIX ---
         
         if not results or not results.value:
             return "No results found in Outlook."
@@ -489,7 +503,9 @@ async def search_outlook(search_query: str) -> str:
         return "Found the following emails:\n\n" + "\n---\n".join(formatted_results)
 
     except Exception as e:
-        logging.error(f"Error searching Outlook: {e}")
+        # --- COPILOT FIX: Correct logging.exception call ---
+        logging.exception(f"Error searching Outlook for query: {search_query}")
+        # --- END FIX ---
         return f"An error occurred while searching Outlook: {str(e)}"
 
 # --- (promptflow_request is unchanged) ---
@@ -800,7 +816,9 @@ async def conversation_internal(request_body, request_headers):
             result = await complete_chat_request(request_body, request_headers)
             return jsonify(result)
     except Exception as ex:
-        logging.exception(ex)
+        # --- COPILOT FIX: Correct logging.exception call ---
+        logging.exception("Exception in conversation_internal")
+        # --- END FIX ---
         if hasattr(ex, "status_code"):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
@@ -820,7 +838,9 @@ def get_frontend_settings():
     try:
         return jsonify(frontend_settings), 200
     except Exception as e:
+        # --- COPILOT FIX: Correct logging.exception call ---
         logging.exception("Exception in /frontend_settings")
+        # --- END FIX ---
         return jsonify({"error": str(e)}), 500
 
 # --- *** NEW LOGIN ENDPOINT *** ---
@@ -846,7 +866,9 @@ async def login():
             return jsonify({"error": "Invalid password"}), 401
             
     except Exception as e:
+        # --- COPILOT FIX: Correct logging.exception call ---
         logging.exception("Exception in /api/login")
+        # --- END FIX ---
         return jsonify({"error": str(e)}), 500
 # --- *** END NEW LOGIN ENDPOINT *** ---
 
@@ -885,7 +907,9 @@ async def get_upload_url():
         logging.info(f"Successfully generated SAS URL for {file_name}")
         return jsonify({"sasUrl": sas_url, "blobUrl": blob_url})
     except Exception as e:
-        logging.exception("Failed to generate SAS URL", exc_info=e)
+        # --- COPILOT FIX: Correct logging.exception call ---
+        logging.exception("Failed to generate SAS URL")
+        # --- END FIX ---
         return jsonify({"error": f"Failed to generate upload URL: {str(e)}"}), 500
     finally:
         if blob_service_client:
@@ -928,6 +952,7 @@ async def add_conversation():
                 file_text = ""
                 file_ext = os.path.splitext(blob_name)[1].lower()
                 if file_ext == ".pdf":
+                    # --- COPILOT FIX: Use corrected function ---
                     file_text = extract_text_from_pdf(file_content_bytes)
                 elif file_ext == ".docx":
                     file_text = extract_text_from_docx(file_content_bytes)
@@ -947,7 +972,9 @@ Now, please answer my original question: {original_message}
 """
                 request_json["messages"] = messages
             except Exception as e:
-                logging.error(f"Failed to process attached file: {e}")
+                # --- COPILOT FIX: Correct logging.exception call ---
+                logging.exception("Failed to process attached file")
+                # --- END FIX ---
                 return jsonify({"error": f"Failed to read the attached file: {str(e)}"}), 500
     # --- END OF FILE PROCESSING BLOCK ---
 
@@ -988,10 +1015,12 @@ Now, please answer my original question: {original_message}
         request_body["history_metadata"] = history_metadata
         return await conversation_internal(request_body, request.headers)
     except Exception as e:
+        # --- COPILOT FIX: Correct logging.exception call ---
         logging.exception("Exception in /history/generate")
+        # --- END FIX ---
         return jsonify({"error": str(e)}), 500
 
-# --- (All other /history/ routes are unchanged) ---
+# --- (All other /history/ routes are unchanged, but logging is fixed) ---
 @bp.route("/history/update", methods=["POST"])
 async def update_conversation():
     await cosmos_db_ready.wait()
@@ -1100,7 +1129,12 @@ async def delete_conversation():
 @bp.route("/history/list", methods=["GET"])
 async def list_conversations():
     await cosmos_db_ready.wait()
-    offset = request.args.get("offset", 0)
+    # --- COPILOT FIX: Cast offset to int ---
+    try:
+        offset = int(request.args.get("offset", 0) or 0)
+    except ValueError:
+        offset = 0
+    # --- END FIX ---
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
     if not current_app.cosmos_conversation_client:
@@ -1295,11 +1329,11 @@ async def generate_title(conversation_messages) -> str:
         title = response.choices[0].message.content
         return title
     except Exception as e:
-        logging.exception("Exception while generating title", e)
-        # Fallback to a safe value
+        # --- COPILOT FIX: Correct logging.exception call and safer fallback ---
+        logging.exception("Exception while generating title")
         if messages and len(messages) > 1 and messages[-2]:
              return messages[-2]["content"][:30] # Return first 30 chars of last user message
         return "Chat"
-
+        # --- END FIX ---
 
 app = create_app()
