@@ -47,12 +47,14 @@ from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
 # --- END FIX ---
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 
-# --- CORRECTED MICROSOFT GRAPH IMPORTS (v5) ---
+# --- CORRECTED MICROSOFT GRAPH IMPORTS (v7) ---
 from msgraph import GraphServiceClient
 from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
-from msgraph.generated.models.search.search_query import SearchQuery
-from msgraph.generated.models.search.search_request import SearchRequest
-from msgraph.generated.models.search.entity_type import EntityType
+from msgraph.generated.models import (
+    SearchQuery,
+    SearchRequest
+)
+from msgraph.generated.models.search import EntityType
 # --- END OF FIX ---
 # --- END OF FIX ---
 
