@@ -50,11 +50,9 @@ from azure.ai.vision.imageanalysis.models import VisualFeatures
 # --- CORRECTED MICROSOFT GRAPH IMPORTS ---
 from msgraph import GraphServiceClient
 from msgraph.generated.search.query.query_post_request_body import QueryPostRequestBody
-from msgraph.generated.models import (
-    SearchQuery,
-    SearchRequest,
-    EntityType
-)
+from msgraph.generated.models import EntityType
+from msgraph.generated.models.search import SearchQuery, SearchRequest
+# --- END OF FIX ---
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
