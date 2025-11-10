@@ -1,25 +1,27 @@
-# app.py  — stabilized
-import os, io, re, json, uuid, logging, datetime, copy, asyncio, httpx
+# app.py  — clean, stable, and SPA-aware
+
+import os, io, json, uuid, logging, datetime, copy, asyncio, httpx
 from typing import Optional
 
-from quart import Quart, Blueprint, jsonify, request, send_from_directory, current_app, session, redirect, url_for, make_response
+from quart import (
+    Quart, Blueprint, jsonify, request, send_from_directory,
+    current_app, session, redirect, make_response
+)
 from quart_cors import cors
 
+# Documents / PDF / Vision
 import docx
 from pypdf import PdfReader
+from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
+from azure.ai.vision.imageanalysis.models import VisualFeatures
 
+# Azure identity / storage
 from openai import AsyncAzureOpenAI
-
-# Azure identity / storage / vision
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from azure.core.credentials import AzureKeyCredential, AccessToken
 from azure.core.credentials_async import AsyncTokenCredential
-
 from azure.storage.blob.aio import BlobServiceClient
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
-
-from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
-from azure.ai.vision.imageanalysis.models import VisualFeatures
 
 # Optional Graph (best-effort import)
 try:
@@ -45,19 +47,20 @@ from backend.utils import (
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CONSTANTS / GLOBALS
+# BASIC CONFIG
 # ──────────────────────────────────────────────────────────────────────────────
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
+# Set this to your Static Web App origin or leave env vars to control it
 FRONTEND_ORIGIN = os.getenv("ALLOWED_ORIGINS", "").split(",")[0].strip() or \
                   os.getenv("FRONTEND_ORIGIN", "") or \
-                  "https://<your-swa>.azurestaticapps.net"  # ← set this
+                  "https://white-stone-09b65ea1e.3.azurestaticapps.net"  # <-- change if different
 
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY") or ("dev_only_do_not_use_in_prod" if DEBUG else None)
 if not SESSION_SECRET_KEY:
     raise RuntimeError("SESSION_SECRET_KEY must be set in production")
 
-# Entra / MSAL (confidential flow variables)
+# (Optional) Entra/MSAL identifiers - not used in this stub, but kept for later
 ENTRA_CLIENT_ID = os.getenv("ENTRA_CLIENT_ID")
 ENTRA_CLIENT_SECRET = os.getenv("ENTRA_CLIENT_SECRET")
 ENTRA_TENANT_ID = os.getenv("ENTRA_TENANT_ID")
@@ -65,23 +68,26 @@ AUTHORITY = f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}" if ENTRA_TENA
 SCOPES = ["Mail.Read"]
 GRAPH_ENDPOINT_ME = "https://graph.microsoft.com/v1.0/me"
 
-USER_AGENT = "JoogmApp/AsyncAzureOpenAI/1.0"
+USER_AGENT = "PB25/AsyncAzureOpenAI/1.0"
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 cosmos_db_ready = asyncio.Event()
 
-# Tools (only when Graph is available)
+# Tool definition (only if Graph SDK is present)
 TOOLS = [{
     "type": "function",
     "function": {
         "name": "search_outlook",
         "description": "Search the user's Outlook mailbox",
-        "parameters": {"type": "object","properties":{"search_query":{"type":"string"}},"required":["search_query"]}
+        "parameters": {
+            "type": "object",
+            "properties": { "search_query": { "type": "string" } },
+            "required": ["search_query"]
+        }
     }
 }] if GRAPH_AVAILABLE else []
 
-azure_openai_tools = []
-azure_openai_available_tools = []
+MS_DEFENDER_ENABLED = os.getenv("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # APP FACTORY
@@ -90,24 +96,45 @@ def create_app():
     app = Quart(__name__, static_folder="static", static_url_path="/static")
     app.secret_key = SESSION_SECRET_KEY
 
-    # CORS – single source of truth
+    # CORS
     app = cors(
         app,
         allow_origin=[FRONTEND_ORIGIN],
-        allow_methods=["GET","POST","OPTIONS"],
-        allow_headers=["Content-Type","Authorization"],
-        allow_credentials=True
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+        allow_credentials=True,
     )
-    # Health check endpoint (used by Azure and for debugging)
+
+    # Health check (Azure probes and quick sanity)
     @app.get("/healthz")
     async def healthz():
         return {"status": "ok"}
 
-
+    # Root: serve static/index.html if present; otherwise friendly message
     @app.get("/")
     async def root():
-        # serve index.html from /static (avoid double-binding “/” via blueprint)
-        return await app.send_static_file("index.html")
+        try:
+            return await app.send_static_file("index.html")
+        except Exception:
+            return (
+                "<h3>Backend is running.</h3>"
+                "<p>No <code>static/index.html</code> found to serve.</p>",
+                200,
+                {"Content-Type": "text/html"},
+            )
+
+    # SPA fallback: send index.html for unknown GET paths (but not for API/auth/etc.)
+    @app.errorhandler(404)
+    async def spa_fallback(e):
+        if request.method == "GET":
+            p = request.path or ""
+            # Don't hijack API/health/auth/frontend_settings paths
+            if not p.startswith(("/api", "/auth", "/conversation", "/history", "/healthz", "/frontend_settings", "/static")):
+                try:
+                    return await app.send_static_file("index.html")
+                except Exception:
+                    pass
+        return jsonify({"error": "Not found"}), 404
 
     @app.before_serving
     async def init_clients():
@@ -118,30 +145,30 @@ def create_app():
             logging.exception("Cosmos init failed")
             app.cosmos_conversation_client = None
 
-    # register blueprint for API & assets
+    # Register blueprint (API & static helpers)
     app.register_blueprint(bp)
     return app
 
 # ──────────────────────────────────────────────────────────────────────────────
-# STATIC FILE ROUTES (under blueprint to avoid colliding with “/”)
+# STATIC FILE ROUTES (under blueprint)
 # ──────────────────────────────────────────────────────────────────────────────
 @bp.get("/script.js")
-async def serve_script():
+async def static_script():
     return await send_from_directory("static", "script.js")
 
 @bp.get("/style.css")
-async def serve_style():
+async def static_style():
     return await send_from_directory("static", "style.css")
 
 @bp.get("/assets/<path:path>")
-async def assets(path):
+async def static_assets(path):
     return await send_from_directory("static/assets", path)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # FRONTEND SETTINGS
 # ──────────────────────────────────────────────────────────────────────────────
 frontend_settings = {
-    "auth_enabled": True,
+    "auth_enabled": True,  # we protect /conversation; stubs emulate sign-in
     "feedback_enabled": (app_settings.chat_history and app_settings.chat_history.enable_feedback),
     "ui": {
         "title": app_settings.ui.title,
@@ -156,14 +183,14 @@ frontend_settings = {
     "oyd_enabled": app_settings.base_settings.datasource_type,
 }
 
-MS_DEFENDER_ENABLED = os.getenv("MS_DEFENDER_ENABLED", "true").lower() == "true"
-
 # ──────────────────────────────────────────────────────────────────────────────
 # OPENAI CLIENT
 # ──────────────────────────────────────────────────────────────────────────────
 async def init_openai_client():
     if app_settings.azure_openai.preview_api_version < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION:
-        raise ValueError(f"Minimum Azure OpenAI API version is {MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}")
+        raise ValueError(
+            f"Minimum Azure OpenAI API version is {MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}"
+        )
 
     endpoint = app_settings.azure_openai.endpoint or f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
     if not endpoint:
@@ -177,7 +204,7 @@ async def init_openai_client():
     if key:
         provider = None
     else:
-        # IMPORTANT: keep credential object alive; do NOT create it in a context manager
+        # Keep credential alive (no context manager)
         credential = DefaultAzureCredential()
         provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
 
@@ -199,7 +226,7 @@ async def init_cosmosdb_client() -> Optional[CosmosConversationClient]:
         return None
 
     endpoint = f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
-    cred = app_settings.chat_history.account_key or DefaultAzureCredential()  # keep ref
+    cred = app_settings.chat_history.account_key or DefaultAzureCredential()
     if not app_settings.chat_history.database:
         raise ValueError("CHAT_HISTORY__DATABASE required")
     if not app_settings.chat_history.conversations_container:
@@ -219,27 +246,29 @@ async def init_cosmosdb_client() -> Optional[CosmosConversationClient]:
 # MODEL ARG PREP
 # ──────────────────────────────────────────────────────────────────────────────
 def prepare_model_args(request_body, request_headers):
-    base = [{"role": "system", "content": app_settings.azure_openai.system_message}] if not app_settings.datasource else []
+    messages = []
+    if not app_settings.datasource:
+        messages.append({"role": "system", "content": app_settings.azure_openai.system_message})
     for m in request_body.get("messages", []):
-        if m and m["role"] in ("user","assistant","function","tool"):
-            base.append(m)
+        if m and m["role"] in ("user", "assistant", "function", "tool"):
+            messages.append(m)
 
     # Defender context
-    user_sec = None
+    user_security_context = None
     if MS_DEFENDER_ENABLED:
         if "user" in session:
-            session_user = session["user"]
+            su = session["user"]
             auth_user = {
-                "user_principal_id": session_user.get("userPrincipalName"),
-                "user_name": session_user.get("displayName"),
-                "user_oid": session_user.get("id"),
+                "user_principal_id": su.get("userPrincipalName"),
+                "user_name": su.get("displayName"),
+                "user_oid": su.get("id"),
             }
         else:
             auth_user = get_authenticated_user_details(request_headers)
-        user_sec = get_msdefender_user_json(auth_user, request_headers, app_settings.ui.title)
+        user_security_context = get_msdefender_user_json(auth_user, request_headers, app_settings.ui.title)
 
     model_args = {
-        "messages": base,
+        "messages": messages,
         "temperature": app_settings.azure_openai.temperature,
         "max_tokens": app_settings.azure_openai.max_tokens,
         "top_p": app_settings.azure_openai.top_p,
@@ -248,9 +277,8 @@ def prepare_model_args(request_body, request_headers):
         "model": app_settings.azure_openai.model,
     }
 
-    # tools and data source
-    if base and base[-1]["role"] == "user":
-        if not app_settings.azure_openai.function_call_azure_functions_enabled:
+    if messages and messages[-1]["role"] == "user":
+        if GRAPH_AVAILABLE and not app_settings.azure_openai.function_call_azure_functions_enabled:
             model_args["tools"] = TOOLS
             model_args["tool_choice"] = "auto"
         if app_settings.datasource:
@@ -258,35 +286,36 @@ def prepare_model_args(request_body, request_headers):
                 app_settings.datasource.construct_payload_configuration(request=request)
             ]
 
-    if user_sec:
-        model_args.setdefault("extra_body", {})["user_security_context"] = user_sec.to_dict()
+    if user_security_context:
+        model_args.setdefault("extra_body", {})["user_security_context"] = user_security_context.to_dict()
 
-    # scrub secrets in logs
+    # Log-safe scrub
     safe = copy.deepcopy(model_args)
     if safe.get("tools"): safe["tools"] = "[REDACTED]"
     if safe.get("extra_body"):
         for ds in safe["extra_body"].get("data_sources", []):
-            for field in ("key","connection_string","embedding_key","encoded_api_key","api_key"):
-                if ds.get("parameters", {}).get(field):
-                    ds["parameters"][field] = "*****"
-    logging.debug("REQUEST BODY (safe): %s", json.dumps(safe)[:1500])
+            params = ds.get("parameters", {})
+            for fld in ("key", "connection_string", "embedding_key", "encoded_api_key", "api_key"):
+                if params.get(fld):
+                    params[fld] = "*****"
+    logging.debug("REQUEST BODY SAFE: %s", json.dumps(safe)[:1500])
     return model_args
 
 # ──────────────────────────────────────────────────────────────────────────────
 # FILE EXTRACTORS
 # ──────────────────────────────────────────────────────────────────────────────
 def extract_text_from_pdf(file_bytes: bytes) -> str:
-    text = ""
+    out = ""
     with io.BytesIO(file_bytes) as f:
         reader = PdfReader(f)
         for p in reader.pages:
-            text += (p.extract_text() or "") + "\n"
-    return text
+            out += (p.extract_text() or "") + "\n"
+    return out
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
     with io.BytesIO(file_bytes) as f:
         d = docx.Document(f)
-        return "\n".join([p.text for p in d.paragraphs])
+        return "\n".join(p.text for p in d.paragraphs)
 
 async def extract_text_from_image(file_bytes: bytes) -> str:
     ep = os.getenv("AZURE_AI_VISION_ENDPOINT")
@@ -302,13 +331,13 @@ async def extract_text_from_image(file_bytes: bytes) -> str:
     return "[No text found]"
 
 # ──────────────────────────────────────────────────────────────────────────────
-# GRAPH TOKEN + SEARCH
+# GRAPH TOKEN + SEARCH (optional)
 # ──────────────────────────────────────────────────────────────────────────────
 class GraphTokenCredential(AsyncTokenCredential):
     async def get_token(self, *scopes, **kwargs) -> AccessToken:
         tok = session.get("token_cache")
-        if not tok: raise Exception("User is not authenticated")
-        # Prefer expires_on (epoch). If only expires_in is present, compute expires_on now.
+        if not tok:
+            raise Exception("User is not authenticated")
         expires_on = tok.get("expires_on")
         if not expires_on:
             expires_in = int(tok.get("expires_in", 0))
@@ -337,7 +366,8 @@ async def search_outlook(search_query: str) -> str:
                 subj = getattr(r, "subject", "N/A")
                 from_addr = getattr(getattr(getattr(r, "from_", None), "email_address", None), "address", "N/A")
                 when = getattr(r, "received_date_time", "N/A")
-                snip = getattr(hit, "summary", ""); link = getattr(r, "web_link", "#")
+                snip = getattr(hit, "summary", "")
+                link = getattr(r, "web_link", "#")
                 out.append(f"Subject: {subj}\nFrom: {from_addr}\nDate: {when}\nSnippet: {snip}\nURL: {link}\n")
         return "Found the following emails:\n\n" + ("\n---\n".join(out) if out else "No results.")
     except Exception:
@@ -345,7 +375,7 @@ async def search_outlook(search_query: str) -> str:
         return "Authentication error or Graph search failed."
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CHAT PIPELINE (unchanged logic, sturdier clients)
+# CHAT PIPELINE
 # ──────────────────────────────────────────────────────────────────────────────
 async def send_chat_request(request_body, request_headers):
     rb = {**request_body}
@@ -361,43 +391,45 @@ async def send_chat_request(request_body, request_headers):
 
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
-        # omitted: your promptflow path (unchanged)
+        # keep existing promptflow path if you use it
         return {"not": "implemented_in_this_minimal_example"}
     response, apim_id = await send_chat_request(request_body, request_headers)
-    # simple tool call handling
-    if response.choices[0].message.tool_calls:
-        tool = response.choices[0].message.tool_calls[0]
+
+    # Simple tool-call loopback
+    msg = response.choices[0].message
+    if getattr(msg, "tool_calls", None):
+        tool = msg.tool_calls[0]
         fn, args = tool.function.name, json.loads(tool.function.arguments or "{}")
         result = await search_outlook(**args) if fn == "search_outlook" else f"Unknown tool {fn}"
-        request_body["messages"].append(response.choices[0].message)
-        request_body["messages"].append({"role":"tool","tool_call_id":tool.id,"name":fn,"content":result})
+        request_body["messages"].append(msg)
+        request_body["messages"].append({"role": "tool", "tool_call_id": tool.id, "name": fn, "content": result})
         response, apim_id = await send_chat_request(request_body, request_headers)
+
     return format_non_streaming_response(response, request_body.get("history_metadata", {}), apim_id)
 
 # ──────────────────────────────────────────────────────────────────────────────
-# API ROUTES
+# AUTH STUBS (works today; swap for Entra later)
 # ──────────────────────────────────────────────────────────────────────────────
-# ===== Auth stubs (temporary) =====
 @bp.get("/auth/login")
 async def auth_login():
-    # Fake a signed-in user so the app can run end-to-end.
+    # Stub: create a fake session user so protected endpoints work
     session["user"] = {"displayName": "Demo User", "userPrincipalName": "demo@example.com", "id": "demo"}
-    return redirect("/")
-
-@bp.get("/auth/callback")
-async def auth_callback():
-    # When we wire Entra ID, the MS redirect will land here.
-    # For now, just go back home.
     return redirect("/")
 
 @bp.get("/auth/logout")
 async def auth_logout():
     session.clear()
     return redirect("/")
-# ===== End auth stubs =====
 
+@bp.get("/auth/status")
+async def auth_status():
+    if "user" not in session:
+        return jsonify({"isAuthenticated": False}), 401
+    return jsonify({"isAuthenticated": True, "user": {"name": session["user"].get("displayName")}})
 
-
+# ──────────────────────────────────────────────────────────────────────────────
+# API ROUTES
+# ──────────────────────────────────────────────────────────────────────────────
 @bp.get("/frontend_settings")
 def get_frontend_settings():
     return jsonify(frontend_settings), 200
@@ -415,9 +447,9 @@ async def conversation():
         logging.exception("conversation failed")
         return jsonify({"error": str(ex)}), getattr(ex, "status_code", 500)
 
-# ── Upload SAS helper: parse connection string for account + key
+# Upload SAS helper: parse connection string for account + key
 def _parse_conn_str(cs: str):
-    parts = dict(kv.split("=",1) for kv in cs.split(";") if "=" in kv)
+    parts = dict(kv.split("=", 1) for kv in cs.split(";") if "=" in kv)
     return parts.get("AccountName"), parts.get("AccountKey")
 
 @bp.post("/api/get-upload-url")
@@ -438,7 +470,6 @@ async def get_upload_url():
 
     container = "chatuploads"
     expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
-
     sas = generate_blob_sas(
         account_name=acct,
         container_name=container,
@@ -448,12 +479,7 @@ async def get_upload_url():
         expiry=expiry
     )
     base = f"https://{acct}.blob.core.windows.net"
-    return jsonify({
-        "sasUrl": f"{base}/{container}/{file_name}?{sas}",
-        "blobUrl": f"{base}/{container}/{file_name}"
-    })
-
-# (History routes omitted here for brevity – keep your existing ones; the Cosmos client fix above makes them stable.)
+    return jsonify({"sasUrl": f"{base}/{container}/{file_name}?{sas}", "blobUrl": f"{base}/{container}/{file_name}"})
 
 # ──────────────────────────────────────────────────────────────────────────────
 # APP INSTANCE
