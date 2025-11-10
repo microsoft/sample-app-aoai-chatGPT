@@ -113,15 +113,10 @@ def create_app():
     # Root: serve static/index.html if present; otherwise friendly message
     @app.get("/")
     async def root():
-        try:
-            return await app.send_static_file("index.html")
-        except Exception:
-            return (
-                "<h3>Backend is running.</h3>"
-                "<p>No <code>static/index.html</code> found to serve.</p>",
-                200,
-                {"Content-Type": "text/html"},
-            )
+    # Redirect to your frontend (SWA) instead of serving a static file
+    from quart import redirect
+    return redirect(FRONTEND_ORIGIN, 302)
+
 
     # SPA fallback: send index.html for unknown GET paths (but not for API/auth/etc.)
     @app.errorhandler(404)
