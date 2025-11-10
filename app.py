@@ -377,6 +377,27 @@ async def complete_chat_request(request_body, request_headers):
 # ──────────────────────────────────────────────────────────────────────────────
 # API ROUTES
 # ──────────────────────────────────────────────────────────────────────────────
+# ===== Auth stubs (temporary) =====
+@bp.get("/auth/login")
+async def auth_login():
+    # Fake a signed-in user so the app can run end-to-end.
+    session["user"] = {"displayName": "Demo User", "userPrincipalName": "demo@example.com", "id": "demo"}
+    return redirect("/")
+
+@bp.get("/auth/callback")
+async def auth_callback():
+    # When we wire Entra ID, the MS redirect will land here.
+    # For now, just go back home.
+    return redirect("/")
+
+@bp.get("/auth/logout")
+async def auth_logout():
+    session.clear()
+    return redirect("/")
+# ===== End auth stubs =====
+
+
+
 @bp.get("/frontend_settings")
 def get_frontend_settings():
     return jsonify(frontend_settings), 200
