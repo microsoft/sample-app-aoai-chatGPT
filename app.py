@@ -102,10 +102,7 @@ def create_app():
     @app.get("/healthz")
     async def healthz():
         return {"status": "ok"}
-    # health endpoints (for Azure + humans)
-    @app.get("/healthz")
-    async def healthz():
-        return {"status": "ok"}
+
 
     @app.get("/")
     async def root():
