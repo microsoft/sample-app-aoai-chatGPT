@@ -113,9 +113,21 @@ def create_app():
     # Root: serve static/index.html if present; otherwise friendly message
     @app.get("/")
     async def root():
-    # Redirect to your frontend (SWA) instead of serving a static file
-    from quart import redirect
-    return redirect(FRONTEND_ORIGIN, 302)
+    fe = (FRONTEND_ORIGIN or "").strip()
+
+    # If FRONTEND_ORIGIN isn't set (or still has the placeholder), show a friendly page
+    if not fe or "<your-swa>" in fe:
+        return (
+            "<h3>Backend is running.</h3>"
+            "<p>FRONTEND_ORIGIN is not configured.</p>"
+            "<p>Set <code>FRONTEND_ORIGIN</code> to your SWA URL "
+            "(e.g., https://white-stone-09b65ea1e.3.azurestaticapps.net) and restart.</p>",
+            200,
+            {"Content-Type": "text/html"},
+        )
+
+    # Otherwise, send users to the frontend
+    return redirect(fe, 302)
 
 
     # SPA fallback: send index.html for unknown GET paths (but not for API/auth/etc.)
