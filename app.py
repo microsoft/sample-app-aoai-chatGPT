@@ -98,7 +98,10 @@ def create_app():
         allow_headers=["Content-Type","Authorization"],
         allow_credentials=True
     )
-
+    # Health check endpoint (used by Azure and for debugging)
+    @app.get("/healthz")
+    async def healthz():
+        return {"status": "ok"}
     # health endpoints (for Azure + humans)
     @app.get("/healthz")
     async def healthz():
