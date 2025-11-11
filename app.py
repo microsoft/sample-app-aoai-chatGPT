@@ -1,7 +1,6 @@
 # app.py — Quart backend for SWA chat (strict CORS, Azure OpenAI, SAS uploads)
 
 import os
-import json
 import uuid
 import logging
 import datetime
@@ -17,6 +16,7 @@ from openai import AzureOpenAI
 # Azure Storage (used by /api/get-upload-url)
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 
+
 # ──────────────────────────────────────────────────────────────
 # CONFIG
 # ──────────────────────────────────────────────────────────────
@@ -28,7 +28,8 @@ FRONTEND_ORIGIN = (
     or "https://<your-swa>.azurestaticapps.net"
 )
 
-BACKEND_PUBLIC_URL = os.getenv("BACKEND_PUBLIC_URL", "").strip() or "https://pb25.azurewebsites.net"
+BACKEND_PUBLIC_URL = (os.getenv("BACKEND_PUBLIC_URL", "").strip()
+                      or "https://pb25.azurewebsites.net")
 
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY") or (
     "dev_only_do_not_use_in_prod" if DEBUG else None
@@ -66,6 +67,7 @@ FRONTEND_SETTINGS = {
     "model": AZURE_OPENAI_MODEL,
     "api_version": OPENAI_API_VERSION,
 }
+
 
 # ──────────────────────────────────────────────────────────────
 # APP FACTORY
