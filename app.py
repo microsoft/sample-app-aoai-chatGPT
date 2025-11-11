@@ -141,4 +141,152 @@ def create_app():
         fs["frontend_origin"] = (os.getenv("FRONTEND_ORIGIN") or FRONTEND_ORIGIN).strip()
         fs["backend_origin"] = (os.getenv("BACKEND_PUBLIC_URL") or BACKEND_PUBLIC_URL).strip()
         fs["model"] = os.getenv("AZURE_OPENAI_MODEL") or AZURE_OPENAI_MODEL
-        fs["api_versio_]()
+        fs["api_version"] = os.getenv("OPENAI_API_VERSION") or OPENAI_API_VERSION
+        return jsonify(fs), 200
+
+    # ───────── Conversation (non-streaming) ─────────
+    @app.post("/conversation")
+    async def conversation():
+        """
+        Non-streaming chat endpoint.
+        If Azure OpenAI env is missing, falls back to echo so UI still works.
+        """
+        if not request.is_json:
+            return jsonify({"error": "request must be json"}), 415
+
+        try:
+            data = await request.get_json()
+        except Exception as e:
+            return jsonify({"error": "invalid_json", "detail": str(e)}), 400
+
+        messages = data.get("messages") or []
+        if not isinstance(messages, list) or not messages:
+            return jsonify({"error": "messages array required"}), 400
+
+        # If client not configured, echo last user
+        if not client:
+            last_user = next(
+                (m.get("content") for m in reversed(messages) if m.get("role") == "user"),
+                "",
+            )
+            answer = (
+                f"(Echo) You said: {last_user}"
+                if last_user
+                else "Hello! Backend is connected. (Model not configured yet.)"
+            )
+            return jsonify(
+                {
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": answer},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                }
+            ), 200
+
+        # Call Azure OpenAI in a worker thread (non-blocking)
+        try:
+            def _call():
+                return client.chat.completions.create(
+                    model=AZURE_OPENAI_MODEL,
+                    messages=messages,
+                )
+
+            resp = await asyncio.to_thread(_call)
+            # SDK v1: return model_dump()
+            return jsonify(resp.model_dump()), 200
+
+        except Exception as e:
+            logging.exception("chat_failed")
+            return jsonify({"error": "chat_failed", "detail": str(e)}), 500
+
+    # ───────── Optional: streaming (plain text stream of deltas) ─────────
+    @app.post("/conversation_stream")
+    async def conversation_stream():
+        if not request.is_json:
+            return jsonify({"error": "request must be json"}), 415
+        if not client:
+            return jsonify({"error": "stream_unavailable", "detail": "Model not configured"}), 501
+
+        data = await request.get_json()
+        messages = data.get("messages") or []
+        if not isinstance(messages, list) or not messages:
+            return jsonify({"error": "messages array required"}), 400
+
+        async def gen():
+            try:
+                # streaming isn't truly async in SDK v1; iterate in thread
+                def _stream():
+                    return client.chat.completions.create(
+                        model=AZURE_OPENAI_MODEL,
+                        messages=messages,
+                        stream=True,
+                    )
+
+                stream = await asyncio.to_thread(_stream)
+                for event in stream:
+                    delta = event.choices[0].delta.content or ""
+                    if delta:
+                        yield delta
+                # ensure a final newline
+                yield "\n"
+            except Exception as e:
+                logging.exception("stream_failed")
+                yield f"\n[stream_error] {e}\n"
+
+        return Response(gen(), content_type="text/plain")
+
+    # ───────── Upload SAS helper ─────────
+    def _parse_conn_str(cs: str):
+        parts = dict(kv.split("=", 1) for kv in cs.split(";") if "=" in kv)
+        return parts.get("AccountName"), parts.get("AccountKey")
+
+    @app.post("/api/get-upload-url")
+    async def get_upload_url():
+        """
+        Returns a short-lived SAS URL to PUT a file into container 'chatuploads'.
+        Requires AZURE_STORAGE_CONNECTION_STRING in App Settings.
+        """
+        if not request.is_json:
+            return jsonify({"error": "request must be json"}), 415
+
+        payload = await request.get_json()
+        file_name = (payload or {}).get("fileName") or f"upload-{uuid.uuid4()}.bin"
+
+        conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not conn:
+            return jsonify({"error": "AZURE_STORAGE_CONNECTION_STRING not configured"}), 500
+
+        acct, key = _parse_conn_str(conn)
+        if not (acct and key):
+            return jsonify({"error": "Invalid storage connection string"}), 500
+
+        container = "chatuploads"
+        expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
+
+        sas = generate_blob_sas(
+            account_name=acct,
+            container_name=container,
+            blob_name=file_name,
+            account_key=key,
+            permission=BlobSasPermissions(create=True, write=True),
+            expiry=expiry,
+        )
+        base = f"https://{acct}.blob.core.windows.net"
+        return jsonify(
+            {
+                "sasUrl": f"{base}/{container}/{file_name}?{sas}",
+                "blobUrl": f"{base}/{container}/{file_name}",
+            }
+        )
+
+    return app
+
+
+# ──────────────────────────────────────────────────────────────
+# APP INSTANCE
+# ──────────────────────────────────────────────────────────────
+app = create_app()
