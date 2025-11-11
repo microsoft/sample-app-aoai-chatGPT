@@ -144,64 +144,94 @@ def create_app():
         fs["api_version"] = os.getenv("OPENAI_API_VERSION") or OPENAI_API_VERSION
         return jsonify(fs), 200
 
-    # ───────── Conversation (non-streaming) ─────────
+# ───────── Conversation (non-streaming) ─────────
     @app.post("/conversation")
     async def conversation():
-        """
-        Non-streaming chat endpoint.
-        If Azure OpenAI env is missing, falls back to echo so UI still works.
-        """
-        if not request.is_json:
-            return jsonify({"error": "request must be json"}), 415
+    """
+    Non-streaming chat endpoint that ALWAYS returns a string in
+    choices[0].message.content so the UI never shows '(no content)'.
+    Falls back to echo if Azure OpenAI isn't configured.
+    """
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
 
-        try:
-            data = await request.get_json()
-        except Exception as e:
-            return jsonify({"error": "invalid_json", "detail": str(e)}), 400
+    try:
+        data = await request.get_json()
+    except Exception as e:
+        return jsonify({"error": "invalid_json", "detail": str(e)}), 400
 
-        messages = data.get("messages") or []
-        if not isinstance(messages, list) or not messages:
-            return jsonify({"error": "messages array required"}), 400
+    messages = data.get("messages") or []
+    if not isinstance(messages, list) or not messages:
+        return jsonify({"error": "messages array required"}), 400
 
-        # If client not configured, echo last user
-        if not client:
-            last_user = next(
-                (m.get("content") for m in reversed(messages) if m.get("role") == "user"),
-                "",
+    # If client not configured, echo last user so UI still works
+    if not client:
+        last_user = next(
+            (m.get("content") for m in reversed(messages) if m.get("role") == "user"),
+            "",
+        )
+        text = f"(Echo) You said: {last_user}" if last_user else "Hello! Backend is connected."
+        return jsonify({
+            "choices": [{
+                "index": 0,
+                "message": {"role": "assistant", "content": text},
+                "finish_reason": "stop",
+            }],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+        }), 200
+
+    # Azure OpenAI call in a worker thread
+    try:
+        def _call():
+            return client.chat.completions.create(
+                model=AZURE_OPENAI_MODEL,
+                messages=messages,
             )
-            answer = (
-                f"(Echo) You said: {last_user}"
-                if last_user
-                else "Hello! Backend is connected. (Model not configured yet.)"
-            )
-            return jsonify(
-                {
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {"role": "assistant", "content": answer},
-                            "finish_reason": "stop",
-                        }
-                    ],
-                    "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
-                }
-            ), 200
+        resp = await asyncio.to_thread(_call)
+    except Exception as e:
+        logging.exception("chat_failed")
+        return jsonify({"error": "chat_failed", "detail": str(e)}), 500
 
-        # Call Azure OpenAI in a worker thread (non-blocking)
-        try:
-            def _call():
-                return client.chat.completions.create(
-                    model=AZURE_OPENAI_MODEL,
-                    messages=messages,
-                )
+    # ---- Normalize response to guaranteed string content ----
+    choice = (getattr(resp, "choices", None) or [None])[0]
+    finish = getattr(choice, "finish_reason", None) or "stop"
+    content = ""
 
-            resp = await asyncio.to_thread(_call)
-            # SDK v1: return model_dump()
-            return jsonify(resp.model_dump()), 200
+    try:
+        msg = getattr(choice, "message", None)
+        if msg:
+            content = (getattr(msg, "content", None) or "").strip()
+            if not content:
+                # fallbacks: refusal/text/tool-calls
+                refusal = getattr(msg, "refusal", None)
+                if refusal:
+                    content = refusal
+                elif getattr(msg, "tool_calls", None):
+                    content = "I considered using tools, but this backend doesn’t support tools yet."
+        # older compat
+        if not content and getattr(choice, "text", None):
+            content = choice.text
+    except Exception:
+        content = ""
 
-        except Exception as e:
-            logging.exception("chat_failed")
-            return jsonify({"error": "chat_failed", "detail": str(e)}), 500
+    if not content:
+        content = "(no text returned by the model)"
+
+    out = {
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": content},
+            "finish_reason": finish,
+        }]
+    }
+    # include usage if available
+    try:
+        if getattr(resp, "usage", None):
+            out["usage"] = resp.usage.model_dump()
+    except Exception:
+        pass
+
+    return jsonify(out), 200
 
     # ───────── Optional: streaming (plain text stream of deltas) ─────────
     @app.post("/conversation_stream")
