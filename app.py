@@ -29,7 +29,7 @@ def create_app():
     async def frontend_settings():
         return jsonify({
             "auth_enabled": False,
-            "openai_model": "gpt-4o-mini",
+            "openai_model": "gpt-4o",
             "max_file_size_mb": 25
         }), 200
 
@@ -41,7 +41,7 @@ def create_app():
             messages = data.get("messages", [])
 
             completion = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=messages
             )
 
@@ -62,7 +62,7 @@ def create_app():
                 return jsonify({"error": "Missing 'url'"}), 400
 
             completion = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a document summarizer."},
                     {
