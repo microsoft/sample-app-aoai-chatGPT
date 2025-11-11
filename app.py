@@ -35,6 +35,31 @@ AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
 AZURE_OPENAI_MODEL = os.getenv("AZURE_OPENAI_MODEL", "gpt-4o")
 OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2024-05-01-preview")
 
+from quart import abort
+
+# ───────── AUTH GUARD ─────────
+ALLOWED_EMAILS = {
+    "rsg@thegillfirm.com",
+    "hgilljd@gmail.com",
+    # add any others from your firm
+}
+
+@app.get("/auth/login")
+async def auth_login():
+    """Fake login page - only allow firm users"""
+    email = request.args.get("email")
+    if not email or email.lower() not in ALLOWED_EMAILS:
+        return Response(
+            "<h2>Access Denied</h2><p>This app is restricted to Gill Firm members only.</p>",
+            status=403,
+            mimetype="text/html",
+        )
+    return redirect(FRONTEND_ORIGIN)
+
+
+
+
+
 # ──────────────────────────────────────────────
 # FRONTEND SETTINGS
 # ──────────────────────────────────────────────
