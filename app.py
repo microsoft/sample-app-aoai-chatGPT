@@ -271,7 +271,6 @@ def create_app():
                 yield f"\n[stream_error] {e}\n"
 
         return Response(gen(), content_type="text/plain")
-
     # ───────── Summarize File (PDF/DOCX/Images via file URL) ─────────
     @app.post("/summarize_file")
     async def summarize_file():
@@ -296,7 +295,6 @@ def create_app():
 
         try:
             def _call():
-                # ✅ FIXED: use "file" instead of "input_file"
                 return client.chat.completions.create(
                     model=AZURE_OPENAI_MODEL,
                     messages=[
@@ -325,6 +323,7 @@ def create_app():
         except Exception as e:
             logging.exception("summarize_failed")
             return jsonify({"error": "summarize_failed", "detail": str(e)}), 500
+
 
     # ───────── Upload SAS helper ─────────
     def _parse_conn_str(cs: str):
