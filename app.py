@@ -1,4 +1,4 @@
-# app.py — Quart backend for SWA chat (strict CORS, Azure OpenAI, SAS uploads)
+# app.py — Quart backend for SWA chat (CORS, Azure OpenAI, SAS uploads)
 
 import os
 import uuid
@@ -10,10 +10,10 @@ from typing import Optional
 from quart import Quart, jsonify, request, redirect, Response
 from quart_cors import cors
 
-# Azure OpenAI (Projects)
+# Azure OpenAI (AzureOpenAI client from openai>=1.x)
 from openai import AzureOpenAI
 
-# Azure Storage (used by /api/get-upload-url)
+# Azure Storage (SAS)
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 
 
@@ -28,8 +28,10 @@ FRONTEND_ORIGIN = (
     or "https://<your-swa>.azurestaticapps.net"
 )
 
-BACKEND_PUBLIC_URL = (os.getenv("BACKEND_PUBLIC_URL", "").strip()
-                      or "https://pb25.azurewebsites.net")
+BACKEND_PUBLIC_URL = (
+    os.getenv("BACKEND_PUBLIC_URL", "").strip()
+    or "https://pb25.azurewebsites.net"
+)
 
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY") or (
     "dev_only_do_not_use_in_prod" if DEBUG else None
@@ -37,12 +39,11 @@ SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY") or (
 if not SESSION_SECRET_KEY:
     raise RuntimeError("SESSION_SECRET_KEY must be set in production")
 
-# Azure OpenAI config (Azure AI Foundry Projects)
+# Azure OpenAI config
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
 AZURE_OPENAI_MODEL = os.getenv("AZURE_OPENAI_MODEL")
-AZURE_OPENAI_PROJECT = os.getenv("AZURE_OPENAI_PROJECT")  # recommended
-OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2024-10-21")  # works with input_file
+OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2024-10-21")  # recommended
 
 # Frontend settings returned to your SWA
 FRONTEND_SETTINGS = {
@@ -61,7 +62,7 @@ FRONTEND_SETTINGS = {
         "show_share_button": True,
         "show_chat_history_button": True,
     },
-    # important bits the frontend reads
+    # values consumed by your frontend
     "frontend_origin": FRONTEND_ORIGIN,
     "backend_origin": BACKEND_PUBLIC_URL,
     "provider": "azure_openai",
@@ -77,7 +78,7 @@ def create_app():
     app = Quart(__name__)
     app.secret_key = SESSION_SECRET_KEY
 
-    # Strict CORS for SWA
+    # Strict CORS for SWA → backend
     app = cors(
         app,
         allow_origin=[FRONTEND_ORIGIN],
@@ -92,19 +93,13 @@ def create_app():
         SESSION_COOKIE_SECURE=True,
     )
 
-    # Initialize Azure OpenAI client (Projects)
+    # Initialize Azure OpenAI client if configured
     client: Optional[AzureOpenAI] = None
     if AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY and AZURE_OPENAI_MODEL:
-        # If you have multiple Projects under one account, set AZURE_OPENAI_PROJECT
-        default_headers = {}
-        if AZURE_OPENAI_PROJECT:
-            default_headers["x-ms-azureai-project-name"] = AZURE_OPENAI_PROJECT
-
         client = AzureOpenAI(
             azure_endpoint=AZURE_OPENAI_ENDPOINT,
             api_key=AZURE_OPENAI_KEY,
             api_version=OPENAI_API_VERSION,
-            default_headers=default_headers or None,
         )
     else:
         logging.warning("Azure OpenAI env vars missing; /conversation will echo.")
@@ -145,7 +140,6 @@ def create_app():
     # ───────── Settings for the frontend ─────────
     @app.get("/frontend_settings")
     async def get_frontend_settings():
-        # Always return fresh env-backed values (helpful during config changes)
         fs = dict(FRONTEND_SETTINGS)
         fs["frontend_origin"] = (os.getenv("FRONTEND_ORIGIN") or FRONTEND_ORIGIN).strip()
         fs["backend_origin"] = (os.getenv("BACKEND_PUBLIC_URL") or BACKEND_PUBLIC_URL).strip()
@@ -271,12 +265,13 @@ def create_app():
                 yield f"\n[stream_error] {e}\n"
 
         return Response(gen(), content_type="text/plain")
-    # ───────── Summarize File (PDF/DOCX/Images via file URL) ─────────
+
+    # ───────── Summarize File (PDF/DOCX/Images via file) ─────────
     @app.post("/summarize_file")
     async def summarize_file():
         """
-        Summarizes an uploaded file using Azure OpenAI.
-        Expects JSON: { "url": "<SAS READ URL>", "question": "Summarize ..." }
+        Summarizes an uploaded file using Azure OpenAI 'file'.
+        Body: { "url": "<SAS READ URL>", "question": "Summarize ..." }
         """
         if not request.is_json:
             return jsonify({"error": "request must be json"}), 415
@@ -315,17 +310,14 @@ def create_app():
                     ],
                     temperature=0.2,
                 )
-
             resp = await asyncio.to_thread(_call)
             content = resp.choices[0].message.content or "(no summary)"
             return jsonify({"summary": content}), 200
-
         except Exception as e:
             logging.exception("summarize_failed")
             return jsonify({"error": "summarize_failed", "detail": str(e)}), 500
 
-
-    # ───────── Upload SAS helper ─────────
+    # ───────── Upload SAS helper (returns PUT + READ) ─────────
     def _parse_conn_str(cs: str):
         parts = dict(kv.split("=", 1) for kv in cs.split(";") if "=" in kv)
         return parts.get("AccountName"), parts.get("AccountKey")
@@ -334,8 +326,7 @@ def create_app():
     async def get_upload_url():
         """
         Returns a short-lived SAS URL to PUT a file into container 'chatuploads'.
-        Also returns a readable SAS URL (readUrl) so the model can fetch it.
-        Requires AZURE_STORAGE_CONNECTION_STRING in App Settings.
+        Also returns a read-enabled URL you can give to the model.
         """
         if not request.is_json:
             return jsonify({"error": "request must be json"}), 415
@@ -354,25 +345,22 @@ def create_app():
         container = "chatuploads"
         expiry = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
 
-        # IMPORTANT: allow read so the model can download the file
         sas = generate_blob_sas(
             account_name=acct,
             container_name=container,
             blob_name=file_name,
             account_key=key,
-            permission=BlobSasPermissions(create=True, write=True, read=True),
+            permission=BlobSasPermissions(read=True, create=True, write=True),  # READ is required
             expiry=expiry,
         )
         base = f"https://{acct}.blob.core.windows.net"
         sas_url = f"{base}/{container}/{file_name}?{sas}"
 
-        return jsonify(
-            {
-                "sasUrl": sas_url,                         # PUT here to upload
-                "blobUrl": f"{base}/{container}/{file_name}",  # permanent URL (no SAS)
-                "readUrl": sas_url,                        # READ with same SAS (model can fetch)
-            }
-        )
+        return jsonify({
+            "sasUrl": sas_url,   # PUT upload
+            "readUrl": sas_url,  # GET for model fetch
+            "blobUrl": f"{base}/{container}/{file_name}"
+        }), 200
 
     return app
 
