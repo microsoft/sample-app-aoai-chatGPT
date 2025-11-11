@@ -272,11 +272,11 @@ def create_app():
 
         return Response(gen(), content_type="text/plain")
 
-    # ───────── Summarize File (PDF/DOCX/Images via input_file) ─────────
+    # ───────── Summarize File (PDF/DOCX/Images via file URL) ─────────
     @app.post("/summarize_file")
     async def summarize_file():
         """
-        Summarizes an uploaded file using Azure OpenAI 'input_file'.
+        Summarizes an uploaded file using Azure OpenAI.
         Expects JSON: { "url": "<SAS READ URL>", "question": "Summarize ..." }
         """
         if not request.is_json:
@@ -296,26 +296,32 @@ def create_app():
 
         try:
             def _call():
+                # ✅ FIXED: use "file" instead of "input_file"
                 return client.chat.completions.create(
                     model=AZURE_OPENAI_MODEL,
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an AI legal assistant that summarizes and interprets documents clearly, precisely, and concisely for attorneys.",
+                            "content": (
+                                "You are an AI legal assistant. Read the attached file and answer clearly, "
+                                "concisely, and accurately for attorneys."
+                            ),
                         },
                         {
                             "role": "user",
                             "content": [
                                 {"type": "text", "text": f"{question}\n\nPlease read and summarize this file:"},
-                                {"type": "input_file", "input_url": file_url},
+                                {"type": "file", "file_url": file_url},
                             ],
                         },
                     ],
                     temperature=0.2,
                 )
+
             resp = await asyncio.to_thread(_call)
             content = resp.choices[0].message.content or "(no summary)"
             return jsonify({"summary": content}), 200
+
         except Exception as e:
             logging.exception("summarize_failed")
             return jsonify({"error": "summarize_failed", "detail": str(e)}), 500
