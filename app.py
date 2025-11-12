@@ -1,100 +1,207 @@
 import os
 import logging
-from quart import Quart, request, jsonify
-from quart_cors import cors
-from openai import AzureOpenAI
+import io
+import uuid
+from datetime import datetime, timedelta, timezone
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from openai import OpenAI
+from azure.storage.blob import (
+    BlobServiceClient,
+    BlobSasPermissions,
+    generate_blob_sas
+)
+import fitz  # PyMuPDF
+from dotenv import load_dotenv
 
-# ───────── Setup Logging ─────────
+# --- Configuration & Clients ---
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ───────── App Factory ─────────
-def create_app():
-    app = Quart(__name__)
-    app = cors(app, allow_origin="*")
+app = FastAPI()
 
-    client = AzureOpenAI(
-        api_key=os.getenv("AZURE_OPENAI_KEY"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
-    )
+# 🔐 Load Environment Variables
+try:
+    OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+    AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+    AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
+except KeyError as e:
+    logger.error(f"Missing environment variable: {e}")
+    # In a real app, you might want to exit or raise an exception
+    # For now, we'll let it fail loudly if a route is called.
 
-    # ───────── Health Check ─────────
-    @app.get("/healthz")
-    async def healthz():
-        return jsonify({"status": "ok"}), 200
+#  OpenAI Client
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-    # ───────── Frontend Config ─────────
-    @app.get("/frontend_settings")
-    async def frontend_settings():
-        return jsonify({
-            "auth_enabled": False,
-            "openai_model": "gpt-4o",
-            "max_file_size_mb": 25
-        }), 200
+# Azure Blob Storage Client
+blob_service_client = BlobServiceClient.from_connection_string(
+    AZURE_STORAGE_CONNECTION_STRING
+)
+container_client = blob_service_client.get_container_client(
+    AZURE_STORAGE_CONTAINER
+)
 
-    # ───────── Chat Completion ─────────
-    @app.post("/conversation")
-    async def conversation():
+
+# --- CORS Middleware ---
+# Allow your frontend to talk to this backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, lock this to your SWA URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# --- Pydantic Models (Request Bodies) ---
+class ChatRequest(BaseModel):
+    messages: list[dict]
+
+class SasRequest(BaseModel):
+    filename: str
+
+class SummarizeRequest(BaseModel):
+    blob_name: str
+    original_filename: str
+
+
+# --- Helper Function: Extract Text from PDF ---
+def extract_text_from_pdf(pdf_content: bytes) -> str:
+    """Extracts text from PDF content."""
+    try:
+        with fitz.open(stream=pdf_content, filetype="pdf") as doc:
+            text = ""
+            for page in doc:
+                text += page.get_text()
+            return text
+    except Exception as e:
+        logger.error(f"Failed to extract text from PDF: {e}")
+        raise ValueError(f"Could not read the PDF file. It may be corrupted or password-protected.")
+
+
+# --- API Routes ---
+
+@app.get("/healthz")
+async def healthz():
+    """Health check endpoint."""
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@app.post("/conversation")
+async def conversation(request: ChatRequest):
+    """Handles standard text-based chat conversations."""
+    try:
+        completion = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=request.messages
+        )
+        reply = completion.choices[0].message.content
+        return {"reply": reply}
+    except Exception as e:
+        logger.error(f"Error in /conversation: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"An error occurred with the chat model: {e}"}
+        )
+
+
+@app.post("/api/get-upload-url")
+async def get_upload_url(request: SasRequest):
+    """Generates a short-lived SAS URL for uploading a file."""
+    try:
+        # Create a unique blob name to prevent overwrites
+        blob_name = f"{uuid.uuid4()}-{request.filename}"
+
+        sas_token = generate_blob_sas(
+            account_name=blob_service_client.account_name,
+            container_name=AZURE_STORAGE_CONTAINER,
+            blob_name=blob_name,
+            account_key=blob_service_client.credential.account_key,
+            permission=BlobSasPermissions(create=True, write=True),
+            expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
+        )
+
+        upload_url = (
+            f"https://{blob_service_client.account_name}.blob.core.windows.net/"
+            f"{AZURE_STORAGE_CONTAINER}/{blob_name}?{sas_token}"
+        )
+
+        return {"upload_url": upload_url, "blob_name": blob_name}
+
+    except Exception as e:
+        logger.error(f"Error generating SAS URL: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Could not generate file upload URL: {e}"}
+        )
+
+
+@app.post("/summarize_file")
+async def summarize_file(request: SummarizeRequest):
+    """
+    Downloads a file from blob storage, extracts text, and summarizes it.
+    This is the fix for the crash you saw.
+    """
+    try:
+        # 1. Download the file from Azure Blob Storage
+        logger.info(f"Downloading blob: {request.blob_name}")
+        blob_client = container_client.get_blob_client(request.blob_name)
+        
+        downloader = blob_client.download_blob()
+        file_content = downloader.readall()
+        logger.info(f"File downloaded, size: {len(file_content)} bytes")
+
+        # 2. Extract text (assuming PDF for now)
+        # In a real app, you'd check the file type
         try:
-            data = await request.get_json()
-            messages = data.get("messages", [])
-
-            completion = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages
-            )
-
-            reply = completion.choices[0].message.content
-            return jsonify({"reply": reply}), 200
+            text_content = extract_text_from_pdf(file_content)
+            if not text_content.strip():
+                raise ValueError("No text could be extracted from the file.")
         except Exception as e:
-            logger.error(f"Error in /conversation: {e}")
-            return jsonify({"error": str(e)}), 500
-
-    # ───────── File Summarization ─────────
-    @app.post("/summarize_file")
-    async def summarize_file():
-        try:
-            data = await request.get_json()
-            file_url = data.get("url")
-
-            if not file_url:
-                return jsonify({"error": "Missing 'url'"}), 400
-
-            completion = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are a document summarizer."},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Summarize this document."},
-                            {"type": "file", "file": {"url": file_url}}
-                        ]
-                    }
-                ]
+            logger.error(f"Text extraction failed: {e}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": str(e)}
             )
+            
+        logger.info(f"Text extracted, length: {len(text_content)} chars")
 
-            summary = completion.choices[0].message.content
-            return jsonify({"summary": summary}), 200
-        except Exception as e:
-            logger.error(f"Error in /summarize_file: {e}")
-            return jsonify({"error": str(e)}), 500
+        # 3. Summarize with OpenAI
+        prompt = f"""
+        Please provide a concise summary of the following document.
+        Original filename: {request.original_filename}
 
-    # ───────── Dummy Auth Routes ─────────
-    @app.get("/auth/login")
-    async def fake_login():
-        return jsonify({"message": "Login not required in demo mode."}), 200
+        Document Content:
+        ---
+        {text_content[:20000]}
+        ---
+        """
+        
+        # Note: We truncate text to avoid exceeding token limits.
+        # A more advanced implementation would chunk the text.
 
-    @app.get("/auth/logout")
-    async def fake_logout():
-        return jsonify({"message": "Logged out (demo mode)."}), 200
+        completion = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an expert document summarizer."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        summary = completion.choices[0].message.content
+        return {"summary": summary}
 
-    return app
+    # This is the crucial 'catch-all' that prevents the crash
+    except Exception as e:
+        logger.error(f"Error in /summarize_file: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to process the file: {e}"}
+        )
 
-
-# ───────── Create App Instance ─────────
-app = create_app()
-
+# --- Gunicorn/Uvicorn entry point ---
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
