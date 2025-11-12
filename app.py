@@ -7,14 +7,21 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# --- API Client Imports ---
 from openai import AzureOpenAI
-import anthropic # Import Anthropic
+import google.generativeai as genai
+
+# NEW: Import Document Intelligence
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.documentintelligence import DocumentIntelligenceClient
+
+# --- Other Imports ---
 from azure.storage.blob import (
     BlobServiceClient,
     BlobSasPermissions,
     generate_blob_sas
 )
-import fitz  # PyMuPDF
 from dotenv import load_dotenv
 
 # --- Configuration & Clients ---
@@ -30,8 +37,12 @@ try:
     AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
     AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
     
-    # Anthropic (Claude)
-    CLAUDE_API_KEY = os.environ["CLAUDE_API_KEY"]
+    # Google (Gemini)
+    GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
+    
+    # NEW: Azure Document Intelligence
+    DOC_INTEL_ENDPOINT = os.environ["DOC_INTEL_ENDPOINT"]
+    DOC_INTEL_KEY = os.environ["DOC_INTEL_KEY"]
     
     # Azure Storage
     AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
@@ -41,23 +52,25 @@ except KeyError as e:
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
 # !! CRITICAL: UPDATE THIS DEFAULT !!
-# This is your fallback Azure deployment name.
-DEFAULT_AZURE_DEPLOYMENT = "gpt-4o"  # <-- Make sure this is your deployment name!
+DEFAULT_AZURE_DEPLOYMENT = "gpt-4o"  # <-- Your default Azure model
 
 # !! CRITICAL: UPDATE THIS MAP !!
-# This map MUST match the 'value' attributes in your index.html
-# !! CRITICAL: UPDATE THIS MAP !!
+# This map routes tasks to your best models.
+# We are using gpt-5-pro for drafting, as requested.
 TASK_MODEL_MAP = {
+    # --- Research & Analysis (Fast & Capable) ---
     "legal_research": "gpt-4o",
-    "build_chronology": "gpt-4o",
     "analyze_document": "gpt-4o",
-    "analyze_legal_argument": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_exam_questions": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_discovery_responses": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_discovery_requests": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_rfo": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_motion": "claude/claude-3-sonnet-20240229", # <-- NEW
-    "draft_brief": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "build_chronology": "google/gemini-1.5-pro-latest",
+    
+    # --- High-Stakes Drafting (Best Models) ---
+    "analyze_legal_argument": "gpt-5-pro", # <-- Using GPT-5 Pro
+    "draft_exam_questions": "google/gemini-1.5-pro-latest",
+    "draft_discovery_responses": "gpt-5-pro", # <-- Using GPT-5 Pro
+    "draft_discovery_requests": "gpt-5-pro", # <-- Using GPT-5 Pro
+    "draft_rfo": "gpt-5-pro",                # <-- Using GPT-5 Pro
+    "draft_motion": "gpt-5-pro",               # <-- Using GPT-5 Pro
+    "draft_brief": "gpt-5-pro",                # <-- Using GPT-5 Pro
 }
 
 # --- Initialize API Clients ---
@@ -69,9 +82,13 @@ azure_openai_client = AzureOpenAI(
     api_version="2024-02-01"
 )
 
-# NEW: Anthropic (Claude) Client
-anthropic_client = anthropic.Anthropic(
-    api_key=CLAUDE_API_KEY
+# Google (Gemini) Client
+genai.configure(api_key=GOOGLE_API_KEY)
+
+# NEW: Document Intelligence Client
+doc_intel_client = DocumentIntelligenceClient(
+    endpoint=DOC_INTEL_ENDPOINT, 
+    credential=AzureKeyCredential(DOC_INTEL_KEY)
 )
 
 # Azure Blob Storage Client
@@ -81,7 +98,6 @@ blob_service_client = BlobServiceClient.from_connection_string(
 container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
-
 
 # --- CORS Middleware ---
 app.add_middleware(
@@ -105,17 +121,26 @@ class CopilotRequest(BaseModel):
     original_filename: str | None = None
 
 
-# --- Helper Function: Extract Text from PDF ---
-def extract_text_from_pdf(pdf_content: bytes) -> str:
+# --- NEW: Helper Function (Replaces PyMuPDF) ---
+def extract_document_content(file_bytes: bytes) -> str:
+    """
+    Analyzes a document from bytes using Azure AI Document Intelligence.
+    """
     try:
-        with fitz.open(stream=pdf_content, filetype="pdf") as doc:
-            text = ""
-            for page in doc:
-                text += page.get_text()
-            return text
+        # Use "prebuilt-layout" to get all text and structure
+        poller = doc_intel_client.begin_analyze_document(
+            "prebuilt-layout", 
+            analyze_request=file_bytes,
+            content_type="application/octet-stream"
+        )
+        result = poller.result()
+        
+        # result.content contains the full, concatenated text
+        return result.content
+
     except Exception as e:
-        logger.error(f"Failed to extract text from PDF: {e}")
-        return f"Error: Could not read the PDF file. It may be corrupted or password-protected. {e}"
+        logger.error(f"Document Intelligence analysis failed: {e}")
+        return f"Error: Could not read the document. It may be an unsupported format. {e}"
 
 
 # --- API Routes ---
@@ -154,10 +179,10 @@ async def get_upload_url(request: SasRequest):
 @app.post("/api/copilot")
 async def copilot_endpoint(request: CopilotRequest):
     """
-    This unified endpoint now routes to EITHER Azure OpenAI OR Anthropic Claude.
+    This unified endpoint routes to Azure OpenAI OR Google Gemini.
     """
     try:
-        # 1. Select the model string (e.g., "gpt-4o" or "claude/claude-3-opus...")
+        # 1. Select the model string
         model_name_string = TASK_MODEL_MAP.get(request.task, DEFAULT_AZURE_DEPLOYMENT)
         logger.info(f"Task: {request.task} -> Using Model: {model_name_string}")
 
@@ -174,10 +199,12 @@ async def copilot_endpoint(request: CopilotRequest):
                 file_content = downloader.readall()
                 logger.info(f"File downloaded, size: {len(file_content)} bytes")
                 
-                text_content = extract_text_from_pdf(file_content)
+                # --- THIS IS THE UPGRADE ---
+                text_content = extract_document_content(file_content)
+                # ---
                 
                 file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
-{text_content[:20000]}
+{text_content}
 --- END ATTACHED DOCUMENT ---
 
 Based on the document above, """
@@ -193,23 +220,26 @@ Based on the document above, """
 
         reply = ""
 
-        # 5. --- NEW: Call the correct API based on the model string ---
-        if model_name_string.startswith("claude/"):
-            # It's a Claude model
-            claude_model_name = model_name_string.split("claude/")[1]
+        # 5. Call the correct API
+        if model_name_string.startswith("google/"):
+            # --- It's a Google model ---
+            google_model_name = model_name_string.split("google/")[1]
             
-            # Anthropic uses a separate 'system' parameter
-            api_response = anthropic_client.messages.create(
-                model=claude_model_name,
-                system=system_prompt,
-                messages=user_messages,
-                max_tokens=4096
+            gemini_messages = []
+            for msg in user_messages:
+                gemini_messages.append({'role': msg['role'], 'parts': [msg['content']]})
+
+            model = genai.GenerativeModel(
+                google_model_name,
+                system_instruction=system_prompt
             )
-            reply = api_response.content[0].text
-        
+            
+            chat = model.start_chat(history=gemini_messages[:-1])
+            api_response = chat.send_message(gemini_messages[-1]['parts'])
+            reply = api_response.text
+
         else:
-            # It's an Azure OpenAI model
-            # Azure expects the system prompt as the first message
+            # --- It's an Azure OpenAI model ---
             messages_to_send = [
                 {"role": "system", "content": system_prompt}
             ]
