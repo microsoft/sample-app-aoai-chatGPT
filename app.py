@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 # --- API Client Imports ---
 from openai import AzureOpenAI
-import google.generativeai as genai
 
 # NEW: Import Document Intelligence
 from azure.core.credentials import AzureKeyCredential
@@ -37,9 +36,6 @@ try:
     AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
     AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
     
-    # Google (Gemini)
-    GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
-    
     # NEW: Azure Document Intelligence
     DOC_INTEL_ENDPOINT = os.environ["DOC_INTEL_ENDPOINT"]
     DOC_INTEL_KEY = os.environ["DOC_INTEL_KEY"]
@@ -55,36 +51,15 @@ except KeyError as e:
 
 # This is your default model, the Azure model-router.
 # Make sure this deployment name is correct.
-DEFAULT_AZURE_DEPLOYMENT = "model-router" 
+DEFAULT_AZURE_DEPLOYMENT = "model-router" # <-- This now handles everything
 
-# This map is for *exceptions* (e.g., routing specific tasks to Google).
-# Any task NOT in this map will use the DEFAULT_AZURE_DEPLOYMENT (your router).
-TASK_MODEL_MAP = {
-    # --- NEW: General Task ---
-    "general_drafting": "google/gemini-1.5-pro-latest", # <-- NEW
-
-    # --- These tasks will be routed to Google Gemini ---
-    "analyze_document": "google/gemini-1.5-pro-latest",
-    "analyze_legal_argument": "google/gemini-1.5-pro-latest",
-    "draft_rfo": "google/gemini-1.5-pro-latest",
-    "draft_motion": "google/gemini-1.5-pro-latest",
-    "draft_brief": "google/gemini-1.5-pro-latest",
-    "draft_exam_questions": "google/gemini-1.5-pro-latest",
-    
-    # --- These tasks will use the default "model-router" ---
-    # "legal_research": DEFAULT_AZURE_DEPLOYMENT, 
-    # "build_chronology": DEFAULT_AZURE_DEPLOYMENT,
-    # "draft_discovery_responses": DEFAULT_AZURE_DEPLOYMENT,
-    # "draft_discovery_requests": DEFAULT_AZURE_DEPLOYMENT,
-}
+# We no longer need the TASK_MODEL_MAP as everything goes to the router
 
 # --- NEW: EXPERT PROMPT MAP ---
-# This is the new "brains" of your task selector.
+# This is the "brains" of your task selector.
 # It gives a specific, high-quality system prompt for each task.
 TASK_PROMPT_MAP = {
-    # --- NEW: General Task Prompt ---
     "general_drafting": "You are Joogni, an expert writing assistant. Your task is to help the user draft or polish any form of text (letters, emails, memos, etc.). Adapt your tone and format based on their request. You are specializing in {jurisdiction} Family Law.",
-
     "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations.",
     "build_chronology": "You are Joogni, a case analyst. Your task is to build a detailed, event-by-event case chronology. Review the user's prompt and any attached documents. Extract key events, dates, and communications, then present them in a clear, reverse-chronological order (most recent first).",
     "analyze_document": "You are Joogni, a legal analyst. Your task is to analyze the attached document(s) and provide a comprehensive summary. Identify the document type, key parties, major factual points, and any stated legal claims or requests for relief.",
@@ -100,7 +75,6 @@ DEFAULT_PROMPT = "You are Joogni, an expert legal copilot specializing in {juris
 
 
 # --- Initialize API Clients ---
-# (Rest of this section is unchanged)
 
 # Azure OpenAI Client
 azure_openai_client = AzureOpenAI(
@@ -108,8 +82,7 @@ azure_openai_client = AzureOpenAI(
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
     api_version="2024-02-01"
 )
-# Google (Gemini) Client
-genai.configure(api_key=GOOGLE_API_KEY)
+
 # Document Intelligence Client
 doc_intel_client = DocumentIntelligenceClient(
     endpoint=DOC_INTEL_ENDPOINT, 
@@ -123,7 +96,6 @@ container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
 # --- CORS Middleware ---
-# (Unchanged)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -132,7 +104,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # --- Pydantic Models ---
-# (Unchanged)
 class SasRequest(BaseModel):
     filename: str
 
@@ -144,7 +115,6 @@ class CopilotRequest(BaseModel):
     original_filename: str | None = None
 
 # --- Helper Function ---
-# (Unchanged)
 def extract_document_content(file_bytes: bytes) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
@@ -165,7 +135,6 @@ def extract_document_content(file_bytes: bytes) -> str:
         return f"Error: Could not read the document. It may be an unsupported format. {e}"
 
 # --- API Routes ---
-# (Unchanged)
 @app.get("/healthz")
 async def healthz():
     """Health check endpoint."""
@@ -185,8 +154,7 @@ async def get_upload_url(request: SasRequest):
             expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
         )
         upload_url = (
-            f"https://{blob_service_client.account_name}.blob.core.windows.net/"
-            f"{AZURE_STORAGE_CONTAINER}/{blob_name}?{sas_token}"
+            f"https"
         )
         return {"upload_url": upload_url, "blob_name": blob_name}
     except Exception as e:
@@ -196,27 +164,23 @@ async def get_upload_url(request: SasRequest):
             content={"error": f"Could not generate file upload URL: {e}"}
         )
 
-# --- Main Copilot Endpoint (LOGIC UPDATED) ---
+# --- Main Copilot Endpoint (SIMPLIFIED) ---
 
 @app.post("/api/copilot")
 async def copilot_endpoint(request: CopilotRequest):
     """
-    This unified endpoint routes to Azure (Router) OR Google.
-    It now uses a dedicated prompt map for each task.
+    This endpoint now sends all requests to the default Azure Model Router.
     """
     try:
-        # 1. Select the model string (e.g., "google/..." or "model-router")
-        model_name_string = TASK_MODEL_MAP.get(request.task, DEFAULT_AZURE_DEPLOYMENT)
+        # 1. Set the model to the default router
+        model_name_string = DEFAULT_AZURE_DEPLOYMENT
         logger.info(f"Task: {request.task} -> Target: {model_name_string}")
 
-        # 2. --- NEW: Build the dynamic system prompt ---
-        # Look up the expert prompt from our new map
+        # 2. Build the dynamic system prompt
         prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
-        # Inject the selected jurisdiction
         system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
         
         # 3. Handle attached file (if any)
-        # (Logic is unchanged)
         file_context = ""
         if request.blob_name and request.original_filename:
             logger.info(f"Downloading blob: {request.blob_name}")
@@ -239,44 +203,21 @@ Based on the document above, """
                 file_context = f"(Error: Failed to read attached file {request.original_filename}. {e})\n\n"
 
         # 4. Combine file context with the user's last message
-        # (Logic is unchanged)
         user_messages = request.messages
         if file_context and user_messages:
             user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
 
-        reply = ""
-
-        # 5. Call the correct API
-        # (Logic is unchanged)
-        if model_name_string.startswith("google/"):
-            # --- It's a Google model ---
-            google_model_name = model_name_string.split("google/")[1]
-            
-            gemini_messages = []
-            for msg in user_messages:
-                gemini_messages.append({'role': msg['role'], 'parts': [msg['content']]})
-
-            model = genai.GenerativeModel(
-                google_model_name,
-                system_instruction=system_prompt # Send the new expert prompt
-            )
-            
-            chat = model.start_chat(history=gemini_messages[:-1])
-            api_response = chat.send_message(gemini_messages[-1]['parts'])
-            reply = api_response.text
-
-        else:
-            # --- It's an Azure OpenAI model ---
-            messages_to_send = [
-                {"role": "system", "content": system_prompt} # Send the new expert prompt
-            ]
-            messages_to_send.extend(user_messages)
-            
-            completion = azure_openai_client.chat.completions.create(
-                model=model_name_string, # This is "model-router"
-                messages=messages_to_send
-            )
-            reply = completion.choices[0].message.content
+        # 5. Call the Azure OpenAI API
+        messages_to_send = [
+            {"role": "system", "content": system_prompt}
+        ]
+        messages_to_send.extend(user_messages)
+        
+        completion = azure_openai_client.chat.completions.create(
+            model=model_name_string, # This is now "model-router"
+            messages=messages_to_send
+        )
+        reply = completion.choices[0].message.content
 
         return {"reply": reply}
 
