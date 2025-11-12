@@ -33,10 +33,25 @@ except KeyError as e:
     logger.error(f"Missing environment variable: {e}")
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
-# !! CRITICAL: UPDATE THIS !!
-# Set this to your primary, default Azure model deployment name.
-# We will use this for all tasks for now.
+# !! CRITICAL: UPDATE THIS DEFAULT !!
+# This is the "fallback" model if a task isn't in the map.
+# Use your main GPT-4o deployment name.
 DEFAULT_MODEL_DEPLOYMENT = "gpt-4o"  # <-- Make sure this is your deployment name!
+
+# !! CRITICAL: UPDATE THIS MAP !!
+# Map your user-facing tasks to your *actual* Azure deployment names.
+# You can use the same deployment for multiple tasks.
+TASK_MODEL_MAP = {
+    "legal_research": "gpt-4o",  # <-- Replace with your deployment name
+    "build_chronology": "gpt-4o",
+    "summarize_docs": "gpt-4o",
+    "draft_exam_questions": "gpt-4o",
+    "draft_discovery_responses": "gpt-4o",
+    "draft_discovery_requests": "gpt-4o",
+    "draft_rfo": "gpt-4o",
+    "draft_brief": "gpt-4o",
+}
+
 
 # OpenAI Client
 openai_client = AzureOpenAI(
@@ -64,16 +79,17 @@ app.add_middleware(
 )
 
 # --- Pydantic Models (Request Bodies) ---
-# We no longer need the 'model' field, as the backend decides.
-class ChatRequest(BaseModel):
-    messages: list[dict]
 
 class SasRequest(BaseModel):
     filename: str
 
-class SummarizeRequest(BaseModel):
-    blob_name: str
-    original_filename: str
+# This is the new model for our single endpoint
+class CopilotRequest(BaseModel):
+    jurisdiction: str
+    task: str
+    messages: list[dict]
+    blob_name: str | None = None
+    original_filename: str | None = None
 
 
 # --- Helper Function: Extract Text from PDF ---
@@ -87,7 +103,8 @@ def extract_text_from_pdf(pdf_content: bytes) -> str:
             return text
     except Exception as e:
         logger.error(f"Failed to extract text from PDF: {e}")
-        raise ValueError(f"Could not read the PDF file. It may be corrupted or password-protected.")
+        # Return a non-crashing error
+        return f"Error: Could not read the PDF file. It may be corrupted or password-protected. {e}"
 
 
 # --- API Routes ---
@@ -98,29 +115,8 @@ async def healthz():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
-@app.post("/conversation")
-async def conversation(request: ChatRequest):
-    """
-    Handles "Legal Research Assistant" task.
-    """
-    try:
-        completion = openai_client.chat.completions.create(
-            # We hard-code the model here.
-            model=DEFAULT_MODEL_DEPLOYMENT,
-            messages=request.messages
-        )
-        reply = completion.choices[0].message.content
-        return {"reply": reply}
-    except Exception as e:
-        logger.error(f"Error in /conversation: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"An error occurred with the chat model: {e}"}
-        )
-
-
 @app.post("/api/get-upload-url")
-async def get_upload_url(request: SasRequest):
+async def get_upload-url(request: SasRequest):
     """Generates a short-lived SAS URL for uploading a file."""
     try:
         blob_name = f"{uuid.uuid4()}-{request.filename}"
@@ -149,61 +145,71 @@ async def get_upload_url(request: SasRequest):
         )
 
 
-@app.post("/summarize_file")
-async def summarize_file(request: SummarizeRequest):
+@app.post("/api/copilot")
+async def copilot_endpoint(request: CopilotRequest):
     """
-    Handles "Summarize Document(s)" task.
+    This is the new single, unified endpoint for all tasks.
     """
     try:
-        logger.info(f"Downloading blob: {request.blob_name}")
-        blob_client = container_client.get_blob_client(request.blob_name)
+        # 1. Select the correct AI model based on the task
+        model_to_use = TASK_MODEL_MAP.get(request.task, DEFAULT_MODEL_DEPLOYMENT)
+        logger.info(f"Task: {request.task} -> Using Model: {model_to_use}")
+
+        # 2. Build the dynamic system prompt
+        system_prompt = f"You are Joogni, an expert legal copilot specializing in **{request.jurisdiction} Family Law**. Your current task is: **{request.task}**."
         
-        downloader = blob_client.download_blob()
-        file_content = downloader.readall()
-        logger.info(f"File downloaded, size: {len(file_content)} bytes")
+        messages_to_send = [
+            {"role": "system", "content": system_prompt}
+        ]
 
-        try:
-            text_content = extract_text_from_pdf(file_content)
-            if not text_content.strip():
-                raise ValueError("No text could be extracted from the file.")
-        except Exception as e:
-            logger.error(f"Text extraction failed: {e}")
-            return JSONResponse(
-                status_code=400,
-                content={"error": str(e)}
-            )
-            
-        logger.info(f"Text extracted, length: {len(text_content)} chars")
+        # 3. Handle attached file (if any)
+        file_context = ""
+        if request.blob_name and request.original_filename:
+            logger.info(f"Downloading blob: {request.blob_name}")
+            try:
+                blob_client = container_client.get_blob_client(request.blob_name)
+                downloader = blob_client.download_blob()
+                file_content = downloader.readall()
+                logger.info(f"File downloaded, size: {len(file_content)} bytes")
+                
+                # Extract text
+                # TODO: Add .docx, .txt support later
+                text_content = extract_text_from_pdf(file_content)
+                
+                file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
+{text_content[:20000]}
+--- END ATTACHED DOCUMENT ---
 
-        prompt = f"""
-        Please provide a concise summary of the following document.
-        Original filename: {request.original_filename}
+Based on the document above, """
+                
+                # Delete the file after processing
+                # blob_client.delete_blob()
+                
+            except Exception as e:
+                logger.error(f"Failed to process file: {e}")
+                file_context = f"(Error: Failed to read attached file {request.original_filename}. {e})\n\n"
 
-        Document Content:
-        ---
-        {text_content[:20000]}
-        ---
-        """
+        # 4. Combine file context with the user's last message
+        user_messages = request.messages
+        if file_context and user_messages:
+            # Prepend file context to the *last* user message
+            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
+
+        messages_to_send.extend(user_messages)
         
-        # Note: We truncate text to avoid exceeding token limits.
-
+        # 5. Call OpenAI
         completion = openai_client.chat.completions.create(
-            # We hard-code the model here.
-            model=DEFAULT_MODEL_DEPLOYMENT,
-            messages=[
-                {"role": "system", "content": "You are an expert document summarizer."},
-                {"role": "user", "content": prompt}
-            ]
+            model=model_to_use,
+            messages=messages_to_send
         )
-        summary = completion.choices[0].message.content
-        return {"summary": summary}
+        reply = completion.choices[0].message.content
+        return {"reply": reply}
 
-    # This is the crucial 'catch-all' that prevents the crash
     except Exception as e:
-        logger.error(f"Error in /summarize_file: {e}")
+        logger.error(f"Error in /api/copilot: {e}")
         return JSONResponse(
             status_code=500,
-            content={"error": f"Failed to process the file: {e}"}
+            content={"error": f"An error occurred: {e}"}
         )
 
 # --- Gunicorn/Uvicorn entry point ---
