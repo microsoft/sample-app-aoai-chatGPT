@@ -53,8 +53,6 @@ except KeyError as e:
 # Make sure this deployment name is correct.
 DEFAULT_AZURE_DEPLOYMENT = "model-router" # <-- This now handles everything
 
-# We no longer need the TASK_MODEL_MAP as everything goes to the router
-
 # --- NEW: EXPERT PROMPT MAP ---
 # This is the "brains" of your task selector.
 # It gives a specific, high-quality system prompt for each task.
@@ -115,17 +113,20 @@ class CopilotRequest(BaseModel):
     original_filename: str | None = None
 
 # --- Helper Function ---
-# --- FIX: This function now accepts the content_type ---
 def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
     """
     try:
+        # --- THIS IS THE FIX ---
+        # The argument for the file data is 'body', not 'analyze_request'
         poller = doc_intel_client.begin_analyze_document(
             "prebuilt-layout", 
-            analyze_request=file_bytes,
-            content_type=content_type # <-- FIX: Use the actual content type
+            body=file_bytes, # <-- THE FIX
+            content_type=content_type
         )
+        # --- END OF FIX ---
+        
         result = poller.result()
         if result.content:
             return result.content
@@ -189,7 +190,6 @@ async def copilot_endpoint(request: CopilotRequest):
             try:
                 blob_client = container_client.get_blob_client(request.blob_name)
                 
-                # --- FIX: Download blob data AND get its content type ---
                 downloader = blob_client.download_blob()
                 file_content = downloader.readall()
                 blob_properties = blob_client.get_blob_properties()
@@ -197,7 +197,6 @@ async def copilot_endpoint(request: CopilotRequest):
                 
                 logger.info(f"File downloaded, size: {len(file_content)} bytes, type: {file_content_type}")
                 
-                # --- FIX: Pass the content type to the analysis function ---
                 text_content = extract_document_content(file_content, file_content_type)
                 
                 file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
