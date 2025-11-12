@@ -115,7 +115,8 @@ class CopilotRequest(BaseModel):
     original_filename: str | None = None
 
 # --- Helper Function ---
-def extract_document_content(file_bytes: bytes) -> str:
+# --- FIX: This function now accepts the content_type ---
+def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
     """
@@ -123,7 +124,7 @@ def extract_document_content(file_bytes: bytes) -> str:
         poller = doc_intel_client.begin_analyze_document(
             "prebuilt-layout", 
             analyze_request=file_bytes,
-            content_type="application/octet-stream"
+            content_type=content_type # <-- FIX: Use the actual content type
         )
         result = poller.result()
         if result.content:
@@ -153,12 +154,10 @@ async def get_upload_url(request: SasRequest):
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
         )
-        # --- THIS IS THE CORRECT, COMPLETE LINE ---
         upload_url = (
             f"https://{blob_service_client.account_name}.blob.core.windows.net/"
             f"{AZURE_STORAGE_CONTAINER}/{blob_name}?{sas_token}"
         )
-        # --- END OF FIX ---
         return {"upload_url": upload_url, "blob_name": blob_name}
     except Exception as e:
         logger.error(f"Error generating SAS URL: {e}")
@@ -189,11 +188,17 @@ async def copilot_endpoint(request: CopilotRequest):
             logger.info(f"Downloading blob: {request.blob_name}")
             try:
                 blob_client = container_client.get_blob_client(request.blob_name)
+                
+                # --- FIX: Download blob data AND get its content type ---
                 downloader = blob_client.download_blob()
                 file_content = downloader.readall()
-                logger.info(f"File downloaded, size: {len(file_content)} bytes")
+                blob_properties = blob_client.get_blob_properties()
+                file_content_type = blob_properties.content_settings.content_type
                 
-                text_content = extract_document_content(file_content)
+                logger.info(f"File downloaded, size: {len(file_content)} bytes, type: {file_content_type}")
+                
+                # --- FIX: Pass the content type to the analysis function ---
+                text_content = extract_document_content(file_content, file_content_type)
                 
                 file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
 {text_content}
