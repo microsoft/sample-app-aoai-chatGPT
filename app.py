@@ -60,6 +60,9 @@ DEFAULT_AZURE_DEPLOYMENT = "model-router"
 # This map is for *exceptions* (e.g., routing specific tasks to Google).
 # Any task NOT in this map will use the DEFAULT_AZURE_DEPLOYMENT (your router).
 TASK_MODEL_MAP = {
+    # --- NEW: General Task ---
+    "general_drafting": "google/gemini-1.5-pro-latest", # <-- NEW
+
     # --- These tasks will be routed to Google Gemini ---
     "analyze_document": "google/gemini-1.5-pro-latest",
     "analyze_legal_argument": "google/gemini-1.5-pro-latest",
@@ -67,12 +70,21 @@ TASK_MODEL_MAP = {
     "draft_motion": "google/gemini-1.5-pro-latest",
     "draft_brief": "google/gemini-1.5-pro-latest",
     "draft_exam_questions": "google/gemini-1.5-pro-latest",
+    
+    # --- These tasks will use the default "model-router" ---
+    # "legal_research": DEFAULT_AZURE_DEPLOYMENT, 
+    # "build_chronology": DEFAULT_AZURE_DEPLOYMENT,
+    # "draft_discovery_responses": DEFAULT_AZURE_DEPLOYMENT,
+    # "draft_discovery_requests": DEFAULT_AZURE_DEPLOYMENT,
 }
 
 # --- NEW: EXPERT PROMPT MAP ---
 # This is the new "brains" of your task selector.
 # It gives a specific, high-quality system prompt for each task.
 TASK_PROMPT_MAP = {
+    # --- NEW: General Task Prompt ---
+    "general_drafting": "You are Joogni, an expert writing assistant. Your task is to help the user draft or polish any form of text (letters, emails, memos, etc.). Adapt your tone and format based on their request. You are specializing in {jurisdiction} Family Law.",
+
     "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations.",
     "build_chronology": "You are Joogni, a case analyst. Your task is to build a detailed, event-by-event case chronology. Review the user's prompt and any attached documents. Extract key events, dates, and communications, then present them in a clear, reverse-chronological order (most recent first).",
     "analyze_document": "You are Joogni, a legal analyst. Your task is to analyze the attached document(s) and provide a comprehensive summary. Identify the document type, key parties, major factual points, and any stated legal claims or requests for relief.",
