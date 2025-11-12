@@ -5,7 +5,6 @@ openai
 azure-storage-blob
 python-dotenv
 requests
-PyMuPDF
 pydantic
-anthropic
 google-generativeai
+azure-ai-documentintelligence
