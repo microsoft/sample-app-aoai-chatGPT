@@ -153,9 +153,12 @@ async def get_upload_url(request: SasRequest):
             permission=BlobSasPermissions(create=True, write=True),
             expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
         )
+        # --- THIS IS THE FIX ---
         upload_url = (
-            f"https"
+            f"https://{blob_service_client.account_name}.blob.core.windows.net/"
+            f"{AZURE_STORAGE_CONTAINER}/{blob_name}?{sas_token}"
         )
+        # --- END OF FIX ---
         return {"upload_url": upload_url, "blob_name": blob_name}
     except Exception as e:
         logger.error(f"Error generating SAS URL: {e}")
