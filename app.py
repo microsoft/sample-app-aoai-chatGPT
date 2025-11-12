@@ -51,28 +51,44 @@ except KeyError as e:
     logger.error(f"Missing environment variable: {e}")
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
-# !! CRITICAL: THIS IS THE FIX !!
-# We are routing ALL tasks to your one, working "gpt-4o" deployment.
-# Make sure "gpt-4o" is the exact name of your deployment in Azure AI Studio.
-DEFAULT_AZURE_DEPLOYMENT = "gpt-4o" 
+# --- Model & Prompt Configuration ---
 
+# This is your default model, the Azure model-router.
+# Make sure this deployment name is correct.
+DEFAULT_AZURE_DEPLOYMENT = "model-router" 
+
+# This map is for *exceptions* (e.g., routing specific tasks to Google).
+# Any task NOT in this map will use the DEFAULT_AZURE_DEPLOYMENT (your router).
 TASK_MODEL_MAP = {
-    "legal_research": "gpt-4o",
-    "analyze_document": "gpt-4o",
-    "build_chronology": "gpt-4o",
-    "analyze_legal_argument": "gpt-4o",
-    "draft_exam_questions": "gpt-4o",
-    "draft_discovery_responses": "gpt-4o",
-    "draft_discovery_requests": "gpt-4o",
-    "draft_rfo": "gpt-4o",
-    "draft_motion": "gpt-4o",
-    "draft_brief": "gpt-4o",
-    
-    # You can still add your other models here when they are working
-    # "draft_brief": "google/gemini-1.5-pro-latest", 
+    # --- These tasks will be routed to Google Gemini ---
+    "analyze_document": "google/gemini-1.5-pro-latest",
+    "analyze_legal_argument": "google/gemini-1.5-pro-latest",
+    "draft_rfo": "google/gemini-1.5-pro-latest",
+    "draft_motion": "google/gemini-1.5-pro-latest",
+    "draft_brief": "google/gemini-1.5-pro-latest",
+    "draft_exam_questions": "google/gemini-1.5-pro-latest",
 }
 
+# --- NEW: EXPERT PROMPT MAP ---
+# This is the new "brains" of your task selector.
+# It gives a specific, high-quality system prompt for each task.
+TASK_PROMPT_MAP = {
+    "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations.",
+    "build_chronology": "You are Joogni, a case analyst. Your task is to build a detailed, event-by-event case chronology. Review the user's prompt and any attached documents. Extract key events, dates, and communications, then present them in a clear, reverse-chronological order (most recent first).",
+    "analyze_document": "You are Joogni, a legal analyst. Your task is to analyze the attached document(s) and provide a comprehensive summary. Identify the document type, key parties, major factual points, and any stated legal claims or requests for relief.",
+    "analyze_legal_argument": "You are Joogni, a senior litigator. Your task is to analyze the attached legal argument. First, summarize the main argument. Then, identify its core strengths and, most importantly, all logical fallacies, unsupported claims, weak evidence, and points of legal vulnerability.",
+    "draft_exam_questions": "You are Joogni, a trial attorney. Your task is to draft examination questions. Based on the user's prompt and any attached documents (like declarations or transcripts), generate a set of both direct and cross-examination questions, clearly labeled.",
+    "draft_discovery_responses": "You are Joogni, a discovery expert. Your task is to help draft discovery responses for {jurisdiction} law. Analyze the user's prompt and any attached propounded discovery. For each request, suggest boilerplate objections (e.g., 'overbroad', 'unduly burdensome', 'attorney-client privilege') and format a template for the user to provide their substantive answer.",
+    "draft_discovery_requests": "You are Joogni, a discovery expert. Your task is to draft discovery requests (e.g., Form Interrogatories, Special Interrogatories, Requests for Production) for a {jurisdiction} Family Law case based on the user's prompt.",
+    "draft_rfo": "You are Joogni, a {jurisdiction} Family Law paralegal. Your task is to draft a Request for Order (RFO) or a Responsive Declaration. Use the user's prompt and any attached documents. Format the response for a court filing, clearly stating the requested orders and the factual basis (declaration) to support them.",
+    "draft_motion": "You are Joogni, a {jurisdiction} civil litigation specialist. Your task is to draft a formal motion. Use the user's prompt and attached documents. Your response should include a Notice of Motion, the Motion itself, a Points and Authorities, and a supporting Declaration.",
+    "draft_brief": "You are Joogni, a legal writing expert. Your task is to draft a formal legal brief. Use the user's prompt and attached documents to construct a persuasive argument, complete with an introduction, statement of facts, legal argument section, and conclusion.",
+}
+DEFAULT_PROMPT = "You are Joogni, an expert legal copilot specializing in {jurisdiction} Family Law."
+
+
 # --- Initialize API Clients ---
+# (Rest of this section is unchanged)
 
 # Azure OpenAI Client
 azure_openai_client = AzureOpenAI(
@@ -80,16 +96,13 @@ azure_openai_client = AzureOpenAI(
     azure_endpoint=AZURE_OPENAI_ENDPOINT,
     api_version="2024-02-01"
 )
-
 # Google (Gemini) Client
 genai.configure(api_key=GOOGLE_API_KEY)
-
-# NEW: Document Intelligence Client
+# Document Intelligence Client
 doc_intel_client = DocumentIntelligenceClient(
     endpoint=DOC_INTEL_ENDPOINT, 
     credential=AzureKeyCredential(DOC_INTEL_KEY)
 )
-
 # Azure Blob Storage Client
 blob_service_client = BlobServiceClient.from_connection_string(
     AZURE_STORAGE_CONNECTION_STRING
@@ -97,8 +110,8 @@ blob_service_client = BlobServiceClient.from_connection_string(
 container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
-
 # --- CORS Middleware ---
+# (Unchanged)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -106,9 +119,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# --- Pydantic Models (Request Bodies) ---
-
+# --- Pydantic Models ---
+# (Unchanged)
 class SasRequest(BaseModel):
     filename: str
 
@@ -119,39 +131,33 @@ class CopilotRequest(BaseModel):
     blob_name: str | None = None
     original_filename: str | None = None
 
-
-# --- NEW: Helper Function (Replaces PyMuPDF) ---
+# --- Helper Function ---
+# (Unchanged)
 def extract_document_content(file_bytes: bytes) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
     """
     try:
-        # Use "prebuilt-layout" to get all text and structure
         poller = doc_intel_client.begin_analyze_document(
             "prebuilt-layout", 
             analyze_request=file_bytes,
             content_type="application/octet-stream"
         )
         result = poller.result()
-        
-        # result.content contains the full, concatenated text
         if result.content:
             return result.content
         else:
             return "(Document appears to be empty or contains no extractable text.)"
-
     except Exception as e:
         logger.error(f"Document Intelligence analysis failed: {e}")
         return f"Error: Could not read the document. It may be an unsupported format. {e}"
 
-
 # --- API Routes ---
-
+# (Unchanged)
 @app.get("/healthz")
 async def healthz():
     """Health check endpoint."""
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
-
 
 @app.post("/api/get-upload-url")
 async def get_upload_url(request: SasRequest):
@@ -178,21 +184,27 @@ async def get_upload_url(request: SasRequest):
             content={"error": f"Could not generate file upload URL: {e}"}
         )
 
+# --- Main Copilot Endpoint (LOGIC UPDATED) ---
 
 @app.post("/api/copilot")
 async def copilot_endpoint(request: CopilotRequest):
     """
-    This unified endpoint routes to Azure OpenAI OR Google Gemini.
+    This unified endpoint routes to Azure (Router) OR Google.
+    It now uses a dedicated prompt map for each task.
     """
     try:
-        # 1. Select the model string
+        # 1. Select the model string (e.g., "google/..." or "model-router")
         model_name_string = TASK_MODEL_MAP.get(request.task, DEFAULT_AZURE_DEPLOYMENT)
-        logger.info(f"Task: {request.task} -> Using Model: {model_name_string}")
+        logger.info(f"Task: {request.task} -> Target: {model_name_string}")
 
-        # 2. Build the dynamic system prompt
-        system_prompt = f"You are Joogni, an expert legal copilot specializing in **{request.jurisdiction} Family Law**. Your current task is: **{request.task}**."
+        # 2. --- NEW: Build the dynamic system prompt ---
+        # Look up the expert prompt from our new map
+        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
+        # Inject the selected jurisdiction
+        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
         
         # 3. Handle attached file (if any)
+        # (Logic is unchanged)
         file_context = ""
         if request.blob_name and request.original_filename:
             logger.info(f"Downloading blob: {request.blob_name}")
@@ -202,9 +214,7 @@ async def copilot_endpoint(request: CopilotRequest):
                 file_content = downloader.readall()
                 logger.info(f"File downloaded, size: {len(file_content)} bytes")
                 
-                # --- THIS IS THE UPGRADE ---
                 text_content = extract_document_content(file_content)
-                # ---
                 
                 file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
 {text_content}
@@ -217,6 +227,7 @@ Based on the document above, """
                 file_context = f"(Error: Failed to read attached file {request.original_filename}. {e})\n\n"
 
         # 4. Combine file context with the user's last message
+        # (Logic is unchanged)
         user_messages = request.messages
         if file_context and user_messages:
             user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
@@ -224,33 +235,33 @@ Based on the document above, """
         reply = ""
 
         # 5. Call the correct API
+        # (Logic is unchanged)
         if model_name_string.startswith("google/"):
             # --- It's a Google model ---
             google_model_name = model_name_string.split("google/")[1]
             
             gemini_messages = []
             for msg in user_messages:
-                # Gemini format: {'role': 'user', 'parts': ['text']}
                 gemini_messages.append({'role': msg['role'], 'parts': [msg['content']]})
 
             model = genai.GenerativeModel(
                 google_model_name,
-                system_instruction=system_prompt
+                system_instruction=system_prompt # Send the new expert prompt
             )
             
-            chat = model.start_chat(history=gemini_messages[:-1]) # History is all but the last message
-            api_response = chat.send_message(gemini_messages[-1]['parts']) # Send the last message
+            chat = model.start_chat(history=gemini_messages[:-1])
+            api_response = chat.send_message(gemini_messages[-1]['parts'])
             reply = api_response.text
 
         else:
             # --- It's an Azure OpenAI model ---
             messages_to_send = [
-                {"role": "system", "content": system_prompt}
+                {"role": "system", "content": system_prompt} # Send the new expert prompt
             ]
             messages_to_send.extend(user_messages)
             
             completion = azure_openai_client.chat.completions.create(
-                model=model_name_string, # This is the Azure deployment name
+                model=model_name_string, # This is "model-router"
                 messages=messages_to_send
             )
             reply = completion.choices[0].message.content
