@@ -41,17 +41,21 @@ except KeyError as e:
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
 # !! CRITICAL: UPDATE THIS DEFAULT !!
+# This is your fallback Azure deployment name.
 DEFAULT_AZURE_DEPLOYMENT = "gpt-4o"  # <-- Make sure this is your deployment name!
 
 # !! CRITICAL: UPDATE THIS MAP !!
+# This map MUST match the 'value' attributes in your index.html
 TASK_MODEL_MAP = {
-    "legal_research": "gpt-4o",  # <-- Example: Use Azure
+    "legal_research": "gpt-4o",  # <-- Replace with your deployment name
     "build_chronology": "gpt-4o",
-    "summarize_docs": "gpt-4o",
-    "draft_exam_questions": "claude/claude-3-opus-20240229", # <-- Example: Use Claude
+    "analyze_document": "gpt-4o", # <-- RENAMED
+    "analyze_legal_argument": "claude/claude-3-opus-20240229", # <-- NEW
+    "draft_exam_questions": "claude/claude-3-opus-20240229",
     "draft_discovery_responses": "claude/claude-3-opus-20240229",
     "draft_discovery_requests": "claude/claude-3-opus-20240229",
     "draft_rfo": "claude/claude-3-opus-20240229",
+    "draft_motion": "claude/claude-3-opus-20240229", 
     "draft_brief": "claude/claude-3-opus-20240229",
 }
 
@@ -122,7 +126,7 @@ async def healthz():
 
 
 @app.post("/api/get-upload-url")
-async def get_upload_url(request: SasRequest): # <-- THIS IS THE FIX (was get_upload-url)
+async def get_upload_url(request: SasRequest):
     """Generates a short-lived SAS URL for uploading a file."""
     try:
         blob_name = f"{uuid.uuid4()}-{request.filename}"
