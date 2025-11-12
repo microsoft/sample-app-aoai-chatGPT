@@ -46,19 +46,19 @@ DEFAULT_AZURE_DEPLOYMENT = "gpt-4o"  # <-- Make sure this is your deployment nam
 
 # !! CRITICAL: UPDATE THIS MAP !!
 # This map MUST match the 'value' attributes in your index.html
+# !! CRITICAL: UPDATE THIS MAP !!
 TASK_MODEL_MAP = {
-    "legal_research": "gpt-4o",  # <-- Replace with your deployment name
+    "legal_research": "gpt-4o",
     "build_chronology": "gpt-4o",
-    "analyze_document": "gpt-4o", # <-- RENAMED
-    "analyze_legal_argument": "claude/claude-3-opus-20240229", # <-- NEW
-    "draft_exam_questions": "claude/claude-3-opus-20240229",
-    "draft_discovery_responses": "claude/claude-3-opus-20240229",
-    "draft_discovery_requests": "claude/claude-3-opus-20240229",
-    "draft_rfo": "claude/claude-3-opus-20240229",
-    "draft_motion": "claude/claude-3-opus-20240229", 
-    "draft_brief": "claude/claude-3-opus-20240229",
+    "analyze_document": "gpt-4o",
+    "analyze_legal_argument": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_exam_questions": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_discovery_responses": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_discovery_requests": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_rfo": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_motion": "claude/claude-3-sonnet-20240229", # <-- NEW
+    "draft_brief": "claude/claude-3-sonnet-20240229", # <-- NEW
 }
-
 
 # --- Initialize API Clients ---
 
