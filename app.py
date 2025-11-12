@@ -7,7 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from openai import OpenAI
+# IMPORTANT: Import the correct client
+from openai import AzureOpenAI
 from azure.storage.blob import (
     BlobServiceClient,
     BlobSasPermissions,
@@ -25,16 +26,25 @@ app = FastAPI()
 
 # 🔐 Load Environment Variables
 try:
-    OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+    # --- THIS SECTION IS NOW UPDATED ---
+    AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
+    AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
     AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
     AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
+    # ---
 except KeyError as e:
     logger.error(f"Missing environment variable: {e}")
-    # In a real app, you might want to exit or raise an exception
-    # For now, we'll let it fail loudly if a route is called.
+    # This is why the app was crashing on startup
+    raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
-#  OpenAI Client
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+# --- THIS IS THE CRITICAL CHANGE ---
+# Use the AzureOpenAI client, not the standard OpenAI() client
+openai_client = AzureOpenAI(
+    api_key=AZURE_OPENAI_KEY,
+    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    api_version="2024-02-01"  # You can update this as needed
+)
+# ---
 
 # Azure Blob Storage Client
 blob_service_client = BlobServiceClient.from_connection_string(
@@ -46,7 +56,6 @@ container_client = blob_service_client.get_container_client(
 
 
 # --- CORS Middleware ---
-# Allow your frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, lock this to your SWA URL
@@ -95,7 +104,9 @@ async def conversation(request: ChatRequest):
     """Handles standard text-based chat conversations."""
     try:
         completion = openai_client.chat.completions.create(
-            model="gpt-4o",
+            # IMPORTANT: You must also specify your model DEPLOYMENT name
+            # It might not be "gpt-4o". Check your AI Studio.
+            model="gpt-4o", # <-- This must match your deployment name in Azure
             messages=request.messages
         )
         reply = completion.choices[0].message.content
@@ -112,7 +123,6 @@ async def conversation(request: ChatRequest):
 async def get_upload_url(request: SasRequest):
     """Generates a short-lived SAS URL for uploading a file."""
     try:
-        # Create a unique blob name to prevent overwrites
         blob_name = f"{uuid.uuid4()}-{request.filename}"
 
         sas_token = generate_blob_sas(
@@ -143,10 +153,8 @@ async def get_upload_url(request: SasRequest):
 async def summarize_file(request: SummarizeRequest):
     """
     Downloads a file from blob storage, extracts text, and summarizes it.
-    This is the fix for the crash you saw.
     """
     try:
-        # 1. Download the file from Azure Blob Storage
         logger.info(f"Downloading blob: {request.blob_name}")
         blob_client = container_client.get_blob_client(request.blob_name)
         
@@ -154,8 +162,6 @@ async def summarize_file(request: SummarizeRequest):
         file_content = downloader.readall()
         logger.info(f"File downloaded, size: {len(file_content)} bytes")
 
-        # 2. Extract text (assuming PDF for now)
-        # In a real app, you'd check the file type
         try:
             text_content = extract_text_from_pdf(file_content)
             if not text_content.strip():
@@ -169,7 +175,6 @@ async def summarize_file(request: SummarizeRequest):
             
         logger.info(f"Text extracted, length: {len(text_content)} chars")
 
-        # 3. Summarize with OpenAI
         prompt = f"""
         Please provide a concise summary of the following document.
         Original filename: {request.original_filename}
@@ -179,12 +184,9 @@ async def summarize_file(request: SummarizeRequest):
         {text_content[:20000]}
         ---
         """
-        
-        # Note: We truncate text to avoid exceeding token limits.
-        # A more advanced implementation would chunk the text.
 
         completion = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o", # <-- This must also match your deployment name
             messages=[
                 {"role": "system", "content": "You are an expert document summarizer."},
                 {"role": "user", "content": prompt}
@@ -193,7 +195,6 @@ async def summarize_file(request: SummarizeRequest):
         summary = completion.choices[0].message.content
         return {"summary": summary}
 
-    # This is the crucial 'catch-all' that prevents the crash
     except Exception as e:
         logger.error(f"Error in /summarize_file: {e}")
         return JSONResponse(
