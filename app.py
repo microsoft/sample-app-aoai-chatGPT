@@ -51,26 +51,25 @@ except KeyError as e:
     logger.error(f"Missing environment variable: {e}")
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
 
-# !! CRITICAL: UPDATE THIS DEFAULT !!
-DEFAULT_AZURE_DEPLOYMENT = "gpt-4o"  # <-- Your default Azure model
+# !! CRITICAL: THIS IS THE FIX !!
+# We are routing ALL tasks to your one, working "gpt-4o" deployment.
+# Make sure "gpt-4o" is the exact name of your deployment in Azure AI Studio.
+DEFAULT_AZURE_DEPLOYMENT = "gpt-4o" 
 
-# !! CRITICAL: UPDATE THIS MAP !!
-# This map routes tasks to your best models.
-# We are using gpt-5-pro for drafting, as requested.
 TASK_MODEL_MAP = {
-    # --- Research & Analysis (Fast & Capable) ---
     "legal_research": "gpt-4o",
     "analyze_document": "gpt-4o",
-    "build_chronology": "google/gemini-1.5-pro-latest",
+    "build_chronology": "gpt-4o",
+    "analyze_legal_argument": "gpt-4o",
+    "draft_exam_questions": "gpt-4o",
+    "draft_discovery_responses": "gpt-4o",
+    "draft_discovery_requests": "gpt-4o",
+    "draft_rfo": "gpt-4o",
+    "draft_motion": "gpt-4o",
+    "draft_brief": "gpt-4o",
     
-    # --- High-Stakes Drafting (Best Models) ---
-    "analyze_legal_argument": "gpt-5-pro", # <-- Using GPT-5 Pro
-    "draft_exam_questions": "google/gemini-1.5-pro-latest",
-    "draft_discovery_responses": "gpt-5-pro", # <-- Using GPT-5 Pro
-    "draft_discovery_requests": "gpt-5-pro", # <-- Using GPT-5 Pro
-    "draft_rfo": "gpt-5-pro",                # <-- Using GPT-5 Pro
-    "draft_motion": "gpt-5-pro",               # <-- Using GPT-5 Pro
-    "draft_brief": "gpt-5-pro",                # <-- Using GPT-5 Pro
+    # You can still add your other models here when they are working
+    # "draft_brief": "google/gemini-1.5-pro-latest", 
 }
 
 # --- Initialize API Clients ---
@@ -136,7 +135,10 @@ def extract_document_content(file_bytes: bytes) -> str:
         result = poller.result()
         
         # result.content contains the full, concatenated text
-        return result.content
+        if result.content:
+            return result.content
+        else:
+            return "(Document appears to be empty or contains no extractable text.)"
 
     except Exception as e:
         logger.error(f"Document Intelligence analysis failed: {e}")
@@ -147,6 +149,7 @@ def extract_document_content(file_bytes: bytes) -> str:
 
 @app.get("/healthz")
 async def healthz():
+    """Health check endpoint."""
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
@@ -227,6 +230,7 @@ Based on the document above, """
             
             gemini_messages = []
             for msg in user_messages:
+                # Gemini format: {'role': 'user', 'parts': ['text']}
                 gemini_messages.append({'role': msg['role'], 'parts': [msg['content']]})
 
             model = genai.GenerativeModel(
@@ -234,8 +238,8 @@ Based on the document above, """
                 system_instruction=system_prompt
             )
             
-            chat = model.start_chat(history=gemini_messages[:-1])
-            api_response = chat.send_message(gemini_messages[-1]['parts'])
+            chat = model.start_chat(history=gemini_messages[:-1]) # History is all but the last message
+            api_response = chat.send_message(gemini_messages[-1]['parts']) # Send the last message
             reply = api_response.text
 
         else:
