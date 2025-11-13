@@ -35,11 +35,11 @@ try:
     # Azure OpenAI
     AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
     AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-    
+   
     # NEW: Azure Document Intelligence
     DOC_INTEL_ENDPOINT = os.environ["DOC_INTEL_ENDPOINT"]
     DOC_INTEL_KEY = os.environ["DOC_INTEL_KEY"]
-    
+   
     # Azure Storage
     AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
     AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
@@ -83,7 +83,7 @@ azure_openai_client = AzureOpenAI(
 
 # Document Intelligence Client
 doc_intel_client = DocumentIntelligenceClient(
-    endpoint=DOC_INTEL_ENDPOINT, 
+    endpoint=DOC_INTEL_ENDPOINT,
     credential=AzureKeyCredential(DOC_INTEL_KEY)
 )
 # Azure Blob Storage Client
@@ -105,12 +105,18 @@ app.add_middleware(
 class SasRequest(BaseModel):
     filename: str
 
+# --- START: MODIFIED SECTION ---
+# This new class will hold info for each file
+class FileInfo(BaseModel):
+    blob_name: str
+    original_filename: str
+
 class CopilotRequest(BaseModel):
     jurisdiction: str
     task: str
     messages: list[dict]
-    blob_name: str | None = None
-    original_filename: str | None = None
+    blobs: list[FileInfo] | None = None # This is now a list of FileInfo objects
+# --- END: MODIFIED SECTION ---
 
 # --- Helper Function ---
 def extract_document_content(file_bytes: bytes, content_type: str) -> str:
@@ -118,15 +124,11 @@ def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     Analyzes a document from bytes using Azure AI Document Intelligence.
     """
     try:
-        # --- THIS IS THE FIX ---
-        # The argument for the file data is 'body', not 'analyze_request'
         poller = doc_intel_client.begin_analyze_document(
-            "prebuilt-layout", 
-            body=file_bytes, # <-- THE FIX
+            "prebuilt-layout",
+            body=file_bytes, # <-- This is the fixed argument
             content_type=content_type
         )
-        # --- END OF FIX ---
-        
         result = poller.result()
         if result.content:
             return result.content
@@ -182,32 +184,45 @@ async def copilot_endpoint(request: CopilotRequest):
         # 2. Build the dynamic system prompt
         prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
         system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
-        
-        # 3. Handle attached file (if any)
+       
+        # --- START: MODIFIED SECTION ---
+        # 3. Handle attached files (if any)
         file_context = ""
-        if request.blob_name and request.original_filename:
-            logger.info(f"Downloading blob: {request.blob_name}")
-            try:
-                blob_client = container_client.get_blob_client(request.blob_name)
-                
-                downloader = blob_client.download_blob()
-                file_content = downloader.readall()
-                blob_properties = blob_client.get_blob_properties()
-                file_content_type = blob_properties.content_settings.content_type
-                
-                logger.info(f"File downloaded, size: {len(file_content)} bytes, type: {file_content_type}")
-                
-                text_content = extract_document_content(file_content, file_content_type)
-                
-                file_context = f"""--- BEGIN ATTACHED DOCUMENT: {request.original_filename} ---
-{text_content}
---- END ATTACHED DOCUMENT ---
+        if request.blobs:
+            logger.info(f"Processing {len(request.blobs)} attached files...")
+            all_file_content = []
 
-Based on the document above, """
+            # Loop through each file in the blobs list
+            for file in request.blobs:
+                try:
+                    logger.info(f"Downloading blob: {file.blob_name}")
+                    blob_client = container_client.get_blob_client(file.blob_name)
                 
-            except Exception as e:
-                logger.error(f"Failed to process file: {e}")
-                file_context = f"(Error: Failed to read attached file {request.original_filename}. {e})\n\n"
+                    # Download blob data AND get its content type
+                    downloader = blob_client.download_blob()
+                    file_content = downloader.readall()
+                    blob_properties = blob_client.get_blob_properties()
+                    file_content_type = blob_properties.content_settings.content_type
+                
+                    logger.info(f"File '{file.original_filename}' downloaded, size: {len(file_content)} bytes, type: {file_content_type}")
+                
+                    # Pass the content type to the analysis function
+                    text_content = extract_document_content(file_content, file_content_type)
+                
+                    # Add content with headers for the LLM
+                    all_file_content.append(f"--- BEGIN ATTACHED DOCUMENT: {file.original_filename} ---\n{text_content}\n--- END ATTACHED DOCUMENT ---")
+
+                except Exception as e:
+                    logger.error(f"Failed to process file {file.original_filename}: {e}")
+                    all_file_content.append(f"(Error: Failed to read attached file {file.original_filename}. {e})\n")
+            
+            # Join all file contents into one big string
+            file_context = "\n\n".join(all_file_content)
+            
+            # Add the final context header
+            if file_context:
+                file_context += "\n\nBased on all the documents above, "
+        # --- END: MODIFIED SECTION ---
 
         # 4. Combine file context with the user's last message
         user_messages = request.messages
@@ -219,7 +234,7 @@ Based on the document above, """
             {"role": "system", "content": system_prompt}
         ]
         messages_to_send.extend(user_messages)
-        
+       
         completion = azure_openai_client.chat.completions.create(
             model=model_name_string, # This is now "model-router"
             messages=messages_to_send
