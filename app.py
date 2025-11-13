@@ -3,7 +3,7 @@ import logging
 import io
 import uuid
 from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -33,6 +33,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+# --- NEW: Job Store ---
+# A simple in-memory store. This will reset if the app restarts,
+# but it's perfect for this architecture.
+# Key: job_id, Value: {"status": "Pending", "result": None}
+job_store = {}
 
 # 🔐 Load Environment Variables
 try:
@@ -93,7 +99,6 @@ container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
 # --- CORS Middleware ---
-# We keep this permissive for the Azure Static Web App Linker
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -136,10 +141,10 @@ def extract_document_content(file_bytes: bytes, content_type: str) -> str:
         logger.error(f"Document Intelligence analysis failed: {e}")
         return f"Error: Could not read the document. It may be an unsupported format. {e}"
 
-# --- NEW HELPER FOR PARALLEL PROCESSING ---
+# --- HELPER FOR PARALLEL PROCESSING ---
 def download_and_extract_content(file: FileInfo) -> str:
     """
-    This is a new helper function that contains all the slow, blocking
+    This is a helper function that contains all the slow, blocking
     I/O operations for a *single* file. We will run this function
     in parallel for all files.
     """
@@ -164,6 +169,76 @@ def download_and_extract_content(file: FileInfo) -> str:
     except Exception as e:
         logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
         return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
+
+# --- NEW: BACKGROUND TASK FUNCTION ---
+async def run_copilot_task(request: CopilotRequest, job_id: str):
+    """
+    This function contains ALL the slow logic and runs in the background.
+    It updates the job_store when it's done.
+    """
+    try:
+        logger.info(f"Job {job_id}: Task started.")
+        # 1. Set the model to the default router
+        model_name_string = DEFAULT_AZURE_DEPLOYMENT
+        logger.info(f"Job {job_id}: Task: {request.task} -> Target: {model_name_string}")
+
+        # 2. Build the dynamic system prompt
+        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
+        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
+       
+        # 3. Process all files in parallel (This is the slow part)
+        file_context = ""
+        if request.blobs:
+            logger.info(f"Job {job_id}: Processing {len(request.blobs)} files in parallel...")
+            
+            loop = asyncio.get_event_loop()
+            tasks = []
+            
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for file in request.blobs:
+                    tasks.append(
+                        loop.run_in_executor(
+                            executor,
+                            download_and_extract_content, # The slow, blocking function
+                            file                      # The argument for the function
+                        )
+                    )
+                
+                # Wait for all jobs in the pool to finish
+                all_file_content = await asyncio.gather(*tasks)
+
+            file_context = "\n\n".join(all_file_content)
+            
+            if file_context:
+                file_context += "\n\nBased on all the documents above, "
+        
+        logger.info(f"Job {job_id}: File processing complete.")
+
+        # 4. Combine file context with the user's last message
+        user_messages = request.messages
+        if file_context and user_messages:
+            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
+
+        # 5. Call the Azure OpenAI API
+        messages_to_send = [
+            {"role": "system", "content": system_prompt}
+        ]
+        messages_to_send.extend(user_messages)
+       
+        completion = azure_openai_client.chat.completions.create(
+            model=model_name_string, # This is now "model-router"
+            messages=messages_to_send
+        )
+        reply = completion.choices[0].message.content
+        logger.info(f"Job {job_id}: AI response received.")
+
+        # 6. Store the final result
+        job_store[job_id] = {"status": "Complete", "result": reply}
+
+    except Exception as e:
+        logger.error(f"Error in background Job {job_id}: {e}")
+        job_store[job_id] = {"status": "Failed", "result": f"An error occurred: {e}"}
+
 
 # --- API Routes ---
 @app.get("/healthz")
@@ -196,76 +271,45 @@ async def get_upload_url(request: SasRequest):
             content={"error": f"Could not generate file upload URL: {e}"}
         )
 
-# --- Main Copilot Endpoint (SIMPLIFIED) ---
+# --- MODIFIED: Main Copilot Endpoint ---
 @app.post("/api/copilot")
-async def copilot_endpoint(request: CopilotRequest):
+async def copilot_endpoint(request: CopilotRequest, background_tasks: BackgroundTasks):
     """
-    This endpoint now sends all requests to the default Azure Model Router.
+    This endpoint is now ASYNCHRONOUS.
+    It starts a background task and returns a job_id immediately.
     """
     try:
-        # 1. Set the model to the default router
-        model_name_string = DEFAULT_AZURE_DEPLOYMENT
-        logger.info(f"Task: {request.task} -> Target: {model_name_string}")
-
-        # 2. Build the dynamic system prompt
-        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
-        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
-       
-        # --- START: MODIFIED PARALLEL SECTION ---
-        file_context = ""
-        if request.blobs:
-            logger.info(f"Processing {len(request.blobs)} files in parallel...")
-            
-            loop = asyncio.get_running_loop()
-            tasks = []
-            
-            # Use a ThreadPoolExecutor to run blocking I/O jobs in parallel
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                for file in request.blobs:
-                    # Add each file-processing job to the execution pool
-                    tasks.append(
-                        loop.run_in_executor(
-                            executor,
-                            download_and_extract_content, # The slow, blocking function
-                            file                      # The argument for the function
-                        )
-                    )
-                
-                # Wait for all jobs in the pool to finish
-                all_file_content = await asyncio.gather(*tasks)
-
-            # Join all the resulting text (in whatever order they finished)
-            file_context = "\n\n".join(all_file_content)
-            
-            if file_context:
-                file_context += "\n\nBased on all the documents above, "
-        # --- END: MODIFIED PARALLEL SECTION ---
-
-        # 4. Combine file context with the user's last message
-        user_messages = request.messages
-        if file_context and user_messages:
-            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
-
-        # 5. Call the Azure OpenAI API
-        messages_to_send = [
-            {"role": "system", "content": system_prompt}
-        ]
-        messages_to_send.extend(user_messages)
-       
-        completion = azure_openai_client.chat.completions.create(
-            model=model_name_string, # This is now "model-router"
-            messages=messages_to_send
-        )
-        reply = completion.choices[0].message.content
-
-        return {"reply": reply}
+        job_id = str(uuid.uuid4())
+        job_store[job_id] = {"status": "Pending", "result": None}
+        
+        # Start the slow, heavy work in the background
+        background_tasks.add_task(run_copilot_task, request, job_id)
+        
+        # Return the job_id to the frontend immediately
+        return {"job_id": job_id}
 
     except Exception as e:
-        logger.error(f"Error in /api/copilot: {e}")
+        logger.error(f"Error starting job: {e}")
         return JSONResponse(
             status_code=500,
-            content={"error": f"An error occurred: {e}"}
+            content={"error": f"An error occurred starting the job: {e}"}
         )
+
+# --- NEW: Job Status Endpoint ---
+@app.get("/api/check_status/{job_id}")
+async def check_status(job_id: str):
+    """
+    A new endpoint for the frontend to poll (ask) for the job status.
+    """
+    job = job_store.get(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "Job not found"})
+    
+    if job["status"] == "Complete":
+        # Clear the job from memory after it's fetched
+        del job_store[job_id]
+    
+    return job
 
 # --- Gunicorn/Uvicorn entry point ---
 if __name__ == "__main__":
