@@ -2,10 +2,12 @@ import os
 import logging
 import io
 import uuid
+import json
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+# NOTE: We are removing CORSMiddleware
+# from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # --- NEW IMPORTS FOR PARALLEL PROCESSING ---
@@ -14,8 +16,6 @@ import concurrent.futures
 
 # --- API Client Imports ---
 from openai import AzureOpenAI
-
-# NEW: Import Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 
@@ -23,7 +23,8 @@ from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.storage.blob import (
     BlobServiceClient,
     BlobSasPermissions,
-    generate_blob_sas
+    generate_blob_sas,
+    ContainerClient
 )
 from dotenv import load_dotenv
 
@@ -34,25 +35,25 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# --- NEW: Job Store ---
-# A simple in-memory store. This will reset if the app restarts,
-# but it's perfect for this architecture.
-# Key: job_id, Value: {"status": "Pending", "result": None}
-job_store = {}
+# --- REMOVED: In-memory job_store = {} ---
 
 # 🔐 Load Environment Variables
 try:
     # Azure OpenAI
     AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
     AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-   
-    # NEW: Azure Document Intelligence
+    
+    # Azure Document Intelligence
     DOC_INTEL_ENDPOINT = os.environ["DOC_INTEL_ENDPOINT"]
     DOC_INTEL_KEY = os.environ["DOC_INTEL_KEY"]
-   
+    
     # Azure Storage
     AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
     AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
+    
+    # --- NEW: Job Status Container ---
+    AZURE_JOB_STATUS_CONTAINER = "jobstatus"
+
 except KeyError as e:
     logger.error(f"Missing environment variable: {e}")
     raise SystemExit(f"Startup failed: Missing environment variable {e}")
@@ -95,17 +96,17 @@ doc_intel_client = DocumentIntelligenceClient(
 blob_service_client = BlobServiceClient.from_connection_string(
     AZURE_STORAGE_CONNECTION_STRING
 )
-container_client = blob_service_client.get_container_client(
+# Client for file uploads
+file_upload_container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
-# --- CORS Middleware ---
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# --- NEW: Client for job status ---
+job_status_container_client = blob_service_client.get_container_client(
+    AZURE_JOB_STATUS_CONTAINER
 )
+
+# --- REMOVED: CORS Middleware ---
+
 # --- Pydantic Models ---
 class SasRequest(BaseModel):
     filename: str
@@ -124,7 +125,6 @@ class CopilotRequest(BaseModel):
 def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
-    (This is a slow, blocking I/O call)
     """
     try:
         poller = doc_intel_client.begin_analyze_document(
@@ -152,7 +152,7 @@ def download_and_extract_content(file: FileInfo) -> str:
         logger.info(f"[Thread] Processing {file.original_filename}")
         
         # 1. Download file from Blob Storage (Blocking I/O)
-        blob_client = container_client.get_blob_client(file.blob_name)
+        blob_client = file_upload_container_client.get_blob_client(file.blob_name)
         downloader = blob_client.download_blob()
         file_content = downloader.readall()
         blob_properties = blob_client.get_blob_properties()
@@ -174,8 +174,10 @@ def download_and_extract_content(file: FileInfo) -> str:
 async def run_copilot_task(request: CopilotRequest, job_id: str):
     """
     This function contains ALL the slow logic and runs in the background.
-    It updates the job_store when it's done.
+    It updates the job status blob when it's done.
     """
+    job_blob_name = f"{job_id}.json"
+
     try:
         logger.info(f"Job {job_id}: Task started.")
         # 1. Set the model to the default router
@@ -232,13 +234,23 @@ async def run_copilot_task(request: CopilotRequest, job_id: str):
         reply = completion.choices[0].message.content
         logger.info(f"Job {job_id}: AI response received.")
 
-        # 6. Store the final result
-        job_store[job_id] = {"status": "Complete", "result": reply}
+        # 6. Store the final result in Blob Storage
+        job_data = {"status": "Complete", "result": reply}
+        job_status_container_client.upload_blob(
+            name=job_blob_name,
+            data=json.dumps(job_data),
+            overwrite=True
+        )
+        logger.info(f"Job {job_id}: Result saved to blob.")
 
     except Exception as e:
         logger.error(f"Error in background Job {job_id}: {e}")
-        job_store[job_id] = {"status": "Failed", "result": f"An error occurred: {e}"}
-
+        job_data = {"status": "Failed", "result": f"An error occurred: {e}"}
+        job_status_container_client.upload_blob(
+            name=job_blob_name,
+            data=json.dumps(job_data),
+            overwrite=True
+        )
 
 # --- API Routes ---
 @app.get("/healthz")
@@ -280,12 +292,21 @@ async def copilot_endpoint(request: CopilotRequest, background_tasks: Background
     """
     try:
         job_id = str(uuid.uuid4())
-        job_store[job_id] = {"status": "Pending", "result": None}
+        job_blob_name = f"{job_id}.json"
         
-        # Start the slow, heavy work in the background
+        # 1. Create the initial "Pending" status file in Blob Storage
+        job_data = {"status": "Pending", "result": None}
+        job_status_container_client.upload_blob(
+            name=job_blob_name,
+            data=json.dumps(job_data),
+            overwrite=True
+        )
+        
+        # 2. Start the slow, heavy work in the background
         background_tasks.add_task(run_copilot_task, request, job_id)
         
-        # Return the job_id to the frontend immediately
+        # 3. Return the job_id to the frontend immediately
+        logger.info(f"Job {job_id}: Started successfully.")
         return {"job_id": job_id}
 
     except Exception as e:
@@ -299,16 +320,30 @@ async def copilot_endpoint(request: CopilotRequest, background_tasks: Background
 @app.get("/api/check_status/{job_id}")
 async def check_status(job_id: str):
     """
-    A new endpoint for the frontend to poll (ask) for the job status.
+    A new endpoint for the frontend to poll (ask) for the job status
+    by reading the JSON file from Blob Storage.
     """
-    job = job_store.get(job_id)
-    if not job:
-        return JSONResponse(status_code=404, content={"error": "Job not found"})
+    job_blob_name = f"{job_id}.json"
+    try:
+        # 1. Get the job status blob
+        blob_client = job_status_container_client.get_blob_client(job_blob_name)
+        downloader = blob_client.download_blob()
+        data_bytes = downloader.readall()
+        job = json.loads(data_bytes)
+
+    except Exception as e:
+        # This will catch if the blob doesn't exist (e.g., a typo in job_id)
+        logger.error(f"Error checking job status for {job_id}: {e}")
+        return JSONResponse(status_code=404, content={"error": "Job not found or status file is missing."})
     
-    if job["status"] == "Complete":
-        # Clear the job from memory after it's fetched
-        del job_store[job_id]
+    # 2. If the job is complete, delete the status blob to clean up
+    if job["status"] == "Complete" or job["status"] == "Failed":
+        try:
+            job_status_container_client.delete_blob(job_blob_name)
+        except Exception as e:
+            logger.warning(f"Failed to delete job status blob {job_blob_name}: {e}")
     
+    # 3. Return the job status
     return job
 
 # --- Gunicorn/Uvicorn entry point ---
