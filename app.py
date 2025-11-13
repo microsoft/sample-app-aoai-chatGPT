@@ -8,6 +8,10 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# --- NEW IMPORTS FOR PARALLEL PROCESSING ---
+import asyncio
+import concurrent.futures
+
 # --- API Client Imports ---
 from openai import AzureOpenAI
 
@@ -49,13 +53,8 @@ except KeyError as e:
 
 # --- Model & Prompt Configuration ---
 
-# This is your default model, the Azure model-router.
-# Make sure this deployment name is correct.
-DEFAULT_AZURE_DEPLOYMENT = "model-router" # <-- This now handles everything
+DEFAULT_AZURE_DEPLOYMENT = "model-router"
 
-# --- NEW: EXPERT PROMPT MAP ---
-# This is the "brains" of your task selector.
-# It gives a specific, high-quality system prompt for each task.
 TASK_PROMPT_MAP = {
     "general_drafting": "You are Joogni, an expert writing assistant. Your task is to help the user draft or polish any form of text (letters, emails, memos, etc.). Adapt your tone and format based on their request. You are specializing in {jurisdiction} Family Law.",
     "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations.",
@@ -94,6 +93,7 @@ container_client = blob_service_client.get_container_client(
     AZURE_STORAGE_CONTAINER
 )
 # --- CORS Middleware ---
+# We keep this permissive for the Azure Static Web App Linker
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -105,8 +105,6 @@ app.add_middleware(
 class SasRequest(BaseModel):
     filename: str
 
-# --- START: MODIFIED SECTION ---
-# This new class will hold info for each file
 class FileInfo(BaseModel):
     blob_name: str
     original_filename: str
@@ -115,18 +113,18 @@ class CopilotRequest(BaseModel):
     jurisdiction: str
     task: str
     messages: list[dict]
-    blobs: list[FileInfo] | None = None # This is now a list of FileInfo objects
-# --- END: MODIFIED SECTION ---
+    blobs: list[FileInfo] | None = None
 
 # --- Helper Function ---
 def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
+    (This is a slow, blocking I/O call)
     """
     try:
         poller = doc_intel_client.begin_analyze_document(
             "prebuilt-layout",
-            body=file_bytes, # <-- This is the fixed argument
+            body=file_bytes,
             content_type=content_type
         )
         result = poller.result()
@@ -137,6 +135,35 @@ def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     except Exception as e:
         logger.error(f"Document Intelligence analysis failed: {e}")
         return f"Error: Could not read the document. It may be an unsupported format. {e}"
+
+# --- NEW HELPER FOR PARALLEL PROCESSING ---
+def download_and_extract_content(file: FileInfo) -> str:
+    """
+    This is a new helper function that contains all the slow, blocking
+    I/O operations for a *single* file. We will run this function
+    in parallel for all files.
+    """
+    try:
+        logger.info(f"[Thread] Processing {file.original_filename}")
+        
+        # 1. Download file from Blob Storage (Blocking I/O)
+        blob_client = container_client.get_blob_client(file.blob_name)
+        downloader = blob_client.download_blob()
+        file_content = downloader.readall()
+        blob_properties = blob_client.get_blob_properties()
+        file_content_type = blob_properties.content_settings.content_type
+        
+        logger.info(f"[Thread] {file.original_filename} downloaded, size: {len(file_content)} bytes")
+
+        # 2. Extract content with Document Intelligence (Blocking I/O)
+        text_content = extract_document_content(file_content, file_content_type)
+        
+        # 3. Return the formatted string
+        return f"--- BEGIN ATTACHED DOCUMENT: {file.original_filename} ---\n{text_content}\n--- END ATTACHED DOCUMENT ---"
+
+    except Exception as e:
+        logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
+        return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
 
 # --- API Routes ---
 @app.get("/healthz")
@@ -170,7 +197,6 @@ async def get_upload_url(request: SasRequest):
         )
 
 # --- Main Copilot Endpoint (SIMPLIFIED) ---
-
 @app.post("/api/copilot")
 async def copilot_endpoint(request: CopilotRequest):
     """
@@ -185,44 +211,35 @@ async def copilot_endpoint(request: CopilotRequest):
         prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
         system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
        
-        # --- START: MODIFIED SECTION ---
-        # 3. Handle attached files (if any)
+        # --- START: MODIFIED PARALLEL SECTION ---
         file_context = ""
         if request.blobs:
-            logger.info(f"Processing {len(request.blobs)} attached files...")
-            all_file_content = []
-
-            # Loop through each file in the blobs list
-            for file in request.blobs:
-                try:
-                    logger.info(f"Downloading blob: {file.blob_name}")
-                    blob_client = container_client.get_blob_client(file.blob_name)
-                
-                    # Download blob data AND get its content type
-                    downloader = blob_client.download_blob()
-                    file_content = downloader.readall()
-                    blob_properties = blob_client.get_blob_properties()
-                    file_content_type = blob_properties.content_settings.content_type
-                
-                    logger.info(f"File '{file.original_filename}' downloaded, size: {len(file_content)} bytes, type: {file_content_type}")
-                
-                    # Pass the content type to the analysis function
-                    text_content = extract_document_content(file_content, file_content_type)
-                
-                    # Add content with headers for the LLM
-                    all_file_content.append(f"--- BEGIN ATTACHED DOCUMENT: {file.original_filename} ---\n{text_content}\n--- END ATTACHED DOCUMENT ---")
-
-                except Exception as e:
-                    logger.error(f"Failed to process file {file.original_filename}: {e}")
-                    all_file_content.append(f"(Error: Failed to read attached file {file.original_filename}. {e})\n")
+            logger.info(f"Processing {len(request.blobs)} files in parallel...")
             
-            # Join all file contents into one big string
+            loop = asyncio.get_running_loop()
+            tasks = []
+            
+            # Use a ThreadPoolExecutor to run blocking I/O jobs in parallel
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for file in request.blobs:
+                    # Add each file-processing job to the execution pool
+                    tasks.append(
+                        loop.run_in_executor(
+                            executor,
+                            download_and_extract_content, # The slow, blocking function
+                            file                      # The argument for the function
+                        )
+                    )
+                
+                # Wait for all jobs in the pool to finish
+                all_file_content = await asyncio.gather(*tasks)
+
+            # Join all the resulting text (in whatever order they finished)
             file_context = "\n\n".join(all_file_content)
             
-            # Add the final context header
             if file_context:
                 file_context += "\n\nBased on all the documents above, "
-        # --- END: MODIFIED SECTION ---
+        # --- END: MODIFIED PARALLEL SECTION ---
 
         # 4. Combine file context with the user's last message
         user_messages = request.messages
