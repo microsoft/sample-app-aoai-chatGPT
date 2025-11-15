@@ -216,77 +216,6 @@ def download_and_extract_content(file: FileInfo) -> str:
         logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
         return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
 
-# --- (Background Task Function is unchanged) ---
-async def run_copilot_task(request: CopilotRequest, job_id: str):
-    """
-    This function contains ALL the slow logic and runs in the background.
-    """
-    job_blob_name = f"{job_id}.json"
-    reply = "" # Initialize reply variable
-
-    try:
-        logger.info(f"Job {job_id}: Task started.")
-        # 1. Build the dynamic system prompt
-        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
-        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
-       
-        # 2. Process all files in parallel (This is the slow part)
-        file_context = ""
-        if request.blobs:
-            logger.info(f"Job {job_id}: Processing {len(request.blobs)} files in parallel...")
-            loop = asyncio.get_event_loop()
-            tasks = []
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                for file in request.blobs:
-                    tasks.append(
-                        loop.run_in_executor(
-                            executor,
-                            download_and_extract_content,
-                            file
-                        )
-                    )
-                all_file_content = await asyncio.gather(*tasks)
-            file_context = "\n\n".join(all_file_content)
-            if file_context:
-                file_context += "\n\nBased on all the documents above, "
-        logger.info(f"Job {job_id}: File processing complete.")
-
-        # 3. Combine file context with the user's last message
-        user_messages = request.messages
-        if file_context and user_messages:
-            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
-
-        # 4. All requests now go to Azure OpenAI
-        logger.info(f"Job {job_id}: Routing task '{request.task}' to Azure Model Router.")
-        messages_to_send = [
-            {"role": "system", "content": system_prompt}
-        ]
-        messages_to_send.extend(user_messages)
-    
-        completion = azure_openai_client.chat.completions.create(
-            model=DEFAULT_AZURE_DEPLOYMENT, # This is "model-router"
-            messages=messages_to_send
-        )
-        reply = completion.choices[0].message.content
-        logger.info(f"Job {job_id}: Azure response received.")
-        
-        # 5. Store the final result in Blob Storage
-        job_data = {"status": "Complete", "result": reply}
-        job_status_container_client.upload_blob(
-            name=job_blob_name,
-            data=json.dumps(job_data),
-            overwrite=True
-        )
-        logger.info(f"Job {job_id}: Result saved to blob.")
-
-    except Exception as e:
-        logger.error(f"Error in background Job {job_id}: {e}")
-        job_data = {"status": "Failed", "result": f"An error occurred: {e}"}
-        job_status_container_client.upload_blob(
-            name=job_blob_name,
-            data=json.dumps(job_data),
-            overwrite=True
-        )
 
 # --- NEW: Graph API Token Helper ---
 async def _get_graph_token(fastapi_request: Request):
@@ -350,6 +279,30 @@ async def search_outlook(search_request: GraphSearchRequest, fastapi_request: Re
     except Exception as e:
         logger.error(f"Graph API error (Outlook): {e}")
         return JSONResponse(status_code=500, content={"error": f"Failed to search Outlook: {e}"})
+
+# --- NEW: Endpoint to get attachments for a single email ---
+@app.get("/api/search-outlook/{email_id}/attachments")
+async def get_email_attachments(email_id: str, fastapi_request: Request):
+    """
+    Gets the list of attachments for a specific email ID.
+    """
+    try:
+        graph_token = await _get_graph_token(fastapi_request)
+    except HTTPException as e:
+        return JSONResponse(status_code=e.status_code, content={"error": e.detail})
+
+    headers = {"Authorization": f"Bearer {graph_token}"}
+    attachments_url = f"https://graph.microsoft.com/v1.0/me/messages/{email_id}/attachments?$select=id,name,contentType,size,isInline"
+
+    try:
+        response = requests.get(attachments_url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Graph API error (Attachments): {e}")
+        return JSONResponse(status_code=500, content={"error": f"Failed to get attachments: {e}"})
+# --- END NEW ---
+
 
 @app.post("/api/search-onedrive")
 async def search_onedrive(search_request: GraphSearchRequest, fastapi_request: Request):
@@ -443,7 +396,9 @@ async def healthz():
 async def get_upload_url(request: SasRequest):
     """Generates a short-lived SAS URL for uploading a file."""
     try:
-        blob_.name = f"{uuid.uuid4()}-{request.filename}"
+        # --- THIS IS THE BUG FIX ---
+        blob_name = f"{uuid.uuid4()}-{request.filename}" # Was 'blob_.name'
+        # --- END BUG FIX ---
         sas_token = generate_blob_sas(
             account_name=blob_service_client.account_name,
             container_name=AZURE_STORAGE_CONTAINER,
