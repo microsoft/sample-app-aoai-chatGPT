@@ -2,9 +2,10 @@ fastapi
 uvicorn
 gunicorn
 openai
-azure-storage-blob
-python-dotenv
-requests
 pydantic
-google-generativeai
+azure-core
 azure-ai-documentintelligence
+azure-storage-blob
+msal
+requests
+python-dotenv
