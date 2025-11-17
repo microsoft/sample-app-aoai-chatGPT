@@ -60,12 +60,13 @@ try:
 
 except KeyError as e:
     logger.error(f"Missing critical environment variable: {e}")
+    # This will cause the app to fail on startup, which is visible in the Log Stream
     raise SystemExit(f"Startup failed: Missing critical environment variable {e}")
 
 # --- Model & Prompt Configuration ---
 DEFAULT_AZURE_DEPLOYMENT = "model-router"
 
-# --- (Task Prompts are unchanged from your last 'app.py') ---
+# --- Task Prompts ---
 TASK_PROMPT_MAP = {
     "general_drafting": "You are Joogni, an expert writing assistant. Your task is to help the user draft or polish any form of text (letters, emails, memos, etc.). Adapt your tone and format based on their request. You are specializing in {jurisdiction} Family Law. Use Markdown for formatting (e.g., **bold**, *italics*, lists).",
     "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations. Format your answer clearly using Markdown.",
@@ -153,7 +154,7 @@ msal_app = msal.ConfidentialClientApplication(
 )
 # --- END NEW ---
 
-# --- (Pydantic Models are unchanged) ---
+# --- Pydantic Models ---
 class SasRequest(BaseModel):
     filename: str
 
@@ -176,7 +177,7 @@ class GraphFileDownloadRequest(BaseModel):
     file_name: str
     download_url: str
 
-# --- (Helper Functions are unchanged) ---
+# --- Helper Functions ---
 def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     """
     Analyzes a document from bytes using Azure AI Document Intelligence.
@@ -215,6 +216,79 @@ def download_and_extract_content(file: FileInfo) -> str:
     except Exception as e:
         logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
         return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
+
+# --- THIS IS THE FUNCTION THAT WAS 'NOT DEFINED' ---
+async def run_copilot_task(request: CopilotRequest, job_id: str):
+    """
+    This function contains ALL the slow logic and runs in the background.
+    """
+    job_blob_name = f"{job_id}.json"
+    reply = "" # Initialize reply variable
+
+    try:
+        logger.info(f"Job {job_id}: Task started.")
+        # 1. Build the dynamic system prompt
+        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
+        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
+       
+        # 2. Process all files in parallel (This is the slow part)
+        file_context = ""
+        if request.blobs:
+            logger.info(f"Job {job_id}: Processing {len(request.blobs)} files in parallel...")
+            loop = asyncio.get_event_loop()
+            tasks = []
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                for file in request.blobs:
+                    tasks.append(
+                        loop.run_in_executor(
+                            executor,
+                            download_and_extract_content,
+                            file
+                        )
+                    )
+                all_file_content = await asyncio.gather(*tasks)
+            file_context = "\n\n".join(all_file_content)
+            if file_context:
+                file_context += "\n\nBased on all the documents above, "
+        logger.info(f"Job {job_id}: File processing complete.")
+
+        # 3. Combine file context with the user's last message
+        user_messages = request.messages
+        if file_context and user_messages:
+            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
+
+        # 4. All requests now go to Azure OpenAI
+        logger.info(f"Job {job_id}: Routing task '{request.task}' to Azure Model Router.")
+        messages_to_send = [
+            {"role": "system", "content": system_prompt}
+        ]
+        messages_to_send.extend(user_messages)
+    
+        completion = azure_openai_client.chat.completions.create(
+            model=DEFAULT_AZURE_DEPLOYMENT, # This is "model-router"
+            messages=messages_to_send
+        )
+        reply = completion.choices[0].message.content
+        logger.info(f"Job {job_id}: Azure response received.")
+        
+        # 5. Store the final result in Blob Storage
+        job_data = {"status": "Complete", "result": reply}
+        job_status_container_client.upload_blob(
+            name=job_blob_name,
+            data=json.dumps(job_data),
+            overwrite=True
+        )
+        logger.info(f"Job {job_id}: Result saved to blob.")
+
+    except Exception as e:
+        logger.error(f"Error in background Job {job_id}: {e}")
+        job_data = {"status": "Failed", "result": f"An error occurred: {e}"}
+        job_status_container_client.upload_blob(
+            name=job_blob_name,
+            data=json.dumps(job_data),
+            overwrite=True
+        )
+# --- END OF FUNCTION ---
 
 
 # --- NEW: Graph API Token Helper ---
@@ -280,7 +354,6 @@ async def search_outlook(search_request: GraphSearchRequest, fastapi_request: Re
         logger.error(f"Graph API error (Outlook): {e}")
         return JSONResponse(status_code=500, content={"error": f"Failed to search Outlook: {e}"})
 
-# --- NEW: Endpoint to get attachments for a single email ---
 @app.get("/api/search-outlook/{email_id}/attachments")
 async def get_email_attachments(email_id: str, fastapi_request: Request):
     """
@@ -301,8 +374,6 @@ async def get_email_attachments(email_id: str, fastapi_request: Request):
     except Exception as e:
         logger.error(f"Graph API error (Attachments): {e}")
         return JSONResponse(status_code=500, content={"error": f"Failed to get attachments: {e}"})
-# --- END NEW ---
-
 
 @app.post("/api/search-onedrive")
 async def search_onedrive(search_request: GraphSearchRequest, fastapi_request: Request):
@@ -343,23 +414,18 @@ async def search_onedrive(search_request: GraphSearchRequest, fastapi_request: R
 @app.post("/api/download-graph-file")
 async def download_graph_file(download_request: GraphFileDownloadRequest, fastapi_request: Request):
     """
-    Downloads a file from Graph (Outlook/OneDrive), runs it through
-    Document Intelligence, and saves it to our app's blob storage.
+    Downloads a file from Graph (Outlook/OneDrive) and saves it
+    to our app's blob storage.
     Returns the FileInfo object for the main /api/copilot call.
     """
     
     try:
-        # --- NEW: Get a token to download the file ---
-        # We need this for Outlook attachments, as their URLs aren't pre-signed.
-        # For OneDrive, the download_url *is* pre-signed, but using the
-        # token is a more robust, unified approach.
         graph_token = await _get_graph_token(fastapi_request)
         headers = {"Authorization": f"Bearer {graph_token}"}
-        # --- END NEW ---
 
         # 1. Download the file from the Graph download URL
         logger.info(f"Graph download: Starting {download_request.file_name}")
-        response = requests.get(download_request.download_url, headers=headers) # Pass headers
+        response = requests.get(download_request.download_url, headers=headers)
         response.raise_for_status()
         file_bytes = response.content
         file_content_type = response.headers.get("Content-Type", "application/octet-stream")
@@ -386,7 +452,7 @@ async def download_graph_file(download_request: GraphFileDownloadRequest, fastap
         return JSONResponse(status_code=500, content={"error": f"Failed to process Graph file: {e}"})
 
 
-# --- (Core API Routes are unchanged) ---
+# --- Core API Routes ---
 @app.get("/healthz")
 async def healthz():
     """Health check endpoint."""
@@ -396,9 +462,7 @@ async def healthz():
 async def get_upload_url(request: SasRequest):
     """Generates a short-lived SAS URL for uploading a file."""
     try:
-        # --- THIS IS THE BUG FIX ---
-        blob_name = f"{uuid.uuid4()}-{request.filename}" # Was 'blob_.name'
-        # --- END BUG FIX ---
+        blob_name = f"{uuid.uuid4()}-{request.filename}" # Fixed typo
         sas_token = generate_blob_sas(
             account_name=blob_service_client.account_name,
             container_name=AZURE_STORAGE_CONTAINER,
@@ -438,6 +502,7 @@ async def copilot_endpoint(request: CopilotRequest, background_tasks: Background
         )
         
         # 2. Start the slow, heavy work in the background
+        # This line was failing because `run_copilot_task` was not defined
         background_tasks.add_task(run_copilot_task, request, job_id)
         
         # 3. Return the job_id to the frontend immediately
