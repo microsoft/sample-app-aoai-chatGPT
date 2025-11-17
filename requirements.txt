@@ -4,7 +4,7 @@ gunicorn
 openai
 pydantic
 azure-core
-azure-ai-documentintelligence
+azure-ai-documentintelligence==1.0.0b1
 azure-storage-blob
 msal
 requests
