@@ -1,5 +1,6 @@
 fastapi==0.115.5
 uvicorn==0.34.0
+gunicorn==23.0.0
 azure-storage-blob==12.20.0
 python-multipart==0.0.9
 pydantic
