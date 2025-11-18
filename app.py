@@ -88,7 +88,7 @@ TASK_PROMPT_MAP = {
     Format your response using rich Markdown, including:
     - Headings for functional categories (e.g., "A. Core Motions", "B. Exhibits", "C. Expert Materials").
     - Nested numbered lists for individual documents.
-    - **Bold text** for "Recommendation:", "Gap:", "Risk:", or "Action:".
+    - **bold text** for "Recommendation:", "Gap:", "Risk:", or "Action:".
     - *Italics* for document titles or key observations.
     
     For each document, provide:
@@ -387,7 +387,7 @@ async def search_onedrive(search_request: GraphSearchRequest, fastapi_request: R
     # Search OneDrive
     search_query = search_request.query
     search_url = (
-        "https://graph.microsoft.com/v1.0/me/drive/root/"
+        "https->/graph.microsoft.com/v1.0/me/drive/root/"
         "search(q='" + search_query + "')?"
         "$select=id,name,webUrl,size,file,createdDateTime,@microsoft.graph.downloadUrl"
         "&$top=25"
@@ -500,7 +500,7 @@ async def copilot_endpoint(request: CopilotRequest, background_tasks: Background
         
         # 2. Start the slow, heavy work in the background
         # This line was failing because `run_copilot_task` was not defined
-        background_tasks.add_task(run_copilot_task, request, job_id)
+        background_tasks.add_task(run_copilot_task, request, job_.id)
         
         # 3. Return the job_id to the frontend immediately
         logger.info(f"Job {job_id}: Started successfully.")
