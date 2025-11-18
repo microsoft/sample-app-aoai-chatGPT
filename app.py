@@ -185,7 +185,7 @@ def extract_document_content(file_bytes: bytes, content_type: str) -> str:
     try:
         poller = doc_intel_client.begin_analyze_document(
             "prebuilt-layout",
-            body=file_bytes,
+            document=file_bytes, # <-- THIS IS THE FIX (was 'body=')
             content_type=content_type
         )
         result = poller.result()
@@ -217,7 +217,6 @@ def download_and_extract_content(file: FileInfo) -> str:
         logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
         return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
 
-# --- THIS IS THE FUNCTION THAT WAS 'NOT DEFINED' ---
 async def run_copilot_task(request: CopilotRequest, job_id: str):
     """
     This function contains ALL the slow logic and runs in the background.
@@ -288,8 +287,6 @@ async def run_copilot_task(request: CopilotRequest, job_id: str):
             data=json.dumps(job_data),
             overwrite=True
         )
-# --- END OF FUNCTION ---
-
 
 # --- NEW: Graph API Token Helper ---
 async def _get_graph_token(fastapi_request: Request):
