@@ -500,7 +500,7 @@ async def copilot_endpoint(request: CopilotRequest, background_tasks: Background
         
         # 2. Start the slow, heavy work in the background
         # This line was failing because `run_copilot_task` was not defined
-        background_tasks.add_task(run_copilot_task, request, job_.id)
+        background_tasks.add_task(run_copilot_task, request, job_id)
         
         # 3. Return the job_id to the frontend immediately
         logger.info(f"Job {job_id}: Started successfully.")
