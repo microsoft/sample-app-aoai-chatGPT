@@ -1,550 +1,417 @@
 import os
-import logging
-import io
-import uuid
 import json
-from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
-from fastapi.responses import JSONResponse
+import uuid
+import logging
+from datetime import datetime, timezone
+from typing import List, Optional
+
+import httpx
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    BackgroundTasks,
+    HTTPException,
+)
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# --- NEW IMPORTS FOR PARALLEL PROCESSING ---
-import asyncio
-import concurrent.futures
-
-# --- API Client Imports ---
-from openai import AzureOpenAI
+from azure.storage.blob import BlobServiceClient
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 
-# --- NEW: MSAL & Requests for Graph API ---
-import msal
-import requests
-
-# --- Other Imports ---
-from azure.storage.blob import (
-    BlobServiceClient,
-    BlobSasPermissions,
-    generate_blob_sas,
-    ContainerClient
+# -------------------------------------------------------------------
+# Logging
+# -------------------------------------------------------------------
+LOGLEVEL = os.getenv("LOGLEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOGLEVEL, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-from dotenv import load_dotenv
+logger = logging.getLogger("app")
 
-# --- Configuration & Clients ---
-load_dotenv()
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# -------------------------------------------------------------------
+# CORS / Origins
+# -------------------------------------------------------------------
+# Prefer ALLOWED_ORIGINS (comma-separated), then FRONTEND_ORIGIN, else "*"
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS") or os.getenv("FRONTEND_ORIGIN")
+if allowed_origins_env:
+    ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = ["*"]
 
-app = FastAPI()
+# -------------------------------------------------------------------
+# Storage & containers (connection string usually lives in App Service
+# "Connection strings" section; name it AZURE_STORAGE_CONNECTION_STRING)
+# -------------------------------------------------------------------
+AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+if not AZURE_STORAGE_CONNECTION_STRING:
+    raise RuntimeError("AZURE_STORAGE_CONNECTION_STRING is required")
 
-# 🔐 Load Environment Variables
-try:
-    # Azure OpenAI
-    AZURE_OPENAI_KEY = os.environ["AZURE_OPENAI_KEY"]
-    AZURE_OPENAI_ENDPOINT = os.environ["AZURE_OPENAI_ENDPOINT"]
-    
-    # Azure Document Intelligence
-    DOC_INTEL_ENDPOINT = os.environ["DOC_INTEL_ENDPOINT"]
-    DOC_INTEL_KEY = os.environ["DOC_INTEL_KEY"]
-    
-    # Azure Storage
-    AZURE_STORAGE_CONNECTION_STRING = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-    AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
-    AZURE_JOB_STATUS_CONTAINER = "jobstatus"
+UPLOAD_CONTAINER = os.getenv("UPLOAD_CONTAINER", "chatuploads")
+JOBSTATUS_CONTAINER = os.getenv("JOBSTATUS_CONTAINER", "jobstatus")
 
-    # --- NEW: Load Graph API Secrets ---
-    AZURE_CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
-    AZURE_CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]
-    AZURE_TENANT_ID = os.environ["AZURE_TENANT_ID"]
-    GRAPH_AUTHORITY = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}"
-
-except KeyError as e:
-    logger.error(f"Missing critical environment variable: {e}")
-    # This will cause the app to fail on startup, which is visible in the Log Stream
-    raise SystemExit(f"Startup failed: Missing critical environment variable {e}")
-
-# --- Model & Prompt Configuration ---
-DEFAULT_AZURE_DEPLOYMENT = "model-router"
-
-# --- Task Prompts ---
-TASK_PROMPT_MAP = {
-    "general_drafting": "You are Joogni, an expert writing assistant. Your task is to help the user draft or polish any form of text (letters, emails, memos, etc.). Adapt your tone and format based on their request. You are specializing in {jurisdiction} Family Law. Use Markdown for formatting (e.g., **bold**, *italics*, lists).",
-    "legal_research": "You are Joogni, a legal research assistant. Provide concise, accurate answers. When possible, cite relevant {jurisdiction} statutes or case law. Do not hallucinate or invent citations. Format your answer clearly using Markdown.",
-    "build_chronology": """You are Joogni, an expert legal case analyst for {jurisdiction} Family Law. Your task is to build a detailed, event-by-event case chronology from all attached documents.
-    
-    Format your response using rich Markdown in reverse-chronological order (most recent first):
-    - Use numbered lists for primary events (e.g., `1)`, `2)`).
-    - Use **bold text** for dates and a summary of the event (e.g., "**11/12/2025 — Substitution of Attorney**").
-    - Use nested bullet points (using `-`) for details.
-    - Use *italics* for document titles (e.g., *- Document: *Substitution of Attorney (MC-050)*...*).
-    
-    Example:
-    1. **11/12/2025 — Substitution of Attorney (MC-050) mailed/served**
-       - *Document:* MC-050 (Substitution of Attorney – civil)
-       - *Event:* Former counsel (Silicon Valley Law Offices) served a Substitution of Attorney form showing Respondent as "in pro per".
-    """,
-    "analyze_document": """You are Joogni, an expert legal analyst for {jurisdiction} Family Law. Your task is to analyze all attached documents and provide a practical, litigation-ready organization of the materials.
-    
-    Format your response using rich Markdown, including:
-    - Headings for functional categories (e.g., "A. Core Motions", "B. Exhibits", "C. Expert Materials").
-    - Nested numbered lists for individual documents.
-    - **bold text** for "Recommendation:", "Gap:", "Risk:", or "Action:".
-    - *Italics* for document titles or key observations.
-    
-    For each document, provide:
-    1. A short description of the item.
-    2. Its evidentiary status or role.
-    3. A recommended action.
-    
-    Conclude with a summary of Gaps, Risks, and a practical Filing Plan.""",
-    "analyze_legal_argument": """You are Joogni, a senior litigator for {jurisdiction} Family Law. Your task is to analyze the attached legal argument(s).
-    
-    Format your response using rich Markdown, including:
-    - Headings for key sections (e.g., "A. Summary of Argument", "B. Core Strengths", "C. Vulnerabilities & Gaps").
-    - Nested bullet points (using `-` or `1.`) for your analysis.
-    - **Bold text** for "Recommendation:", "Risk:", or "Action:".
-    
-    Your analysis must identify:
-    1. The core legal and factual claims.
-    2. Strengths in the argument.
-    3. All logical fallacies, unsupported claims, weak evidence, and points of legal vulnerability.
-    4. A final, practical recommendation for how to defeat this argument.""",
-    "draft_exam_questions": "You are Joogni, a trial attorney. Your task is to draft examination questions. Based on the user's prompt and any attached documents (like declarations or transcripts), generate a set of both **Direct** and **Cross-Examination** questions, clearly labeled.",
-    "draft_discovery_responses": "You are Joogni, a discovery expert. Your task is to help draft discovery responses for {jurisdiction} law. Analyze the user's prompt and any attached propounded discovery. For each request, suggest boilerplate objections (e.g., **Objection: Overbroad**, **Objection: Unduly Burdensome**) and format a template.",
-    "draft_discovery_requests": "You are Joogni, a discovery expert. Your task is to draft discovery requests (e.g., Form Interrogatories, Special Interrogatories, Requests for Production) for a {jurisdiction} Family Law case based on the user's prompt. Use clear numbering and sub-parts.",
-    "draft_rfo": "You are Joogni, a {jurisdiction} Family Law paralegal. Your task is to draft a Request for Order (RFO) or a Responsive Declaration. Use the user's prompt and any attached documents. Format the response for a court filing, clearly stating the **Requested Orders** and the **Factual Basis (Declaration)** to support them.",
-    "draft_motion": "You are Joogni, a {jurisdiction} civil litigation specialist. Your task is to draft a formal motion. Use the user's prompt and attached documents. Your response should include a **Notice of Motion**, the **Motion**, a **Memorandum of Points and Authorities**, and a **Supporting Declaration**.",
-    "draft_brief": "You are Joogni, a legal writing expert. Your task is to draft a formal legal brief. Use the user's prompt and attached documents to construct a persuasive argument, complete with an **Introduction**, **Statement of Facts**, **Legal Argument** section, and **Conclusion**."
-}
-DEFAULT_PROMPT = "You are Joogni, an expert legal copilot specializing in {jurisdiction} Family Law."
-
-
-# --- Initialize API Clients ---
-
-# Azure OpenAI Client
-azure_openai_client = AzureOpenAI(
-    api_key=AZURE_OPENAI_KEY,
-    azure_endpoint=AZURE_OPENAI_ENDPOINT,
-    api_version="2024-02-01"
-)
-
-# Document Intelligence Client
-doc_intel_client = DocumentIntelligenceClient(
-    endpoint=DOC_INTEL_ENDPOINT,
-    credential=AzureKeyCredential(DOC_INTEL_KEY)
-)
-# Azure Blob Storage Client
 blob_service_client = BlobServiceClient.from_connection_string(
     AZURE_STORAGE_CONNECTION_STRING
 )
-# Client for file uploads
-file_upload_container_client = blob_service_client.get_container_client(
-    AZURE_STORAGE_CONTAINER
-)
-# Client for job status
-job_status_container_client = blob_service_client.get_container_client(
-    AZURE_JOB_STATUS_CONTAINER
-)
+upload_container_client = blob_service_client.get_container_client(UPLOAD_CONTAINER)
+jobstatus_container_client = blob_service_client.get_container_client(JOBSTATUS_CONTAINER)
 
-# --- NEW: MSAL Client for Graph API ---
-msal_app = msal.ConfidentialClientApplication(
-    client_id=AZURE_CLIENT_ID,
-    authority=GRAPH_AUTHORITY,
-    client_credential=AZURE_CLIENT_SECRET
-)
-# --- END NEW ---
-
-# --- Pydantic Models ---
-class SasRequest(BaseModel):
-    filename: str
-
-class FileInfo(BaseModel):
-    blob_name: str
-    original_filename: str
-
-class CopilotRequest(BaseModel):
-    jurisdiction: str
-    task: str
-    messages: list[dict]
-    blobs: list[FileInfo] | None = None
-
-# --- NEW: Pydantic Models for Graph API ---
-class GraphSearchRequest(BaseModel):
-    query: str
-
-class GraphFileDownloadRequest(BaseModel):
-    file_id: str
-    file_name: str
-    download_url: str
-
-# --- Helper Functions ---
-def extract_document_content(file_bytes: bytes, content_type: str) -> str:
-    """
-    Analyzes a document from bytes using Azure AI Document Intelligence.
-    """
+for c in (upload_container_client, jobstatus_container_client):
     try:
-        poller = doc_intel_client.begin_analyze_document(
-            "prebuilt-layout",
-            document=file_bytes, # <-- THIS IS THE FIX (was 'body=')
-            content_type=content_type
+        c.create_container()
+    except Exception:
+        # Already exists
+        pass
+
+# -------------------------------------------------------------------
+# Azure Document Intelligence
+# -------------------------------------------------------------------
+DOCINT_ENDPOINT = os.getenv("DOCUMENTINTELLIGENCE_ENDPOINT")
+DOCINT_KEY = os.getenv("DOCUMENTINTELLIGENCE_KEY")
+DOCINT_MODEL_ID = os.getenv("DOCUMENTINTELLIGENCE_MODEL_ID", "prebuilt-document")
+
+docint_client: Optional[DocumentIntelligenceClient] = None
+if DOCINT_ENDPOINT and DOCINT_KEY:
+    docint_client = DocumentIntelligenceClient(
+        endpoint=DOCINT_ENDPOINT,
+        credential=AzureKeyCredential(DOCINT_KEY),
+    )
+else:
+    logger.warning(
+        "Document Intelligence not fully configured; OCR will return empty text."
+    )
+
+# -------------------------------------------------------------------
+# Azure OpenAI (works with standard env naming)
+#   Required (for Azure OpenAI):
+#     AZURE_OPENAI_ENDPOINT
+#     AZURE_OPENAI_API_KEY
+#   Optional:
+#     OPENAI_API_VERSION  (you already have this)
+# -------------------------------------------------------------------
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_DEPLOYMENT_ID = os.getenv("AZURE_OPENAI_DEPLOYMENT_ID")
+OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION", "2024-02-15-preview")
+
+if not (AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY and AZURE_OPENAI_DEPLOYMENT_ID):
+    logger.warning(
+        "Azure OpenAI endpoint/key/deployment not fully configured; "
+        "draft generation will return a placeholder string."
+    )
+
+# -------------------------------------------------------------------
+# FastAPI app
+# -------------------------------------------------------------------
+app = FastAPI(title="BossNex Backend", version="2.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# -------------------------------------------------------------------
+# Pydantic models
+# -------------------------------------------------------------------
+
+
+class CreateJobRequest(BaseModel):
+    files: List[str]  # blob names in `chatuploads`
+    prompt: str
+    extra_context: Optional[str] = None
+
+
+class JobStatus(BaseModel):
+    job_id: str
+    status: str  # queued | running | succeeded | failed
+    created_at: str
+    updated_at: str
+    files: List[str]
+    prompt: str
+    error: Optional[str] = None
+    draft: Optional[str] = None
+    metadata: Optional[dict] = None
+
+
+# -------------------------------------------------------------------
+# Helpers – Blob Storage
+# -------------------------------------------------------------------
+def _save_job_status(job: JobStatus) -> None:
+    """Persist job status as JSON in jobstatus container."""
+    blob_name = f"{job.job_id}.json"
+    payload = job.model_dump()
+    jobstatus_container_client.upload_blob(
+        name=blob_name,
+        data=json.dumps(payload, ensure_ascii=False, indent=2),
+        overwrite=True,
+    )
+    logger.info("Saved job status for %s (status=%s)", job.job_id, job.status)
+
+
+def _load_job_status(job_id: str) -> JobStatus:
+    blob_name = f"{job_id}.json"
+    try:
+        blob = jobstatus_container_client.get_blob_client(blob_name)
+        stream = blob.download_blob()
+        data = json.loads(stream.readall())
+        return JobStatus(**data)
+    except Exception as e:
+        logger.error("Error loading job %s: %s", job_id, e)
+        raise HTTPException(status_code=404, detail="Job not found")
+
+
+def _download_blob_to_bytes(blob_name: str) -> bytes:
+    try:
+        blob_client = upload_container_client.get_blob_client(blob_name)
+        stream = blob_client.download_blob()
+        data = stream.readall()
+        logger.info("Downloaded blob %s (%d bytes)", blob_name, len(data))
+        return data
+    except Exception as e:
+        logger.error("Error downloading blob %s: %s", blob_name, e)
+        raise
+
+
+# -------------------------------------------------------------------
+# Helpers – Document Intelligence & Azure OpenAI
+# -------------------------------------------------------------------
+def _extract_text_with_docint(file_bytes: bytes) -> str:
+    """
+    Send PDF bytes to Azure Document Intelligence and return extracted text.
+
+    NOTE: This uses the correct signature:
+      begin_analyze_document(model_id, body, content_type=...)
+    which fixes the error:
+      DocumentIntelligenceClientOperationsMixin.begin_analyze_document()
+      missing 1 required positional argument: 'body'
+    """
+    if not docint_client:
+        return ""
+
+    try:
+        poller = docint_client.begin_analyze_document(
+            model_id=DOCINT_MODEL_ID,
+            body=file_bytes,               # <-- THIS IS THE REQUIRED 'body'
+            content_type="application/pdf",
         )
         result = poller.result()
-        if result.content:
-            return result.content
-        else:
-            return "(Document appears to be empty or contains no extractable text.)"
+
+        texts: List[str] = []
+
+        # Newer SDK often exposes overall combined content
+        if getattr(result, "content", None):
+            texts.append(result.content)
+
+        # Also loop through pages if present
+        if getattr(result, "pages", None):
+            for page in result.pages:
+                if getattr(page, "content", None):
+                    texts.append(page.content)
+
+        full_text = "\n".join(t for t in texts if t)
+        logger.info("Extracted %d characters from Document Intelligence", len(full_text))
+        return full_text
     except Exception as e:
-        logger.error(f"Document Intelligence analysis failed: {e}")
-        return f"Error: Could not read the document. It may be an unsupported format. {e}"
+        logger.error("Document Intelligence error: %s", e)
+        return ""
 
-def download_and_extract_content(file: FileInfo) -> str:
-    """
-    This is a helper function that contains all the slow, blocking
-    I/O operations for a *single* file. We will run this function
-    in parallel for all files.
-    """
-    try:
-        logger.info(f"[Thread] Processing {file.original_filename}")
-        blob_client = file_upload_container_client.get_blob_client(file.blob_name)
-        downloader = blob_client.download_blob()
-        file_content = downloader.readall()
-        blob_properties = blob_client.get_blob_properties()
-        file_content_type = blob_properties.content_settings.content_type
-        logger.info(f"[Thread] {file.original_filename} downloaded, size: {len(file_content)} bytes")
-        text_content = extract_document_content(file_content, file_content_type)
-        return f"--- BEGIN ATTACHED DOCUMENT: {file.original_filename} ---\n{text_content}\n--- END ATTACHED DOCUMENT ---"
-    except Exception as e:
-        logger.error(f"[Thread] Failed to process file {file.original_filename}: {e}")
-        return f"(Error: Failed to read attached file {file.original_filename}. {e})\n"
 
-async def run_copilot_task(request: CopilotRequest, job_id: str):
-    """
-    This function contains ALL the slow logic and runs in the background.
-    """
-    job_blob_name = f"{job_id}.json"
-    reply = "" # Initialize reply variable
-
-    try:
-        logger.info(f"Job {job_id}: Task started.")
-        # 1. Build the dynamic system prompt
-        prompt_template = TASK_PROMPT_MAP.get(request.task, DEFAULT_PROMPT)
-        system_prompt = prompt_template.format(jurisdiction=request.jurisdiction)
-       
-        # 2. Process all files in parallel (This is the slow part)
-        file_context = ""
-        if request.blobs:
-            logger.info(f"Job {job_id}: Processing {len(request.blobs)} files in parallel...")
-            loop = asyncio.get_event_loop()
-            tasks = []
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                for file in request.blobs:
-                    tasks.append(
-                        loop.run_in_executor(
-                            executor,
-                            download_and_extract_content,
-                            file
-                        )
-                    )
-                all_file_content = await asyncio.gather(*tasks)
-            file_context = "\n\n".join(all_file_content)
-            if file_context:
-                file_context += "\n\nBased on all the documents above, "
-        logger.info(f"Job {job_id}: File processing complete.")
-
-        # 3. Combine file context with the user's last message
-        user_messages = request.messages
-        if file_context and user_messages:
-            user_messages[-1]["content"] = file_context + user_messages[-1]["content"]
-
-        # 4. All requests now go to Azure OpenAI
-        logger.info(f"Job {job_id}: Routing task '{request.task}' to Azure Model Router.")
-        messages_to_send = [
-            {"role": "system", "content": system_prompt}
-        ]
-        messages_to_send.extend(user_messages)
-    
-        completion = azure_openai_client.chat.completions.create(
-            model=DEFAULT_AZURE_DEPLOYMENT, # This is "model-router"
-            messages=messages_to_send
-        )
-        reply = completion.choices[0].message.content
-        logger.info(f"Job {job_id}: Azure response received.")
-        
-        # 5. Store the final result in Blob Storage
-        job_data = {"status": "Complete", "result": reply}
-        job_status_container_client.upload_blob(
-            name=job_blob_name,
-            data=json.dumps(job_data),
-            overwrite=True
-        )
-        logger.info(f"Job {job_id}: Result saved to blob.")
-
-    except Exception as e:
-        logger.error(f"Error in background Job {job_id}: {e}")
-        job_data = {"status": "Failed", "result": f"An error occurred: {e}"}
-        job_status_container_client.upload_blob(
-            name=job_blob_name,
-            data=json.dumps(job_data),
-            overwrite=True
+async def _call_azure_openai(prompt: str, context: str) -> str:
+    """Call Azure OpenAI Chat Completions and return the draft text."""
+    if not (AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY and AZURE_OPENAI_DEPLOYMENT_ID):
+        logger.warning("Azure OpenAI not configured; returning placeholder draft.")
+        return (
+            "Azure OpenAI is not configured in the backend, "
+            "so this is a placeholder draft instead of a real model response."
         )
 
-# --- NEW: Graph API Token Helper ---
-async def _get_graph_token(fastapi_request: Request):
-    """
-    Gets a Graph API access token on behalf of the logged-in user.
-    """
-    # Get the user's access token (passed by the Static Web App proxy)
-    user_token = fastapi_request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
-    if not user_token:
-        logger.error("Graph token helper: X-MS-TOKEN-AAD-ACCESS-TOKEN header missing.")
-        raise HTTPException(status_code=401, detail="User access token not found.")
-        
-    scopes = ["Mail.Read", "Files.Read.All"] # The permissions you granted
-    
-    # Try to get a new token from MSAL cache
-    result = msal_app.acquire_token_on_behalf_of(
-        user_assertion=user_token,
-        scopes=scopes
-    )
-    
-    if "error" in result:
-        logger.error(f"MSAL Error: {result.get('error_description')}")
-        raise HTTPException(status_code=500, detail=f"Failed to acquire Graph token: {result.get('error_description')}")
-        
-    if "access_token" not in result:
-        logger.error("MSAL did not return an access token.")
-        raise HTTPException(status_code=500, detail="Failed to acquire Graph token.")
-        
-    return result["access_token"]
-
-
-# --- NEW: Graph API Endpoints ---
-
-@app.post("/api/search-outlook")
-async def search_outlook(search_request: GraphSearchRequest, fastapi_request: Request):
-    """
-    Searches the user's email for attachments.
-    """
-    try:
-        graph_token = await _get_graph_token(fastapi_request)
-    except HTTPException as e:
-        return JSONResponse(status_code=e.status_code, content={"error": e.detail})
-
-    headers = {"Authorization": f"Bearer {graph_token}"}
-    
-    # Search for emails that HAVE attachments and match the query
-    search_query = search_request.query
-    search_url = (
-        "https://graph.microsoft.com/v1.0/me/messages?"
-        "$search=" + (f'"{search_query}"' if search_query else "") +
-        "&$filter=hasAttachments eq true"
-        "&$select=id,subject,from,receivedDateTime,bodyPreview,hasAttachments"
-        "&$top=25"
-        "&$orderby=receivedDateTime desc"
+    url = (
+        f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/"
+        f"{AZURE_OPENAI_DEPLOYMENT_ID}/chat/completions"
+        f"?api-version={OPENAI_API_VERSION}"
     )
 
-    try:
-        response = requests.get(search_url, headers=headers)
-        response.raise_for_status() # Raise an error for bad responses (4xx, 5xx)
-        return response.json()
-    except Exception as e:
-        logger.error(f"Graph API error (Outlook): {e}")
-        return JSONResponse(status_code=500, content={"error": f"Failed to search Outlook: {e}"})
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": AZURE_OPENAI_API_KEY,
+    }
 
-@app.get("/api/search-outlook/{email_id}/attachments")
-async def get_email_attachments(email_id: str, fastapi_request: Request):
-    """
-    Gets the list of attachments for a specific email ID.
-    """
-    try:
-        graph_token = await _get_graph_token(fastapi_request)
-    except HTTPException as e:
-        return JSONResponse(status_code=e.status_code, content={"error": e.detail})
-
-    headers = {"Authorization": f"Bearer {graph_token}"}
-    attachments_url = f"https://graph.microsoft.com/v1.0/me/messages/{email_id}/attachments?$select=id,name,contentType,size,isInline"
-
-    try:
-        response = requests.get(attachments_url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        logger.error(f"Graph API error (Attachments): {e}")
-        return JSONResponse(status_code=500, content={"error": f"Failed to get attachments: {e}"})
-
-@app.post("/api/search-onedrive")
-async def search_onedrive(search_request: GraphSearchRequest, fastapi_request: Request):
-    """
-    Searches the user's OneDrive for files.
-    """
-    try:
-        graph_token = await _get_graph_token(fastapi_request)
-    except HTTPException as e:
-        return JSONResponse(status_code=e.status_code, content={"error": e.detail})
-
-    headers = {"Authorization": f"Bearer {graph_token}"}
-    
-    # Search OneDrive
-    search_query = search_request.query
-    search_url = (
-        "https->/graph.microsoft.com/v1.0/me/drive/root/"
-        "search(q='" + search_query + "')?"
-        "$select=id,name,webUrl,size,file,createdDateTime,@microsoft.graph.downloadUrl"
-        "&$top=25"
+    system_prompt = (
+        "You are an expert California family law assistant. "
+        "You receive OCR'd text from court filings, declarations, custody reports, "
+        "and related documents. Draft clear, practical, and well-structured output. "
+        "Cite and summarize rather than copying huge chunks verbatim."
     )
-    if not search_query:
-        # If no query, just get recent files
-         search_url = (
-            "https://graph.microsoft.com/v1.0/me/drive/recent?"
-            "$select=id,name,webUrl,size,file,createdDateTime,@microsoft.graph.downloadUrl"
-            "&$top=25"
-         )
 
-    try:
-        response = requests.get(search_url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        logger.error(f"Graph API error (OneDrive): {e}")
-        return JSONResponse(status_code=500, content={"error": f"Failed to search OneDrive: {e}"})
+    payload = {
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {
+                "role": "user",
+                "content": (
+                    f"User prompt:\n{prompt}\n\n"
+                    f"Relevant extracted document text:\n{context[:50000]}"
+                ),
+            },
+        ],
+        "temperature": 0.25,
+        "top_p": 0.95,
+        "max_tokens": 4096,
+        "stream": os.getenv("SHOULD_STREAM", "false").lower() == "true",
+    }
 
-@app.post("/api/download-graph-file")
-async def download_graph_file(download_request: GraphFileDownloadRequest, fastapi_request: Request):
-    """
-    Downloads a file from Graph (Outlook/OneDrive) and saves it
-    to our app's blob storage.
-    Returns the FileInfo object for the main /api/copilot call.
-    """
-    
-    try:
-        graph_token = await _get_graph_token(fastapi_request)
-        headers = {"Authorization": f"Bearer {graph_token}"}
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(url, headers=headers, json=payload)
+        if resp.status_code != 200:
+            logger.error(
+                "Azure OpenAI error %s: %s",
+                resp.status_code,
+                resp.text[:800],
+            )
+            raise RuntimeError(f"Azure OpenAI error: {resp.status_code}")
 
-        # 1. Download the file from the Graph download URL
-        logger.info(f"Graph download: Starting {download_request.file_name}")
-        response = requests.get(download_request.download_url, headers=headers)
-        response.raise_for_status()
-        file_bytes = response.content
-        file_content_type = response.headers.get("Content-Type", "application/octet-stream")
-        logger.info(f"Graph download: File downloaded, size: {len(file_bytes)} bytes")
+        data = resp.json()
 
-        # 2. Upload the raw file bytes to our app's blob storage
-        blob_name = f"graph-{uuid.uuid4()}-{download_request.file_name}"
-        file_upload_container_client.upload_blob(
-            name=blob_name,
-            data=file_bytes,
-            overwrite=True,
-            content_settings={"content_type": file_content_type}
-        )
-        logger.info(f"Graph download: File uploaded to {blob_name}")
-        
-        # 3. Return the new FileInfo object
-        return {
-            "blob_name": blob_name,
-            "original_filename": download_request.file_name
-        }
-
-    except Exception as e:
-        logger.error(f"Graph file download failed: {e}")
-        return JSONResponse(status_code=500, content={"error": f"Failed to process Graph file: {e}"})
-
-
-# --- Core API Routes ---
-@app.get("/healthz")
-async def healthz():
-    """Health check endpoint."""
-    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-@app.post("/api/get-upload-url")
-async def get_upload_url(request: SasRequest):
-    """Generates a short-lived SAS URL for uploading a file."""
-    try:
-        blob_name = f"{uuid.uuid4()}-{request.filename}" # Fixed typo
-        sas_token = generate_blob_sas(
-            account_name=blob_service_client.account_name,
-            container_name=AZURE_STORAGE_CONTAINER,
-            blob_name=blob_name,
-            account_key=blob_service_client.credential.account_key,
-            permission=BlobSasPermissions(create=True, write=True),
-            expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
-        )
-        upload_url = (
-            f"https://{blob_service_client.account_name}.blob.core.windows.net/"
-            f"{AZURE_STORAGE_CONTAINER}/{blob_name}?{sas_token}"
-        )
-        return {"upload_url": upload_url, "blob_name": blob_name}
-    except Exception as e:
-        logger.error(f"Error generating SAS URL: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Could not generate file upload URL: {e}"}
-        )
-
-@app.post("/api/copilot")
-async def copilot_endpoint(request: CopilotRequest, background_tasks: BackgroundTasks):
-    """
-    This endpoint is asynchronous.
-    It starts a background task and returns a job_id immediately.
-    """
-    try:
-        job_id = str(uuid.uuid4())
-        job_blob_name = f"{job_id}.json"
-        
-        # 1. Create the initial "Pending" status file in Blob Storage
-        job_data = {"status": "Pending", "result": None}
-        job_status_container_client.upload_blob(
-            name=job_blob_name,
-            data=json.dumps(job_data),
-            overwrite=True
-        )
-        
-        # 2. Start the slow, heavy work in the background
-        # This line was failing because `run_copilot_task` was not defined
-        background_tasks.add_task(run_copilot_task, request, job_id)
-        
-        # 3. Return the job_id to the frontend immediately
-        logger.info(f"Job {job_id}: Started successfully.")
-        return {"job_id": job_id}
-
-    except Exception as e:
-        logger.error(f"Error starting job: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"An error occurred starting the job: {e}"}
-        )
-
-@app.get("/api/check_status/{job_id}")
-async def check_status(job_id: str):
-    """
-    A new endpoint for the frontend to poll (ask) for the job status
-    by reading the JSON file from Blob Storage.
-    """
-    job_blob_name = f"{job_id}.json"
-    try:
-        # 1. Get the job status blob
-        blob_client = job_status_container_client.get_blob_client(job_blob_name)
-        downloader = blob_client.download_blob()
-        data_bytes = downloader.readall()
-        job = json.loads(data_bytes)
-
-    except Exception as e:
-        # This will catch if the blob doesn't exist (e.g., a typo in job_id)
-        # This is now *expected* behavior while the job is starting.
-        # We return "Pending" to the frontend.
-        logger.info(f"Job {job_id} status file not found, assuming Pending.")
-        return {"status": "Pending", "result": None}
-    
-    # 2. If the job is complete, delete the status blob to clean up
-    if job["status"] == "Complete" or job["status"] == "Failed":
+        # If streaming was enabled, response shape may differ; handle both.
         try:
-            job_status_container_client.delete_blob(job_blob_name)
-        except Exception as e:
-            logger.warning(f"Failed to delete job status blob {job_blob_name}: {e}")
-    
-    # 3. Return the job status
+            if isinstance(data.get("choices"), list):
+                draft = data["choices"][0]["message"]["content"]
+            else:
+                draft = json.dumps(data, indent=2)
+        except Exception:
+            draft = json.dumps(data, indent=2)
+
+        logger.info("Received draft from Azure OpenAI (%d chars)", len(draft))
+        return draft
+
+
+# -------------------------------------------------------------------
+# Job processor (background)
+# -------------------------------------------------------------------
+async def _process_job(job_id: str, payload: CreateJobRequest) -> None:
+    logger.info("Processing job %s", job_id)
+
+    job = _load_job_status(job_id)
+    job.status = "running"
+    job.updated_at = datetime.now(timezone.utc).isoformat()
+    _save_job_status(job)
+
+    try:
+        # 1. Download & OCR all files
+        all_text_chunks: List[str] = []
+
+        for blob_name in payload.files:
+            try:
+                file_bytes = _download_blob_to_bytes(blob_name)
+                text = _extract_text_with_docint(file_bytes)
+                if text:
+                    all_text_chunks.append(text)
+            except Exception as e:
+                logger.error("Error processing file %s: %s", blob_name, e)
+
+        combined_context = "\n\n".join(all_text_chunks)
+        if payload.extra_context:
+            combined_context += "\n\nAdditional user-provided context:\n" + payload.extra_context
+
+        # 2. Call Azure OpenAI to create draft
+        draft = await _call_azure_openai(payload.prompt, combined_context)
+
+        # 3. Save success status
+        job.status = "succeeded"
+        job.updated_at = datetime.now(timezone.utc).isoformat()
+        job.draft = draft
+        job.metadata = {
+            "num_files": len(payload.files),
+            "context_chars": len(combined_context),
+        }
+        _save_job_status(job)
+
+        logger.info("Job %s completed successfully", job_id)
+
+    except Exception as e:
+        logger.exception("Job %s failed: %s", job_id, e)
+        job.status = "failed"
+        job.updated_at = datetime.now(timezone.utc).isoformat()
+        job.error = str(e)
+        _save_job_status(job)
+
+
+# -------------------------------------------------------------------
+# Routes
+# -------------------------------------------------------------------
+@app.get("/health")
+async def health():
+    return {
+        "status": "ok",
+        "time": datetime.now(timezone.utc).isoformat(),
+        "allowed_origins": ALLOWED_ORIGINS,
+    }
+
+
+@app.post("/upload")
+async def upload_files(files: List[UploadFile] = File(...)):
+    """
+    Upload one or more files to Blob Storage (container: chatuploads).
+
+    Returns an array of blob names you can pass into /jobs.
+    """
+    uploaded: List[str] = []
+
+    for f in files:
+        contents = await f.read()
+        if not contents:
+            continue
+
+        blob_name = f"{uuid.uuid4()}-{f.filename}"
+        blob_client = upload_container_client.get_blob_client(blob_name)
+        blob_client.upload_blob(contents, overwrite=True)
+
+        uploaded.append(blob_name)
+        logger.info("Uploaded %s as blob %s", f.filename, blob_name)
+
+    if not uploaded:
+        raise HTTPException(status_code=400, detail="No valid files uploaded")
+
+    return {"files": uploaded}
+
+
+@app.post("/jobs", response_model=JobStatus)
+async def create_job(request: CreateJobRequest, background_tasks: BackgroundTasks):
+    """
+    Create a new job based on existing blobs in `chatuploads`.
+
+    Front end flow:
+      1. POST /upload -> get blob names
+      2. POST /jobs   -> pass those blob names + prompt
+      3. Poll /jobs/{job_id} until status == 'succeeded' or 'failed'
+    """
+    if not request.files:
+        raise HTTPException(status_code=400, detail="No files specified")
+
+    now = datetime.now(timezone.utc).isoformat()
+    job_id = str(uuid.uuid4())
+
+    job = JobStatus(
+        job_id=job_id,
+        status="queued",
+        created_at=now,
+        updated_at=now,
+        files=request.files,
+        prompt=request.prompt,
+    )
+    _save_job_status(job)
+
+    # Kick off async processing
+    background_tasks.add_task(_process_job, job_id, request)
+
     return job
 
-# --- Gunicorn/Uvicorn entry point ---
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/jobs/{job_id}", response_model=JobStatus)
+async def get_job(job_id: str):
+    """Fetch status & result of a job."""
+    return _load_job_status(job_id)
