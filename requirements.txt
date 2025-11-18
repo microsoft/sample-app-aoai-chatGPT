@@ -1,11 +1,5 @@
-fastapi
-uvicorn
-gunicorn
-openai
+fastapi==0.115.5
+uvicorn==0.34.0
+azure-storage-blob==12.20.0
+python-multipart==0.0.9
 pydantic
-azure-core
-azure-ai-documentintelligence
-azure-storage-blob
-msal
-requests
-python-dotenv
