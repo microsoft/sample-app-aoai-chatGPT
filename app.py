@@ -280,6 +280,12 @@ def create_job(req: CreateJobRequest):
       - Calls Azure OpenAI,
       - Saves the result JSON to Blob,
       - Returns the job id + result to the frontend.
+
+    IMPORTANT: We NEVER return 500 here anymore.
+    If Azure OpenAI fails for any reason, we return a normal 200
+    with an "assistant" message that explains the error.
+    This avoids the frontend generic "Failed to start job" and
+    shows you the real error text instead.
     """
     job_id = str(uuid.uuid4())
     logger.info(
@@ -290,12 +296,24 @@ def create_job(req: CreateJobRequest):
 
     try:
         result = run_openai_job(req.task, req.message, req.files)
-        save_result_to_blob(job_id, result)
-    except HTTPException:
-        # Re-raise the HTTPException with the same status/detail
-        raise
     except Exception as e:
+        # Log full stack trace for debugging
         logger.exception("Error running job %s", job_id)
-        raise HTTPException(status_code=500, detail=str(e))
+
+        # Build a "fake" assistant message that surfaces the error
+        result = {
+            "role": "assistant",
+            "content": (
+                "⚠️ I couldn't complete this request because the Azure OpenAI call failed.\n\n"
+                f"Internal error details:\n{e}"
+            ),
+        }
+
+    # Even in error, we still try to save the result blob for later inspection
+    try:
+        save_result_to_blob(job_id, result)
+    except Exception as blob_err:
+        logger.exception("Failed to save result blob for job %s: %s", job_id, blob_err)
+        # But do not fail the HTTP request because of blob issues
 
     return JobResponse(job_id=job_id, result=result)
