@@ -5,3 +5,4 @@ azure-storage-blob==12.20.0
 python-multipart==0.0.9
 pydantic
 httpx>=0.27.0
+openai>=1.44.0
