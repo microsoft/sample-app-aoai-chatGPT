@@ -128,7 +128,7 @@ def generate_blob_write_sas(blob_name: str) -> str:
 
 def generate_blob_read_sas(blob_name: str) -> str:
     """
-    SAS URL for GPT / backend to READ the PDF.
+    SAS URL for the PDF (not yet actually used by the model in this version).
     """
     sas_token = generate_blob_sas(
         account_name=account_name_for_sas,
@@ -152,39 +152,27 @@ def save_result_to_blob(job_id: str, result: dict) -> None:
     logger.info("Saved result for job: %s", job_id)
 
 
-def build_message_content(task: str, user_message: str, file_blob_names: List[str]) -> list:
+def build_message_text(task: str, user_message: str, file_blob_names: List[str]) -> str:
     """
-    Build the `content` array for the user message, combining:
-    - the instruction text
-    - any attached PDFs as `input_file`
+    Build a plain text prompt for the chat/completions API.
+    NOTE: In this simplified version, the model cannot actually read the PDFs —
+    we just list their blob names so at least they're referenced.
     """
-    combined_instruction = (
+    base = (
         "You are Joogni, a California family-law drafting assistant. "
-        "When PDFs are attached as input_file, you MUST read them carefully "
-        "and incorporate their contents into your answer.\n\n"
+        "Be precise and practical. Respond concisely but clearly.\n\n"
         f"Task: {task}\n"
-        f"User message: {user_message}"
+        f"User message: {user_message}\n"
     )
 
-    content = [
-        {
-            "type": "input_text",
-            "text": combined_instruction,
-        }
-    ]
+    if file_blob_names:
+        base += "\nAttached files (stored in Azure Blob Storage):\n"
+        for name in file_blob_names:
+            # we *could* generate read SAS URLs here just for debugging / logging
+            sas_url = generate_blob_read_sas(name)
+            base += f"- Blob name: {name}\n  SAS URL: {sas_url}\n"
 
-    for blob_name in file_blob_names:
-        url = generate_blob_read_sas(blob_name)
-        content.append(
-            {
-                "type": "input_file",
-                "file_url": {
-                    "url": url
-                },
-            }
-        )
-
-    return content
+    return base
 
 
 def call_azure_openai(messages: list) -> dict:
@@ -203,8 +191,8 @@ def call_azure_openai(messages: list) -> dict:
     }
 
     payload = {
-        "model": AZURE_OPENAI_DEPLOYMENT,
         "messages": messages,
+        # "model" is optional when using deployments; Azure routes by deployment name
     }
 
     try:
@@ -235,19 +223,19 @@ def call_azure_openai(messages: list) -> dict:
 
 def run_openai_job(task: str, message: str, files: List[FileRef]) -> dict:
     blob_names = [f.blob_name for f in files]
-    user_content = build_message_content(task, message, blob_names)
+    user_text = build_message_text(task, message, blob_names)
 
     messages = [
         {
             "role": "system",
             "content": (
                 "You are Joogni, a precise and practical assistant for a California family-law attorney. "
-                "Be concise but clear. If you rely on an attached document, treat it as the source of truth."
+                "Be concise but clear. If you rely on any attached documents mentioned, explain your reasoning."
             ),
         },
         {
             "role": "user",
-            "content": user_content,
+            "content": user_text,
         },
     ]
 
@@ -289,7 +277,7 @@ def create_job(req: CreateJobRequest):
 
     It:
       - Creates a job id,
-      - Calls Azure OpenAI with any attached files,
+      - Calls Azure OpenAI,
       - Saves the result JSON to Blob,
       - Returns the job id + result to the frontend.
     """
@@ -304,6 +292,7 @@ def create_job(req: CreateJobRequest):
         result = run_openai_job(req.task, req.message, req.files)
         save_result_to_blob(job_id, result)
     except HTTPException:
+        # Re-raise the HTTPException with the same status/detail
         raise
     except Exception as e:
         logger.exception("Error running job %s", job_id)
