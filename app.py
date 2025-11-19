@@ -1,105 +1,22 @@
-import json
-import logging
-import os
 import uuid
-from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from pydantic import BaseModel
 
-from azure.storage.blob import (
-    BlobServiceClient,
-    BlobSasPermissions,
-    generate_blob_sas,
-)
+# -----------------------------------------------------------------------------
+# Pydantic models
+# -----------------------------------------------------------------------------
 
-import httpx
-
-# -------------------------------------------------------------------
-# Logging
-# -------------------------------------------------------------------
-logger = logging.getLogger("app")
-logging.basicConfig(level=logging.INFO)
-
-# -------------------------------------------------------------------
-# Config
-# -------------------------------------------------------------------
-AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-AZURE_OPENAI_API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
-
-STORAGE_ACCOUNT_NAME = os.environ.get("AZURE_STORAGE_ACCOUNT")
-STORAGE_ACCOUNT_KEY = os.environ.get("AZURE_STORAGE_KEY")
-STORAGE_CONNECTION_STRING = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
-STORAGE_CONTAINER_NAME = os.environ.get("AZURE_STORAGE_CONTAINER", "chatuploads")
-
-if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_API_KEY:
-    raise RuntimeError("Azure OpenAI config missing (AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY).")
-
-if not (STORAGE_CONNECTION_STRING or (STORAGE_ACCOUNT_NAME and STORAGE_ACCOUNT_KEY)):
-    raise RuntimeError(
-        "Azure Storage config missing. Set AZURE_STORAGE_CONNECTION_STRING or "
-        "AZURE_STORAGE_ACCOUNT + AZURE_STORAGE_KEY."
-    )
-
-AZURE_OPENAI_ENDPOINT = AZURE_OPENAI_ENDPOINT.rstrip("/")
-
-# -------------------------------------------------------------------
-# Azure Blob setup
-# -------------------------------------------------------------------
-if STORAGE_CONNECTION_STRING:
-    blob_service_client = BlobServiceClient.from_connection_string(STORAGE_CONNECTION_STRING)
-    account_name_for_sas = blob_service_client.account_name
-else:
-    blob_service_client = BlobServiceClient(
-        account_url=f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net",
-        credential=STORAGE_ACCOUNT_KEY,
-    )
-    account_name_for_sas = STORAGE_ACCOUNT_NAME
-
-container_client = blob_service_client.get_container_client(STORAGE_CONTAINER_NAME)
-try:
-    container_client.create_container()
-    logger.info("Created container: %s", STORAGE_CONTAINER_NAME)
-except Exception:
-    logger.info("Storage configured for container: %s", STORAGE_CONTAINER_NAME)
-
-# -------------------------------------------------------------------
-# FastAPI app
-# -------------------------------------------------------------------
-app = FastAPI(title="Joogni Backend")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # tighten this in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# -------------------------------------------------------------------
-# Models
-# -------------------------------------------------------------------
-class UploadUrlRequest(BaseModel):
+class ChatFile(BaseModel):
     filename: str
-
-
-class UploadUrlResponse(BaseModel):
-    blob_name: str
-    upload_url: str
-
-
-class FileRef(BaseModel):
-    blob_name: str
+    url: str
 
 
 class CreateJobRequest(BaseModel):
     task: str
     message: str
-    files: List[FileRef] = []
+    files: Optional[List[ChatFile]] = None
 
 
 class JobResponse(BaseModel):
@@ -107,213 +24,44 @@ class JobResponse(BaseModel):
     result: dict
 
 
-# -------------------------------------------------------------------
-# Helpers: SAS URLs
-# -------------------------------------------------------------------
-def generate_blob_write_sas(blob_name: str) -> str:
-    """
-    SAS URL for the frontend to PUT the original upload.
-    """
-    sas_token = generate_blob_sas(
-        account_name=account_name_for_sas,
-        container_name=STORAGE_CONTAINER_NAME,
-        blob_name=blob_name,
-        account_key=STORAGE_ACCOUNT_KEY,
-        permission=BlobSasPermissions(create=True, write=True),
-        expiry=datetime.utcnow() + timedelta(hours=1),
-    )
-    url = f"https://{account_name_for_sas}.blob.core.windows.net/{STORAGE_CONTAINER_NAME}/{blob_name}?{sas_token}"
-    return url
+# -----------------------------------------------------------------------------
+# FastAPI app
+# -----------------------------------------------------------------------------
+
+app = FastAPI(title="Joogni Backend - Minimal Echo Version")
 
 
-def generate_blob_read_sas(blob_name: str) -> str:
-    """
-    SAS URL for the PDF (not yet actually used by the model in this version).
-    """
-    sas_token = generate_blob_sas(
-        account_name=account_name_for_sas,
-        container_name=STORAGE_CONTAINER_NAME,
-        blob_name=blob_name,
-        account_key=STORAGE_ACCOUNT_KEY,
-        permission=BlobSasPermissions(read=True),
-        expiry=datetime.utcnow() + timedelta(hours=1),
-    )
-    url = f"https://{account_name_for_sas}.blob.core.windows.net/{STORAGE_CONTAINER_NAME}/{blob_name}?{sas_token}"
-    return url
-
-
-def save_result_to_blob(job_id: str, result: dict) -> None:
-    """
-    Store GPT result JSON at results/{job_id}.json
-    """
-    blob_name = f"results/{job_id}.json"
-    data = json.dumps(result, ensure_ascii=False).encode("utf-8")
-    container_client.upload_blob(name=blob_name, data=data, overwrite=True)
-    logger.info("Saved result for job: %s", job_id)
-
-
-def build_message_text(task: str, user_message: str, file_blob_names: List[str]) -> str:
-    """
-    Build a plain text prompt for the chat/completions API.
-    NOTE: In this simplified version, the model cannot actually read the PDFs —
-    we just list their blob names so at least they're referenced.
-    """
-    base = (
-        "You are Joogni, a California family-law drafting assistant. "
-        "Be precise and practical. Respond concisely but clearly.\n\n"
-        f"Task: {task}\n"
-        f"User message: {user_message}\n"
-    )
-
-    if file_blob_names:
-        base += "\nAttached files (stored in Azure Blob Storage):\n"
-        for name in file_blob_names:
-            # we *could* generate read SAS URLs here just for debugging / logging
-            sas_url = generate_blob_read_sas(name)
-            base += f"- Blob name: {name}\n  SAS URL: {sas_url}\n"
-
-    return base
-
-
-def call_azure_openai(messages: list) -> dict:
-    """
-    Call Azure OpenAI Chat Completions using HTTP, no openai SDK.
-    """
-    url = (
-        f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/"
-        f"{AZURE_OPENAI_DEPLOYMENT}/chat/completions"
-        f"?api-version={AZURE_OPENAI_API_VERSION}"
-    )
-
-    headers = {
-        "api-key": AZURE_OPENAI_API_KEY,
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "messages": messages,
-        # "model" is optional when using deployments; Azure routes by deployment name
-    }
-
-    try:
-        resp = httpx.post(url, headers=headers, json=payload, timeout=120.0)
-    except Exception as e:
-        logger.exception("Error calling Azure OpenAI")
-        raise HTTPException(status_code=500, detail=f"Error calling Azure OpenAI: {e}")
-
-    if resp.status_code >= 400:
-        logger.error("Azure OpenAI error %s: %s", resp.status_code, resp.text)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Azure OpenAI returned {resp.status_code}: {resp.text}",
-        )
-
-    data = resp.json()
-    try:
-        choice = data["choices"][0]["message"]
-    except Exception:
-        logger.error("Unexpected Azure OpenAI response: %s", data)
-        raise HTTPException(status_code=500, detail="Unexpected Azure OpenAI response format.")
-
-    return {
-        "role": choice.get("role", "assistant"),
-        "content": choice.get("content", ""),
-    }
-
-
-def run_openai_job(task: str, message: str, files: List[FileRef]) -> dict:
-    blob_names = [f.blob_name for f in files]
-    user_text = build_message_text(task, message, blob_names)
-
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are Joogni, a precise and practical assistant for a California family-law attorney. "
-                "Be concise but clear. If you rely on any attached documents mentioned, explain your reasoning."
-            ),
-        },
-        {
-            "role": "user",
-            "content": user_text,
-        },
-    ]
-
-    logger.info("Calling Azure OpenAI for task '%s' with %d file(s)", task, len(blob_names))
-    return call_azure_openai(messages)
-
-
-# -------------------------------------------------------------------
-# Routes
-# -------------------------------------------------------------------
 @app.get("/health")
-def health():
+def health_check():
+    """
+    Simple health endpoint so the platform can see the app is alive.
+    """
     return {"status": "ok"}
-
-
-@app.post("/upload-url", response_model=UploadUrlResponse)
-def get_upload_url(req: UploadUrlRequest):
-    """
-    Frontend calls this to get a URL to upload the raw PDF directly to Blob.
-    """
-    unique = uuid.uuid4()
-    blob_name = f"{unique}_{req.filename}"
-    logger.info("Generating upload URL for: %s", blob_name)
-
-    try:
-        upload_url = generate_blob_write_sas(blob_name)
-    except Exception as e:
-        logger.exception("Failed to generate upload URL")
-        raise HTTPException(status_code=500, detail=f"Could not generate upload URL: {e}")
-
-    logger.info("Generated upload URL successfully for blob: %s", blob_name)
-    return UploadUrlResponse(blob_name=blob_name, upload_url=upload_url)
 
 
 @app.post("/jobs", response_model=JobResponse)
 def create_job(req: CreateJobRequest):
     """
-    Main endpoint the frontend calls when the user hits 'Send' in Joogni.
+    Minimal /jobs endpoint that ALWAYS returns 200 and NEVER talks to Azure.
 
-    It:
-      - Creates a job id,
-      - Calls Azure OpenAI,
-      - Saves the result JSON to Blob,
-      - Returns the job id + result to the frontend.
-
-    IMPORTANT: We NEVER return 500 here anymore.
-    If Azure OpenAI fails for any reason, we return a normal 200
-    with an "assistant" message that explains the error.
-    This avoids the frontend generic "Failed to start job" and
-    shows you the real error text instead.
+    This is purely to verify:
+      - The frontend is calling the right URL (/jobs),
+      - CORS / networking is OK,
+      - The request body matches this schema,
+      - The frontend correctly handles a successful response.
     """
     job_id = str(uuid.uuid4())
-    logger.info(
-        "Created job: %s with %d files",
-        job_id,
-        len(req.files) if req.files else 0,
-    )
 
-    try:
-        result = run_openai_job(req.task, req.message, req.files)
-    except Exception as e:
-        # Log full stack trace for debugging
-        logger.exception("Error running job %s", job_id)
+    # This is the "assistant" reply the frontend will show.
+    # We keep it simple on purpose.
+    assistant_message = {
+        "role": "assistant",
+        "content": (
+            "👋 Hi from the minimal backend!\n\n"
+            f"- task: {req.task}\n"
+            f"- message: {req.message}\n"
+            f"- files_received: {len(req.files) if req.files else 0}"
+        ),
+    }
 
-        # Build a "fake" assistant message that surfaces the error
-        result = {
-            "role": "assistant",
-            "content": (
-                "⚠️ I couldn't complete this request because the Azure OpenAI call failed.\n\n"
-                f"Internal error details:\n{e}"
-            ),
-        }
-
-    # Even in error, we still try to save the result blob for later inspection
-    try:
-        save_result_to_blob(job_id, result)
-    except Exception as blob_err:
-        logger.exception("Failed to save result blob for job %s: %s", job_id, blob_err)
-        # But do not fail the HTTP request because of blob issues
-
-    return JobResponse(job_id=job_id, result=result)
+    return JobResponse(job_id=job_id, result=assistant_message)
