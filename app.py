@@ -57,19 +57,15 @@ async def health():
 @app.post("/jobs")
 async def create_job(request: Request):
     """
-    Extremely forgiving job endpoint:
-    - Accepts ANY JSON body
-    - Never assumes any particular structure
-    - Always returns 200 with a completed job payload
+    Extremely forgiving job endpoint (kept just in case anything uses it).
     """
     try:
         payload = await request.json()
     except Exception:
         payload = None
 
-    logger.info("Received job payload: %r", payload)
+    logger.info("Received job payload on /jobs: %r", payload)
 
-    # Dummy job id & response the platform can accept
     job_id = f"job-{uuid4()}"
 
     response_body = {
@@ -77,10 +73,54 @@ async def create_job(request: Request):
         "status": "completed",
         "output": {
             "echo": payload,
-            "message": "Job handled by backend.",
+            "message": "Job handled by /jobs backend.",
         },
     }
 
-    logger.info("Returning job response: %r", response_body)
+    logger.info("Returning job response from /jobs: %r", response_body)
+
+    return JSONResponse(status_code=200, content=response_body)
+
+
+@app.post("/api/copilot")
+async def copilot(request: Request):
+    """
+    This is the endpoint your app is actually calling:
+    body: {"jurisdiction": "...", "task": "...", "messages": [...], "blobs": []}
+
+    We:
+    - accept ANY JSON
+    - log it
+    - always return 200 with a simple 'answer' + echo
+    """
+    try:
+        data = await request.json()
+    except Exception:
+        data = None
+
+    logger.info("Received copilot payload: %r", data)
+
+    # Try to extract the latest user question (best effort, safe if shape changes)
+    user_question = None
+    if isinstance(data, dict):
+        msgs = data.get("messages") or []
+        if isinstance(msgs, list) and msgs:
+            last = msgs[-1]
+            if isinstance(last, dict):
+                user_question = last.get("content")
+
+    # Very simple placeholder answer — we can later swap this for real OpenAI logic
+    if user_question:
+        answer_text = f"You asked: {user_question!r}. This is a dummy backend response from /api/copilot."
+    else:
+        answer_text = "This is a dummy backend response from /api/copilot."
+
+    response_body = {
+        "status": "completed",
+        "answer": answer_text,
+        "echo": data,
+    }
+
+    logger.info("Returning copilot response: %r", response_body)
 
     return JSONResponse(status_code=200, content=response_body)
