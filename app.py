@@ -1,67 +1,76 @@
 import uuid
-from typing import List, Optional
+import logging
+from typing import Any, Dict, Optional
 
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-# -----------------------------------------------------------------------------
-# Pydantic models
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Logging config
+# ---------------------------------------------------------------------------
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("app")
 
-class ChatFile(BaseModel):
-    filename: str
-    url: str
-
-
-class CreateJobRequest(BaseModel):
-    task: str
-    message: str
-    files: Optional[List[ChatFile]] = None
-
-
-class JobResponse(BaseModel):
-    job_id: str
-    result: dict
-
-
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # FastAPI app
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+app = FastAPI(title="Joogni Backend - Ultra Lenient /jobs")
 
-app = FastAPI(title="Joogni Backend - Minimal Echo Version")
+
+# CORS: allow everything so the frontend can talk to us
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],       # you can restrict this later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
-def health_check():
+async def health_check():
     """
     Simple health endpoint so the platform can see the app is alive.
     """
     return {"status": "ok"}
 
 
-@app.post("/jobs", response_model=JobResponse)
-def create_job(req: CreateJobRequest):
+@app.post("/jobs")
+async def create_job(request: Request) -> Dict[str, Any]:
     """
-    Minimal /jobs endpoint that ALWAYS returns 200 and NEVER talks to Azure.
+    ULTRA-LENIENT /jobs endpoint:
 
-    This is purely to verify:
-      - The frontend is calling the right URL (/jobs),
-      - CORS / networking is OK,
-      - The request body matches this schema,
-      - The frontend correctly handles a successful response.
+    - Accepts ANY JSON body (or none).
+    - Never talks to Azure OpenAI.
+    - Always returns a 'job' with:
+        { job_id, status, result: { message, echo } }
+    - Logs whatever the frontend sent so we can inspect it in the container logs.
     """
+    try:
+        body: Optional[Dict[str, Any]] = await request.json()
+    except Exception:
+        body = None
+
+    logger.info("----- /jobs called -----")
+    logger.info(f"Request body: {body}")
+
     job_id = str(uuid.uuid4())
 
-    # This is the "assistant" reply the frontend will show.
-    # We keep it simple on purpose.
-    assistant_message = {
-        "role": "assistant",
-        "content": (
-            "👋 Hi from the minimal backend!\n\n"
-            f"- task: {req.task}\n"
-            f"- message: {req.message}\n"
-            f"- files_received: {len(req.files) if req.files else 0}"
-        ),
+    # Very generic response that most “job” clients will tolerate
+    return {
+        "job_id": job_id,
+        "status": "completed",
+        "result": {
+            "message": "👋 Hello from the ultra-lenient backend. The job completed successfully.",
+            "echo": body,
+        },
+        "metadata": {},
     }
 
-    return JobResponse(job_id=job_id, result=assistant_message)
+
+@app.get("/")
+async def root():
+    """
+    Root endpoint just to verify the app is running.
+    """
+    return {"message": "Backend is running", "hint": "POST to /jobs to start a job."}
