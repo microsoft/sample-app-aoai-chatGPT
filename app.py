@@ -7,16 +7,13 @@ logger = logging.getLogger("app")
 
 app = FastAPI()
 
-
 @app.on_event("startup")
 async def startup_event():
     logger.info("+++ APP STARTUP +++")
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("--- APP SHUTDOWN ---")
-
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -25,39 +22,37 @@ async def log_requests(request: Request, call_next):
         body_preview = body_bytes.decode("utf-8", errors="ignore")[:500]
     except Exception:
         body_preview = "<unable to read body>"
-
+    
     logger.info("Incoming %s %s | body: %s", request.method, request.url.path, body_preview)
     response = await call_next(request)
     logger.info("Completed %s %s -> %s", request.method, request.url.path, response.status_code)
     return response
 
-
 @app.get("/")
 async def root():
     return {"message": "Backend is running"}
 
+# --- Mocking the Async Job Flow for the Smoke Test ---
 
 @app.post("/api/copilot")
 async def copilot(request: Request):
+    """
+    Mocks the job creation. Returns a static job_id to satisfy script.js.
+    """
     payload = await request.json()
     logger.info("Received copilot payload: %r", payload)
+    
+    # Return a dummy job_id so script.js proceeds to polling
+    return JSONResponse(status_code=200, content={"job_id": "smoke-test-123"})
 
-    # Try to grab the last user message
-    user_message = "No user message found."
-    try:
-        msgs = payload.get("messages") or []
-        for m in reversed(msgs):
-            if m.get("role") == "user":
-                user_message = m.get("content") or user_message
-                break
-    except Exception:
-        pass
-
-    answer = f"You asked: '{user_message}'. This is a dummy backend response from /api/copilot."
-
-    response_body = {
-        "answer": answer
-    }
-
-    logger.info("Returning copilot response: %r", response_body)
-    return JSONResponse(status_code=200, content=response_body)
+@app.get("/api/check_status/{job_id}")
+async def check_status(job_id: str):
+    """
+    Mocks the status check. Returns 'Complete' immediately.
+    """
+    logger.info(f"Checking status for job: {job_id}")
+    
+    return JSONResponse(status_code=200, content={
+        "status": "Complete",
+        "result": "Ghost Busted! 👻 The backend is successfully updated and communicating with the frontend."
+    })
