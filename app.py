@@ -1,76 +1,86 @@
-import uuid
 import logging
-from typing import Any, Dict, Optional
+from uuid import uuid4
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-# ---------------------------------------------------------------------------
-# Logging config
-# ---------------------------------------------------------------------------
+# --- Logging setup ---
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
 
-# ---------------------------------------------------------------------------
-# FastAPI app
-# ---------------------------------------------------------------------------
-app = FastAPI(title="Joogni Backend - Ultra Lenient /jobs")
+app = FastAPI()
 
 
-# CORS: allow everything so the frontend can talk to us
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],       # you can restrict this later
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.on_event("startup")
+async def startup_event():
+    logger.info("+++ APP STARTUP +++")
 
 
-@app.get("/health")
-async def health_check():
-    """
-    Simple health endpoint so the platform can see the app is alive.
-    """
-    return {"status": "ok"}
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("--- APP SHUTDOWN ---")
 
 
-@app.post("/jobs")
-async def create_job(request: Request) -> Dict[str, Any]:
-    """
-    ULTRA-LENIENT /jobs endpoint:
-
-    - Accepts ANY JSON body (or none).
-    - Never talks to Azure OpenAI.
-    - Always returns a 'job' with:
-        { job_id, status, result: { message, echo } }
-    - Logs whatever the frontend sent so we can inspect it in the container logs.
-    """
+# Log every request so we can see what the platform is calling
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
     try:
-        body: Optional[Dict[str, Any]] = await request.json()
+        body_bytes = await request.body()
+        body_preview = body_bytes.decode("utf-8", errors="ignore")[:500]
     except Exception:
-        body = None
+        body_preview = "<unable to read body>"
 
-    logger.info("----- /jobs called -----")
-    logger.info(f"Request body: {body}")
+    logger.info("Incoming %s %s | body: %s", request.method, request.url.path, body_preview)
 
-    job_id = str(uuid.uuid4())
+    response = await call_next(request)
 
-    # Very generic response that most “job” clients will tolerate
-    return {
-        "job_id": job_id,
-        "status": "completed",
-        "result": {
-            "message": "👋 Hello from the ultra-lenient backend. The job completed successfully.",
-            "echo": body,
-        },
-        "metadata": {},
-    }
+    logger.info(
+        "Completed %s %s -> %s",
+        request.method,
+        request.url.path,
+        response.status_code,
+    )
+    return response
 
 
 @app.get("/")
 async def root():
+    return {"message": "Backend is running"}
+
+
+@app.get("/health")
+async def health():
+    # Simple health endpoint the platform can ping
+    return {"status": "ok"}
+
+
+@app.post("/jobs")
+async def create_job(request: Request):
     """
-    Root endpoint just to verify the app is running.
+    Extremely forgiving job endpoint:
+    - Accepts ANY JSON body
+    - Never assumes any particular structure
+    - Always returns 200 with a completed job payload
     """
-    return {"message": "Backend is running", "hint": "POST to /jobs to start a job."}
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = None
+
+    logger.info("Received job payload: %r", payload)
+
+    # Dummy job id & response the platform can accept
+    job_id = f"job-{uuid4()}"
+
+    response_body = {
+        "job_id": job_id,
+        "status": "completed",
+        "output": {
+            "echo": payload,
+            "message": "Job handled by backend.",
+        },
+    }
+
+    logger.info("Returning job response: %r", response_body)
+
+    return JSONResponse(status_code=200, content=response_body)
