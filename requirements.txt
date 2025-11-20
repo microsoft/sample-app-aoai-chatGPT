@@ -1,3 +1,11 @@
 fastapi==0.115.5
 uvicorn==0.34.0
 gunicorn==23.0.0
+python-dotenv==1.0.1
+openai==1.55.0
+azure-storage-blob==12.23.1
+azure-identity==1.19.0
+# CRITICAL: This version fixes the 'Session' object crash
+azure-ai-documentintelligence>=1.0.0b4
+requests==2.32.3
+aiohttp==3.11.9
