@@ -24,11 +24,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Routes ---
+# --- 1. DEFINITIONS (MUST BE AT TOP) ---
+# We define this HERE so it exists before any route tries to use it.
+class SasRequest(BaseModel):
+    filename: str
+
+# --- 2. ROUTES ---
 
 @app.get("/")
 async def root():
-    return {"status": "Online", "message": "Server is running in Lazy Mode"}
+    return {"status": "Online", "message": "Server is running (Lazy Mode)"}
 
 @app.post("/api/copilot")
 async def start_copilot_job(request: Request, background_tasks: BackgroundTasks):
@@ -36,22 +41,54 @@ async def start_copilot_job(request: Request, background_tasks: BackgroundTasks)
         data = await request.json()
         job_id = str(uuid.uuid4())
         
-        # We define the job wrapper here to ensure the endpoint returns immediately
+        # Wrapper for background task
         background_tasks.add_task(lazy_copilot_task, job_id, data)
         
         return {"job_id": job_id}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- The Lazy Task ---
-# This imports libraries ONLY when the job runs. If they fail, it logs the error to the chat.
+@app.post("/api/get-upload-url")
+async def get_upload_url(req: SasRequest):
+    """
+    Generates a SAS URL for uploading files.
+    """
+    try:
+        # Lazy Import Storage Client
+        from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
+        
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container = os.getenv("AZURE_STORAGE_CONTAINER")
+        
+        if not connect_str or not container:
+            return JSONResponse(status_code=500, content={"error": "Storage Config Missing on Server"})
 
+        blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+        
+        blob_name = f"{uuid.uuid4()}-{req.filename}"
+        sas_token = generate_blob_sas(
+            account_name=blob_service_client.account_name,
+            container_name=container,
+            blob_name=blob_name,
+            account_key=blob_service_client.credential.account_key,
+            permission=BlobSasPermissions(create=True, write=True),
+            expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
+        )
+        url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container}/{blob_name}?{sas_token}"
+        return {"upload_url": url, "blob_name": blob_name}
+    
+    except ImportError:
+        return JSONResponse(status_code=500, content={"error": "Azure Storage Library not installed."})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# --- 3. BACKGROUND TASK LOGIC ---
 JOBS = {}
 
 async def lazy_copilot_task(job_id: str, data: dict):
     JOBS[job_id] = {"status": "Processing", "result": ""}
     try:
-        # 1. LAZY IMPORT - If these fail, we catch it here.
+        # LAZY IMPORTS - Prevents startup crash if libraries fail
         try:
             from openai import AzureOpenAI
             from azure.core.credentials import AzureKeyCredential
@@ -60,13 +97,14 @@ async def lazy_copilot_task(job_id: str, data: dict):
         except ImportError as e:
             raise ImportError(f"Library Installation Failed: {e}")
 
-        # 2. CHECK KEYS
+        # CHECK KEYS
         key = os.getenv("AZURE_OPENAI_KEY")
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        
         if not key or not endpoint:
-            raise ValueError("Missing Azure OpenAI Key/Endpoint in Environment Variables.")
+            raise ValueError(f"Missing Azure OpenAI Key/Endpoint. Keys found: {list(os.environ.keys())}")
 
-        # 3. RUN LOGIC (Simplified for diagnosis)
+        # RUN AI
         client = AzureOpenAI(api_key=key, azure_endpoint=endpoint, api_version="2024-02-01")
         
         task = data.get("task", "general")
