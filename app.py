@@ -28,7 +28,10 @@ app.add_middleware(
 class SasRequest(BaseModel):
     filename: str
 
-# --- 2. ROUTES ---
+# --- 2. GLOBAL STATE ---
+JOBS = {}
+
+# --- 3. ROUTES ---
 
 @app.get("/")
 async def root():
@@ -46,6 +49,20 @@ async def start_copilot_job(request: Request, background_tasks: BackgroundTasks)
         return {"job_id": job_id}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/check_status/{job_id}")
+async def check_job_status(job_id: str):
+    """
+    Checks the status of a background job.
+    """
+    job = JOBS.get(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "Job not found"})
+    
+    return {
+        "status": job["status"],
+        "result": job["result"]
+    }
 
 @app.post("/api/get-upload-url")
 async def get_upload_url(req: SasRequest):
@@ -81,8 +98,7 @@ async def get_upload_url(req: SasRequest):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- 3. BACKGROUND TASK (DEBUG MODE) ---
-JOBS = {}
+# --- 4. BACKGROUND TASK (DEBUG MODE) ---
 
 async def lazy_copilot_task(job_id: str, data: dict):
     JOBS[job_id] = {"status": "Processing", "result": ""}
