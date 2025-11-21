@@ -7,5 +7,5 @@ aiohttp
 openai
 azure-storage-blob
 azure-identity
-# We remove the version lock to let Azure pick a compatible version
+# Removing version constraints to prevent build failures
 azure-ai-documentintelligence
