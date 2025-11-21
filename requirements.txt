@@ -7,5 +7,4 @@ aiohttp
 openai
 azure-storage-blob
 azure-identity
-# Removing version constraints to prevent build failures
-azure-ai-documentintelligence
+# REMOVED: azure-ai-documentintelligence (We will let the code handle the missing lib gracefully)
