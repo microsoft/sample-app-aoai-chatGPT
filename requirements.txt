@@ -7,4 +7,5 @@ aiohttp
 openai
 azure-storage-blob
 azure-identity
-# REMOVED: azure-ai-documentintelligence (We will let the code handle the missing lib gracefully)
+azure-ai-documentintelligence==1.0.0
+# Force Rebuild 001
