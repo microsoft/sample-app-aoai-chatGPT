@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 1. DEFINITIONS (MUST BE AT TOP) ---
+# --- 1. DEFINITIONS ---
 class SasRequest(BaseModel):
     filename: str
 
@@ -35,7 +35,7 @@ JOBS = {}
 
 @app.get("/")
 async def root():
-    return {"status": "Online", "message": "Server is running (Debug Mode)"}
+    return {"status": "Online", "message": "Server is running (Threaded Mode)"}
 
 @app.post("/api/copilot")
 async def start_copilot_job(request: Request, background_tasks: BackgroundTasks):
@@ -52,9 +52,6 @@ async def start_copilot_job(request: Request, background_tasks: BackgroundTasks)
 
 @app.get("/api/check_status/{job_id}")
 async def check_job_status(job_id: str):
-    """
-    Checks the status of a background job.
-    """
     job = JOBS.get(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"error": "Job not found"})
@@ -66,9 +63,6 @@ async def check_job_status(job_id: str):
 
 @app.post("/api/get-upload-url")
 async def get_upload_url(req: SasRequest):
-    """
-    Generates a SAS URL for uploading files.
-    """
     try:
         # Lazy Import Storage Client
         from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
@@ -98,11 +92,13 @@ async def get_upload_url(req: SasRequest):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- 4. BACKGROUND TASK (DEBUG MODE) ---
+# --- 4. BACKGROUND TASK (THREADED MODE) ---
+# CRITICAL CHANGE: Removed 'async'. This tells FastAPI to run this in a 
+# separate thread so it doesn't block the server heartbeat during long PDF processing.
 
-async def lazy_copilot_task(job_id: str, data: dict):
+def lazy_copilot_task(job_id: str, data: dict):
     JOBS[job_id] = {"status": "Processing", "result": ""}
-    debug_log = [] # Collecting logs to show user
+    debug_log = [] 
     
     try:
         # 1. LAZY IMPORTS
