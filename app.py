@@ -115,18 +115,27 @@ async def search_outlook(request: Request):
         query = data.get("query", "")
         
         url = "https://graph.microsoft.com/v1.0/me/messages"
-        params = {
-            "$top": 15,
-            "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
-            "$filter": "hasAttachments eq true",
-            "$orderby": "receivedDateTime desc"
-        }
+        
+        # ✅ FIX: Split Logic to avoid "InefficientFilter" error
         if query:
-            params["$search"] = f'"{query}"'
+            # Mode A: Active Search (Sort by Relevance, KQL Syntax)
+            # We move 'hasAttachments' inside the search query
+            params = {
+                "$top": 15,
+                "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
+                "$search": f'"{query}" AND hasAttachments:true' 
+            }
+        else:
+            # Mode B: Recent Items (Sort by Date)
+            params = {
+                "$top": 15,
+                "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
+                "$filter": "hasAttachments eq true",
+                "$orderby": "receivedDateTime desc"
+            }
             
         resp = requests.get(url, headers=headers, params=params)
         
-        # ✅ DEBUG MODE: Return the actual error from Microsoft
         if resp.status_code != 200:
             error_detail = resp.text
             logger.error(f"Graph Error: {error_detail}")
