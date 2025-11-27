@@ -82,7 +82,7 @@ async def get_upload_url(req: SasRequest):
 # --- 4. BACKGROUND TASK ---
 
 def lazy_copilot_task(job_id: str, data: dict):
-    JOBS[job_id] = {"status": "Processing", "result": ""}
+    JOBS[job_id] = {"status": "Pending", "result": ""}
     debug_log = [] 
     
     try:
