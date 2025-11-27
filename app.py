@@ -2,7 +2,7 @@ import os
 import uuid
 import logging
 import sys
-import requests
+import requests 
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# --- IMPORTS FOR BLOB STORAGE ---
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
 
 load_dotenv()
@@ -19,28 +18,22 @@ logger = logging.getLogger("app")
 
 app = FastAPI()
 
+# ✅ CORS FIX
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=["*"], 
+    allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- 1. DEFINITIONS ---
 class SasRequest(BaseModel):
     filename: str
 
-# --- 2. GLOBAL STATE ---
 JOBS = {}
 
-# --- 3. HELPER: GRAPH AUTH (UPDATED) ---
+# --- HELPER: GRAPH AUTH ---
 def get_graph_headers(req: Request):
-    """
-    Extracts the User's Access Token.
-    Checks for a direct 'Authorization' header first (Frontend passing the key),
-    then falls back to Azure's internal 'X-MS-TOKEN'.
-    """
     # 1. Check for Direct Header (Passed by Frontend JS)
     auth_header = req.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
@@ -49,15 +42,14 @@ def get_graph_headers(req: Request):
             "Content-Type": "application/json"
         }
 
-    # 2. Check for Internal Azure Header (Easy Auth)
+    # 2. Check for Internal Azure Header
     token = req.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
     
     if not token:
-        # Fallback for local testing
         token = os.getenv("TEST_GRAPH_TOKEN")
         
     if not token:
-        logger.warning("No Auth Token found in headers.")
+        logger.warning("No Auth Token found.")
         return None
         
     return {
@@ -65,11 +57,11 @@ def get_graph_headers(req: Request):
         "Content-Type": "application/json"
     }
 
-# --- 4. ROUTES (CORE) ---
+# --- ROUTES ---
 
 @app.get("/")
 async def root():
-    return {"status": "Online", "message": "Joogni Backend (Graph Enabled) is Running"}
+    return {"status": "Online", "message": "Joogni Backend is Running"}
 
 @app.post("/api/copilot")
 async def start_copilot_job(request: Request, background_tasks: BackgroundTasks):
@@ -112,14 +104,12 @@ async def get_upload_url(req: SasRequest):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- 5. ROUTES (MICROSOFT GRAPH) ---
-
 @app.post("/api/search-outlook")
 async def search_outlook(request: Request):
     try:
         headers = get_graph_headers(request)
         if not headers:
-             return JSONResponse(status_code=401, content={"error": "Not authenticated with Microsoft. Please refresh the page."})
+             return JSONResponse(status_code=401, content={"error": "Not authenticated. Please Refresh."})
 
         data = await request.json()
         query = data.get("query", "")
@@ -128,18 +118,19 @@ async def search_outlook(request: Request):
         params = {
             "$top": 15,
             "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
-            "$filter": "hasAttachments eq true", # Only emails with files
+            "$filter": "hasAttachments eq true",
             "$orderby": "receivedDateTime desc"
         }
-        
         if query:
             params["$search"] = f'"{query}"'
             
         resp = requests.get(url, headers=headers, params=params)
         
+        # ✅ DEBUG MODE: Return the actual error from Microsoft
         if resp.status_code != 200:
-            logger.error(f"Graph Error: {resp.text}")
-            return JSONResponse(status_code=resp.status_code, content={"error": "Failed to search Outlook"})
+            error_detail = resp.text
+            logger.error(f"Graph Error: {error_detail}")
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {error_detail}"})
             
         return resp.json()
     except Exception as e:
@@ -156,7 +147,7 @@ async def get_outlook_attachments(message_id: str, request: Request):
         resp = requests.get(url, headers=headers)
         
         if resp.status_code != 200:
-            return JSONResponse(status_code=resp.status_code, content={"error": "Failed to fetch attachments"})
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
             
         return resp.json()
     except Exception as e:
@@ -173,14 +164,12 @@ async def download_graph_file(request: Request):
         if not headers:
              return JSONResponse(status_code=401, content={"error": "Not authenticated"})
         
-        # 1. Download from Graph
         graph_resp = requests.get(download_url, headers=headers)
         if graph_resp.status_code != 200:
-            return JSONResponse(status_code=400, content={"error": "Could not download file from Microsoft Graph"})
+            return JSONResponse(status_code=400, content={"error": f"Download Error: {graph_resp.text}"})
             
         file_content = graph_resp.content
 
-        # 2. Upload to Blob
         connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         container = os.getenv("AZURE_STORAGE_CONTAINER")
         
@@ -196,14 +185,10 @@ async def download_graph_file(request: Request):
             "source": "microsoft_graph"
         }
     except Exception as e:
-        logger.error(f"Graph Download Error: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- 6. BACKGROUND TASK ---
 def lazy_copilot_task(job_id: str, data: dict):
     JOBS[job_id] = {"status": "Pending", "result": ""}
-    debug_log = [] 
-    
     try:
         try:
             from openai import AzureOpenAI
@@ -211,7 +196,6 @@ def lazy_copilot_task(job_id: str, data: dict):
         except ImportError as e:
             raise ImportError(f"Base Library Failed: {e}")
 
-        # 2. EXTRACT FILES
         blobs = data.get("blobs", [])
         file_context = ""
         
@@ -241,24 +225,18 @@ def lazy_copilot_task(job_id: str, data: dict):
                             result = poller.result()
                             text = result.content or "(No Text)"
                             file_context += f"\n--- FILE: {f_name} ---\n{text}\n"
-                        except Exception as e:
-                            debug_log.append(f"Err {f_name}: {str(e)}")
-            except Exception as e:
-                debug_log.append(f"File Process Error: {e}")
+                        except Exception:
+                            pass 
+            except Exception:
+                pass 
 
-        # 3. SAFETY VALVE
         if len(file_context) > 500000:
             JOBS[job_id]["status"] = "Failed"
-            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** The documents are too large. Please upload fewer or smaller files."
+            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too many files."
             return
 
-        # 4. RUN AI
         key = os.getenv("AZURE_OPENAI_KEY")
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        
-        if not key:
-            raise ValueError("Azure OpenAI Key Missing")
-
         client = AzureOpenAI(api_key=key, azure_endpoint=endpoint, api_version="2024-02-01")
         
         task = data.get("task", "general")
@@ -269,7 +247,7 @@ def lazy_copilot_task(job_id: str, data: dict):
         completion = client.chat.completions.create(
             model="model-router",
             messages=[
-                {"role": "system", "content": f"You are Joogni, an expert legal AI. Current Task: {task}"},
+                {"role": "system", "content": f"You are Joogni, an expert legal AI. Task: {task}"},
                 {"role": "user", "content": final_prompt}
             ]
         )
@@ -278,6 +256,5 @@ def lazy_copilot_task(job_id: str, data: dict):
         JOBS[job_id]["result"] = completion.choices[0].message.content
 
     except Exception as e:
-        logger.error(f"Job Failed: {e}")
         JOBS[job_id]["status"] = "Failed"
         JOBS[job_id]["result"] = f"Error: {str(e)}"
