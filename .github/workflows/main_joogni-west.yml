@@ -1,72 +1,73 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-    # More GitHub Actions for Azure: https://github.com/Azure/actions
+# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-    name: Build and deploy Python app to Azure Web App - Joogni-West
+name: Build and deploy Python app to Azure Web App - Joogni-West
 
-    on:
-      push:
-        branches:
-          - main
-      workflow_dispatch:
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-    jobs:
-      build:
-        runs-on: ubuntu-latest
-        permissions:
-          contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
-        steps:
-          - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-          - name: Set up Python version
-            uses: actions/setup-python@v5
-            with:
-              python-version: '3.11'
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-          # Build the app to verify requirements
-          - name: Create virtual env and install dependencies
-            run: |
-              python -m venv antenv
-              source antenv/bin/activate
-              pip install -r requirements.txt
+      # Build the app and install libraries into 'antenv'
+      - name: Create virtual env and install dependencies
+        run: |
+          python -m venv antenv
+          source antenv/bin/activate
+          pip install -r requirements.txt
 
-          # Zip the application for faster upload
-          - name: Zip artifact for deployment
-            run: zip -r release.zip . -x "antenv/**" -x ".git/**" -x ".github/**" -x "__pycache__/**"
+      # Zip the application INCLUDING 'antenv' (Libraries)
+      # We removed the exclusion for antenv here
+      - name: Zip artifact for deployment
+        run: zip -r release.zip . -x ".git/**" -x ".github/**" -x "__pycache__/**"
 
-          - name: Upload artifact for deployment jobs
-            uses: actions/upload-artifact@v4
-            with:
-              name: python-app
-              path: release.zip
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: release.zip
 
-      deploy:
-        runs-on: ubuntu-latest
-        needs: build
-        permissions:
-          id-token: write
-          contents: read
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
 
-        steps:
-          - name: Download artifact from build job
-            uses: actions/download-artifact@v4
-            with:
-              name: python-app
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
 
-          - name: Unzip artifact for deployment
-            run: unzip release.zip
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
 
-          - name: Login to Azure
-            uses: azure/login@v2
-            with:
-              client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0A5E35A5DED44D169C8BBD6AB7B40887 }}
-              tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_52A040AD54D0436FB2424EE01F65E2A5 }}
-              subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_53DC821971C040A3B651F8515D513B35 }}
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0A5E35A5DED44D169C8BBD6AB7B40887 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_52A040AD54D0436FB2424EE01F65E2A5 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_53DC821971C040A3B651F8515D513B35 }}
 
-          - name: 'Deploy to Azure Web App'
-            uses: azure/webapps-deploy@v3
-            id: deploy-to-webapp
-            with:
-              app-name: 'Joogni-West'
-              slot-name: 'Production'
-              package: release.zip
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'Joogni-West'
+          slot-name: 'Production'
+          package: release.zip
