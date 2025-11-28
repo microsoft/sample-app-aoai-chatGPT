@@ -1,11 +1,8 @@
 fastapi
 uvicorn
-gunicorn
-python-dotenv
-requests
-aiohttp
-openai
-azure-storage-blob
+jinja2
 azure-identity
-azure-ai-documentintelligence==1.0.0
-# Force Rebuild 003 - Final Repair
+msgraph-core
+gunicorn
+pydantic
+requests
