@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
 name: Build and deploy Python app to Azure Web App - Joogni-West
 
 on:
@@ -20,13 +23,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Create virtual env to verify requirements
+      # Build the app to verify requirements
+      - name: Create virtual env and install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install -r requirements.txt
 
-      # THIS IS THE FIX: Zip the files to make upload fast
+      # Zip the application for faster upload
       - name: Zip artifact for deployment
         run: zip -r release.zip . -x "antenv/**" -x ".git/**" -x ".github/**" -x "__pycache__/**"
 
