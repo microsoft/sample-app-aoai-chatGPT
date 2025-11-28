@@ -19,7 +19,11 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Setup Templates (Assumes 'templates' folder exists)
+# 1. SETUP STATIC FILES (CSS/JS)
+# This allows the app to find 'style.css' and 'script.js' in the 'static' folder
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 2. SETUP TEMPLATES
 templates = Jinja2Templates(directory="templates")
 
 # Model for incoming chat messages
@@ -30,38 +34,32 @@ class ChatRequest(BaseModel):
 
 def get_graph_client():
     """
-    Authenticates with Azure using the Managed Identity we set up.
+    Authenticates with Azure using the Managed Identity.
     """
     credential = DefaultAzureCredential()
-    # Scopes for Graph API
     scopes = ["https://graph.microsoft.com/.default"]
     client = GraphClient(credential=credential, scopes=scopes)
     return client
 
 def calculate_date_filter(time_range: str) -> str:
-    """Returns the ISO date string for the filter."""
     now = datetime.datetime.utcnow()
     if time_range == "24h":
         delta = now - datetime.timedelta(hours=24)
     elif time_range == "30days":
         delta = now - datetime.timedelta(days=30)
     elif time_range == "all":
-        return None # No date filter
+        return None 
     else: # Default 7 days
         delta = now - datetime.timedelta(days=7)
-    
     return delta.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    """Serves the Chat UI."""
+    """Serves the main Chat UI."""
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
-    """
-    Handles the chat logic and Graph API calls.
-    """
     try:
         user_message = request.message
         scope = request.search_scope
@@ -72,28 +70,20 @@ async def chat_endpoint(request: ChatRequest):
         
         # --- 1. SEARCH EMAILS ---
         if scope in ["email", "both"]:
-            # Robust Query Construction
-            # We use $search for the keyword, but $filter for the date.
-            # We MUST send 'ConsistencyLevel: eventual' header for this combo to work.
-            
             query_params = {
                 "$top": 5,
                 "$select": "subject,receivedDateTime,from,webLink,bodyPreview",
-                "$count": "true" # Required for advanced queries
+                "$count": "true"
             }
-
-            # If user typed a keyword, use $search
             if user_message.strip():
                 query_params["$search"] = f'"{user_message}"'
             
-            # Apply Date Filter if not 'all'
             start_date = calculate_date_filter(time_range)
             if start_date:
                 query_params["$filter"] = f"receivedDateTime ge {start_date}"
 
             logger.info(f"Querying Graph Messages: {query_params}")
             
-            # Execute Request with Special Headers
             response = client.get(
                 "/me/messages",
                 params=query_params,
@@ -111,19 +101,15 @@ async def chat_endpoint(request: ChatRequest):
                         "date": email.get('receivedDateTime'),
                         "sender": email.get('from', {}).get('emailAddress', {}).get('name')
                     })
-            else:
-                logger.error(f"Graph Email Error: {response.text}")
 
         # --- 2. SEARCH FILES (OneDrive) ---
         if scope in ["files", "both"] and user_message.strip():
-            # OneDrive search is different: /me/drive/root/search(q='keyword')
             search_url = f"/me/drive/root/search(q='{user_message}')"
-            
             response = client.get(search_url)
             
             if response.status_code == 200:
                 data = response.json()
-                for file in data.get('value', [])[:5]: # Limit to 5
+                for file in data.get('value', [])[:5]:
                     results.append({
                         "type": "File",
                         "title": file.get('name'),
@@ -138,8 +124,3 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         logger.error(f"Backend Crash: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-# Run logic for local debugging (Azure uses gunicorn instead)
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
