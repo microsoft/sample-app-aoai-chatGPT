@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from azure.identity import DefaultAzureCredential
-from msgraph.core import GraphClient
+import requests
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 # 1. SETUP STATIC FILES (CSS/JS)
-# This allows the app to find 'style.css' and 'script.js' in the 'static' folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 2. SETUP TEMPLATES
@@ -32,14 +31,21 @@ class ChatRequest(BaseModel):
     search_scope: str = "email"  # 'email', 'files', or 'both'
     time_range: str = "7days"    # '24h', '7days', '30days', 'all'
 
-def get_graph_client():
-    """
-    Authenticates with Azure using the Managed Identity.
-    """
-    credential = DefaultAzureCredential()
-    scopes = ["https://graph.microsoft.com/.default"]
-    client = GraphClient(credential=credential, scopes=scopes)
-    return client
+# Cache credential to avoid repeated initialization
+_credential = None
+
+def get_graph_headers():
+    """Get authorization headers for Graph API calls."""
+    global _credential
+    if _credential is None:
+        _credential = DefaultAzureCredential()
+    
+    token = _credential.get_token("https://graph.microsoft.com/.default")
+    return {
+        "Authorization": f"Bearer {token.token}",
+        "Content-Type": "application/json",
+        "ConsistencyLevel": "eventual"
+    }
 
 def calculate_date_filter(time_range: str) -> str:
     now = datetime.datetime.utcnow()
@@ -49,7 +55,7 @@ def calculate_date_filter(time_range: str) -> str:
         delta = now - datetime.timedelta(days=30)
     elif time_range == "all":
         return None 
-    else: # Default 7 days
+    else:  # Default 7 days
         delta = now - datetime.timedelta(days=7)
     return delta.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -65,7 +71,7 @@ async def chat_endpoint(request: ChatRequest):
         scope = request.search_scope
         time_range = request.time_range
         
-        client = get_graph_client()
+        headers = get_graph_headers()
         results = []
         
         # --- 1. SEARCH EMAILS ---
@@ -84,10 +90,10 @@ async def chat_endpoint(request: ChatRequest):
 
             logger.info(f"Querying Graph Messages: {query_params}")
             
-            response = client.get(
-                "/me/messages",
-                params=query_params,
-                headers={"ConsistencyLevel": "eventual"}
+            response = requests.get(
+                "https://graph.microsoft.com/v1.0/me/messages",
+                headers=headers,
+                params=query_params
             )
             
             if response.status_code == 200:
@@ -101,11 +107,13 @@ async def chat_endpoint(request: ChatRequest):
                         "date": email.get('receivedDateTime'),
                         "sender": email.get('from', {}).get('emailAddress', {}).get('name')
                     })
+            else:
+                logger.error(f"Graph API error: {response.status_code} - {response.text}")
 
         # --- 2. SEARCH FILES (OneDrive) ---
         if scope in ["files", "both"] and user_message.strip():
-            search_url = f"/me/drive/root/search(q='{user_message}')"
-            response = client.get(search_url)
+            search_url = f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{user_message}')"
+            response = requests.get(search_url, headers=headers)
             
             if response.status_code == 200:
                 data = response.json()
@@ -118,9 +126,22 @@ async def chat_endpoint(request: ChatRequest):
                         "date": file.get('lastModifiedDateTime'),
                         "sender": "Me"
                     })
+            else:
+                logger.error(f"Graph API error (files): {response.status_code} - {response.text}")
 
         return JSONResponse(content={"response": "Here is what I found:", "data": results})
 
     except Exception as e:
         logger.error(f"Backend Crash: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
+```
+
+And here's the updated `requirements.txt`:
+```
+fastapi
+uvicorn
+jinja2
+azure-identity
+gunicorn
+pydantic
+requests
