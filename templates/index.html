@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joogni | AI Assistant</title>
+    <!-- Tailwind for Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-gray-50 h-screen flex flex-col font-sans text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white p-4 shadow-sm flex justify-between items-center border-b border-blue-950">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-white bg-opacity-10 rounded-lg flex items-center justify-center text-white font-bold text-lg border border-white border-opacity-20">
+                J
+            </div>
+            <h1 class="text-lg font-semibold tracking-wide">Joogni</h1>
+        </div>
+        <div class="flex items-center gap-2 text-xs bg-blue-800 px-3 py-1 rounded-full border border-blue-700">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span>M365 Connected</span>
+        </div>
+    </header>
+
+    <!-- Chat Area -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 chat-scroll space-y-6">
+        <!-- Welcome Message -->
+        <div class="flex justify-start animate-fade-in">
+            <div class="bg-white p-5 rounded-xl rounded-tl-none shadow-sm max-w-lg border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-1">Welcome to Joogni</h3>
+                <p class="text-gray-600 text-sm leading-relaxed">
+                    I am ready to help. Use the <b>Connector Settings</b> below to refine your search, then type a keyword to search Outlook and OneDrive.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Connector Panel (Hidden by default) -->
+    <div id="connector-panel" class="hidden bg-gray-50 border-t border-gray-200 p-4 shadow-inner transition-all duration-300">
+        <div class="flex flex-wrap gap-6 items-center justify-center text-sm">
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-gray-500 text-xs uppercase tracking-wider">Source</label>
+                <div class="relative">
+                    <i class="fas fa-filter absolute left-3 top-2.5 text-gray-400"></i>
+                    <select id="scope-select" class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer">
+                        <option value="email">Outlook Emails</option>
+                        <option value="files">OneDrive Files</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-gray-500 text-xs uppercase tracking-wider">Time Range</label>
+                <div class="relative">
+                    <i class="far fa-clock absolute left-3 top-2.5 text-gray-400"></i>
+                    <select id="time-select" class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm appearance-none cursor-pointer">
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7days" selected>Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="all">Everything</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <footer class="bg-white p-4 border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+        <div class="max-w-4xl mx-auto flex gap-3">
+            <!-- Connector Button -->
+            <button onclick="toggleConnector()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-12 h-12 rounded-xl transition-all border border-gray-300 flex items-center justify-center shadow-sm active:scale-95" title="Search Settings">
+                <i class="fas fa-sliders-h text-lg"></i>
+            </button>
+            
+            <input type="text" id="user-input" class="flex-1 border border-gray-300 rounded-xl px-5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-gray-700 placeholder-gray-400" placeholder="Type a keyword (e.g., 'Invoice', 'Project Alpha')..." onkeypress="handleEnter(event)">
+            
+            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition-all shadow-md active:scale-95 flex items-center gap-2">
+                <span>Send</span> <i class="fas fa-paper-plane text-sm"></i>
+            </button>
+        </div>
+    </footer>
+
+    <!-- JS Logic -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
