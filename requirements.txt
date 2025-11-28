@@ -2,7 +2,6 @@ fastapi
 uvicorn
 jinja2
 azure-identity
-msgraph-core
 gunicorn
 pydantic
 requests
