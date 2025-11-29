@@ -11,14 +11,10 @@ def install_requirements():
 
 def run_gunicorn():
     print("--- Starting Gunicorn Server ---", flush=True)
-    # This replaces the current process with Gunicorn
-    # We use sys.executable to ensure we use the same python interpreter
     gunicorn_path = os.path.join(os.path.dirname(sys.executable), "gunicorn")
     
-    # Fallback if gunicorn isn't in the same bin folder
     if not os.path.exists(gunicorn_path):
         gunicorn_path = "gunicorn"
-
     cmd = [
         gunicorn_path,
         "-w", "2",
@@ -26,7 +22,6 @@ def run_gunicorn():
         "app:app"
     ]
     
-    # Execute gunicorn, replacing this script
     os.execvp(cmd[0], cmd)
 
 if __name__ == "__main__":
@@ -34,17 +29,16 @@ if __name__ == "__main__":
         # 1. Install critical packages first if missing
         try:
             import uvicorn
-            import msgraph
+            import gunicorn
         except ImportError:
             print("Critical libraries missing. Installing...", flush=True)
             install("uvicorn")
-            install("msgraph-core")
             install("gunicorn")
-
+        
         # 2. Install everything else
         if os.path.exists("requirements.txt"):
             install_requirements()
-
+        
         # 3. Launch the App
         run_gunicorn()
         
