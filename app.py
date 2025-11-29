@@ -134,14 +134,3 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         logger.error(f"Backend Crash: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
-```
-
-And here's the updated `requirements.txt`:
-```
-fastapi
-uvicorn
-jinja2
-azure-identity
-gunicorn
-pydantic
-requests
