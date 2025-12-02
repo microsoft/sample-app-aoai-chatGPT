@@ -6,6 +6,8 @@ var searchSource = 'email';
 var selectedM365Items = [];
 var boxConnected = false;
 var boxAuthWindow = null;
+var boxBreadcrumbs = [{id: '0', name: 'All Files'}];
+var boxCurrentFolder = '0';
 
 console.log('Joogni script loaded');
 
@@ -114,6 +116,41 @@ window.addEventListener('message', function(event) {
     }
 });
 
+// --- QUICK ACTIONS ---
+
+function quickAction(action) {
+    var input = document.getElementById('user-input');
+    if (!input) return;
+    
+    var prompts = {
+        'draft': 'I need to draft a pleading. [Tell me the case name, type of pleading (motion, declaration, response, etc.), and key facts to include]',
+        'analyze': 'Please analyze the attached document and summarize the key points, identify any issues, and suggest next steps.',
+        'legal': 'I have a legal question about California family law: [Ask your question]',
+        'status': 'What is the current status of the [Client Name] case? Please check for any upcoming hearings, recent communications, and pending deadlines.',
+        'evidence': 'Please help me organize the evidence for the [Client Name] case. Create a list of exhibits with descriptions, categorized by type (financial, communications, declarations, etc.)',
+        'chronology': 'Create a case chronology for [Client Name]. Include key dates, events, and facts from the case files, emails, and calendar. Format as a timeline.'
+    };
+    
+    input.value = prompts[action] || '';
+    input.focus();
+    
+    // Select the placeholder text for easy replacement
+    var placeholderMatch = input.value.match(/\[.*?\]/);
+    if (placeholderMatch) {
+        var start = input.value.indexOf(placeholderMatch[0]);
+        var end = start + placeholderMatch[0].length;
+        input.setSelectionRange(start, end);
+    }
+}
+
+function usePrompt(prompt) {
+    var input = document.getElementById('user-input');
+    if (!input) return;
+    
+    input.value = prompt;
+    input.focus();
+}
+
 // --- BOX FUNCTIONS ---
 
 async function checkBoxStatus() {
@@ -148,6 +185,16 @@ async function connectBox() {
 async function searchBox(query) {
     var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
+    
+    // If empty query, browse root folder
+    if (!query) {
+        boxBreadcrumbs = [{id: '0', name: 'All Files'}];
+        browseBoxFolder('0', 'All Files', true);
+        return;
+    }
+    
+    // Reset breadcrumbs for search
+    boxBreadcrumbs = [{id: '0', name: 'All Files'}, {id: 'search', name: 'Search: "' + query + '"'}];
     
     resultsDiv.innerHTML = 
         '<div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">' +
@@ -185,69 +232,128 @@ async function searchBox(query) {
         var items = data.entries || data.value || [];
         
         if (items.length === 0) {
-            resultsDiv.innerHTML = '<p class="m365-results-empty">No files found. Try a different search term.</p>';
+            resultsDiv.innerHTML = '<p class="m365-results-empty">No files found for "' + escapeHtml(query) + '". Try a different search term.</p>';
             return;
         }
         
-        renderBoxResults(items);
+        renderBoxResults(items, true);
         
     } catch (error) {
         resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);">Search failed: ' + error.message + '</p>';
     }
 }
 
-function renderBoxResults(items) {
+// Track Box navigation
+var boxBreadcrumbs = [{id: '0', name: 'All Files'}];
+var boxCurrentFolder = '0';
+
+function renderBoxResults(items, isSearch) {
     var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
     
-    var html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click files to select them for analysis.</div>';
+    // Sort: folders first, then files alphabetically
+    var folders = items.filter(function(i) { return i.type === 'folder'; });
+    var files = items.filter(function(i) { return i.type === 'file'; });
     
-    items.forEach(function(item) {
-        var isFolder = item.type === 'folder';
-        var date = item.modified_at ? new Date(item.modified_at).toLocaleDateString() : '';
-        var size = item.size ? formatFileSize(item.size) : '';
-        var iconClass = isFolder ? 'folder' : 'box';
-        var icon = isFolder ? 'fa-folder' : getFileIcon(item.name || 'file');
-        var parent = item.parent ? item.parent.name : '';
-        
-        if (isFolder) {
+    folders.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    files.sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+    
+    var sortedItems = folders.concat(files);
+    
+    var html = '';
+    
+    // Breadcrumb navigation (only when browsing, not searching)
+    if (!isSearch && boxBreadcrumbs.length > 0) {
+        html += '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 13px; flex-wrap: wrap;">';
+        boxBreadcrumbs.forEach(function(crumb, index) {
+            if (index > 0) {
+                html += '<i class="fas fa-chevron-right" style="color: var(--gray-400); font-size: 10px;"></i>';
+            }
+            if (index === boxBreadcrumbs.length - 1) {
+                html += '<span style="color: var(--gray-900); font-weight: 600;">' + escapeHtml(crumb.name) + '</span>';
+            } else {
+                html += '<a href="#" onclick="navigateBoxBreadcrumb(' + index + '); return false;" style="color: var(--primary-500); text-decoration: none;">' + escapeHtml(crumb.name) + '</a>';
+            }
+        });
+        html += '</div>';
+    }
+    
+    // Summary
+    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
+    html += '<span style="font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>' + folders.length + ' folders, ' + files.length + ' files</span>';
+    html += '</div>';
+    
+    // Render folders first with distinct styling
+    if (folders.length > 0) {
+        folders.forEach(function(item) {
             html += 
-                '<div class="search-result" ' +
+                '<div class="search-result" style="background: #fffbeb; border-color: #fde68a;" ' +
                     'data-type="box-folder" ' +
                     'data-id="' + item.id + '" ' +
                     'data-name="' + escapeHtml(item.name || 'Folder') + '" ' +
-                    'onclick="browseBoxFolder(\'' + item.id + '\')">' +
-                    '<div class="result-icon ' + iconClass + '"><i class="fas ' + icon + '"></i></div>' +
+                    'onclick="browseBoxFolder(\'' + item.id + '\', \'' + escapeHtml(item.name || 'Folder').replace(/'/g, "\\'") + '\')">' +
+                    '<div class="result-icon folder"><i class="fas fa-folder" style="color: #f59e0b;"></i></div>' +
                     '<div class="result-content">' +
                         '<div class="result-title"><span class="truncate">' + escapeHtml(item.name || 'Folder') + '</span></div>' +
-                        '<div class="result-meta">Folder' + (parent ? ' in ' + escapeHtml(parent) : '') + '</div>' +
+                        '<div class="result-meta">Folder</div>' +
                     '</div>' +
                     '<i class="fas fa-chevron-right" style="color: var(--gray-400);"></i>' +
                 '</div>';
-        } else {
+        });
+    }
+    
+    // Render files
+    if (files.length > 0) {
+        files.forEach(function(item) {
+            var date = item.modified_at ? new Date(item.modified_at).toLocaleDateString() : '';
+            var size = item.size ? formatFileSize(item.size) : '';
+            var icon = getFileIcon(item.name || 'file');
+            var parent = item.parent ? item.parent.name : '';
+            
             html += 
                 '<div class="search-result" ' +
                     'data-type="box-file" ' +
                     'data-id="' + item.id + '" ' +
                     'data-name="' + escapeHtml(item.name || 'File') + '" ' +
-                    'onclick="toggleBoxFileSelection(this, \'' + item.id + '\', \'' + escapeHtml(item.name || 'File') + '\')">' +
-                    '<div class="result-icon ' + iconClass + '"><i class="fas ' + icon + '"></i></div>' +
+                    'onclick="toggleBoxFileSelection(this, \'' + item.id + '\', \'' + escapeHtml(item.name || 'File').replace(/'/g, "\\'") + '\')">' +
+                    '<div class="result-icon box"><i class="fas ' + icon + '" style="color: #0061d5;"></i></div>' +
                     '<div class="result-content">' +
                         '<div class="result-title"><span class="truncate">' + escapeHtml(item.name || 'File') + '</span></div>' +
                         '<div class="result-meta">' + size + (date ? ' • ' + date : '') + '</div>' +
-                        (parent ? '<div class="result-preview">in ' + escapeHtml(parent) + '</div>' : '') +
+                        (isSearch && parent ? '<div class="result-preview">in ' + escapeHtml(parent) + '</div>' : '') +
                     '</div>' +
                     '<div class="result-check"><i class="fas fa-check-circle"></i></div>' +
                 '</div>';
-        }
-    });
+        });
+    }
+    
+    if (sortedItems.length === 0) {
+        html += '<p class="m365-results-empty">This folder is empty</p>';
+    }
     
     resultsDiv.innerHTML = html;
 }
 
-async function browseBoxFolder(folderId) {
+function navigateBoxBreadcrumb(index) {
+    // Truncate breadcrumbs to this level
+    boxBreadcrumbs = boxBreadcrumbs.slice(0, index + 1);
+    var targetFolder = boxBreadcrumbs[index];
+    browseBoxFolder(targetFolder.id, targetFolder.name, true);
+}
+
+async function browseBoxFolder(folderId, folderName, isBackNav) {
     var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
+    
+    // Update breadcrumbs
+    if (!isBackNav) {
+        if (folderId === '0') {
+            boxBreadcrumbs = [{id: '0', name: 'All Files'}];
+        } else if (folderName) {
+            boxBreadcrumbs.push({id: folderId, name: folderName});
+        }
+    }
+    boxCurrentFolder = folderId;
     
     resultsDiv.innerHTML = 
         '<div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">' +
@@ -270,23 +376,7 @@ async function browseBoxFolder(folderId) {
         }
         
         var items = data.entries || data.value || [];
-        
-        // Add back button
-        var backHtml = 
-            '<div class="search-result" onclick="browseBoxFolder(\'0\')" style="background: var(--gray-50);">' +
-                '<div class="result-icon"><i class="fas fa-arrow-left"></i></div>' +
-                '<div class="result-content">' +
-                    '<div class="result-title"><span>Back to Root</span></div>' +
-                '</div>' +
-            '</div>';
-        
-        if (items.length === 0) {
-            resultsDiv.innerHTML = backHtml + '<p class="m365-results-empty">This folder is empty</p>';
-            return;
-        }
-        
-        renderBoxResults(items);
-        resultsDiv.innerHTML = backHtml + resultsDiv.innerHTML.replace(/<div style="margin-bottom.*?<\/div>/, '');
+        renderBoxResults(items, false);
         
     } catch (error) {
         resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);">' + error.message + '</p>';
@@ -381,15 +471,21 @@ function setSearchSource(source) {
     
     var resultsDiv = document.getElementById('m365-results');
     if (resultsDiv) {
-        if (source === 'box' && !boxConnected) {
-            resultsDiv.innerHTML = 
-                '<div style="text-align: center; padding: 40px 20px;">' +
-                    '<i class="fas fa-box" style="font-size: 48px; color: #0061d5; margin-bottom: 16px;"></i>' +
-                    '<p style="color: var(--gray-600); margin-bottom: 16px;">Connect your Box account to search files</p>' +
-                    '<button onclick="connectBox()" class="box-connect-btn" style="margin: 0 auto;">' +
-                        '<i class="fas fa-link"></i> Connect Box' +
-                    '</button>' +
-                '</div>';
+        if (source === 'box') {
+            if (!boxConnected) {
+                resultsDiv.innerHTML = 
+                    '<div style="text-align: center; padding: 40px 20px;">' +
+                        '<i class="fas fa-box" style="font-size: 48px; color: #0061d5; margin-bottom: 16px;"></i>' +
+                        '<p style="color: var(--gray-600); margin-bottom: 16px;">Connect your Box account to search files</p>' +
+                        '<button onclick="connectBox()" class="box-connect-btn" style="margin: 0 auto;">' +
+                            '<i class="fas fa-link"></i> Connect Box' +
+                        '</button>' +
+                    '</div>';
+            } else {
+                // Auto-browse root folder when Box tab is selected
+                boxBreadcrumbs = [{id: '0', name: 'All Files'}];
+                browseBoxFolder('0', 'All Files', true);
+            }
         } else {
             var sourceNames = {
                 'email': 'Outlook emails',
@@ -1036,14 +1132,20 @@ async function sendMessage() {
     addMessage(displayMessage, 'user');
     input.value = '';
 
-    var loadingId = addLoading();
+    // Get jurisdiction
+    var jurisdictionSelect = document.getElementById('jurisdiction');
+    var jurisdiction = jurisdictionSelect ? jurisdictionSelect.value : 'California';
+
+    // Add agentic status indicator
+    var statusId = addAgenticStatus();
 
     try {
-        var response = await fetch('/api/copilot', {
+        var response = await fetch('/api/agentic', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                messages: [{ role: 'user', content: message || 'Please analyze the attached content.' }],
+                query: message || 'Please analyze the attached content.',
+                jurisdiction: jurisdiction,
                 blobs: attachedFiles,
                 emails: selectedEmails,
                 calendar_events: selectedCalendarEvents
@@ -1053,15 +1155,15 @@ async function sendMessage() {
         var data = await response.json();
 
         if (data.error) {
-            removeMessage(loadingId);
+            removeMessage(statusId);
             addMessage('Error: ' + data.error, 'system-error');
             return;
         }
 
         var jobId = data.job_id;
-        var result = await pollForResult(jobId);
+        var result = await pollForResultWithStatus(jobId, statusId);
         
-        removeMessage(loadingId);
+        removeMessage(statusId);
 
         if (result.status === 'Complete') {
             addMessage(result.result, 'system', true);
@@ -1074,9 +1176,92 @@ async function sendMessage() {
         clearAllAttachments();
 
     } catch (error) {
-        removeMessage(loadingId);
+        removeMessage(statusId);
         addMessage('Failed to connect to server: ' + error.message, 'system-error');
     }
+}
+
+function addAgenticStatus() {
+    var container = document.getElementById('chat-container');
+    if (!container) return;
+    
+    var div = document.createElement('div');
+    div.className = 'message message-system';
+    div.innerHTML = 
+        '<div class="agentic-status">' +
+            '<div class="agentic-status-header">' +
+                '<div class="loading-spinner"></div>' +
+                '<span class="agentic-status-text">Planning search strategy...</span>' +
+            '</div>' +
+            '<div class="agentic-sources">' +
+                '<span class="agentic-source-badge" id="source-box"><i class="fas fa-box"></i> Box</span>' +
+                '<span class="agentic-source-badge" id="source-outlook"><i class="fas fa-envelope"></i> Outlook</span>' +
+                '<span class="agentic-source-badge" id="source-calendar"><i class="fas fa-calendar"></i> Calendar</span>' +
+            '</div>' +
+        '</div>';
+    div.id = 'agentic-status-' + Date.now();
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div.id;
+}
+
+function updateAgenticStatus(statusId, statusText, activeSource) {
+    var statusDiv = document.getElementById(statusId);
+    if (!statusDiv) return;
+    
+    var textEl = statusDiv.querySelector('.agentic-status-text');
+    if (textEl) {
+        textEl.textContent = statusText;
+    }
+    
+    // Update source badges
+    if (activeSource) {
+        var sourceMap = {
+            'box': 'source-box',
+            'outlook': 'source-outlook',
+            'emails': 'source-outlook',
+            'calendar': 'source-calendar'
+        };
+        
+        Object.keys(sourceMap).forEach(function(key) {
+            var badge = statusDiv.querySelector('#' + sourceMap[key]);
+            if (badge) {
+                if (statusText.toLowerCase().includes(key)) {
+                    badge.classList.add('active');
+                    badge.classList.remove('done');
+                } else if (badge.classList.contains('active')) {
+                    badge.classList.remove('active');
+                    badge.classList.add('done');
+                }
+            }
+        });
+    }
+}
+
+async function pollForResultWithStatus(jobId, statusId, maxAttempts, interval) {
+    maxAttempts = maxAttempts || 180;
+    interval = interval || 800;
+    
+    for (var i = 0; i < maxAttempts; i++) {
+        try {
+            var response = await fetch('/api/check_status/' + jobId);
+            var data = await response.json();
+            
+            // Update status display
+            if (data.status && data.status !== 'Complete' && data.status !== 'Failed') {
+                updateAgenticStatus(statusId, data.status, true);
+            }
+            
+            if (data.status === 'Complete' || data.status === 'Failed') {
+                return data;
+            }
+            
+            await new Promise(function(resolve) { setTimeout(resolve, interval); });
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+    }
+    return { status: 'Timeout', result: 'Request timed out' };
 }
 
 async function pollForResult(jobId, maxAttempts, interval) {
