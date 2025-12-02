@@ -41,7 +41,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write
       contents: read
 
     steps:
@@ -50,16 +49,11 @@ jobs:
         with:
           name: python-app
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0A5E35A5DED44D169C8BBD6AB7B40887 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_52A040AD54D0436FB2424EE01F65E2A5 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_53DC821971C040A3B651F8515D513B35 }}
-
+      # We now deploy directly using the Publish Profile.
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'Joogni-West'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
