@@ -49,7 +49,9 @@ jobs:
         with:
           name: python-app
 
-      # We now deploy directly using the Publish Profile.
+      # Broken 'Login to Azure' step removed. 
+      # Direct deployment via Publish Profile below:
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
