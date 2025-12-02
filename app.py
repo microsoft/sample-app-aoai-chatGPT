@@ -143,10 +143,11 @@ async def search_outlook(request: Request):
         url = "https://graph.microsoft.com/v1.0/me/messages"
         
         if query:
+            # Mode A: Active Search
             params = {
                 "$top": 15,
                 "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
-                "$search": f'"{query}" AND hasAttachments:true' 
+                "$search": f'"{query}"'
             }
         else:
             params = {
