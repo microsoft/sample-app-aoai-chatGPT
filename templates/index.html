@@ -33,6 +33,7 @@
             --white: #ffffff;
             --success: #10b981;
             --error: #ef4444;
+            --box-blue: #0061d5;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -432,8 +433,8 @@
         .m365-panel.hidden { display: none; }
         
         .m365-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
-        .m365-header-row { display: flex; align-items: center; gap: 12px; }
-        .source-tabs { display: flex; gap: 8px; }
+        .m365-header-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .source-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
         
         .source-tab {
             display: flex; align-items: center; gap: 6px;
@@ -447,7 +448,20 @@
         
         .source-tab:hover { border-color: var(--gray-300); background: var(--gray-50); }
         .source-tab.active { border-color: var(--primary-500); background: var(--primary-50); color: var(--primary-600); }
+        .source-tab.box-tab.active { border-color: var(--box-blue); background: #e6f0fc; color: var(--box-blue); }
         .source-tab i { font-size: 13px; }
+        
+        .box-connect-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--box-blue);
+            border-radius: 8px;
+            background: var(--box-blue);
+            font-size: 13px; font-weight: 500; color: white;
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .box-connect-btn:hover { background: #0052b3; }
         
         .m365-search-input {
             flex: 1; padding: 10px 16px;
@@ -455,6 +469,7 @@
             font-size: 13px; font-family: inherit;
             color: var(--gray-900); background: var(--white);
             transition: all 0.15s ease;
+            min-width: 150px;
         }
         
         .m365-search-input:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
@@ -504,6 +519,8 @@
         .result-icon.email i { color: var(--primary-500); }
         .result-icon.calendar i { color: #8b5cf6; }
         .result-icon.file i { color: var(--gray-500); }
+        .result-icon.box i { color: var(--box-blue); }
+        .result-icon.folder i { color: #f59e0b; }
         
         .result-content { flex: 1; min-width: 0; }
         .result-title { font-size: 13px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
@@ -633,6 +650,8 @@
             .btn-send { width: 48px; padding: 0; }
             .agreement-modal { margin: 10px; max-height: 95vh; }
             .modal-header, .modal-body, .modal-footer { padding: 20px; }
+            .source-tabs { gap: 6px; }
+            .source-tab { padding: 6px 10px; font-size: 12px; }
         }
     </style>
 </head>
@@ -743,6 +762,7 @@
                     <div class="welcome-feature"><i class="fas fa-envelope"></i><span>Search Emails</span></div>
                     <div class="welcome-feature"><i class="fas fa-calendar"></i><span>Check Calendar</span></div>
                     <div class="welcome-feature"><i class="fas fa-file-alt"></i><span>Analyze Docs</span></div>
+                    <div class="welcome-feature"><i class="fas fa-box"></i><span>Box Files</span></div>
                     <div class="welcome-feature"><i class="fas fa-gavel"></i><span>CA Family Law</span></div>
                 </div>
             </div>
@@ -762,6 +782,9 @@
                     <button onclick="setSearchSource('calendar')" id="src-calendar" class="source-tab">
                         <i class="fas fa-calendar"></i><span>Calendar</span>
                     </button>
+                    <button onclick="setSearchSource('box')" id="src-box" class="source-tab box-tab">
+                        <i class="fas fa-box"></i><span>Box</span>
+                    </button>
                 </div>
                 <input type="text" id="m365-search-input" class="m365-search-input" placeholder="Search emails..." onkeypress="if(event.key==='Enter')searchM365()">
                 <button onclick="searchM365()" class="btn-search"><i class="fas fa-search"></i></button>
@@ -769,7 +792,7 @@
             </div>
         </div>
         <div id="m365-results" class="m365-results">
-            <p class="m365-results-empty">Search your Outlook emails, OneDrive files, or calendar events</p>
+            <p class="m365-results-empty">Search your Outlook emails, OneDrive files, calendar events, or Box files</p>
         </div>
         <div id="m365-actions" class="m365-actions hidden">
             <span id="selected-count" class="selected-count">0 selected</span>
@@ -792,7 +815,7 @@
                 <i class="fas fa-paperclip"></i>
                 <span id="attachment-count" class="attachment-badge hidden">0</span>
             </button>
-            <button onclick="toggleM365Panel()" id="m365-button" class="btn-m365" title="Search Microsoft 365">
+            <button onclick="toggleM365Panel()" id="m365-button" class="btn-m365" title="Search Microsoft 365 & Box">
                 <i class="fab fa-microsoft"></i>
             </button>
             <input type="text" id="user-input" class="input-field" placeholder="Ask a legal question or describe what you need..." onkeypress="handleEnter(event)">
