@@ -5,6 +5,7 @@ import requests
 import json
 import base64
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,12 +68,10 @@ JOBS = {}
 # --- HELPER: GET USER IDENTITY ---
 def get_user_email(request: Request) -> str:
     """Extract user email from Azure Easy Auth headers"""
-    # Try X-MS-CLIENT-PRINCIPAL-NAME first (most common)
     email = request.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
     if email:
         return email.lower()
     
-    # Try decoding X-MS-CLIENT-PRINCIPAL
     principal = request.headers.get("X-MS-CLIENT-PRINCIPAL")
     if principal:
         try:
@@ -84,7 +83,6 @@ def get_user_email(request: Request) -> str:
         except:
             pass
     
-    # Fallback for development
     return os.getenv("TEST_USER_EMAIL", "unknown@user.com").lower()
 
 # --- HELPER: GRAPH AUTH ---
@@ -110,6 +108,376 @@ def get_graph_headers(req: Request):
         "Content-Type": "application/json"
     }
 
+# --- BOX HELPER FUNCTIONS ---
+
+def get_box_token_storage_key(user_email: str) -> str:
+    """Generate blob name for user's Box token"""
+    safe_email = user_email.replace('@', '_at_').replace('.', '_')
+    return f"box-token-{safe_email}.json"
+
+def get_box_tokens(user_email: str) -> dict:
+    """Retrieve Box tokens for a user from blob storage"""
+    try:
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return None
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "box-tokens"
+        
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except:
+            pass
+        
+        blob_name = get_box_token_storage_key(user_email)
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        
+        try:
+            data = blob_client.download_blob().readall()
+            return json.loads(data)
+        except:
+            return None
+    except Exception as e:
+        logger.error(f"Error getting Box tokens: {e}")
+        return None
+
+def save_box_tokens(user_email: str, tokens: dict):
+    """Save Box tokens for a user to blob storage"""
+    try:
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return False
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "box-tokens"
+        
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except:
+            pass
+        
+        blob_name = get_box_token_storage_key(user_email)
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        
+        tokens["saved_at"] = datetime.now(timezone.utc).isoformat()
+        blob_client.upload_blob(json.dumps(tokens), overwrite=True)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving Box tokens: {e}")
+        return False
+
+def refresh_box_token(user_email: str, refresh_token: str) -> dict:
+    """Refresh Box access token using refresh token"""
+    try:
+        client_id = os.getenv("BOX_CLIENT_ID")
+        client_secret = os.getenv("BOX_CLIENT_SECRET")
+        
+        response = requests.post(
+            "https://api.box.com/oauth2/token",
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": client_id,
+                "client_secret": client_secret
+            }
+        )
+        
+        if response.status_code == 200:
+            tokens = response.json()
+            save_box_tokens(user_email, tokens)
+            return tokens
+        else:
+            logger.error(f"Box token refresh failed: {response.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Error refreshing Box token: {e}")
+        return None
+
+def get_valid_box_token(user_email: str) -> str:
+    """Get a valid Box access token, refreshing if necessary"""
+    tokens = get_box_tokens(user_email)
+    if not tokens:
+        return None
+    
+    # Check if token might be expired (Box tokens expire after 60 minutes)
+    saved_at = tokens.get("saved_at")
+    if saved_at:
+        try:
+            saved_time = datetime.fromisoformat(saved_at.replace('Z', '+00:00'))
+            if datetime.now(timezone.utc) - saved_time > timedelta(minutes=55):
+                # Token likely expired, refresh it
+                new_tokens = refresh_box_token(user_email, tokens.get("refresh_token"))
+                if new_tokens:
+                    return new_tokens.get("access_token")
+                return None
+        except:
+            pass
+    
+    return tokens.get("access_token")
+
+# --- BOX ENDPOINTS ---
+
+@app.get("/api/box/auth")
+async def box_auth(request: Request):
+    """Start Box OAuth flow"""
+    client_id = os.getenv("BOX_CLIENT_ID")
+    if not client_id:
+        return JSONResponse(status_code=500, content={"error": "Box not configured"})
+    
+    user_email = get_user_email(request)
+    
+    # Store user email in state for callback
+    state = base64.b64encode(user_email.encode()).decode()
+    
+    redirect_uri = "https://advocateintel.ai/api/box/callback"
+    
+    auth_url = "https://account.box.com/api/oauth2/authorize?" + urlencode({
+        "response_type": "code",
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "state": state
+    })
+    
+    return {"auth_url": auth_url}
+
+@app.get("/api/box/callback")
+async def box_callback(request: Request, code: str = None, state: str = None, error: str = None):
+    """Handle Box OAuth callback"""
+    if error:
+        return HTMLResponse(content=f"""
+            <html><body>
+            <h2>Box Authorization Failed</h2>
+            <p>Error: {error}</p>
+            <script>window.close();</script>
+            </body></html>
+        """)
+    
+    if not code:
+        return HTMLResponse(content="""
+            <html><body>
+            <h2>Box Authorization Failed</h2>
+            <p>No authorization code received.</p>
+            <script>window.close();</script>
+            </body></html>
+        """)
+    
+    try:
+        # Decode user email from state
+        user_email = base64.b64decode(state).decode() if state else "unknown@user.com"
+        
+        client_id = os.getenv("BOX_CLIENT_ID")
+        client_secret = os.getenv("BOX_CLIENT_SECRET")
+        redirect_uri = "https://advocateintel.ai/api/box/callback"
+        
+        # Exchange code for tokens
+        response = requests.post(
+            "https://api.box.com/oauth2/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri
+            }
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Box token exchange failed: {response.text}")
+            return HTMLResponse(content=f"""
+                <html><body>
+                <h2>Box Authorization Failed</h2>
+                <p>Could not exchange code for token.</p>
+                <script>window.close();</script>
+                </body></html>
+            """)
+        
+        tokens = response.json()
+        save_box_tokens(user_email, tokens)
+        
+        return HTMLResponse(content="""
+            <html><body>
+            <h2>Box Connected Successfully!</h2>
+            <p>You can close this window.</p>
+            <script>
+                if (window.opener) {
+                    window.opener.postMessage({type: 'box-auth-success'}, '*');
+                }
+                setTimeout(function() { window.close(); }, 1500);
+            </script>
+            </body></html>
+        """)
+        
+    except Exception as e:
+        logger.error(f"Box callback error: {e}")
+        return HTMLResponse(content=f"""
+            <html><body>
+            <h2>Box Authorization Failed</h2>
+            <p>Error: {str(e)}</p>
+            <script>window.close();</script>
+            </body></html>
+        """)
+
+@app.get("/api/box/status")
+async def box_status(request: Request):
+    """Check if user has valid Box connection"""
+    user_email = get_user_email(request)
+    token = get_valid_box_token(user_email)
+    
+    if token:
+        # Verify token by getting user info
+        try:
+            response = requests.get(
+                "https://api.box.com/2.0/users/me",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+            if response.status_code == 200:
+                user_info = response.json()
+                return {
+                    "connected": True,
+                    "box_user": user_info.get("name"),
+                    "box_email": user_info.get("login")
+                }
+        except:
+            pass
+    
+    return {"connected": False}
+
+@app.post("/api/box/search")
+async def box_search(request: Request):
+    """Search Box files"""
+    user_email = get_user_email(request)
+    token = get_valid_box_token(user_email)
+    
+    if not token:
+        return JSONResponse(status_code=401, content={"error": "Box not connected", "need_auth": True})
+    
+    try:
+        data = await request.json()
+        query = data.get("query", "")
+        folder_id = data.get("folder_id", "0")  # 0 = root folder
+        
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        if query:
+            # Search across all files
+            response = requests.get(
+                "https://api.box.com/2.0/search",
+                headers=headers,
+                params={
+                    "query": query,
+                    "type": "file",
+                    "limit": 25,
+                    "fields": "id,name,size,created_at,modified_at,parent,extension"
+                }
+            )
+        else:
+            # Browse folder contents
+            response = requests.get(
+                f"https://api.box.com/2.0/folders/{folder_id}/items",
+                headers=headers,
+                params={
+                    "limit": 50,
+                    "fields": "id,name,size,created_at,modified_at,type,extension"
+                }
+            )
+        
+        if response.status_code == 401:
+            # Token expired, try refresh
+            tokens = get_box_tokens(user_email)
+            if tokens and tokens.get("refresh_token"):
+                new_tokens = refresh_box_token(user_email, tokens["refresh_token"])
+                if new_tokens:
+                    return await box_search(request)
+            return JSONResponse(status_code=401, content={"error": "Box session expired", "need_auth": True})
+        
+        if response.status_code != 200:
+            return JSONResponse(status_code=response.status_code, content={"error": f"Box API error: {response.text}"})
+        
+        result = response.json()
+        
+        # Normalize response format
+        items = result.get("entries", [])
+        return {"value": items}
+        
+    except Exception as e:
+        logger.error(f"Box search error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/box/download")
+async def box_download(request: Request):
+    """Download file from Box to Azure blob storage"""
+    user_email = get_user_email(request)
+    token = get_valid_box_token(user_email)
+    
+    if not token:
+        return JSONResponse(status_code=401, content={"error": "Box not connected", "need_auth": True})
+    
+    try:
+        data = await request.json()
+        file_id = data.get("file_id")
+        file_name = data.get("file_name", "unknown_file")
+        
+        if not file_id:
+            return JSONResponse(status_code=400, content={"error": "file_id required"})
+        
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        # Download file from Box
+        response = requests.get(
+            f"https://api.box.com/2.0/files/{file_id}/content",
+            headers=headers,
+            allow_redirects=True
+        )
+        
+        if response.status_code != 200:
+            return JSONResponse(status_code=response.status_code, content={"error": f"Box download error: {response.text}"})
+        
+        file_content = response.content
+        
+        # Upload to Azure blob storage
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container = os.getenv("AZURE_STORAGE_CONTAINER")
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        new_blob_name = f"box-{uuid.uuid4()}-{file_name}"
+        
+        blob_client = blob_service.get_blob_client(container=container, blob=new_blob_name)
+        blob_client.upload_blob(file_content, overwrite=True)
+        
+        return {
+            "blob_name": new_blob_name,
+            "original_filename": file_name,
+            "source": "box"
+        }
+        
+    except Exception as e:
+        logger.error(f"Box download error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/box/disconnect")
+async def box_disconnect(request: Request):
+    """Disconnect Box account"""
+    user_email = get_user_email(request)
+    
+    try:
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if connect_str:
+            blob_service = BlobServiceClient.from_connection_string(connect_str)
+            blob_name = get_box_token_storage_key(user_email)
+            blob_client = blob_service.get_blob_client(container="box-tokens", blob=blob_name)
+            try:
+                blob_client.delete_blob()
+            except:
+                pass
+        return {"success": True}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 # --- AGREEMENT ENDPOINTS ---
 
 @app.get("/api/check-agreement")
@@ -125,7 +493,6 @@ async def check_agreement(request: Request):
         blob_service = BlobServiceClient.from_connection_string(connect_str)
         container_name = "user-agreements"
         
-        # Create container if it doesn't exist
         try:
             container_client = blob_service.get_container_client(container_name)
             if not container_client.exists():
@@ -133,7 +500,6 @@ async def check_agreement(request: Request):
         except Exception as e:
             logger.error(f"Container error: {e}")
         
-        # Check if user has agreement blob
         blob_name = f"{user_email.replace('@', '_at_').replace('.', '_')}.json"
         blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
         
@@ -160,7 +526,6 @@ async def accept_agreement(request: Request):
         blob_service = BlobServiceClient.from_connection_string(connect_str)
         container_name = "user-agreements"
         
-        # Create container if it doesn't exist
         try:
             container_client = blob_service.get_container_client(container_name)
             if not container_client.exists():
@@ -168,7 +533,6 @@ async def accept_agreement(request: Request):
         except:
             pass
         
-        # Create agreement record
         agreement_data = {
             "user_email": user_email,
             "accepted_at": datetime.now(timezone.utc).isoformat(),
@@ -196,7 +560,7 @@ async def login_page(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Main app - check if authenticated"""
+    """Main app"""
     auth_header = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
     principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
     
