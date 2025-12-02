@@ -1,7 +1,10 @@
 fastapi
 uvicorn
-jinja2
-azure-identity
 gunicorn
-pydantic
+python-dotenv
 requests
+aiohttp
+openai
+azure-storage-blob
+azure-identity
+azure-ai-documentintelligence==1.0.0
