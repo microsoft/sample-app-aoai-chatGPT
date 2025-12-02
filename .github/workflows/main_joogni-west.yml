@@ -55,3 +55,4 @@ jobs:
         with:
           app-name: 'Joogni-West'
           slot-name: 'Production'
+          package: .
