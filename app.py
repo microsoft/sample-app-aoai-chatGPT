@@ -4,7 +4,7 @@ import logging
 import requests 
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Request, BackgroundTasks
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -39,6 +39,7 @@ Your capabilities:
 - Answer questions about California Family Code, divorce, custody, support, property division, and family law procedures
 - Analyze legal documents when provided (pleadings, declarations, financial disclosures, agreements)
 - Analyze email correspondence to understand case history, communications with opposing counsel, and client interactions
+- Review calendar events to identify upcoming hearings, deadlines, and important dates
 - Draft legal documents, motions, discovery requests, correspondence, and client communications
 - Summarize case information and identify key issues
 - Create chronologies from email threads and documents
@@ -51,6 +52,8 @@ Guidelines:
 - If you analyze uploaded documents or emails, reference specific content from them
 - For California-specific questions, cite relevant Family Code sections when applicable
 - When analyzing emails, pay attention to dates, senders, recipients, and key discussion points
+- When reviewing calendar events, highlight upcoming deadlines and hearing dates
+- Format your responses clearly with appropriate structure for readability
 
 Current context: You are assisting attorneys and staff at a family law firm. Respond appropriately based on whether the question seems like a quick query or a request for formal document drafting."""
 
@@ -84,8 +87,27 @@ def get_graph_headers(req: Request):
 
 # --- ROUTES ---
 
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Render login page"""
+    return templates.TemplateResponse("login.html", {"request": request})
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
+    """Main app - check if authenticated"""
+    # Check for auth header from Azure Easy Auth
+    auth_header = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
+    principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    
+    # If no auth headers, user might not be logged in
+    # Azure Easy Auth should handle redirects, but we can show login page as fallback
+    if not auth_header and not principal_header:
+        # Check if we're in development mode
+        if os.getenv("TEST_GRAPH_TOKEN"):
+            return templates.TemplateResponse("index.html", {"request": request})
+        # In production without auth, could redirect to login
+        # But Azure Easy Auth should handle this automatically
+    
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/health")
@@ -207,6 +229,55 @@ async def get_outlook_attachments(message_id: str, request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.post("/api/search-calendar")
+async def search_calendar(request: Request):
+    """Search calendar events or get upcoming events"""
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated. Please Refresh."})
+
+        data = await request.json()
+        query = data.get("query", "")
+        
+        # Get events from now to 90 days in the future
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=90)
+        
+        url = "https://graph.microsoft.com/v1.0/me/calendarView"
+        params = {
+            "startDateTime": now.isoformat(),
+            "endDateTime": end_date.isoformat(),
+            "$top": 50,
+            "$select": "id,subject,start,end,location,bodyPreview,isAllDay,organizer,attendees",
+            "$orderby": "start/dateTime"
+        }
+        
+        # If there's a search query, we'll filter results client-side
+        # (Graph calendarView doesn't support $search)
+        
+        resp = requests.get(url, headers=headers, params=params)
+        
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+        
+        result = resp.json()
+        
+        # If query provided, filter results
+        if query:
+            query_lower = query.lower()
+            filtered = [
+                event for event in result.get("value", [])
+                if query_lower in (event.get("subject") or "").lower() 
+                or query_lower in (event.get("bodyPreview") or "").lower()
+                or query_lower in (event.get("location", {}).get("displayName") or "").lower()
+            ]
+            result["value"] = filtered
+            
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/api/search-onedrive")
 async def search_onedrive(request: Request):
     try:
@@ -278,8 +349,10 @@ def lazy_copilot_task(job_id: str, data: dict):
 
         blobs = data.get("blobs", [])
         emails = data.get("emails", [])
+        calendar_events = data.get("calendar_events", [])
         file_context = ""
         email_context = ""
+        calendar_context = ""
         
         # Process uploaded files/documents
         if blobs:
@@ -330,11 +403,42 @@ def lazy_copilot_task(job_id: str, data: dict):
                 email_context += f"Body:\n{body}\n"
                 email_context += "---\n"
 
-        total_context = file_context + email_context
+        # Process calendar events
+        if calendar_events:
+            calendar_context = "\n--- CALENDAR EVENTS ---\n"
+            for event in calendar_events:
+                subject = event.get("subject", "No title")
+                start = event.get("start", "Unknown")
+                end = event.get("end", "Unknown")
+                location = event.get("location", "")
+                body = event.get("body", "")
+                
+                # Format dates nicely
+                try:
+                    start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+                    start_str = start_dt.strftime("%A, %B %d, %Y at %I:%M %p")
+                except:
+                    start_str = start
+                
+                try:
+                    end_dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
+                    end_str = end_dt.strftime("%I:%M %p")
+                except:
+                    end_str = end
+                
+                calendar_context += f"\n[EVENT: {subject}]\n"
+                calendar_context += f"When: {start_str} - {end_str}\n"
+                if location:
+                    calendar_context += f"Location: {location}\n"
+                if body:
+                    calendar_context += f"Details: {body}\n"
+                calendar_context += "---\n"
+
+        total_context = file_context + email_context + calendar_context
         
         if len(total_context) > 500000:
             JOBS[job_id]["status"] = "Failed"
-            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too much content. Try selecting fewer emails or documents."
+            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too much content. Try selecting fewer items."
             return
 
         key = os.getenv("AZURE_OPENAI_KEY")
