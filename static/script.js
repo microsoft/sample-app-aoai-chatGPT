@@ -182,7 +182,7 @@ async function searchBox(query) {
             return;
         }
         
-        var items = data.entries || [];
+        var items = data.entries || data.value || [];
         
         if (items.length === 0) {
             resultsDiv.innerHTML = '<p class="m365-results-empty">No files found. Try a different search term.</p>';
@@ -269,7 +269,7 @@ async function browseBoxFolder(folderId) {
             return;
         }
         
-        var items = data.entries || [];
+        var items = data.entries || data.value || [];
         
         // Add back button
         var backHtml = 
