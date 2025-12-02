@@ -1,12 +1,13 @@
 import os
 import uuid
 import logging
-import sys
 import requests 
 from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -18,7 +19,7 @@ logger = logging.getLogger("app")
 
 app = FastAPI()
 
-# ✅ CORS FIX
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -27,6 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static files & Templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 class SasRequest(BaseModel):
     filename: str
 
@@ -34,7 +39,6 @@ JOBS = {}
 
 # --- HELPER: GRAPH AUTH ---
 def get_graph_headers(req: Request):
-    # 1. Check for Direct Header (Passed by Frontend JS)
     auth_header = req.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         return {
@@ -42,7 +46,6 @@ def get_graph_headers(req: Request):
             "Content-Type": "application/json"
         }
 
-    # 2. Check for Internal Azure Header
     token = req.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
     
     if not token:
@@ -59,8 +62,12 @@ def get_graph_headers(req: Request):
 
 # --- ROUTES ---
 
-@app.get("/")
-async def root():
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/health")
+async def health():
     return {"status": "Online", "message": "Joogni Backend is Running"}
 
 @app.post("/api/copilot")
@@ -117,14 +124,12 @@ async def search_outlook(request: Request):
         url = "https://graph.microsoft.com/v1.0/me/messages"
         
         if query:
-            # Mode A: Active Search
             params = {
                 "$top": 15,
                 "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
                 "$search": f'"{query}" AND hasAttachments:true' 
             }
         else:
-            # Mode B: Recent Items
             params = {
                 "$top": 15,
                 "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
@@ -158,7 +163,6 @@ async def get_outlook_attachments(message_id: str, request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# ✅ NEW ROUTE: OneDrive Search
 @app.post("/api/search-onedrive")
 async def search_onedrive(request: Request):
     try:
@@ -170,12 +174,10 @@ async def search_onedrive(request: Request):
         query = data.get("query", "")
         
         if query:
-            # Mode A: Active Search (Find specific files)
             url = f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{query}')"
             params = { "$top": 20, "$select": "id,name,size,createdDateTime,webUrl,@microsoft.graph.downloadUrl" }
             resp = requests.get(url, headers=headers, params=params)
         else:
-            # Mode B: Recent Files (What did I work on last?)
             url = "https://graph.microsoft.com/v1.0/me/drive/recent"
             params = { "$top": 20 }
             resp = requests.get(url, headers=headers, params=params)
