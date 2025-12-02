@@ -3,153 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joogni | AI Assistant</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <title>Joogni | Legal Intelligence Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        .chat-scroll::-webkit-scrollbar { width: 6px; }
-        .chat-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .chat-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        :root {
+            --primary-900: #0c1929;
+            --primary-800: #132337;
+            --primary-700: #1a3550;
+            --primary-600: #1e4976;
+            --primary-500: #2563eb;
+            --primary-400: #3b82f6;
+            --primary-300: #60a5fa;
+            --primary-200: #bfdbfe;
+            --primary-100: #dbeafe;
+            --primary-50: #eff6ff;
+            --gray-900: #111827;
+            --gray-800: #1f2937;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-500: #6b7280;
+            --gray-400: #9ca3af;
+            --gray-300: #d1d5db;
+            --gray-200: #e5e7eb;
+            --gray-100: #f3f4f6;
+            --gray-50: #f9fafb;
+            --white: #ffffff;
+            --success: #10b981;
+            --error: #ef4444;
+        }
         
-        .search-result:hover { background-color: #f8fafc; }
-        .search-result.selected { background-color: #eff6ff; border-color: #3b82f6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* Better markdown styling */
-        .prose-chat h1, .prose-chat h2, .prose-chat h3 { font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-900);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        
+        .logo { display: flex; align-items: center; gap: 12px; }
+        
+        .logo-mark {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-400) 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; color: white;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+        }
+        
+        .logo-text { font-size: 22px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+        .logo-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.15); margin: 0 4px; }
+        .logo-subtitle { font-size: 12px; font-weight: 500; color: var(--primary-300); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        
+        .status-indicator {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 14px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 24px;
+        }
+        
+        .status-dot {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        
+        .status-text { font-size: 12px; font-weight: 600; color: #34d399; }
+        
+        .btn-logout {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            font-size: 13px; font-weight: 500;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-logout:hover { background: rgba(255,255,255,0.12); color: white; }
+        
+        /* Chat */
+        .chat-wrapper {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden;
+            background: linear-gradient(180deg, var(--gray-100) 0%, var(--gray-50) 100%);
+        }
+        
+        .chat-container {
+            flex: 1; overflow-y: auto; padding: 32px 24px;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+        
+        /* Messages */
+        .message { display: flex; gap: 12px; max-width: 800px; animation: messageIn 0.3s ease; }
+        @keyframes messageIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .message-user { flex-direction: row-reverse; margin-left: auto; }
+        
+        .message-bubble {
+            padding: 16px 20px; border-radius: 16px;
+            font-size: 14px; line-height: 1.65; max-width: 100%;
+        }
+        
+        .message-system .message-bubble {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px 16px 16px 4px;
+            color: var(--gray-700);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .message-user .message-bubble {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        
+        .message-error .message-bubble {
+            background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+        }
+        
+        /* Prose */
+        .prose-chat h1, .prose-chat h2, .prose-chat h3 { font-weight: 600; color: var(--gray-900); margin-top: 1.25em; margin-bottom: 0.5em; }
         .prose-chat h1 { font-size: 1.25rem; }
         .prose-chat h2 { font-size: 1.125rem; }
         .prose-chat h3 { font-size: 1rem; }
-        .prose-chat p { margin-bottom: 0.75em; }
-        .prose-chat ul, .prose-chat ol { margin-left: 1.5em; margin-bottom: 0.75em; }
+        .prose-chat p { margin-bottom: 0.875em; }
+        .prose-chat ul, .prose-chat ol { margin-left: 1.5em; margin-bottom: 0.875em; }
         .prose-chat ul { list-style-type: disc; }
         .prose-chat ol { list-style-type: decimal; }
-        .prose-chat li { margin-bottom: 0.25em; }
-        .prose-chat strong { font-weight: 600; }
-        .prose-chat em { font-style: italic; }
-        .prose-chat code { background: #f1f5f9; padding: 0.125em 0.375em; border-radius: 0.25em; font-size: 0.875em; }
-        .prose-chat pre { background: #f1f5f9; padding: 1em; border-radius: 0.5em; overflow-x: auto; margin: 0.75em 0; }
-        .prose-chat pre code { background: none; padding: 0; }
-        .prose-chat blockquote { border-left: 3px solid #3b82f6; padding-left: 1em; margin: 0.75em 0; color: #64748b; }
-        .prose-chat hr { border: none; border-top: 1px solid #e2e8f0; margin: 1em 0; }
-        .prose-chat a { color: #2563eb; text-decoration: underline; }
+        .prose-chat li { margin-bottom: 0.375em; }
+        .prose-chat strong { font-weight: 600; color: var(--gray-900); }
+        .prose-chat code { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+        .prose-chat pre { background: var(--gray-800); color: var(--gray-100); padding: 16px; border-radius: 10px; overflow-x: auto; margin: 1em 0; }
+        .prose-chat pre code { background: none; padding: 0; color: inherit; }
+        .prose-chat blockquote { border-left: 3px solid var(--primary-400); padding-left: 16px; margin: 1em 0; color: var(--gray-600); }
+        .prose-chat a { color: var(--primary-500); text-decoration: underline; }
         
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        /* Welcome */
+        .welcome-card {
+            background: var(--white); border: 1px solid var(--gray-200);
+            border-radius: 16px; padding: 28px; max-width: 520px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .welcome-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .welcome-icon i { font-size: 22px; color: var(--primary-500); }
+        .welcome-title { font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
+        .welcome-text { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-bottom: 20px; }
+        .welcome-features { display: flex; flex-wrap: wrap; gap: 10px; }
+        
+        .welcome-feature {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px;
+            background: var(--gray-50); border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 12px; font-weight: 500; color: var(--gray-600);
+        }
+        
+        .welcome-feature i { color: var(--primary-500); font-size: 12px; }
+        
+        /* Loading */
+        .loading-bubble {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 18px;
+            background: var(--white); border: 1px solid var(--gray-200);
+            border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .loading-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid var(--gray-200);
+            border-top-color: var(--primary-500);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 13px; color: var(--gray-500); font-weight: 500; }
+        
+        /* M365 Panel */
+        .m365-panel {
+            background: var(--white);
+            border-top: 1px solid var(--gray-200);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            max-height: 50vh;
+            display: flex; flex-direction: column;
+        }
+        
+        .m365-panel.hidden { display: none; }
+        
+        .m365-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+        .m365-header-row { display: flex; align-items: center; gap: 12px; }
+        .source-tabs { display: flex; gap: 8px; }
+        
+        .source-tab {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 8px;
+            background: var(--white);
+            font-size: 13px; font-weight: 500; color: var(--gray-600);
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .source-tab:hover { border-color: var(--gray-300); background: var(--gray-50); }
+        .source-tab.active { border-color: var(--primary-500); background: var(--primary-50); color: var(--primary-600); }
+        .source-tab i { font-size: 13px; }
+        
+        .m365-search-input {
+            flex: 1; padding: 10px 16px;
+            border: 1.5px solid var(--gray-200); border-radius: 8px;
+            font-size: 13px; font-family: inherit;
+            color: var(--gray-900); background: var(--white);
+            transition: all 0.15s ease;
+        }
+        
+        .m365-search-input:focus { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .btn-search {
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px;
+            background: var(--primary-500); border: none; border-radius: 8px;
+            color: white; cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .btn-search:hover { background: var(--primary-600); }
+        
+        .btn-close-panel {
+            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px;
+            border: none; background: transparent;
+            color: var(--gray-400); cursor: pointer;
+            border-radius: 6px; transition: all 0.15s ease;
+        }
+        
+        .btn-close-panel:hover { background: var(--gray-100); color: var(--gray-600); }
+        
+        .m365-results { flex: 1; overflow-y: auto; padding: 16px 20px; }
+        .m365-results-empty { text-align: center; padding: 40px 20px; color: var(--gray-400); font-size: 13px; }
+        
+        .search-result {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 16px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 10px; margin-bottom: 10px;
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .search-result:hover { background: var(--gray-50); border-color: var(--gray-300); }
+        .search-result.selected { background: var(--primary-50); border-color: var(--primary-400); }
+        
+        .result-icon {
+            width: 36px; height: 36px;
+            background: var(--gray-100);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .result-icon i { font-size: 14px; }
+        .result-icon.email i { color: var(--primary-500); }
+        .result-icon.calendar i { color: #8b5cf6; }
+        .result-icon.file i { color: var(--gray-500); }
+        
+        .result-content { flex: 1; min-width: 0; }
+        .result-title { font-size: 13px; font-weight: 600; color: var(--gray-900); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .result-title .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .result-meta { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
+        .result-preview { font-size: 12px; color: var(--gray-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .result-check { color: var(--primary-500); font-size: 18px; display: none; }
+        .search-result.selected .result-check { display: block; }
+        
+        .m365-actions {
+            padding: 14px 20px;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        
+        .m365-actions.hidden { display: none; }
+        .selected-count { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+        
+        .btn-add-to-chat {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 18px;
+            background: var(--primary-500); border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; color: white;
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .btn-add-to-chat:hover { background: var(--primary-600); }
+        
+        /* Attachments */
+        .attachments-preview { background: var(--primary-50); border-top: 1px solid var(--primary-200); padding: 14px 20px; }
+        .attachments-preview.hidden { display: none; }
+        .attachments-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .attachments-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--primary-700); }
+        .btn-clear-all { font-size: 12px; color: var(--primary-600); background: none; border: none; cursor: pointer; text-decoration: underline; }
+        .btn-clear-all:hover { color: var(--primary-800); }
+        .attachments-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        
+        .attachment-chip {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 12px;
+            background: var(--white);
+            border: 1px solid var(--primary-200);
+            border-radius: 8px;
+            font-size: 12px; color: var(--gray-700);
+        }
+        
+        .attachment-chip i { font-size: 12px; }
+        .attachment-chip .name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .attachment-chip .remove { color: var(--gray-400); cursor: pointer; padding: 2px; }
+        .attachment-chip .remove:hover { color: var(--error); }
+        
+        /* Input */
+        .input-area { background: var(--white); border-top: 1px solid var(--gray-200); padding: 20px 24px; }
+        .input-wrapper { max-width: 800px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
+        
+        .btn-attach {
+            display: flex; align-items: center; justify-content: center;
+            width: 48px; height: 48px;
+            background: var(--gray-50);
+            border: 1.5px solid var(--gray-200);
+            border-radius: 12px;
+            color: var(--gray-500);
+            cursor: pointer; transition: all 0.15s ease;
+            position: relative;
+        }
+        
+        .btn-attach:hover { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); }
+        .btn-attach i { font-size: 18px; }
+        
+        .attachment-badge {
+            position: absolute; top: -6px; right: -6px;
+            width: 20px; height: 20px;
+            background: var(--primary-500);
+            border-radius: 50%;
+            font-size: 11px; font-weight: 700; color: white;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .attachment-badge.hidden { display: none; }
+        
+        .btn-m365 {
+            display: flex; align-items: center; justify-content: center;
+            width: 48px; height: 48px;
+            background: var(--gray-50);
+            border: 1.5px solid var(--gray-200);
+            border-radius: 12px;
+            color: var(--gray-500);
+            cursor: pointer; transition: all 0.15s ease;
+        }
+        
+        .btn-m365:hover { background: var(--gray-100); border-color: var(--gray-300); color: var(--gray-600); }
+        .btn-m365.active { background: var(--primary-50); border-color: var(--primary-400); color: var(--primary-600); }
+        .btn-m365 i { font-size: 18px; }
+        
+        .input-field {
+            flex: 1; padding: 14px 18px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 14px; font-family: inherit;
+            color: var(--gray-900); background: var(--gray-50);
+            transition: all 0.15s ease;
+        }
+        
+        .input-field:focus { outline: none; border-color: var(--primary-400); background: var(--white); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .input-field::placeholder { color: var(--gray-400); }
+        
+        .btn-send {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            height: 48px; padding: 0 24px;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+            border: none; border-radius: 12px;
+            font-size: 14px; font-weight: 600; color: white;
+            cursor: pointer; transition: all 0.15s ease;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-send:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
+        .btn-send:active { transform: translateY(0); }
+        
+        @media (max-width: 768px) {
+            .header { padding: 0 16px; }
+            .logo-divider, .logo-subtitle, .status-indicator { display: none; }
+            .chat-container { padding: 20px 16px; }
+            .input-area { padding: 16px; }
+            .btn-send span { display: none; }
+            .btn-send { width: 48px; padding: 0; }
+        }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col font-sans text-gray-800">
-
-    <!-- Header -->
-    <header class="bg-blue-900 text-white p-4 shadow-sm flex justify-between items-center border-b border-blue-950">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white bg-opacity-10 rounded-lg flex items-center justify-center text-white font-bold text-lg border border-white border-opacity-20">
-                J
+<body>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-mark">J</div>
+                <span class="logo-text">Joogni</span>
             </div>
-            <h1 class="text-lg font-semibold tracking-wide">Joogni</h1>
+            <div class="logo-divider"></div>
+            <span class="logo-subtitle">Legal AI</span>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-xs bg-blue-800 px-3 py-1 rounded-full border border-blue-700">
-                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>M365 Connected</span>
+        <div class="header-right">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span class="status-text">Connected</span>
             </div>
-            <a href="/.auth/logout" class="flex items-center gap-2 text-xs bg-blue-800 hover:bg-blue-700 px-3 py-1.5 rounded-lg border border-blue-700 transition-colors" title="Sign Out">
+            <a href="/.auth/logout" class="btn-logout">
                 <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+                <span>Sign Out</span>
             </a>
         </div>
     </header>
 
-    <!-- Chat Area -->
-    <main id="chat-container" class="flex-1 overflow-y-auto p-4 chat-scroll space-y-6">
-        <!-- Welcome Message -->
-        <div class="flex justify-start animate-fade-in">
-            <div class="bg-white p-5 rounded-xl rounded-tl-none shadow-sm max-w-lg border border-gray-200">
-                <h3 class="font-bold text-gray-800 mb-1">Welcome to Joogni</h3>
-                <p class="text-gray-600 text-sm leading-relaxed">
+    <div class="chat-wrapper">
+        <main id="chat-container" class="chat-container">
+            <div class="welcome-card">
+                <div class="welcome-icon">
+                    <i class="fas fa-scale-balanced"></i>
+                </div>
+                <h2 class="welcome-title">Welcome to Joogni</h2>
+                <p class="welcome-text">
                     I'm your legal AI assistant. I can answer questions about California family law, analyze documents, review email correspondence, and help draft legal documents.
                 </p>
-                <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
-                    <span><i class="fas fa-paperclip mr-1"></i> Attach files</span>
-                    <span><i class="fab fa-microsoft mr-1"></i> Search M365</span>
-                    <span><i class="fas fa-calendar mr-1"></i> Check calendar</span>
+                <div class="welcome-features">
+                    <div class="welcome-feature"><i class="fas fa-envelope"></i><span>Search Emails</span></div>
+                    <div class="welcome-feature"><i class="fas fa-calendar"></i><span>Check Calendar</span></div>
+                    <div class="welcome-feature"><i class="fas fa-file-alt"></i><span>Analyze Docs</span></div>
+                    <div class="welcome-feature"><i class="fas fa-gavel"></i><span>CA Family Law</span></div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
-    <!-- M365 Search Panel (Hidden by default) -->
-    <div id="m365-panel" class="hidden bg-white border-t border-gray-200 shadow-lg max-h-[50vh] flex flex-col">
-        <!-- Search Header -->
-        <div class="p-4 border-b border-gray-200 bg-gray-50">
-            <div class="flex gap-3 items-center">
-                <div class="flex gap-2">
-                    <button onclick="setSearchSource('email')" id="src-email" class="px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all">
-                        <i class="fas fa-envelope mr-1"></i> Outlook
+    <div id="m365-panel" class="m365-panel hidden">
+        <div class="m365-header">
+            <div class="m365-header-row">
+                <div class="source-tabs">
+                    <button onclick="setSearchSource('email')" id="src-email" class="source-tab active">
+                        <i class="fas fa-envelope"></i><span>Outlook</span>
                     </button>
-                    <button onclick="setSearchSource('files')" id="src-files" class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all">
-                        <i class="fas fa-folder mr-1"></i> OneDrive
+                    <button onclick="setSearchSource('files')" id="src-files" class="source-tab">
+                        <i class="fas fa-folder"></i><span>OneDrive</span>
                     </button>
-                    <button onclick="setSearchSource('calendar')" id="src-calendar" class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all">
-                        <i class="fas fa-calendar mr-1"></i> Calendar
+                    <button onclick="setSearchSource('calendar')" id="src-calendar" class="source-tab">
+                        <i class="fas fa-calendar"></i><span>Calendar</span>
                     </button>
                 </div>
-                <input type="text" id="m365-search-input" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search emails (e.g., case name, client, topic)..." onkeypress="if(event.key==='Enter')searchM365()">
-                <button onclick="searchM365()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button onclick="closeM365Panel()" class="text-gray-400 hover:text-gray-600 px-2">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
+                <input type="text" id="m365-search-input" class="m365-search-input" placeholder="Search emails..." onkeypress="if(event.key==='Enter')searchM365()">
+                <button onclick="searchM365()" class="btn-search"><i class="fas fa-search"></i></button>
+                <button onclick="closeM365Panel()" class="btn-close-panel"><i class="fas fa-times"></i></button>
             </div>
         </div>
-        
-        <!-- Search Results -->
-        <div id="m365-results" class="flex-1 overflow-y-auto p-4">
-            <p class="text-gray-400 text-sm text-center py-8">Search your Outlook emails, OneDrive files, or calendar events</p>
+        <div id="m365-results" class="m365-results">
+            <p class="m365-results-empty">Search your Outlook emails, OneDrive files, or calendar events</p>
         </div>
-        
-        <!-- Action Bar -->
-        <div id="m365-actions" class="hidden p-3 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-            <span id="selected-count" class="text-sm text-gray-600">0 files selected</span>
-            <button onclick="addSelectedToChat()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                <i class="fas fa-plus mr-1"></i> Add to Chat
-            </button>
+        <div id="m365-actions" class="m365-actions hidden">
+            <span id="selected-count" class="selected-count">0 selected</span>
+            <button onclick="addSelectedToChat()" class="btn-add-to-chat"><i class="fas fa-plus"></i><span>Add to Chat</span></button>
         </div>
     </div>
 
-    <!-- Attached Files Preview -->
-    <div id="attachments-preview" class="hidden bg-blue-50 border-t border-blue-200 px-4 py-3">
-        <div class="flex items-center gap-2 text-sm text-blue-800 mb-2">
-            <i class="fas fa-paperclip"></i>
-            <span class="font-medium">Attached Files</span>
-            <button onclick="clearAllAttachments()" class="ml-auto text-xs text-blue-600 hover:text-blue-800 hover:underline">Clear All</button>
+    <div id="attachments-preview" class="attachments-preview hidden">
+        <div class="attachments-header">
+            <div class="attachments-label"><i class="fas fa-paperclip"></i><span>Attached Items</span></div>
+            <button onclick="clearAllAttachments()" class="btn-clear-all">Clear All</button>
         </div>
-        <div id="attachments-list" class="flex flex-wrap gap-2"></div>
+        <div id="attachments-list" class="attachments-list"></div>
     </div>
 
-    <!-- Input Area -->
-    <footer class="bg-white p-4 border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-        <div class="max-w-4xl mx-auto flex gap-3">
-            <!-- Hidden File Input -->
-            <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" onchange="handleFileSelect(event)">
-            
-            <!-- Attach Button -->
-            <button onclick="document.getElementById('file-input').click()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-12 h-12 rounded-xl transition-all border border-gray-300 flex items-center justify-center shadow-sm active:scale-95 relative" title="Attach Local Files">
-                <i class="fas fa-paperclip text-lg"></i>
-                <span id="attachment-count" class="hidden absolute -top-1 -right-1 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+    <footer class="input-area">
+        <div class="input-wrapper">
+            <input type="file" id="file-input" style="display: none;" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" onchange="handleFileSelect(event)">
+            <button onclick="document.getElementById('file-input').click()" class="btn-attach" title="Attach Files">
+                <i class="fas fa-paperclip"></i>
+                <span id="attachment-count" class="attachment-badge hidden">0</span>
             </button>
-            
-            <!-- M365 Search Button -->
-            <button onclick="toggleM365Panel()" id="m365-button" class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-12 h-12 rounded-xl transition-all border border-gray-300 flex items-center justify-center shadow-sm active:scale-95" title="Search Outlook, OneDrive & Calendar">
-                <i class="fab fa-microsoft text-lg"></i>
+            <button onclick="toggleM365Panel()" id="m365-button" class="btn-m365" title="Search Microsoft 365">
+                <i class="fab fa-microsoft"></i>
             </button>
-            
-            <input type="text" id="user-input" class="flex-1 border border-gray-300 rounded-xl px-5 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-inner text-gray-700 placeholder-gray-400" placeholder="Ask a legal question or describe what you need..." onkeypress="handleEnter(event)">
-            
-            <button onclick="sendMessage()" id="send-button" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-medium transition-all shadow-md active:scale-95 flex items-center gap-2">
-                <span>Send</span> <i class="fas fa-paper-plane text-sm"></i>
-            </button>
+            <input type="text" id="user-input" class="input-field" placeholder="Ask a legal question or describe what you need..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()" class="btn-send"><span>Send</span><i class="fas fa-paper-plane"></i></button>
         </div>
     </footer>
 
