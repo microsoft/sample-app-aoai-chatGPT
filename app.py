@@ -2,6 +2,8 @@ import os
 import uuid
 import logging
 import requests 
+import json
+import base64
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
@@ -62,6 +64,29 @@ class SasRequest(BaseModel):
 
 JOBS = {}
 
+# --- HELPER: GET USER IDENTITY ---
+def get_user_email(request: Request) -> str:
+    """Extract user email from Azure Easy Auth headers"""
+    # Try X-MS-CLIENT-PRINCIPAL-NAME first (most common)
+    email = request.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+    if email:
+        return email.lower()
+    
+    # Try decoding X-MS-CLIENT-PRINCIPAL
+    principal = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    if principal:
+        try:
+            decoded = json.loads(base64.b64decode(principal))
+            claims = {c["typ"]: c["val"] for c in decoded.get("claims", [])}
+            email = claims.get("preferred_username") or claims.get("email") or claims.get("name")
+            if email:
+                return email.lower()
+        except:
+            pass
+    
+    # Fallback for development
+    return os.getenv("TEST_USER_EMAIL", "unknown@user.com").lower()
+
 # --- HELPER: GRAPH AUTH ---
 def get_graph_headers(req: Request):
     auth_header = req.headers.get("Authorization")
@@ -85,6 +110,83 @@ def get_graph_headers(req: Request):
         "Content-Type": "application/json"
     }
 
+# --- AGREEMENT ENDPOINTS ---
+
+@app.get("/api/check-agreement")
+async def check_agreement(request: Request):
+    """Check if user has accepted the agreement"""
+    try:
+        user_email = get_user_email(request)
+        
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return JSONResponse(status_code=500, content={"error": "Storage not configured"})
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "user-agreements"
+        
+        # Create container if it doesn't exist
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except Exception as e:
+            logger.error(f"Container error: {e}")
+        
+        # Check if user has agreement blob
+        blob_name = f"{user_email.replace('@', '_at_').replace('.', '_')}.json"
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        
+        try:
+            blob_client.get_blob_properties()
+            return {"accepted": True, "user": user_email}
+        except:
+            return {"accepted": False, "user": user_email}
+            
+    except Exception as e:
+        logger.error(f"Check agreement error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/accept-agreement")
+async def accept_agreement(request: Request):
+    """Record user's acceptance of the agreement"""
+    try:
+        user_email = get_user_email(request)
+        
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return JSONResponse(status_code=500, content={"error": "Storage not configured"})
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "user-agreements"
+        
+        # Create container if it doesn't exist
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except:
+            pass
+        
+        # Create agreement record
+        agreement_data = {
+            "user_email": user_email,
+            "accepted_at": datetime.now(timezone.utc).isoformat(),
+            "version": "1.0",
+            "ip_address": request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+        }
+        
+        blob_name = f"{user_email.replace('@', '_at_').replace('.', '_')}.json"
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        blob_client.upload_blob(json.dumps(agreement_data), overwrite=True)
+        
+        logger.info(f"Agreement accepted by {user_email}")
+        return {"success": True, "user": user_email}
+        
+    except Exception as e:
+        logger.error(f"Accept agreement error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 # --- ROUTES ---
 
 @app.get("/login", response_class=HTMLResponse)
@@ -95,18 +197,12 @@ async def login_page(request: Request):
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     """Main app - check if authenticated"""
-    # Check for auth header from Azure Easy Auth
     auth_header = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
     principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
     
-    # If no auth headers, user might not be logged in
-    # Azure Easy Auth should handle redirects, but we can show login page as fallback
     if not auth_header and not principal_header:
-        # Check if we're in development mode
         if os.getenv("TEST_GRAPH_TOKEN"):
             return templates.TemplateResponse("index.html", {"request": request})
-        # In production without auth, could redirect to login
-        # But Azure Easy Auth should handle this automatically
     
     return templates.TemplateResponse("index.html", {"request": request})
 
@@ -168,14 +264,12 @@ async def search_outlook(request: Request):
         url = "https://graph.microsoft.com/v1.0/me/messages"
         
         if query:
-            # Mode A: Active Search
             params = {
                 "$top": 25,
                 "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
                 "$search": f'"{query}"'
             }
         else:
-            # Mode B: Recent Items
             params = {
                 "$top": 25,
                 "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
@@ -240,7 +334,6 @@ async def search_calendar(request: Request):
         data = await request.json()
         query = data.get("query", "")
         
-        # Get events from now to 90 days in the future
         now = datetime.now(timezone.utc)
         end_date = now + timedelta(days=90)
         
@@ -253,9 +346,6 @@ async def search_calendar(request: Request):
             "$orderby": "start/dateTime"
         }
         
-        # If there's a search query, we'll filter results client-side
-        # (Graph calendarView doesn't support $search)
-        
         resp = requests.get(url, headers=headers, params=params)
         
         if resp.status_code != 200:
@@ -263,7 +353,6 @@ async def search_calendar(request: Request):
         
         result = resp.json()
         
-        # If query provided, filter results
         if query:
             query_lower = query.lower()
             filtered = [
@@ -354,7 +443,6 @@ def lazy_copilot_task(job_id: str, data: dict):
         email_context = ""
         calendar_context = ""
         
-        # Process uploaded files/documents
         if blobs:
             try:
                 from azure.ai.documentintelligence import DocumentIntelligenceClient
@@ -386,7 +474,6 @@ def lazy_copilot_task(job_id: str, data: dict):
             except Exception:
                 pass 
 
-        # Process emails
         if emails:
             email_context = "\n--- EMAIL CORRESPONDENCE ---\n"
             for email in emails:
@@ -403,7 +490,6 @@ def lazy_copilot_task(job_id: str, data: dict):
                 email_context += f"Body:\n{body}\n"
                 email_context += "---\n"
 
-        # Process calendar events
         if calendar_events:
             calendar_context = "\n--- CALENDAR EVENTS ---\n"
             for event in calendar_events:
@@ -413,7 +499,6 @@ def lazy_copilot_task(job_id: str, data: dict):
                 location = event.get("location", "")
                 body = event.get("body", "")
                 
-                # Format dates nicely
                 try:
                     start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
                     start_str = start_dt.strftime("%A, %B %d, %Y at %I:%M %p")
@@ -447,7 +532,6 @@ def lazy_copilot_task(job_id: str, data: dict):
         
         user_msg = data.get("messages", [])[-1].get("content", "")
         
-        # Build the final prompt with context
         if total_context:
             final_prompt = f"The user has provided the following content for analysis:\n{total_context}\n\nUser Query: {user_msg}"
         else:
