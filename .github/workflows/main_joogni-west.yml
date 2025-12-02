@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Python app to Azure Web App - Joogni-West
 
 on:
@@ -14,21 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Create and Start virtual environment and Install dependencies
+          
+      - name: Create virtual environment and install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install -r requirements.txt
-
+          
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
@@ -42,20 +38,20 @@ jobs:
     needs: build
     permissions:
       contents: read
-
+      
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-
-      # Broken 'Login to Azure' step removed. 
-      # Direct deployment via Publish Profile below:
-
-      - name: 'Deploy to Azure Web App'
+          
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'Joogni-West'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
