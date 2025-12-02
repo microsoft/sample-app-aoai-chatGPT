@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joogni | Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+        .accent-bar {
+            height: 6px;
+            background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
+            border-radius: 12px 12px 0 0;
+        }
+        .sign-in-btn {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+        .sign-in-btn:hover {
+            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="login-card w-full max-w-md">
+        <div class="accent-bar"></div>
+        <div class="p-10 text-center">
+            <!-- Logo -->
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-blue-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <span class="text-white text-3xl font-bold">J</span>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Joogni</h1>
+            <p class="text-gray-500 mb-8">Your secure, internal legal copilot.</p>
+            
+            <!-- Sign In Button -->
+            <a href="/.auth/login/aad?post_login_redirect_uri=/" class="sign-in-btn inline-flex items-center justify-center gap-3 text-white font-semibold py-3 px-8 rounded-lg w-full max-w-xs mx-auto">
+                <i class="fab fa-microsoft text-lg"></i>
+                <span>Sign In with Microsoft</span>
+            </a>
+            
+            <!-- Footer text -->
+            <p class="text-gray-400 text-sm mt-8">
+                You must sign in with your <span class="font-medium text-gray-600">@thegillfirm.com</span> account to continue.
+            </p>
+        </div>
+        
+        <!-- Bottom branding -->
+        <div class="border-t border-gray-100 py-4 text-center">
+            <p class="text-xs text-gray-400">
+                <i class="fas fa-shield-alt mr-1"></i> Secured by Microsoft Entra ID
+            </p>
+        </div>
+    </div>
+</body>
+</html>
