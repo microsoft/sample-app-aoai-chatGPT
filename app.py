@@ -65,6 +65,54 @@ class SasRequest(BaseModel):
 
 JOBS = {}
 
+# --- AGENTIC SYSTEM PROMPTS ---
+
+AGENTIC_PLANNER_PROMPT = """You are a search planner for a legal AI assistant at a family law firm. 
+Analyze the user's query and determine what data sources need to be searched.
+
+You have access to:
+1. Box.com - Document storage (pleadings, declarations, discovery, contracts, evidence)
+2. Outlook - Email correspondence (client communications, opposing counsel, court notices)
+3. Calendar - Upcoming hearings, deadlines, meetings
+
+For case-specific queries (mentioning client names, case numbers, specific matters), you should search relevant sources.
+For general legal questions (e.g., "What is the community property rule?"), no searches are needed.
+
+Respond with JSON only:
+{
+  "is_case_specific": true/false,
+  "search_box": true/false,
+  "box_query": "search terms for Box" or null,
+  "search_emails": true/false,
+  "email_query": "search terms for Outlook" or null,
+  "search_calendar": true/false,
+  "calendar_query": "search terms for Calendar" or null,
+  "reasoning": "brief explanation of search strategy"
+}
+
+Be smart about search terms - extract client names, case topics, document types mentioned."""
+
+AGENTIC_RESPONSE_PROMPT = """You are Joogni, an expert legal AI assistant for Gill Law Group, a California family law firm.
+
+You have been provided with:
+1. The user's question
+2. Search results from various sources (Box files, emails, calendar events)
+3. The jurisdiction context
+
+CRITICAL INSTRUCTIONS:
+- Synthesize information from all provided sources
+- ALWAYS cite your sources using [Source: X] format
+- For emails, cite as [Email: subject, date]
+- For documents, cite as [Document: filename]
+- For calendar events, cite as [Calendar: event name, date]
+- If information conflicts between sources, note the discrepancy
+- If you cannot find relevant information, say so clearly
+- Provide actionable, specific answers based on the evidence
+
+JURISDICTION: {jurisdiction}
+
+When drafting documents or providing legal analysis, apply {jurisdiction} law unless otherwise specified."""
+
 # --- HELPER: GET USER IDENTITY ---
 def get_user_email(request: Request) -> str:
     """Extract user email from Azure Easy Auth headers"""
@@ -477,6 +525,387 @@ async def box_disconnect(request: Request):
         return {"success": True}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+# --- AGENTIC SEARCH SYSTEM ---
+
+def search_box_internal(token: str, query: str, limit: int = 10) -> list:
+    """Internal Box search - returns list of files with metadata"""
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(
+            "https://api.box.com/2.0/search",
+            headers=headers,
+            params={
+                "query": query,
+                "type": "file",
+                "limit": limit,
+                "fields": "id,name,size,created_at,modified_at,parent,extension"
+            }
+        )
+        if response.status_code == 200:
+            return response.json().get("entries", [])
+        return []
+    except Exception as e:
+        logger.error(f"Box internal search error: {e}")
+        return []
+
+def download_box_file_internal(token: str, file_id: str) -> bytes:
+    """Download file content from Box"""
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(
+            f"https://api.box.com/2.0/files/{file_id}/content",
+            headers=headers,
+            allow_redirects=True
+        )
+        if response.status_code == 200:
+            return response.content
+        return None
+    except Exception as e:
+        logger.error(f"Box download error: {e}")
+        return None
+
+def search_outlook_internal(graph_token: str, query: str, limit: int = 10) -> list:
+    """Internal Outlook search - returns list of emails"""
+    try:
+        headers = {
+            "Authorization": f"Bearer {graph_token}",
+            "Content-Type": "application/json"
+        }
+        
+        if query:
+            url = f"https://graph.microsoft.com/v1.0/me/messages?$search=\"{query}\""
+        else:
+            url = "https://graph.microsoft.com/v1.0/me/messages"
+        
+        params = {
+            "$top": limit,
+            "$select": "id,subject,bodyPreview,body,from,toRecipients,receivedDateTime,hasAttachments"
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            return response.json().get("value", [])
+        return []
+    except Exception as e:
+        logger.error(f"Outlook internal search error: {e}")
+        return []
+
+def search_calendar_internal(graph_token: str, query: str, limit: int = 10) -> list:
+    """Internal Calendar search - returns list of events"""
+    try:
+        headers = {
+            "Authorization": f"Bearer {graph_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Get events from now to 60 days ahead
+        start_time = datetime.now(timezone.utc).isoformat()
+        end_time = (datetime.now(timezone.utc) + timedelta(days=60)).isoformat()
+        
+        url = f"https://graph.microsoft.com/v1.0/me/calendarView"
+        params = {
+            "startDateTime": start_time,
+            "endDateTime": end_time,
+            "$top": 50,
+            "$select": "id,subject,start,end,location,bodyPreview,isAllDay"
+        }
+        
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            events = response.json().get("value", [])
+            # Filter by query if provided
+            if query:
+                query_lower = query.lower()
+                events = [e for e in events if query_lower in (e.get("subject") or "").lower() 
+                         or query_lower in (e.get("bodyPreview") or "").lower()]
+            return events[:limit]
+        return []
+    except Exception as e:
+        logger.error(f"Calendar internal search error: {e}")
+        return []
+
+def extract_text_from_file(file_content: bytes, filename: str) -> str:
+    """Extract text from file using Document Intelligence"""
+    try:
+        from azure.ai.documentintelligence import DocumentIntelligenceClient
+        from azure.core.credentials import AzureKeyCredential
+        
+        doc_endpoint = os.getenv("DOC_INTEL_ENDPOINT")
+        doc_key = os.getenv("DOC_INTEL_KEY")
+        
+        if not doc_endpoint or not doc_key:
+            return f"[Could not extract text from {filename} - Document Intelligence not configured]"
+        
+        # Only process supported file types
+        supported_ext = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg', '.tiff', '.bmp']
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in supported_ext:
+            return f"[File type {ext} not supported for text extraction]"
+        
+        doc_client = DocumentIntelligenceClient(endpoint=doc_endpoint, credential=AzureKeyCredential(doc_key))
+        poller = doc_client.begin_analyze_document("prebuilt-layout", body=file_content)
+        result = poller.result()
+        
+        return result.content or f"[No text extracted from {filename}]"
+    except Exception as e:
+        logger.error(f"Text extraction error for {filename}: {e}")
+        return f"[Error extracting text from {filename}: {str(e)}]"
+
+@app.post("/api/agentic")
+async def agentic_search(request: Request, background_tasks: BackgroundTasks):
+    """Agentic search endpoint - AI automatically searches relevant sources"""
+    try:
+        data = await request.json()
+        job_id = str(uuid.uuid4())
+        
+        user_email = get_user_email(request)
+        graph_token = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN") or os.getenv("TEST_GRAPH_TOKEN")
+        box_token = get_valid_box_token(user_email)
+        
+        # Add tokens and user info to data
+        data["graph_token"] = graph_token
+        data["box_token"] = box_token
+        data["user_email"] = user_email
+        
+        background_tasks.add_task(agentic_task, job_id, data)
+        return {"job_id": job_id}
+        
+    except Exception as e:
+        logger.error(f"Agentic endpoint error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+def agentic_task(job_id: str, data: dict):
+    """Background task for agentic search and response"""
+    JOBS[job_id] = {"status": "Planning", "result": "", "sources_searched": []}
+    
+    try:
+        from openai import AzureOpenAI
+        
+        key = os.getenv("AZURE_OPENAI_KEY")
+        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        client = AzureOpenAI(api_key=key, azure_endpoint=endpoint, api_version="2024-02-01")
+        
+        user_query = data.get("query", "")
+        jurisdiction = data.get("jurisdiction", "California")
+        graph_token = data.get("graph_token")
+        box_token = data.get("box_token")
+        
+        # Also include any manually attached content
+        manual_blobs = data.get("blobs", [])
+        manual_emails = data.get("emails", [])
+        manual_calendar = data.get("calendar_events", [])
+        
+        # Step 1: Plan what to search
+        JOBS[job_id]["status"] = "Planning search strategy..."
+        
+        plan_response = client.chat.completions.create(
+            model="model-router",
+            messages=[
+                {"role": "system", "content": AGENTIC_PLANNER_PROMPT},
+                {"role": "user", "content": f"User query: {user_query}"}
+            ],
+            response_format={"type": "json_object"}
+        )
+        
+        plan_text = plan_response.choices[0].message.content
+        try:
+            plan = json.loads(plan_text)
+        except:
+            plan = {"is_case_specific": False}
+        
+        logger.info(f"Search plan: {plan}")
+        
+        # Collect all context
+        collected_emails = list(manual_emails)
+        collected_calendar = list(manual_calendar)
+        collected_documents = []
+        sources_searched = []
+        
+        # Step 2: Execute searches based on plan
+        if plan.get("is_case_specific", False):
+            
+            # Search Box
+            if plan.get("search_box") and box_token:
+                JOBS[job_id]["status"] = "Searching Box files..."
+                box_query = plan.get("box_query", "")
+                if box_query:
+                    sources_searched.append(f"Box: '{box_query}'")
+                    box_results = search_box_internal(box_token, box_query, limit=5)
+                    
+                    # Download and extract text from top results
+                    for file_info in box_results[:3]:  # Limit to 3 files for performance
+                        file_id = file_info.get("id")
+                        file_name = file_info.get("name", "unknown")
+                        
+                        JOBS[job_id]["status"] = f"Reading {file_name}..."
+                        file_content = download_box_file_internal(box_token, file_id)
+                        
+                        if file_content:
+                            text = extract_text_from_file(file_content, file_name)
+                            collected_documents.append({
+                                "name": file_name,
+                                "source": "Box",
+                                "text": text[:50000]  # Limit per doc
+                            })
+            
+            # Search Outlook
+            if plan.get("search_emails") and graph_token:
+                JOBS[job_id]["status"] = "Searching emails..."
+                email_query = plan.get("email_query", "")
+                if email_query:
+                    sources_searched.append(f"Outlook: '{email_query}'")
+                    email_results = search_outlook_internal(graph_token, email_query, limit=10)
+                    
+                    for email in email_results:
+                        body_content = ""
+                        if email.get("body"):
+                            if email["body"].get("contentType") == "html":
+                                # Strip HTML tags
+                                import re
+                                body_content = re.sub(r'<[^>]+>', '', email["body"].get("content", ""))
+                            else:
+                                body_content = email["body"].get("content", "")
+                        
+                        collected_emails.append({
+                            "subject": email.get("subject", "No subject"),
+                            "from": email.get("from", {}).get("emailAddress", {}).get("address", "Unknown"),
+                            "date": email.get("receivedDateTime", ""),
+                            "body": body_content[:10000]  # Limit per email
+                        })
+            
+            # Search Calendar
+            if plan.get("search_calendar") and graph_token:
+                JOBS[job_id]["status"] = "Checking calendar..."
+                calendar_query = plan.get("calendar_query", "")
+                sources_searched.append(f"Calendar: '{calendar_query}'" if calendar_query else "Calendar: upcoming events")
+                calendar_results = search_calendar_internal(graph_token, calendar_query, limit=10)
+                
+                for event in calendar_results:
+                    collected_calendar.append({
+                        "subject": event.get("subject", "No title"),
+                        "start": event.get("start", {}).get("dateTime", ""),
+                        "end": event.get("end", {}).get("dateTime", ""),
+                        "location": event.get("location", {}).get("displayName", ""),
+                        "body": event.get("bodyPreview", "")
+                    })
+        
+        JOBS[job_id]["sources_searched"] = sources_searched
+        
+        # Step 3: Process manually attached blobs
+        if manual_blobs:
+            JOBS[job_id]["status"] = "Processing uploaded documents..."
+            try:
+                from azure.ai.documentintelligence import DocumentIntelligenceClient
+                from azure.storage.blob import BlobServiceClient
+                from azure.core.credentials import AzureKeyCredential
+                
+                storage_conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+                storage_cont = os.getenv("AZURE_STORAGE_CONTAINER")
+                doc_endpoint = os.getenv("DOC_INTEL_ENDPOINT")
+                doc_key = os.getenv("DOC_INTEL_KEY")
+                
+                if storage_conn and doc_endpoint:
+                    blob_service = BlobServiceClient.from_connection_string(storage_conn)
+                    container_client = blob_service.get_container_client(storage_cont)
+                    doc_client = DocumentIntelligenceClient(endpoint=doc_endpoint, credential=AzureKeyCredential(doc_key))
+                    
+                    for blob_info in manual_blobs:
+                        b_name = blob_info.get("blob_name")
+                        f_name = blob_info.get("original_filename")
+                        try:
+                            blob_client = container_client.get_blob_client(b_name)
+                            file_data = blob_client.download_blob().readall()
+                            
+                            poller = doc_client.begin_analyze_document("prebuilt-layout", body=file_data)
+                            result = poller.result()
+                            text = result.content or "(No Text)"
+                            collected_documents.append({
+                                "name": f_name,
+                                "source": "Uploaded",
+                                "text": text[:50000]
+                            })
+                        except Exception as e:
+                            logger.error(f"Error processing blob {f_name}: {e}")
+            except Exception as e:
+                logger.error(f"Error processing manual blobs: {e}")
+        
+        # Step 4: Build context for final response
+        JOBS[job_id]["status"] = "Analyzing and preparing response..."
+        
+        context_parts = []
+        
+        if collected_documents:
+            context_parts.append("=== DOCUMENTS ===")
+            for doc in collected_documents:
+                context_parts.append(f"\n--- Document: {doc['name']} (Source: {doc['source']}) ---")
+                context_parts.append(doc['text'])
+        
+        if collected_emails:
+            context_parts.append("\n=== EMAILS ===")
+            for email in collected_emails:
+                context_parts.append(f"\n--- Email: {email['subject']} ({email['date']}) ---")
+                context_parts.append(f"From: {email['from']}")
+                context_parts.append(f"Body: {email['body']}")
+        
+        if collected_calendar:
+            context_parts.append("\n=== CALENDAR EVENTS ===")
+            for event in collected_calendar:
+                start_str = event['start']
+                try:
+                    start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
+                    start_str = start_dt.strftime("%B %d, %Y at %I:%M %p")
+                except:
+                    pass
+                context_parts.append(f"\n--- Event: {event['subject']} ({start_str}) ---")
+                if event['location']:
+                    context_parts.append(f"Location: {event['location']}")
+                if event['body']:
+                    context_parts.append(f"Details: {event['body']}")
+        
+        full_context = "\n".join(context_parts)
+        
+        # Limit total context
+        if len(full_context) > 100000:
+            full_context = full_context[:100000] + "\n\n[Content truncated due to length...]"
+        
+        # Step 5: Generate final response
+        system_prompt = AGENTIC_RESPONSE_PROMPT.format(jurisdiction=jurisdiction)
+        
+        if full_context:
+            user_message = f"""Based on the following information gathered from the firm's systems:
+
+{full_context}
+
+---
+
+User's Question: {user_query}
+
+Please provide a comprehensive response, citing specific sources where applicable."""
+        else:
+            user_message = user_query
+        
+        final_response = client.chat.completions.create(
+            model="model-router",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        
+        result_text = final_response.choices[0].message.content
+        
+        # Add sources footer if searches were performed
+        if sources_searched:
+            result_text += f"\n\n---\n📚 **Sources searched:** {', '.join(sources_searched)}"
+        
+        JOBS[job_id]["status"] = "Complete"
+        JOBS[job_id]["result"] = result_text
+        
+    except Exception as e:
+        logger.error(f"Agentic task error: {e}")
+        JOBS[job_id]["status"] = "Failed"
+        JOBS[job_id]["result"] = f"Error: {str(e)}"
 
 # --- AGREEMENT ENDPOINTS ---
 
