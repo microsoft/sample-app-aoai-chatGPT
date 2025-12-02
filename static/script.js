@@ -1,6 +1,7 @@
 // Track attached files and emails
 let attachedFiles = [];
 let selectedEmails = [];
+let selectedCalendarEvents = [];
 let searchSource = 'email';
 let selectedM365Items = [];
 
@@ -40,19 +41,28 @@ function setSearchSource(source) {
     
     const emailBtn = document.getElementById('src-email');
     const filesBtn = document.getElementById('src-files');
+    const calendarBtn = document.getElementById('src-calendar');
     const searchInput = document.getElementById('m365-search-input');
     
-    if (source === 'email') {
-        emailBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
-        filesBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
-        searchInput.placeholder = 'Search emails (e.g., case name, client, topic)...';
-    } else {
-        filesBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
-        emailBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
-        searchInput.placeholder = 'Search OneDrive files...';
-    }
+    // Reset all buttons
+    [emailBtn, filesBtn, calendarBtn].forEach(btn => {
+        btn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
+    });
     
-    document.getElementById('m365-results').innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Search your ' + (source === 'email' ? 'Outlook emails' : 'OneDrive files') + '</p>';
+    // Highlight selected
+    const activeBtn = source === 'email' ? emailBtn : source === 'files' ? filesBtn : calendarBtn;
+    activeBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
+    
+    // Update placeholder
+    const placeholders = {
+        'email': 'Search emails (e.g., case name, client, topic)...',
+        'files': 'Search OneDrive files...',
+        'calendar': 'Search calendar events or leave blank for upcoming...'
+    };
+    searchInput.placeholder = placeholders[source];
+    
+    // Clear results
+    document.getElementById('m365-results').innerHTML = `<p class="text-gray-400 text-sm text-center py-8">Search your ${source === 'email' ? 'Outlook emails' : source === 'files' ? 'OneDrive files' : 'calendar events'}</p>`;
     selectedM365Items = [];
     updateSelectedCount();
 }
@@ -61,19 +71,33 @@ async function searchM365() {
     const query = document.getElementById('m365-search-input').value.trim();
     const resultsDiv = document.getElementById('m365-results');
     
+    const sourceNames = { 'email': 'Outlook', 'files': 'OneDrive', 'calendar': 'Calendar' };
+    
     resultsDiv.innerHTML = `
         <div class="flex items-center justify-center py-8 gap-3">
             <div class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-gray-500">Searching ${searchSource === 'email' ? 'Outlook' : 'OneDrive'}...</span>
+            <span class="text-gray-500">Searching ${sourceNames[searchSource]}...</span>
         </div>
     `;
     
     try {
-        const endpoint = searchSource === 'email' ? '/api/search-outlook' : '/api/search-onedrive';
+        let endpoint, body;
+        
+        if (searchSource === 'calendar') {
+            endpoint = '/api/search-calendar';
+            body = { query: query };
+        } else if (searchSource === 'email') {
+            endpoint = '/api/search-outlook';
+            body = { query: query };
+        } else {
+            endpoint = '/api/search-onedrive';
+            body = { query: query };
+        }
+        
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query })
+            body: JSON.stringify(body)
         });
         
         const data = await response.json();
@@ -92,6 +116,8 @@ async function searchM365() {
         
         if (searchSource === 'email') {
             renderEmailResults(items);
+        } else if (searchSource === 'calendar') {
+            renderCalendarResults(items);
         } else {
             renderFileResults(items);
         }
@@ -99,6 +125,76 @@ async function searchM365() {
     } catch (error) {
         resultsDiv.innerHTML = `<p class="text-red-500 text-sm text-center py-8"><i class="fas fa-exclamation-circle mr-2"></i>Search failed: ${error.message}</p>`;
     }
+}
+
+function renderCalendarResults(events) {
+    const resultsDiv = document.getElementById('m365-results');
+    
+    let html = '<div class="space-y-2">';
+    html += '<p class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle mr-1"></i>Click events to select them for analysis (e.g., find upcoming hearings).</p>';
+    
+    events.forEach((event) => {
+        const startDate = new Date(event.start?.dateTime || event.start?.date);
+        const endDate = new Date(event.end?.dateTime || event.end?.date);
+        const dateStr = startDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeStr = event.isAllDay ? 'All Day' : `${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        const location = event.location?.displayName || '';
+        
+        html += `
+            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
+                 data-type="calendar" 
+                 data-id="${event.id}" 
+                 data-subject="${escapeHtml(event.subject || 'No Title')}"
+                 data-start="${event.start?.dateTime || event.start?.date}"
+                 data-end="${event.end?.dateTime || event.end?.date}"
+                 data-location="${escapeHtml(location)}"
+                 data-body="${escapeHtml(event.bodyPreview || '')}"
+                 onclick="toggleCalendarSelection(this, '${event.id}')">
+                <div class="flex items-start gap-3">
+                    <div class="mt-1">
+                        <i class="fas fa-calendar-day text-purple-500"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium text-gray-800">${escapeHtml(event.subject || 'No Title')}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-0.5">${dateStr} • ${timeStr}</div>
+                        ${location ? `<div class="text-xs text-gray-400 mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i>${escapeHtml(location)}</div>` : ''}
+                    </div>
+                    <div class="check-indicator hidden text-blue-600">
+                        <i class="fas fa-check-circle text-lg"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+function toggleCalendarSelection(element, eventId) {
+    const existingIndex = selectedM365Items.findIndex(item => item.id === eventId);
+    
+    if (existingIndex >= 0) {
+        selectedM365Items.splice(existingIndex, 1);
+        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
+        element.querySelector('.check-indicator').classList.add('hidden');
+    } else {
+        selectedM365Items.push({
+            type: 'calendar',
+            id: eventId,
+            subject: element.dataset.subject,
+            start: element.dataset.start,
+            end: element.dataset.end,
+            location: element.dataset.location,
+            body: element.dataset.body
+        });
+        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
+        element.querySelector('.check-indicator').classList.remove('hidden');
+    }
+    
+    updateSelectedCount();
 }
 
 function renderEmailResults(emails) {
@@ -186,11 +282,9 @@ function renderFileResults(files) {
 }
 
 async function toggleEmailSelection(element, emailId) {
-    // Check if already selected
     const existingIndex = selectedM365Items.findIndex(item => item.id === emailId);
     
     if (existingIndex >= 0) {
-        // Deselect
         selectedM365Items.splice(existingIndex, 1);
         element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
         element.querySelector('.check-indicator').classList.add('hidden');
@@ -198,11 +292,9 @@ async function toggleEmailSelection(element, emailId) {
         return;
     }
     
-    // Select - fetch full email content
     element.style.opacity = '0.5';
     
     try {
-        // Get full email content
         const response = await fetch(`/api/get-email-content/${emailId}`);
         const emailData = await response.json();
         
@@ -212,7 +304,6 @@ async function toggleEmailSelection(element, emailId) {
             return;
         }
         
-        // Extract email details
         const sender = emailData.from?.emailAddress?.name || emailData.from?.emailAddress?.address || 'Unknown';
         const senderEmail = emailData.from?.emailAddress?.address || '';
         const toRecipients = (emailData.toRecipients || []).map(r => r.emailAddress?.address || r.emailAddress?.name).join(', ');
@@ -220,11 +311,9 @@ async function toggleEmailSelection(element, emailId) {
         const subject = emailData.subject || 'No Subject';
         const date = new Date(emailData.receivedDateTime).toLocaleString();
         
-        // Get body text (strip HTML if needed)
         let bodyText = '';
         if (emailData.body) {
             if (emailData.body.contentType === 'html') {
-                // Basic HTML to text conversion
                 const temp = document.createElement('div');
                 temp.innerHTML = emailData.body.content;
                 bodyText = temp.textContent || temp.innerText || '';
@@ -233,7 +322,6 @@ async function toggleEmailSelection(element, emailId) {
             }
         }
         
-        // Add to selected items
         const emailItem = {
             type: 'email',
             id: emailId,
@@ -248,7 +336,6 @@ async function toggleEmailSelection(element, emailId) {
         
         selectedM365Items.push(emailItem);
         
-        // Also fetch attachments if any
         if (emailData.hasAttachments) {
             try {
                 const attResponse = await fetch(`/api/search-outlook/${emailId}/attachments`);
@@ -317,15 +404,16 @@ function updateSelectedCount() {
     const actionsBar = document.getElementById('m365-actions');
     const countSpan = document.getElementById('selected-count');
     
-    // Count unique emails and files
     const emailCount = selectedM365Items.filter(i => i.type === 'email').length;
     const fileCount = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment').length;
+    const calendarCount = selectedM365Items.filter(i => i.type === 'calendar').length;
     
     if (selectedM365Items.length > 0) {
         actionsBar.classList.remove('hidden');
         let text = [];
         if (emailCount > 0) text.push(`${emailCount} email${emailCount > 1 ? 's' : ''}`);
         if (fileCount > 0) text.push(`${fileCount} file${fileCount > 1 ? 's' : ''}`);
+        if (calendarCount > 0) text.push(`${calendarCount} event${calendarCount > 1 ? 's' : ''}`);
         countSpan.textContent = text.join(', ') + ' selected';
     } else {
         actionsBar.classList.add('hidden');
@@ -337,11 +425,10 @@ async function addSelectedToChat() {
     
     const statusId = addLoading('Importing from Microsoft 365...');
     
-    // Separate emails from files
     const emails = selectedM365Items.filter(i => i.type === 'email');
     const files = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment');
+    const calendarEvents = selectedM365Items.filter(i => i.type === 'calendar');
     
-    // Add emails to selectedEmails array
     for (const email of emails) {
         selectedEmails.push({
             subject: email.subject,
@@ -352,11 +439,19 @@ async function addSelectedToChat() {
         });
     }
     
-    // Process file attachments
+    for (const event of calendarEvents) {
+        selectedCalendarEvents.push({
+            subject: event.subject,
+            start: event.start,
+            end: event.end,
+            location: event.location,
+            body: event.body
+        });
+    }
+    
     for (const item of files) {
         try {
             if (item.type === 'email-attachment') {
-                // Upload base64 content directly to blob storage
                 const response = await fetch('/api/get-upload-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -366,7 +461,6 @@ async function addSelectedToChat() {
                 const urlData = await response.json();
                 if (urlData.error) throw new Error(urlData.error);
                 
-                // Decode base64 and upload
                 const binaryData = atob(item.contentBytes);
                 const bytes = new Uint8Array(binaryData.length);
                 for (let i = 0; i < binaryData.length; i++) {
@@ -391,7 +485,6 @@ async function addSelectedToChat() {
                 });
                 
             } else if (item.type === 'onedrive-file') {
-                // Use backend to download and store
                 const response = await fetch('/api/download-graph-file', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -419,11 +512,11 @@ async function addSelectedToChat() {
     updateAttachmentsUI();
     closeM365Panel();
     
-    // Show confirmation
     let importMsg = '✅ Imported: ';
     const parts = [];
     if (emails.length > 0) parts.push(`${emails.length} email${emails.length > 1 ? 's' : ''}`);
     if (attachedFiles.length > 0) parts.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
+    if (calendarEvents.length > 0) parts.push(`${calendarEvents.length} calendar event${calendarEvents.length > 1 ? 's' : ''}`);
     importMsg += parts.join(' and ');
     importMsg += '. You can now ask questions about them.';
     
@@ -491,7 +584,7 @@ function updateAttachmentsUI() {
     const list = document.getElementById('attachments-list');
     const count = document.getElementById('attachment-count');
 
-    const totalItems = attachedFiles.length + selectedEmails.length;
+    const totalItems = attachedFiles.length + selectedEmails.length + selectedCalendarEvents.length;
     
     if (totalItems === 0) {
         preview.classList.add('hidden');
@@ -505,7 +598,6 @@ function updateAttachmentsUI() {
 
     let html = '';
     
-    // Render emails
     selectedEmails.forEach((email, index) => {
         html += `
             <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
@@ -518,7 +610,18 @@ function updateAttachmentsUI() {
         `;
     });
     
-    // Render files
+    selectedCalendarEvents.forEach((event, index) => {
+        html += `
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-purple-200 text-sm">
+                <i class="fas fa-calendar text-purple-500"></i>
+                <span class="text-gray-700 max-w-[150px] truncate" title="${escapeHtml(event.subject)}">${escapeHtml(event.subject)}</span>
+                <button onclick="removeCalendarEvent(${index})" class="text-gray-400 hover:text-red-500 ml-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    
     attachedFiles.forEach((file, index) => {
         const sourceIcon = file.source === 'outlook' ? 'fa-envelope' : file.source === 'onedrive' ? 'fa-cloud' : 'fa-file';
         const sourceColor = file.source === 'outlook' ? 'text-blue-500' : file.source === 'onedrive' ? 'text-sky-500' : 'text-gray-500';
@@ -579,9 +682,15 @@ function removeEmail(index) {
     updateAttachmentsUI();
 }
 
+function removeCalendarEvent(index) {
+    selectedCalendarEvents.splice(index, 1);
+    updateAttachmentsUI();
+}
+
 function clearAllAttachments() {
     attachedFiles = [];
     selectedEmails = [];
+    selectedCalendarEvents = [];
     updateAttachmentsUI();
 }
 
@@ -606,14 +715,16 @@ async function sendMessage() {
     const input = document.getElementById('user-input');
     const message = input.value.trim();
     
-    if (!message && attachedFiles.length === 0 && selectedEmails.length === 0) return;
+    if (!message && attachedFiles.length === 0 && selectedEmails.length === 0 && selectedCalendarEvents.length === 0) return;
 
-    // Build display message
     let displayMessage = message;
     const attachments = [];
     
     if (selectedEmails.length > 0) {
         attachments.push(`${selectedEmails.length} email${selectedEmails.length > 1 ? 's' : ''}`);
+    }
+    if (selectedCalendarEvents.length > 0) {
+        attachments.push(`${selectedCalendarEvents.length} event${selectedCalendarEvents.length > 1 ? 's' : ''}`);
     }
     if (attachedFiles.length > 0) {
         attachments.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
@@ -637,7 +748,8 @@ async function sendMessage() {
             body: JSON.stringify({ 
                 messages: [{ role: 'user', content: message || 'Please analyze the attached content.' }],
                 blobs: attachedFiles,
-                emails: selectedEmails
+                emails: selectedEmails,
+                calendar_events: selectedCalendarEvents
             })
         });
 
@@ -694,12 +806,12 @@ function addMessage(text, type, isMarkdown = false) {
     div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`;
     
     const bubble = document.createElement('div');
-    bubble.className = `p-4 rounded-2xl shadow-sm max-w-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+    bubble.className = `p-4 rounded-2xl shadow-sm max-w-2xl text-sm leading-relaxed ${
         type === 'user' 
         ? 'bg-blue-600 text-white rounded-tr-sm' 
         : type === 'system-error' 
             ? 'bg-red-50 text-red-700 border border-red-200 rounded-tl-sm'
-            : 'bg-white text-gray-700 border border-gray-200 rounded-tl-sm'
+            : 'bg-white text-gray-700 border border-gray-200 rounded-tl-sm prose-chat'
     }`;
     
     if (isMarkdown && type !== 'user') {
@@ -717,15 +829,75 @@ function addMessage(text, type, isMarkdown = false) {
 function renderMarkdown(text) {
     if (!text) return '';
     
-    return text
+    // Escape HTML first
+    let html = text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded mt-2 mb-2 overflow-x-auto text-xs"><code>$1</code></pre>')
-        .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded text-xs">$1</code>')
-        .replace(/\n/g, '<br>');
+        .replace(/>/g, '&gt;');
+    
+    // Code blocks (must come before other processing)
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Headers
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    
+    // Bold and italic
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    
+    // Horizontal rule
+    html = html.replace(/^---$/gm, '<hr>');
+    
+    // Blockquotes
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    
+    // Unordered lists
+    html = html.replace(/^[\s]*[-*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+    
+    // Ordered lists
+    html = html.replace(/^[\s]*\d+\. (.+)$/gm, '<oli>$1</oli>');
+    html = html.replace(/(<oli>.*<\/oli>\n?)+/g, function(match) {
+        return '<ol>' + match.replace(/<\/?oli>/g, function(tag) {
+            return tag === '<oli>' ? '<li>' : '</li>';
+        }) + '</ol>';
+    });
+    
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Paragraphs - convert double newlines to paragraph breaks
+    html = html.replace(/\n\n+/g, '</p><p>');
+    
+    // Single newlines to <br> (but not inside pre/code blocks)
+    html = html.replace(/(?<!<\/pre>|<\/code>)\n(?!<)/g, '<br>');
+    
+    // Wrap in paragraph if not already wrapped
+    if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol') && !html.startsWith('<pre') && !html.startsWith('<blockquote')) {
+        html = '<p>' + html + '</p>';
+    }
+    
+    // Clean up empty paragraphs
+    html = html.replace(/<p><\/p>/g, '');
+    html = html.replace(/<p>(<h[123]>)/g, '$1');
+    html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<ul>)/g, '$1');
+    html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<ol>)/g, '$1');
+    html = html.replace(/(<\/ol>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<pre>)/g, '$1');
+    html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<blockquote>)/g, '$1');
+    html = html.replace(/(<\/blockquote>)<\/p>/g, '$1');
+    html = html.replace(/<p><br>/g, '<p>');
+    
+    return html;
 }
 
 function addLoading(customText) {
