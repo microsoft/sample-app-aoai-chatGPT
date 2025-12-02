@@ -1,38 +1,171 @@
-// Toggle the Settings Panel
-function toggleConnector() {
-    const panel = document.getElementById('connector-panel');
-    panel.classList.toggle('hidden');
-}
+// Track attached files
+let attachedFiles = [];
 
 function handleEnter(e) {
     if (e.key === 'Enter') sendMessage();
 }
 
+// --- FILE ATTACHMENT HANDLING ---
+
+async function handleFileSelect(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    for (const file of files) {
+        // Check file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            addMessage(`File "${file.name}" is too large. Maximum size is 10MB.`, 'system-error');
+            continue;
+        }
+
+        // Show uploading status
+        const statusId = addUploadingStatus(file.name);
+
+        try {
+            // 1. Get upload URL from backend
+            const urlResponse = await fetch('/api/get-upload-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: file.name })
+            });
+
+            const urlData = await urlResponse.json();
+            
+            if (urlData.error) {
+                throw new Error(urlData.error);
+            }
+
+            // 2. Upload file directly to Azure Blob Storage
+            const uploadResponse = await fetch(urlData.upload_url, {
+                method: 'PUT',
+                headers: {
+                    'x-ms-blob-type': 'BlockBlob',
+                    'Content-Type': file.type || 'application/octet-stream'
+                },
+                body: file
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Upload failed');
+            }
+
+            // 3. Track the uploaded file
+            attachedFiles.push({
+                blob_name: urlData.blob_name,
+                original_filename: file.name,
+                size: file.size
+            });
+
+            updateAttachmentsUI();
+            removeMessage(statusId);
+
+        } catch (error) {
+            removeMessage(statusId);
+            addMessage(`Failed to upload "${file.name}": ${error.message}`, 'system-error');
+        }
+    }
+
+    // Clear the input so the same file can be selected again
+    event.target.value = '';
+}
+
+function updateAttachmentsUI() {
+    const preview = document.getElementById('attachments-preview');
+    const list = document.getElementById('attachments-list');
+    const count = document.getElementById('attachment-count');
+
+    if (attachedFiles.length === 0) {
+        preview.classList.add('hidden');
+        count.classList.add('hidden');
+        return;
+    }
+
+    preview.classList.remove('hidden');
+    count.classList.remove('hidden');
+    count.textContent = attachedFiles.length;
+
+    list.innerHTML = attachedFiles.map((file, index) => `
+        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
+            <i class="fas ${getFileIcon(file.original_filename)} text-blue-500"></i>
+            <span class="text-gray-700 max-w-[150px] truncate">${file.original_filename}</span>
+            <button onclick="removeAttachment(${index})" class="text-gray-400 hover:text-red-500 ml-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const icons = {
+        'pdf': 'fa-file-pdf',
+        'doc': 'fa-file-word',
+        'docx': 'fa-file-word',
+        'txt': 'fa-file-lines',
+        'png': 'fa-file-image',
+        'jpg': 'fa-file-image',
+        'jpeg': 'fa-file-image'
+    };
+    return icons[ext] || 'fa-file';
+}
+
+function removeAttachment(index) {
+    attachedFiles.splice(index, 1);
+    updateAttachmentsUI();
+}
+
+function clearAllAttachments() {
+    attachedFiles = [];
+    updateAttachmentsUI();
+}
+
+function addUploadingStatus(filename) {
+    const container = document.getElementById('chat-container');
+    const div = document.createElement('div');
+    div.className = 'flex justify-start animate-fade-in';
+    div.innerHTML = `
+        <div class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-200 flex items-center gap-3">
+            <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-blue-700 text-sm">Uploading ${filename}...</span>
+        </div>`;
+    div.id = 'upload-' + Date.now();
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div.id;
+}
+
+// --- CHAT FUNCTIONS ---
+
 async function sendMessage() {
     const input = document.getElementById('user-input');
     const message = input.value.trim();
-    const scope = document.getElementById('scope-select').value;
-    const timeRange = document.getElementById('time-select').value;
     
-    if (!message) return;
+    if (!message && attachedFiles.length === 0) return;
 
-    // 1. Add User Message
-    addMessage(message, 'user');
+    // Build display message
+    let displayMessage = message;
+    if (attachedFiles.length > 0) {
+        const fileNames = attachedFiles.map(f => f.original_filename).join(', ');
+        displayMessage = message 
+            ? `📎 ${fileNames}\n\n${message}`
+            : `📎 Attached: ${fileNames}`;
+    }
+
+    // Add user message to chat
+    addMessage(displayMessage, 'user');
     input.value = '';
 
-    // 2. Add Loading
+    // Add loading indicator
     const loadingId = addLoading();
 
     try {
-        // 3. Send to Backend - Start the job
+        // Send to backend with attached files
         const response = await fetch('/api/copilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                task: scope,
-                messages: [{ role: 'user', content: message }],
-                search_scope: scope,
-                time_range: timeRange
+                messages: [{ role: 'user', content: message || 'Please analyze the attached files.' }],
+                blobs: attachedFiles
             })
         });
 
@@ -44,7 +177,7 @@ async function sendMessage() {
             return;
         }
 
-        // 4. Poll for job completion
+        // Poll for job completion
         const jobId = data.job_id;
         const result = await pollForResult(jobId);
         
@@ -58,14 +191,16 @@ async function sendMessage() {
             addMessage("Request timed out. Please try again.", 'system-error');
         }
 
+        // Clear attachments after sending
+        clearAllAttachments();
+
     } catch (error) {
         removeMessage(loadingId);
         addMessage("Failed to connect to server: " + error.message, 'system-error');
     }
 }
 
-// Poll the job status endpoint until complete or timeout
-async function pollForResult(jobId, maxAttempts = 60, interval = 1000) {
+async function pollForResult(jobId, maxAttempts = 120, interval = 1000) {
     for (let i = 0; i < maxAttempts; i++) {
         try {
             const response = await fetch(`/api/check_status/${jobId}`);
@@ -75,7 +210,6 @@ async function pollForResult(jobId, maxAttempts = 60, interval = 1000) {
                 return data;
             }
             
-            // Still pending, wait and try again
             await new Promise(resolve => setTimeout(resolve, interval));
         } catch (error) {
             console.error('Polling error:', error);
@@ -90,7 +224,7 @@ function addMessage(text, type, isMarkdown = false) {
     div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`;
     
     const bubble = document.createElement('div');
-    bubble.className = `p-4 rounded-2xl shadow-sm max-w-2xl text-sm leading-relaxed ${
+    bubble.className = `p-4 rounded-2xl shadow-sm max-w-2xl text-sm leading-relaxed whitespace-pre-wrap ${
         type === 'user' 
         ? 'bg-blue-600 text-white rounded-tr-sm' 
         : type === 'system-error' 
@@ -99,7 +233,6 @@ function addMessage(text, type, isMarkdown = false) {
     }`;
     
     if (isMarkdown && type !== 'user') {
-        // Basic markdown rendering for AI responses
         bubble.innerHTML = renderMarkdown(text);
     } else {
         bubble.textContent = text;
@@ -111,24 +244,17 @@ function addMessage(text, type, isMarkdown = false) {
     return div.id = 'msg-' + Date.now();
 }
 
-// Basic markdown rendering
 function renderMarkdown(text) {
     if (!text) return '';
     
     return text
-        // Escape HTML first
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        // Bold
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Italic
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Code blocks
         .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded mt-2 mb-2 overflow-x-auto text-xs"><code>$1</code></pre>')
-        // Inline code
         .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded text-xs">$1</code>')
-        // Line breaks
         .replace(/\n/g, '<br>');
 }
 
@@ -150,50 +276,4 @@ function addLoading() {
 function removeMessage(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
-}
-
-// Renders the results in a clean "File List" style
-function renderResults(items) {
-    const container = document.getElementById('chat-container');
-    const div = document.createElement('div');
-    div.className = 'flex justify-start w-full animate-fade-in';
-    
-    let html = `<div class="w-full max-w-2xl border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">`;
-    
-    html += `
-        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            <span>Name</span>
-            <span>Date</span>
-        </div>
-    `;
-
-    items.forEach(item => {
-        const iconClass = item.type === 'Email' ? 'fa-envelope text-blue-500' : 'fa-file-alt text-green-500';
-        const dateObj = new Date(item.date);
-        const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        
-        html += `
-            <div class="result-row group cursor-pointer" onclick="window.open('${item.link}', '_blank')">
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <i class="fas ${iconClass} text-lg w-6 text-center opacity-80 group-hover:opacity-100 transition-opacity"></i>
-                    <div class="flex flex-col min-w-0">
-                        <span class="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate transition-colors">
-                            ${item.title}
-                        </span>
-                        <span class="text-xs text-gray-400 truncate">
-                            ${item.sender || 'Unknown'} &bull; ${item.preview ? item.preview.substring(0, 40) + '...' : 'No preview'}
-                        </span>
-                    </div>
-                </div>
-                <div class="text-xs text-gray-400 whitespace-nowrap pl-4 group-hover:text-gray-600 transition-colors">
-                    ${dateStr}
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `</div>`;
-    div.innerHTML = html;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
 }
