@@ -116,14 +116,15 @@ async def search_outlook(request: Request):
         
         url = "https://graph.microsoft.com/v1.0/me/messages"
         
-        # ✅ FIX: Split Logic to avoid "InefficientFilter" error
         if query:
+            # Mode A: Active Search
             params = {
                 "$top": 15,
                 "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
                 "$search": f'"{query}" AND hasAttachments:true' 
             }
         else:
+            # Mode B: Recent Items
             params = {
                 "$top": 15,
                 "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
@@ -134,9 +135,7 @@ async def search_outlook(request: Request):
         resp = requests.get(url, headers=headers, params=params)
         
         if resp.status_code != 200:
-            error_detail = resp.text
-            logger.error(f"Graph Error: {error_detail}")
-            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {error_detail}"})
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
             
         return resp.json()
     except Exception as e:
@@ -152,6 +151,35 @@ async def get_outlook_attachments(message_id: str, request: Request):
         url = f"https://graph.microsoft.com/v1.0/me/messages/{message_id}/attachments"
         resp = requests.get(url, headers=headers)
         
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ NEW ROUTE: OneDrive Search
+@app.post("/api/search-onedrive")
+async def search_onedrive(request: Request):
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated."})
+
+        data = await request.json()
+        query = data.get("query", "")
+        
+        if query:
+            # Mode A: Active Search (Find specific files)
+            url = f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{query}')"
+            params = { "$top": 20, "$select": "id,name,size,createdDateTime,webUrl,@microsoft.graph.downloadUrl" }
+            resp = requests.get(url, headers=headers, params=params)
+        else:
+            # Mode B: Recent Files (What did I work on last?)
+            url = "https://graph.microsoft.com/v1.0/me/drive/recent"
+            params = { "$top": 20 }
+            resp = requests.get(url, headers=headers, params=params)
+
         if resp.status_code != 200:
             return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
             
