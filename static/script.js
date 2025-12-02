@@ -1,829 +1,553 @@
-// Track attached files and emails
-let attachedFiles = [];
-let selectedEmails = [];
-let selectedCalendarEvents = [];
-let searchSource = 'email';
-let selectedM365Items = [];
+import os
+import uuid
+import logging
+import requests 
+import json
+import base64
+from datetime import datetime, timedelta, timezone
+from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from dotenv import load_dotenv
 
-function handleEnter(e) {
-    if (e.key === 'Enter') sendMessage();
-}
+from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
 
-// --- M365 SEARCH FUNCTIONS ---
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("app")
 
-function toggleM365Panel() {
-    const panel = document.getElementById('m365-panel');
-    const button = document.getElementById('m365-button');
+app = FastAPI()
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=False, 
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Static files & Templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# --- SYSTEM PROMPT ---
+JOOGNI_SYSTEM_PROMPT = """You are Joogni, an expert legal AI assistant for Gill Law Group, a California family law firm.
+
+Your capabilities:
+- Answer questions about California Family Code, divorce, custody, support, property division, and family law procedures
+- Analyze legal documents when provided (pleadings, declarations, financial disclosures, agreements)
+- Analyze email correspondence to understand case history, communications with opposing counsel, and client interactions
+- Review calendar events to identify upcoming hearings, deadlines, and important dates
+- Draft legal documents, motions, discovery requests, correspondence, and client communications
+- Summarize case information and identify key issues
+- Create chronologies from email threads and documents
+- Explain legal concepts in plain language for clients or in technical terms for attorneys
+
+Guidelines:
+- Be conversational and helpful for general questions
+- When asked to draft something, produce professional, court-ready language
+- Always note that you are an AI assistant and your output should be reviewed by an attorney
+- If you analyze uploaded documents or emails, reference specific content from them
+- For California-specific questions, cite relevant Family Code sections when applicable
+- When analyzing emails, pay attention to dates, senders, recipients, and key discussion points
+- When reviewing calendar events, highlight upcoming deadlines and hearing dates
+- Format your responses clearly with appropriate structure for readability
+
+Current context: You are assisting attorneys and staff at a family law firm. Respond appropriately based on whether the question seems like a quick query or a request for formal document drafting."""
+
+class SasRequest(BaseModel):
+    filename: str
+
+JOBS = {}
+
+# --- HELPER: GET USER IDENTITY ---
+def get_user_email(request: Request) -> str:
+    """Extract user email from Azure Easy Auth headers"""
+    # Try X-MS-CLIENT-PRINCIPAL-NAME first (most common)
+    email = request.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+    if email:
+        return email.lower()
     
-    if (panel.classList.contains('hidden')) {
-        panel.classList.remove('hidden');
-        button.classList.add('active');
-        document.getElementById('m365-search-input').focus();
-    } else {
-        closeM365Panel();
+    # Try decoding X-MS-CLIENT-PRINCIPAL
+    principal = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    if principal:
+        try:
+            decoded = json.loads(base64.b64decode(principal))
+            claims = {c["typ"]: c["val"] for c in decoded.get("claims", [])}
+            email = claims.get("preferred_username") or claims.get("email") or claims.get("name")
+            if email:
+                return email.lower()
+        except:
+            pass
+    
+    # Fallback for development
+    return os.getenv("TEST_USER_EMAIL", "unknown@user.com").lower()
+
+# --- HELPER: GRAPH AUTH ---
+def get_graph_headers(req: Request):
+    auth_header = req.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return {
+            "Authorization": auth_header,
+            "Content-Type": "application/json"
+        }
+
+    token = req.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
+    
+    if not token:
+        token = os.getenv("TEST_GRAPH_TOKEN")
+        
+    if not token:
+        logger.warning("No Auth Token found.")
+        return None
+        
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
     }
-}
 
-function closeM365Panel() {
-    const panel = document.getElementById('m365-panel');
-    const button = document.getElementById('m365-button');
-    
-    panel.classList.add('hidden');
-    button.classList.remove('active');
-    selectedM365Items = [];
-    updateSelectedCount();
-}
+# --- AGREEMENT ENDPOINTS ---
 
-function setSearchSource(source) {
-    searchSource = source;
-    
-    const emailBtn = document.getElementById('src-email');
-    const filesBtn = document.getElementById('src-files');
-    const calendarBtn = document.getElementById('src-calendar');
-    const searchInput = document.getElementById('m365-search-input');
-    
-    [emailBtn, filesBtn, calendarBtn].forEach(btn => btn.classList.remove('active'));
-    
-    const activeBtn = source === 'email' ? emailBtn : source === 'files' ? filesBtn : calendarBtn;
-    activeBtn.classList.add('active');
-    
-    const placeholders = {
-        'email': 'Search emails...',
-        'files': 'Search OneDrive files...',
-        'calendar': 'Search calendar events...'
-    };
-    searchInput.placeholder = placeholders[source];
-    
-    document.getElementById('m365-results').innerHTML = `<p class="m365-results-empty">Search your ${source === 'email' ? 'Outlook emails' : source === 'files' ? 'OneDrive files' : 'calendar events'}</p>`;
-    selectedM365Items = [];
-    updateSelectedCount();
-}
+@app.get("/api/check-agreement")
+async def check_agreement(request: Request):
+    """Check if user has accepted the agreement"""
+    try:
+        user_email = get_user_email(request)
+        
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return JSONResponse(status_code=500, content={"error": "Storage not configured"})
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "user-agreements"
+        
+        # Create container if it doesn't exist
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except Exception as e:
+            logger.error(f"Container error: {e}")
+        
+        # Check if user has agreement blob
+        blob_name = f"{user_email.replace('@', '_at_').replace('.', '_')}.json"
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        
+        try:
+            blob_client.get_blob_properties()
+            return {"accepted": True, "user": user_email}
+        except:
+            return {"accepted": False, "user": user_email}
+            
+    except Exception as e:
+        logger.error(f"Check agreement error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
-async function searchM365() {
-    const query = document.getElementById('m365-search-input').value.trim();
-    const resultsDiv = document.getElementById('m365-results');
-    
-    const sourceNames = { 'email': 'Outlook', 'files': 'OneDrive', 'calendar': 'Calendar' };
-    
-    resultsDiv.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
-            <div class="loading-spinner"></div>
-            <span style="color: var(--gray-500); font-size: 13px;">Searching ${sourceNames[searchSource]}...</span>
-        </div>
-    `;
-    
-    try {
-        let endpoint = searchSource === 'calendar' ? '/api/search-calendar' : 
-                       searchSource === 'email' ? '/api/search-outlook' : '/api/search-onedrive';
+@app.post("/api/accept-agreement")
+async def accept_agreement(request: Request):
+    """Record user's acceptance of the agreement"""
+    try:
+        user_email = get_user_email(request)
         
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query })
-        });
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connect_str:
+            return JSONResponse(status_code=500, content={"error": "Storage not configured"})
         
-        const data = await response.json();
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        container_name = "user-agreements"
         
-        if (data.error) {
-            resultsDiv.innerHTML = `<p class="m365-results-empty" style="color: var(--error);"><i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>${data.error}</p>`;
-            return;
+        # Create container if it doesn't exist
+        try:
+            container_client = blob_service.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+        except:
+            pass
+        
+        # Create agreement record
+        agreement_data = {
+            "user_email": user_email,
+            "accepted_at": datetime.now(timezone.utc).isoformat(),
+            "version": "1.0",
+            "ip_address": request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
         }
         
-        const items = data.value || [];
+        blob_name = f"{user_email.replace('@', '_at_').replace('.', '_')}.json"
+        blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
+        blob_client.upload_blob(json.dumps(agreement_data), overwrite=True)
         
-        if (items.length === 0) {
-            resultsDiv.innerHTML = '<p class="m365-results-empty">No results found</p>';
-            return;
-        }
+        logger.info(f"Agreement accepted by {user_email}")
+        return {"success": True, "user": user_email}
         
-        if (searchSource === 'email') renderEmailResults(items);
-        else if (searchSource === 'calendar') renderCalendarResults(items);
-        else renderFileResults(items);
-        
-    } catch (error) {
-        resultsDiv.innerHTML = `<p class="m365-results-empty" style="color: var(--error);">Search failed: ${error.message}</p>`;
-    }
-}
+    except Exception as e:
+        logger.error(f"Accept agreement error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
-function renderCalendarResults(events) {
-    const resultsDiv = document.getElementById('m365-results');
-    
-    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click events to select them for analysis.</div>';
-    
-    events.forEach((event) => {
-        const startDate = new Date(event.start?.dateTime || event.start?.date);
-        const endDate = new Date(event.end?.dateTime || event.end?.date);
-        const dateStr = startDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        const timeStr = event.isAllDay ? 'All Day' : `${startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-        const location = event.location?.displayName || '';
-        
-        html += `
-            <div class="search-result" 
-                 data-type="calendar" 
-                 data-id="${event.id}" 
-                 data-subject="${escapeHtml(event.subject || 'No Title')}"
-                 data-start="${event.start?.dateTime || event.start?.date}"
-                 data-end="${event.end?.dateTime || event.end?.date}"
-                 data-location="${escapeHtml(location)}"
-                 data-body="${escapeHtml(event.bodyPreview || '')}"
-                 onclick="toggleCalendarSelection(this, '${event.id}')">
-                <div class="result-icon calendar"><i class="fas fa-calendar-day"></i></div>
-                <div class="result-content">
-                    <div class="result-title"><span class="truncate">${escapeHtml(event.subject || 'No Title')}</span></div>
-                    <div class="result-meta">${dateStr} • ${timeStr}</div>
-                    ${location ? `<div class="result-preview"><i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${escapeHtml(location)}</div>` : ''}
-                </div>
-                <div class="result-check"><i class="fas fa-check-circle"></i></div>
-            </div>
-        `;
-    });
-    
-    resultsDiv.innerHTML = html;
-}
+# --- ROUTES ---
 
-function toggleCalendarSelection(element, eventId) {
-    const existingIndex = selectedM365Items.findIndex(item => item.id === eventId);
-    
-    if (existingIndex >= 0) {
-        selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected');
-    } else {
-        selectedM365Items.push({
-            type: 'calendar',
-            id: eventId,
-            subject: element.dataset.subject,
-            start: element.dataset.start,
-            end: element.dataset.end,
-            location: element.dataset.location,
-            body: element.dataset.body
-        });
-        element.classList.add('selected');
-    }
-    
-    updateSelectedCount();
-}
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Render login page"""
+    return templates.TemplateResponse("login.html", {"request": request})
 
-function renderEmailResults(emails) {
-    const resultsDiv = document.getElementById('m365-results');
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Main app - check if authenticated"""
+    auth_header = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
+    principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
     
-    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click emails to select. Full content will be included.</div>';
+    if not auth_header and not principal_header:
+        if os.getenv("TEST_GRAPH_TOKEN"):
+            return templates.TemplateResponse("index.html", {"request": request})
     
-    emails.forEach((email) => {
-        const date = new Date(email.receivedDateTime).toLocaleDateString();
-        const time = new Date(email.receivedDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const sender = email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown';
-        const senderEmail = email.from?.emailAddress?.address || '';
-        const hasAttachments = email.hasAttachments;
-        
-        html += `
-            <div class="search-result" 
-                 data-type="email" 
-                 data-id="${email.id}" 
-                 data-subject="${escapeHtml(email.subject || 'No Subject')}"
-                 data-has-attachments="${hasAttachments}"
-                 data-sender="${escapeHtml(sender)}"
-                 data-sender-email="${escapeHtml(senderEmail)}"
-                 data-date="${email.receivedDateTime}"
-                 onclick="toggleEmailSelection(this, '${email.id}')">
-                <div class="result-icon email"><i class="fas fa-envelope"></i></div>
-                <div class="result-content">
-                    <div class="result-title">
-                        <span class="truncate">${escapeHtml(email.subject || 'No Subject')}</span>
-                        ${hasAttachments ? '<i class="fas fa-paperclip" style="color: var(--gray-400); font-size: 11px;"></i>' : ''}
-                    </div>
-                    <div class="result-meta">${escapeHtml(sender)} • ${date} ${time}</div>
-                    <div class="result-preview">${escapeHtml(email.bodyPreview || '')}</div>
-                </div>
-                <div class="result-check"><i class="fas fa-check-circle"></i></div>
-            </div>
-        `;
-    });
-    
-    resultsDiv.innerHTML = html;
-}
+    return templates.TemplateResponse("index.html", {"request": request})
 
-function renderFileResults(files) {
-    const resultsDiv = document.getElementById('m365-results');
-    
-    let html = '';
-    
-    files.forEach((file) => {
-        const date = new Date(file.createdDateTime || file.lastModifiedDateTime).toLocaleDateString();
-        const size = formatFileSize(file.size);
-        const downloadUrl = file['@microsoft.graph.downloadUrl'] || file['@content.downloadUrl'] || '';
-        const name = file.name || 'Unknown File';
-        const iconClass = getFileIconClass(name);
-        
-        html += `
-            <div class="search-result" 
-                 data-type="file" 
-                 data-name="${escapeHtml(name)}"
-                 data-download-url="${escapeHtml(downloadUrl)}"
-                 data-web-url="${escapeHtml(file.webUrl || '')}"
-                 onclick="toggleFileSelection(this)">
-                <div class="result-icon file"><i class="fas ${iconClass}"></i></div>
-                <div class="result-content">
-                    <div class="result-title"><span class="truncate">${escapeHtml(name)}</span></div>
-                    <div class="result-meta">${size} • ${date}</div>
-                </div>
-                <div class="result-check"><i class="fas fa-check-circle"></i></div>
-            </div>
-        `;
-    });
-    
-    resultsDiv.innerHTML = html;
-}
+@app.get("/health")
+async def health():
+    return {"status": "Online", "message": "Joogni Backend is Running"}
 
-async function toggleEmailSelection(element, emailId) {
-    const existingIndex = selectedM365Items.findIndex(item => item.id === emailId);
-    
-    if (existingIndex >= 0) {
-        selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected');
-        updateSelectedCount();
-        return;
-    }
-    
-    element.style.opacity = '0.5';
-    
-    try {
-        const response = await fetch(`/api/get-email-content/${emailId}`);
-        const emailData = await response.json();
+@app.post("/api/copilot")
+async def start_copilot_job(request: Request, background_tasks: BackgroundTasks):
+    try:
+        data = await request.json()
+        job_id = str(uuid.uuid4())
+        background_tasks.add_task(lazy_copilot_task, job_id, data)
+        return {"job_id": job_id}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/check_status/{job_id}")
+async def check_job_status(job_id: str):
+    job = JOBS.get(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"error": "Job not found"})
+    return {"status": job["status"], "result": job["result"]}
+
+@app.post("/api/get-upload-url")
+async def get_upload_url(req: SasRequest):
+    try:
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container = os.getenv("AZURE_STORAGE_CONTAINER")
         
-        if (emailData.error) {
-            addMessage(`Failed to get email: ${emailData.error}`, 'system-error');
-            element.style.opacity = '1';
-            return;
-        }
+        if not connect_str or not container:
+            return JSONResponse(status_code=500, content={"error": "Storage Config Missing"})
+
+        blob_service_client = BlobServiceClient.from_connection_string(connect_str)
+        blob_name = f"{uuid.uuid4()}-{req.filename}"
+        sas_token = generate_blob_sas(
+            account_name=blob_service_client.account_name,
+            container_name=container,
+            blob_name=blob_name,
+            account_key=blob_service_client.credential.account_key,
+            permission=BlobSasPermissions(create=True, write=True),
+            expiry=datetime.now(timezone.utc) + timedelta(minutes=15)
+        )
+        url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container}/{blob_name}?{sas_token}"
+        return {"upload_url": url, "blob_name": blob_name}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/search-outlook")
+async def search_outlook(request: Request):
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated. Please Refresh."})
+
+        data = await request.json()
+        query = data.get("query", "")
         
-        const sender = emailData.from?.emailAddress?.name || emailData.from?.emailAddress?.address || 'Unknown';
-        const senderEmail = emailData.from?.emailAddress?.address || '';
-        const toRecipients = (emailData.toRecipients || []).map(r => r.emailAddress?.address || r.emailAddress?.name).join(', ');
-        const ccRecipients = (emailData.ccRecipients || []).map(r => r.emailAddress?.address || r.emailAddress?.name).join(', ');
-        const subject = emailData.subject || 'No Subject';
-        const date = new Date(emailData.receivedDateTime).toLocaleString();
+        url = "https://graph.microsoft.com/v1.0/me/messages"
         
-        let bodyText = '';
-        if (emailData.body) {
-            if (emailData.body.contentType === 'html') {
-                const temp = document.createElement('div');
-                temp.innerHTML = emailData.body.content;
-                bodyText = temp.textContent || temp.innerText || '';
-            } else {
-                bodyText = emailData.body.content || '';
+        if query:
+            params = {
+                "$top": 25,
+                "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
+                "$search": f'"{query}"'
             }
+        else:
+            params = {
+                "$top": 25,
+                "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
+                "$orderby": "receivedDateTime desc"
+            }
+            
+        resp = requests.get(url, headers=headers, params=params)
+        
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/get-email-content/{message_id}")
+async def get_email_content(message_id: str, request: Request):
+    """Fetch full email content including body"""
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated"})
+
+        url = f"https://graph.microsoft.com/v1.0/me/messages/{message_id}"
+        params = {
+            "$select": "id,subject,from,toRecipients,ccRecipients,receivedDateTime,body,hasAttachments"
+        }
+        resp = requests.get(url, headers=headers, params=params)
+        
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/search-outlook/{message_id}/attachments")
+async def get_outlook_attachments(message_id: str, request: Request):
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated"})
+
+        url = f"https://graph.microsoft.com/v1.0/me/messages/{message_id}/attachments"
+        resp = requests.get(url, headers=headers)
+        
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/search-calendar")
+async def search_calendar(request: Request):
+    """Search calendar events or get upcoming events"""
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated. Please Refresh."})
+
+        data = await request.json()
+        query = data.get("query", "")
+        
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=90)
+        
+        url = "https://graph.microsoft.com/v1.0/me/calendarView"
+        params = {
+            "startDateTime": now.isoformat(),
+            "endDateTime": end_date.isoformat(),
+            "$top": 50,
+            "$select": "id,subject,start,end,location,bodyPreview,isAllDay,organizer,attendees",
+            "$orderby": "start/dateTime"
         }
         
-        const emailItem = {
-            type: 'email',
-            id: emailId,
-            subject: subject,
-            from: `${sender} <${senderEmail}>`,
-            to: toRecipients,
-            cc: ccRecipients,
-            date: date,
-            body: bodyText.trim(),
-            hasAttachments: emailData.hasAttachments
-        };
+        resp = requests.get(url, headers=headers, params=params)
         
-        selectedM365Items.push(emailItem);
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
         
-        if (emailData.hasAttachments) {
-            try {
-                const attResponse = await fetch(`/api/search-outlook/${emailId}/attachments`);
-                const attData = await attResponse.json();
+        result = resp.json()
+        
+        if query:
+            query_lower = query.lower()
+            filtered = [
+                event for event in result.get("value", [])
+                if query_lower in (event.get("subject") or "").lower() 
+                or query_lower in (event.get("bodyPreview") or "").lower()
+                or query_lower in (event.get("location", {}).get("displayName") or "").lower()
+            ]
+            result["value"] = filtered
+            
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/search-onedrive")
+async def search_onedrive(request: Request):
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated."})
+
+        data = await request.json()
+        query = data.get("query", "")
+        
+        if query:
+            url = f"https://graph.microsoft.com/v1.0/me/drive/root/search(q='{query}')"
+            params = { "$top": 20, "$select": "id,name,size,createdDateTime,webUrl,@microsoft.graph.downloadUrl" }
+            resp = requests.get(url, headers=headers, params=params)
+        else:
+            url = "https://graph.microsoft.com/v1.0/me/drive/recent"
+            params = { "$top": 20 }
+            resp = requests.get(url, headers=headers, params=params)
+
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/download-graph-file")
+async def download_graph_file(request: Request):
+    try:
+        data = await request.json()
+        download_url = data.get("download_url")
+        file_name = data.get("file_name", "unknown_file")
+        
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated"})
+        
+        graph_resp = requests.get(download_url, headers=headers)
+        if graph_resp.status_code != 200:
+            return JSONResponse(status_code=400, content={"error": f"Download Error: {graph_resp.text}"})
+            
+        file_content = graph_resp.content
+
+        connect_str = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container = os.getenv("AZURE_STORAGE_CONTAINER")
+        
+        blob_service = BlobServiceClient.from_connection_string(connect_str)
+        new_blob_name = f"graph-{uuid.uuid4()}-{file_name}"
+        
+        blob_client = blob_service.get_blob_client(container=container, blob=new_blob_name)
+        blob_client.upload_blob(file_content, overwrite=True)
+        
+        return {
+            "blob_name": new_blob_name,
+            "original_filename": file_name,
+            "source": "microsoft_graph"
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+def lazy_copilot_task(job_id: str, data: dict):
+    JOBS[job_id] = {"status": "Pending", "result": ""}
+    try:
+        try:
+            from openai import AzureOpenAI
+            from azure.core.credentials import AzureKeyCredential
+        except ImportError as e:
+            raise ImportError(f"Base Library Failed: {e}")
+
+        blobs = data.get("blobs", [])
+        emails = data.get("emails", [])
+        calendar_events = data.get("calendar_events", [])
+        file_context = ""
+        email_context = ""
+        calendar_context = ""
+        
+        if blobs:
+            try:
+                from azure.ai.documentintelligence import DocumentIntelligenceClient
+                from azure.storage.blob import BlobServiceClient
                 
-                if (!attData.error && attData.value) {
-                    const validAttachments = attData.value.filter(a => a['@odata.type'] === '#microsoft.graph.fileAttachment');
+                storage_conn = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+                storage_cont = os.getenv("AZURE_STORAGE_CONTAINER")
+                doc_endpoint = os.getenv("DOC_INTEL_ENDPOINT")
+                doc_key = os.getenv("DOC_INTEL_KEY")
+                
+                if storage_conn and doc_endpoint:
+                    blob_service = BlobServiceClient.from_connection_string(storage_conn)
+                    container_client = blob_service.get_container_client(storage_cont)
+                    doc_client = DocumentIntelligenceClient(endpoint=doc_endpoint, credential=AzureKeyCredential(doc_key))
                     
-                    validAttachments.forEach(att => {
-                        selectedM365Items.push({
-                            type: 'email-attachment',
-                            id: emailId + '-' + att.id,
-                            emailId: emailId,
-                            name: att.name,
-                            contentBytes: att.contentBytes,
-                            contentType: att.contentType,
-                            parentSubject: subject
-                        });
-                    });
-                }
-            } catch (e) {
-                console.error('Failed to fetch attachments:', e);
-            }
-        }
+                    for blob_info in blobs:
+                        b_name = blob_info.get("blob_name")
+                        f_name = blob_info.get("original_filename")
+                        try:
+                            blob_client = container_client.get_blob_client(b_name)
+                            file_data = blob_client.download_blob().readall()
+                            
+                            poller = doc_client.begin_analyze_document("prebuilt-layout", body=file_data)
+                            result = poller.result()
+                            text = result.content or "(No Text)"
+                            file_context += f"\n--- DOCUMENT: {f_name} ---\n{text}\n"
+                        except Exception:
+                            pass 
+            except Exception:
+                pass 
+
+        if emails:
+            email_context = "\n--- EMAIL CORRESPONDENCE ---\n"
+            for email in emails:
+                date = email.get("date", "Unknown date")
+                subject = email.get("subject", "No subject")
+                sender = email.get("from", "Unknown sender")
+                to = email.get("to", "Unknown recipient")
+                body = email.get("body", "")
+                
+                email_context += f"\n[EMAIL - {date}]\n"
+                email_context += f"From: {sender}\n"
+                email_context += f"To: {to}\n"
+                email_context += f"Subject: {subject}\n"
+                email_context += f"Body:\n{body}\n"
+                email_context += "---\n"
+
+        if calendar_events:
+            calendar_context = "\n--- CALENDAR EVENTS ---\n"
+            for event in calendar_events:
+                subject = event.get("subject", "No title")
+                start = event.get("start", "Unknown")
+                end = event.get("end", "Unknown")
+                location = event.get("location", "")
+                body = event.get("body", "")
+                
+                try:
+                    start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+                    start_str = start_dt.strftime("%A, %B %d, %Y at %I:%M %p")
+                except:
+                    start_str = start
+                
+                try:
+                    end_dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
+                    end_str = end_dt.strftime("%I:%M %p")
+                except:
+                    end_str = end
+                
+                calendar_context += f"\n[EVENT: {subject}]\n"
+                calendar_context += f"When: {start_str} - {end_str}\n"
+                if location:
+                    calendar_context += f"Location: {location}\n"
+                if body:
+                    calendar_context += f"Details: {body}\n"
+                calendar_context += "---\n"
+
+        total_context = file_context + email_context + calendar_context
         
-        element.classList.add('selected');
+        if len(total_context) > 500000:
+            JOBS[job_id]["status"] = "Failed"
+            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too much content. Try selecting fewer items."
+            return
+
+        key = os.getenv("AZURE_OPENAI_KEY")
+        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        client = AzureOpenAI(api_key=key, azure_endpoint=endpoint, api_version="2024-02-01")
         
-    } catch (error) {
-        addMessage(`Failed to get email: ${error.message}`, 'system-error');
-    }
-    
-    element.style.opacity = '1';
-    updateSelectedCount();
-}
-
-function toggleFileSelection(element) {
-    const downloadUrl = element.dataset.downloadUrl;
-    const name = element.dataset.name;
-    
-    if (!downloadUrl) {
-        addMessage('This file cannot be downloaded directly.', 'system-error');
-        return;
-    }
-    
-    const existingIndex = selectedM365Items.findIndex(item => item.name === name && item.type === 'onedrive-file');
-    
-    if (existingIndex >= 0) {
-        selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected');
-    } else {
-        selectedM365Items.push({
-            type: 'onedrive-file',
-            name: name,
-            downloadUrl: downloadUrl
-        });
-        element.classList.add('selected');
-    }
-    
-    updateSelectedCount();
-}
-
-function updateSelectedCount() {
-    const actionsBar = document.getElementById('m365-actions');
-    const countSpan = document.getElementById('selected-count');
-    
-    const emailCount = selectedM365Items.filter(i => i.type === 'email').length;
-    const fileCount = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment').length;
-    const calendarCount = selectedM365Items.filter(i => i.type === 'calendar').length;
-    
-    if (selectedM365Items.length > 0) {
-        actionsBar.classList.remove('hidden');
-        let text = [];
-        if (emailCount > 0) text.push(`${emailCount} email${emailCount > 1 ? 's' : ''}`);
-        if (fileCount > 0) text.push(`${fileCount} file${fileCount > 1 ? 's' : ''}`);
-        if (calendarCount > 0) text.push(`${calendarCount} event${calendarCount > 1 ? 's' : ''}`);
-        countSpan.textContent = text.join(', ') + ' selected';
-    } else {
-        actionsBar.classList.add('hidden');
-    }
-}
-
-async function addSelectedToChat() {
-    if (selectedM365Items.length === 0) return;
-    
-    const statusId = addLoading('Importing from Microsoft 365...');
-    
-    const emails = selectedM365Items.filter(i => i.type === 'email');
-    const files = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment');
-    const calendarEvents = selectedM365Items.filter(i => i.type === 'calendar');
-    
-    for (const email of emails) {
-        selectedEmails.push({
-            subject: email.subject,
-            from: email.from,
-            to: email.to,
-            date: email.date,
-            body: email.body
-        });
-    }
-    
-    for (const event of calendarEvents) {
-        selectedCalendarEvents.push({
-            subject: event.subject,
-            start: event.start,
-            end: event.end,
-            location: event.location,
-            body: event.body
-        });
-    }
-    
-    for (const item of files) {
-        try {
-            if (item.type === 'email-attachment') {
-                const response = await fetch('/api/get-upload-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: item.name })
-                });
-                
-                const urlData = await response.json();
-                if (urlData.error) throw new Error(urlData.error);
-                
-                const binaryData = atob(item.contentBytes);
-                const bytes = new Uint8Array(binaryData.length);
-                for (let i = 0; i < binaryData.length; i++) {
-                    bytes[i] = binaryData.charCodeAt(i);
-                }
-                
-                const uploadResponse = await fetch(urlData.upload_url, {
-                    method: 'PUT',
-                    headers: {
-                        'x-ms-blob-type': 'BlockBlob',
-                        'Content-Type': item.contentType || 'application/octet-stream'
-                    },
-                    body: bytes
-                });
-                
-                if (!uploadResponse.ok) throw new Error('Upload failed');
-                
-                attachedFiles.push({
-                    blob_name: urlData.blob_name,
-                    original_filename: item.name,
-                    source: 'outlook'
-                });
-                
-            } else if (item.type === 'onedrive-file') {
-                const response = await fetch('/api/download-graph-file', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        download_url: item.downloadUrl,
-                        file_name: item.name
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-                
-                attachedFiles.push({
-                    blob_name: data.blob_name,
-                    original_filename: data.original_filename,
-                    source: 'onedrive'
-                });
-            }
-        } catch (error) {
-            console.error(`Failed to import ${item.name}:`, error);
-        }
-    }
-    
-    removeMessage(statusId);
-    updateAttachmentsUI();
-    closeM365Panel();
-    
-    let importMsg = '✅ Imported: ';
-    const parts = [];
-    if (emails.length > 0) parts.push(`${emails.length} email${emails.length > 1 ? 's' : ''}`);
-    if (attachedFiles.length > 0) parts.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
-    if (calendarEvents.length > 0) parts.push(`${calendarEvents.length} calendar event${calendarEvents.length > 1 ? 's' : ''}`);
-    importMsg += parts.join(' and ');
-    importMsg += '. You can now ask questions about them.';
-    
-    if (parts.length > 0) {
-        addMessage(importMsg, 'system');
-    }
-}
-
-// --- FILE ATTACHMENT HANDLING ---
-
-async function handleFileSelect(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    for (const file of files) {
-        if (file.size > 10 * 1024 * 1024) {
-            addMessage(`File "${file.name}" is too large. Maximum size is 10MB.`, 'system-error');
-            continue;
-        }
-
-        const statusId = addLoading(`Uploading ${file.name}...`);
-
-        try {
-            const urlResponse = await fetch('/api/get-upload-url', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename: file.name })
-            });
-
-            const urlData = await urlResponse.json();
-            if (urlData.error) throw new Error(urlData.error);
-
-            const uploadResponse = await fetch(urlData.upload_url, {
-                method: 'PUT',
-                headers: {
-                    'x-ms-blob-type': 'BlockBlob',
-                    'Content-Type': file.type || 'application/octet-stream'
-                },
-                body: file
-            });
-
-            if (!uploadResponse.ok) throw new Error('Upload failed');
-
-            attachedFiles.push({
-                blob_name: urlData.blob_name,
-                original_filename: file.name,
-                size: file.size,
-                source: 'local'
-            });
-
-            updateAttachmentsUI();
-            removeMessage(statusId);
-
-        } catch (error) {
-            removeMessage(statusId);
-            addMessage(`Failed to upload "${file.name}": ${error.message}`, 'system-error');
-        }
-    }
-
-    event.target.value = '';
-}
-
-function updateAttachmentsUI() {
-    const preview = document.getElementById('attachments-preview');
-    const list = document.getElementById('attachments-list');
-    const count = document.getElementById('attachment-count');
-
-    const totalItems = attachedFiles.length + selectedEmails.length + selectedCalendarEvents.length;
-    
-    if (totalItems === 0) {
-        preview.classList.add('hidden');
-        count.classList.add('hidden');
-        return;
-    }
-
-    preview.classList.remove('hidden');
-    count.classList.remove('hidden');
-    count.textContent = totalItems;
-
-    let html = '';
-    
-    selectedEmails.forEach((email, index) => {
-        html += `
-            <div class="attachment-chip">
-                <i class="fas fa-envelope" style="color: var(--primary-500);"></i>
-                <span class="name" title="${escapeHtml(email.subject)}">${escapeHtml(email.subject)}</span>
-                <span class="remove" onclick="removeEmail(${index})"><i class="fas fa-times"></i></span>
-            </div>
-        `;
-    });
-    
-    selectedCalendarEvents.forEach((event, index) => {
-        html += `
-            <div class="attachment-chip">
-                <i class="fas fa-calendar" style="color: #8b5cf6;"></i>
-                <span class="name" title="${escapeHtml(event.subject)}">${escapeHtml(event.subject)}</span>
-                <span class="remove" onclick="removeCalendarEvent(${index})"><i class="fas fa-times"></i></span>
-            </div>
-        `;
-    });
-    
-    attachedFiles.forEach((file, index) => {
-        const iconColor = file.source === 'outlook' ? 'var(--primary-500)' : file.source === 'onedrive' ? '#0ea5e9' : 'var(--gray-500)';
-        html += `
-            <div class="attachment-chip">
-                <i class="fas ${getFileIcon(file.original_filename)}" style="color: ${iconColor};"></i>
-                <span class="name">${escapeHtml(file.original_filename)}</span>
-                <span class="remove" onclick="removeAttachment(${index})"><i class="fas fa-times"></i></span>
-            </div>
-        `;
-    });
-    
-    list.innerHTML = html;
-}
-
-function getFileIcon(filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const icons = {
-        'pdf': 'fa-file-pdf',
-        'doc': 'fa-file-word',
-        'docx': 'fa-file-word',
-        'txt': 'fa-file-lines',
-        'png': 'fa-file-image',
-        'jpg': 'fa-file-image',
-        'jpeg': 'fa-file-image',
-        'xls': 'fa-file-excel',
-        'xlsx': 'fa-file-excel'
-    };
-    return icons[ext] || 'fa-file';
-}
-
-function getFileIconClass(filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const icons = {
-        'pdf': 'fa-file-pdf',
-        'doc': 'fa-file-word',
-        'docx': 'fa-file-word',
-        'txt': 'fa-file-lines',
-        'png': 'fa-file-image',
-        'jpg': 'fa-file-image',
-        'jpeg': 'fa-file-image',
-        'xls': 'fa-file-excel',
-        'xlsx': 'fa-file-excel'
-    };
-    return icons[ext] || 'fa-file';
-}
-
-function removeAttachment(index) {
-    attachedFiles.splice(index, 1);
-    updateAttachmentsUI();
-}
-
-function removeEmail(index) {
-    selectedEmails.splice(index, 1);
-    updateAttachmentsUI();
-}
-
-function removeCalendarEvent(index) {
-    selectedCalendarEvents.splice(index, 1);
-    updateAttachmentsUI();
-}
-
-function clearAllAttachments() {
-    attachedFiles = [];
-    selectedEmails = [];
-    selectedCalendarEvents = [];
-    updateAttachmentsUI();
-}
-
-// --- CHAT FUNCTIONS ---
-
-async function sendMessage() {
-    const input = document.getElementById('user-input');
-    const message = input.value.trim();
-    
-    if (!message && attachedFiles.length === 0 && selectedEmails.length === 0 && selectedCalendarEvents.length === 0) return;
-
-    let displayMessage = message;
-    const attachments = [];
-    
-    if (selectedEmails.length > 0) attachments.push(`${selectedEmails.length} email${selectedEmails.length > 1 ? 's' : ''}`);
-    if (selectedCalendarEvents.length > 0) attachments.push(`${selectedCalendarEvents.length} event${selectedCalendarEvents.length > 1 ? 's' : ''}`);
-    if (attachedFiles.length > 0) attachments.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
-    
-    if (attachments.length > 0) {
-        displayMessage = message 
-            ? `📎 ${attachments.join(', ')}\n\n${message}`
-            : `📎 Attached: ${attachments.join(', ')}`;
-    }
-
-    addMessage(displayMessage, 'user');
-    input.value = '';
-
-    const loadingId = addLoading();
-
-    try {
-        const response = await fetch('/api/copilot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                messages: [{ role: 'user', content: message || 'Please analyze the attached content.' }],
-                blobs: attachedFiles,
-                emails: selectedEmails,
-                calendar_events: selectedCalendarEvents
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-            removeMessage(loadingId);
-            addMessage(`Error: ${data.error}`, 'system-error');
-            return;
-        }
-
-        const jobId = data.job_id;
-        const result = await pollForResult(jobId);
+        user_msg = data.get("messages", [])[-1].get("content", "")
         
-        removeMessage(loadingId);
+        if total_context:
+            final_prompt = f"The user has provided the following content for analysis:\n{total_context}\n\nUser Query: {user_msg}"
+        else:
+            final_prompt = user_msg
+        
+        completion = client.chat.completions.create(
+            model="model-router",
+            messages=[
+                {"role": "system", "content": JOOGNI_SYSTEM_PROMPT},
+                {"role": "user", "content": final_prompt}
+            ]
+        )
+        
+        JOBS[job_id]["status"] = "Complete"
+        JOBS[job_id]["result"] = completion.choices[0].message.content
 
-        if (result.status === 'Complete') {
-            addMessage(result.result, 'system', true);
-        } else if (result.status === 'Failed') {
-            addMessage(`Error: ${result.result}`, 'system-error');
-        } else {
-            addMessage("Request timed out. Please try again.", 'system-error');
-        }
-
-        clearAllAttachments();
-
-    } catch (error) {
-        removeMessage(loadingId);
-        addMessage("Failed to connect to server: " + error.message, 'system-error');
-    }
-}
-
-async function pollForResult(jobId, maxAttempts = 120, interval = 1000) {
-    for (let i = 0; i < maxAttempts; i++) {
-        try {
-            const response = await fetch(`/api/check_status/${jobId}`);
-            const data = await response.json();
-            
-            if (data.status === 'Complete' || data.status === 'Failed') {
-                return data;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, interval));
-        } catch (error) {
-            console.error('Polling error:', error);
-        }
-    }
-    return { status: 'Timeout', result: 'Request timed out' };
-}
-
-function addMessage(text, type, isMarkdown = false) {
-    const container = document.getElementById('chat-container');
-    const div = document.createElement('div');
-    
-    const messageClass = type === 'user' ? 'message-user' : type === 'system-error' ? 'message-system message-error' : 'message-system';
-    div.className = `message ${messageClass}`;
-    
-    const bubble = document.createElement('div');
-    bubble.className = 'message-bubble' + (isMarkdown && type !== 'user' ? ' prose-chat' : '');
-    
-    if (isMarkdown && type !== 'user') {
-        bubble.innerHTML = renderMarkdown(text);
-    } else {
-        bubble.textContent = text;
-    }
-    
-    div.appendChild(bubble);
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    return div.id = 'msg-' + Date.now();
-}
-
-function renderMarkdown(text) {
-    if (!text) return '';
-    
-    let html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    
-    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    html = html.replace(/^---$/gm, '<hr>');
-    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-    html = html.replace(/^[\s]*[-*] (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-    html = html.replace(/^[\s]*\d+\. (.+)$/gm, '<oli>$1</oli>');
-    html = html.replace(/(<oli>.*<\/oli>\n?)+/g, function(match) {
-        return '<ol>' + match.replace(/<\/?oli>/g, function(tag) {
-            return tag === '<oli>' ? '<li>' : '</li>';
-        }) + '</ol>';
-    });
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-    html = html.replace(/\n\n+/g, '</p><p>');
-    html = html.replace(/(?<!<\/pre>|<\/code>)\n(?!<)/g, '<br>');
-    
-    if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol') && !html.startsWith('<pre') && !html.startsWith('<blockquote')) {
-        html = '<p>' + html + '</p>';
-    }
-    
-    html = html.replace(/<p><\/p>/g, '');
-    html = html.replace(/<p>(<h[123]>)/g, '$1');
-    html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
-    html = html.replace(/<p>(<ul>)/g, '$1');
-    html = html.replace(/(<\/ul>)<\/p>/g, '$1');
-    html = html.replace(/<p>(<ol>)/g, '$1');
-    html = html.replace(/(<\/ol>)<\/p>/g, '$1');
-    html = html.replace(/<p>(<pre>)/g, '$1');
-    html = html.replace(/(<\/pre>)<\/p>/g, '$1');
-    html = html.replace(/<p>(<blockquote>)/g, '$1');
-    html = html.replace(/(<\/blockquote>)<\/p>/g, '$1');
-    html = html.replace(/<p><br>/g, '<p>');
-    
-    return html;
-}
-
-function addLoading(customText) {
-    const container = document.getElementById('chat-container');
-    const div = document.createElement('div');
-    div.className = 'message message-system';
-    div.innerHTML = `
-        <div class="loading-bubble">
-            <div class="loading-spinner"></div>
-            <span class="loading-text">${customText || 'Thinking...'}</span>
-        </div>`;
-    div.id = 'loading-' + Date.now();
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    return div.id;
-}
-
-function removeMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-}
-
-// --- UTILITY FUNCTIONS ---
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function formatFileSize(bytes) {
-    if (!bytes) return 'Unknown size';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
+    except Exception as e:
+        JOBS[job_id]["status"] = "Failed"
+        JOBS[job_id]["result"] = f"Error: {str(e)}"
