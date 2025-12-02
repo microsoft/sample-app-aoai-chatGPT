@@ -47,6 +47,204 @@
             -webkit-font-smoothing: antialiased;
         }
         
+        /* Agreement Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-overlay.hidden { display: none; }
+        
+        .agreement-modal {
+            background: var(--white);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalIn 0.3s ease;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .modal-header {
+            padding: 24px 28px 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .modal-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .modal-logo-mark {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 20px; color: white;
+        }
+        
+        .modal-logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .modal-body {
+            padding: 24px 28px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .agreement-section {
+            margin-bottom: 20px;
+        }
+        
+        .agreement-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .agreement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #059669;
+            margin-bottom: 16px;
+        }
+        
+        .agreement-badge i {
+            font-size: 11px;
+        }
+        
+        .agreement-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--gray-700);
+        }
+        
+        .agreement-heading {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .agreement-heading .number {
+            width: 22px; height: 22px;
+            background: var(--primary-100);
+            color: var(--primary-600);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700;
+        }
+        
+        .agreement-highlight {
+            background: var(--primary-50);
+            border-left: 3px solid var(--primary-500);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 16px;
+        }
+        
+        .agreement-highlight p {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary-700);
+            margin: 0;
+        }
+        
+        .modal-footer {
+            padding: 20px 28px 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .checkbox-row input[type="checkbox"] {
+            width: 20px; height: 20px;
+            margin-top: 2px;
+            accent-color: var(--primary-500);
+            cursor: pointer;
+        }
+        
+        .checkbox-row label {
+            font-size: 14px;
+            color: var(--gray-700);
+            cursor: pointer;
+            line-height: 1.5;
+        }
+        
+        .btn-accept {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-accept:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        .btn-accept:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .modal-copyright {
+            text-align: center;
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+        
         /* Header */
         .header {
             background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-800) 100%);
@@ -433,10 +631,83 @@
             .input-area { padding: 16px; }
             .btn-send span { display: none; }
             .btn-send { width: 48px; padding: 0; }
+            .agreement-modal { margin: 10px; max-height: 95vh; }
+            .modal-header, .modal-body, .modal-footer { padding: 20px; }
         }
     </style>
 </head>
 <body>
+    <!-- Agreement Modal -->
+    <div id="agreement-modal" class="modal-overlay hidden">
+        <div class="agreement-modal">
+            <div class="modal-header">
+                <div class="modal-logo">
+                    <div class="modal-logo-mark">J</div>
+                    <span class="modal-logo-text">Joogni</span>
+                </div>
+                <h2 class="modal-title">Terms of Use</h2>
+            </div>
+            <div class="modal-body">
+                <div class="agreement-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    Secure Environment
+                </div>
+                <p class="agreement-text" style="margin-bottom: 20px;">
+                    Joogni is hosted on Gill Law Group's private Azure infrastructure. Your data remains within our secure tenant and is never used to train AI models.
+                </p>
+                
+                <p class="agreement-text" style="margin-bottom: 16px; font-weight: 500; color: var(--gray-900);">
+                    By using Joogni, you acknowledge and agree that:
+                </p>
+                
+                <div class="agreement-section">
+                    <div class="agreement-heading">
+                        <span class="number">1</span>
+                        AI Limitations
+                    </div>
+                    <p class="agreement-text">
+                        Joogni is an AI assistant. All output must be reviewed by a licensed attorney before use with clients or courts. AI can make mistakes — always verify legal citations, calculations, and case-specific advice.
+                    </p>
+                </div>
+                
+                <div class="agreement-section">
+                    <div class="agreement-heading">
+                        <span class="number">2</span>
+                        Confidentiality
+                    </div>
+                    <p class="agreement-text">
+                        Confidential client information may be used with this tool in accordance with firm policies. Your queries and uploaded documents are processed securely but may be logged for quality assurance.
+                    </p>
+                </div>
+                
+                <div class="agreement-section">
+                    <div class="agreement-heading">
+                        <span class="number">3</span>
+                        Intellectual Property
+                    </div>
+                    <p class="agreement-text">
+                        All work product generated using Joogni, including but not limited to documents, analysis, drafts, and research, is the sole property of Gill Law Group, PC. Users retain no individual ownership rights to AI-assisted output created during the course of employment.
+                    </p>
+                </div>
+                
+                <div class="agreement-highlight">
+                    <p><i class="fas fa-check-circle" style="margin-right: 8px;"></i>Acceptance required to continue.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="checkbox-row">
+                    <input type="checkbox" id="agree-checkbox" onchange="updateAcceptButton()">
+                    <label for="agree-checkbox">I have read, understand, and agree to the Terms of Use</label>
+                </div>
+                <button id="accept-btn" class="btn-accept" onclick="acceptAgreement()" disabled>
+                    <i class="fas fa-check"></i>
+                    Accept & Continue
+                </button>
+                <p class="modal-copyright">Gill Law Group, PC © 2025</p>
+            </div>
+        </div>
+    </div>
+
     <header class="header">
         <div class="header-left">
             <div class="logo">
