@@ -38,16 +38,19 @@ JOOGNI_SYSTEM_PROMPT = """You are Joogni, an expert legal AI assistant for Gill 
 Your capabilities:
 - Answer questions about California Family Code, divorce, custody, support, property division, and family law procedures
 - Analyze legal documents when provided (pleadings, declarations, financial disclosures, agreements)
+- Analyze email correspondence to understand case history, communications with opposing counsel, and client interactions
 - Draft legal documents, motions, discovery requests, correspondence, and client communications
 - Summarize case information and identify key issues
+- Create chronologies from email threads and documents
 - Explain legal concepts in plain language for clients or in technical terms for attorneys
 
 Guidelines:
 - Be conversational and helpful for general questions
 - When asked to draft something, produce professional, court-ready language
 - Always note that you are an AI assistant and your output should be reviewed by an attorney
-- If you analyze uploaded documents, reference specific content from them
+- If you analyze uploaded documents or emails, reference specific content from them
 - For California-specific questions, cite relevant Family Code sections when applicable
+- When analyzing emails, pay attention to dates, senders, recipients, and key discussion points
 
 Current context: You are assisting attorneys and staff at a family law firm. Respond appropriately based on whether the question seems like a quick query or a request for formal document drafting."""
 
@@ -145,18 +148,39 @@ async def search_outlook(request: Request):
         if query:
             # Mode A: Active Search
             params = {
-                "$top": 15,
-                "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
+                "$top": 25,
+                "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
                 "$search": f'"{query}"'
             }
         else:
+            # Mode B: Recent Items
             params = {
-                "$top": 15,
-                "$select": "id,subject,from,receivedDateTime,bodyPreview,hasAttachments",
-                "$filter": "hasAttachments eq true",
+                "$top": 25,
+                "$select": "id,subject,from,toRecipients,receivedDateTime,bodyPreview,hasAttachments",
                 "$orderby": "receivedDateTime desc"
             }
             
+        resp = requests.get(url, headers=headers, params=params)
+        
+        if resp.status_code != 200:
+            return JSONResponse(status_code=resp.status_code, content={"error": f"Graph Error: {resp.text}"})
+            
+        return resp.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/api/get-email-content/{message_id}")
+async def get_email_content(message_id: str, request: Request):
+    """Fetch full email content including body"""
+    try:
+        headers = get_graph_headers(request)
+        if not headers:
+             return JSONResponse(status_code=401, content={"error": "Not authenticated"})
+
+        url = f"https://graph.microsoft.com/v1.0/me/messages/{message_id}"
+        params = {
+            "$select": "id,subject,from,toRecipients,ccRecipients,receivedDateTime,body,hasAttachments"
+        }
         resp = requests.get(url, headers=headers, params=params)
         
         if resp.status_code != 200:
@@ -253,8 +277,11 @@ def lazy_copilot_task(job_id: str, data: dict):
             raise ImportError(f"Base Library Failed: {e}")
 
         blobs = data.get("blobs", [])
+        emails = data.get("emails", [])
         file_context = ""
+        email_context = ""
         
+        # Process uploaded files/documents
         if blobs:
             try:
                 from azure.ai.documentintelligence import DocumentIntelligenceClient
@@ -280,15 +307,34 @@ def lazy_copilot_task(job_id: str, data: dict):
                             poller = doc_client.begin_analyze_document("prebuilt-layout", body=file_data)
                             result = poller.result()
                             text = result.content or "(No Text)"
-                            file_context += f"\n--- FILE: {f_name} ---\n{text}\n"
+                            file_context += f"\n--- DOCUMENT: {f_name} ---\n{text}\n"
                         except Exception:
                             pass 
             except Exception:
                 pass 
 
-        if len(file_context) > 500000:
+        # Process emails
+        if emails:
+            email_context = "\n--- EMAIL CORRESPONDENCE ---\n"
+            for email in emails:
+                date = email.get("date", "Unknown date")
+                subject = email.get("subject", "No subject")
+                sender = email.get("from", "Unknown sender")
+                to = email.get("to", "Unknown recipient")
+                body = email.get("body", "")
+                
+                email_context += f"\n[EMAIL - {date}]\n"
+                email_context += f"From: {sender}\n"
+                email_context += f"To: {to}\n"
+                email_context += f"Subject: {subject}\n"
+                email_context += f"Body:\n{body}\n"
+                email_context += "---\n"
+
+        total_context = file_context + email_context
+        
+        if len(total_context) > 500000:
             JOBS[job_id]["status"] = "Failed"
-            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too many files."
+            JOBS[job_id]["result"] = "⚠️ **Limit Exceeded:** Too much content. Try selecting fewer emails or documents."
             return
 
         key = os.getenv("AZURE_OPENAI_KEY")
@@ -297,9 +343,9 @@ def lazy_copilot_task(job_id: str, data: dict):
         
         user_msg = data.get("messages", [])[-1].get("content", "")
         
-        # Build the final prompt with any file context
-        if file_context:
-            final_prompt = f"The user has uploaded the following documents for analysis:\n{file_context}\n\nUser Query: {user_msg}"
+        # Build the final prompt with context
+        if total_context:
+            final_prompt = f"The user has provided the following content for analysis:\n{total_context}\n\nUser Query: {user_msg}"
         else:
             final_prompt = user_msg
         
