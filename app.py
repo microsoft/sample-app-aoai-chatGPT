@@ -32,6 +32,25 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# --- SYSTEM PROMPT ---
+JOOGNI_SYSTEM_PROMPT = """You are Joogni, an expert legal AI assistant for Gill Law Group, a California family law firm.
+
+Your capabilities:
+- Answer questions about California Family Code, divorce, custody, support, property division, and family law procedures
+- Analyze legal documents when provided (pleadings, declarations, financial disclosures, agreements)
+- Draft legal documents, motions, discovery requests, correspondence, and client communications
+- Summarize case information and identify key issues
+- Explain legal concepts in plain language for clients or in technical terms for attorneys
+
+Guidelines:
+- Be conversational and helpful for general questions
+- When asked to draft something, produce professional, court-ready language
+- Always note that you are an AI assistant and your output should be reviewed by an attorney
+- If you analyze uploaded documents, reference specific content from them
+- For California-specific questions, cite relevant Family Code sections when applicable
+
+Current context: You are assisting attorneys and staff at a family law firm. Respond appropriately based on whether the question seems like a quick query or a request for formal document drafting."""
+
 class SasRequest(BaseModel):
     filename: str
 
@@ -275,15 +294,18 @@ def lazy_copilot_task(job_id: str, data: dict):
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         client = AzureOpenAI(api_key=key, azure_endpoint=endpoint, api_version="2024-02-01")
         
-        task = data.get("task", "general")
         user_msg = data.get("messages", [])[-1].get("content", "")
         
-        final_prompt = f"{file_context}\n\nUser Query: {user_msg}"
+        # Build the final prompt with any file context
+        if file_context:
+            final_prompt = f"The user has uploaded the following documents for analysis:\n{file_context}\n\nUser Query: {user_msg}"
+        else:
+            final_prompt = user_msg
         
         completion = client.chat.completions.create(
             model="model-router",
             messages=[
-                {"role": "system", "content": f"You are Joogni, an expert legal AI. Task: {task}"},
+                {"role": "system", "content": JOOGNI_SYSTEM_PROMPT},
                 {"role": "user", "content": final_prompt}
             ]
         )
