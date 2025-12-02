@@ -310,6 +310,37 @@
         
         .btn-logout:hover { background: rgba(255,255,255,0.12); color: white; }
         
+        .jurisdiction-select {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+        }
+        
+        .jurisdiction-select label {
+            font-size: 12px; font-weight: 500;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .jurisdiction-select select {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            padding-right: 4px;
+        }
+        
+        .jurisdiction-select select option {
+            background: var(--primary-900);
+            color: white;
+        }
+        
+        .jurisdiction-select select:focus { outline: none; }
+        
         /* Chat */
         .chat-wrapper {
             flex: 1; display: flex; flex-direction: column; overflow: hidden;
@@ -375,7 +406,7 @@
         /* Welcome */
         .welcome-card {
             background: var(--white); border: 1px solid var(--gray-200);
-            border-radius: 16px; padding: 28px; max-width: 520px;
+            border-radius: 16px; padding: 28px; max-width: 640px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
         
@@ -401,6 +432,168 @@
         }
         
         .welcome-feature i { color: var(--primary-500); font-size: 12px; }
+        
+        /* Quick Actions */
+        .quick-actions {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .quick-actions-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .quick-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 12px;
+            background: var(--gray-50);
+            border: 1.5px solid var(--gray-200);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        
+        .quick-action-btn:hover {
+            background: var(--primary-50);
+            border-color: var(--primary-300);
+            transform: translateY(-2px);
+        }
+        
+        .quick-action-btn i {
+            font-size: 20px;
+            color: var(--primary-500);
+        }
+        
+        .quick-action-btn span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            line-height: 1.3;
+        }
+        
+        /* Suggested Prompts */
+        .suggested-prompts {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .suggested-prompts-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-500);
+            margin-bottom: 10px;
+        }
+        
+        .suggested-prompts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .suggested-prompt {
+            text-align: left;
+            padding: 10px 14px;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        
+        .suggested-prompt:hover {
+            background: var(--primary-50);
+            border-color: var(--primary-300);
+            color: var(--primary-700);
+        }
+        
+        /* Agentic Status */
+        .agentic-status {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px 20px;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .agentic-status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .agentic-status-header .loading-spinner {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .agentic-status-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        
+        .agentic-sources {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        
+        .agentic-source-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--gray-100);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+        
+        .agentic-source-badge.active {
+            background: var(--primary-100);
+            color: var(--primary-700);
+        }
+        
+        .agentic-source-badge.done {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .agentic-source-badge i {
+            font-size: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .quick-actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .jurisdiction-select { display: none; }
+        }
         
         /* Loading */
         .loading-bubble {
@@ -737,6 +930,21 @@
             <span class="logo-subtitle">Legal AI</span>
         </div>
         <div class="header-right">
+            <div class="jurisdiction-select">
+                <label for="jurisdiction">Jurisdiction:</label>
+                <select id="jurisdiction">
+                    <option value="California" selected>California</option>
+                    <option value="Texas">Texas</option>
+                    <option value="New York">New York</option>
+                    <option value="Florida">Florida</option>
+                    <option value="Illinois">Illinois</option>
+                    <option value="Arizona">Arizona</option>
+                    <option value="Nevada">Nevada</option>
+                    <option value="Washington">Washington</option>
+                    <option value="Oregon">Oregon</option>
+                    <option value="Colorado">Colorado</option>
+                </select>
+            </div>
             <div class="status-indicator">
                 <div class="status-dot"></div>
                 <span class="status-text">Connected</span>
@@ -756,14 +964,52 @@
                 </div>
                 <h2 class="welcome-title">Welcome to Joogni</h2>
                 <p class="welcome-text">
-                    I'm your legal AI assistant. I can answer questions about California family law, analyze documents, review email correspondence, and help draft legal documents.
+                    I'm your legal AI assistant with agentic search. Ask me about a case and I'll automatically search your emails, Box files, and calendar to find relevant information.
                 </p>
-                <div class="welcome-features">
-                    <div class="welcome-feature"><i class="fas fa-envelope"></i><span>Search Emails</span></div>
-                    <div class="welcome-feature"><i class="fas fa-calendar"></i><span>Check Calendar</span></div>
-                    <div class="welcome-feature"><i class="fas fa-file-alt"></i><span>Analyze Docs</span></div>
-                    <div class="welcome-feature"><i class="fas fa-box"></i><span>Box Files</span></div>
-                    <div class="welcome-feature"><i class="fas fa-gavel"></i><span>CA Family Law</span></div>
+                
+                <div class="quick-actions">
+                    <div class="quick-actions-label">Quick Actions</div>
+                    <div class="quick-actions-grid">
+                        <button class="quick-action-btn" onclick="quickAction('draft')">
+                            <i class="fas fa-file-signature"></i>
+                            <span>Draft a Pleading</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="quickAction('analyze')">
+                            <i class="fas fa-magnifying-glass-chart"></i>
+                            <span>Analyze a Document</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="quickAction('legal')">
+                            <i class="fas fa-gavel"></i>
+                            <span>Ask a Legal Question</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="quickAction('status')">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Case Status Check</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="quickAction('evidence')">
+                            <i class="fas fa-list-check"></i>
+                            <span>Organize Evidence</span>
+                        </button>
+                        <button class="quick-action-btn" onclick="quickAction('chronology')">
+                            <i class="fas fa-timeline"></i>
+                            <span>Create Chronology</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="suggested-prompts">
+                    <div class="suggested-prompts-label">Try asking:</div>
+                    <div class="suggested-prompts-list">
+                        <button class="suggested-prompt" onclick="usePrompt('What is the status of the Smith case? Any upcoming hearings or recent communications?')">
+                            "What is the status of the Smith case?"
+                        </button>
+                        <button class="suggested-prompt" onclick="usePrompt('Summarize the key issues in the Johnson custody dispute based on the case files.')">
+                            "Summarize key issues in Johnson custody case"
+                        </button>
+                        <button class="suggested-prompt" onclick="usePrompt('What are the deadlines coming up this week?')">
+                            "What deadlines are coming up this week?"
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
