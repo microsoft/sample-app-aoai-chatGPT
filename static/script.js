@@ -1,9 +1,11 @@
 // Track attached files and emails
-let attachedFiles = [];
-let selectedEmails = [];
-let selectedCalendarEvents = [];
-let searchSource = 'email';
-let selectedM365Items = [];
+var attachedFiles = [];
+var selectedEmails = [];
+var selectedCalendarEvents = [];
+var searchSource = 'email';
+var selectedM365Items = [];
+var boxConnected = false;
+var boxAuthWindow = null;
 
 console.log('Joogni script loaded');
 
@@ -12,8 +14,8 @@ console.log('Joogni script loaded');
 async function checkAgreement() {
     console.log('Checking agreement...');
     try {
-        const response = await fetch('/api/check-agreement');
-        const data = await response.json();
+        var response = await fetch('/api/check-agreement');
+        var data = await response.json();
         console.log('Agreement check response:', data);
         
         if (data.error) {
@@ -36,7 +38,7 @@ async function checkAgreement() {
 
 function showAgreementModal() {
     console.log('Showing agreement modal');
-    const modal = document.getElementById('agreement-modal');
+    var modal = document.getElementById('agreement-modal');
     if (modal) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -46,7 +48,7 @@ function showAgreementModal() {
 }
 
 function hideAgreementModal() {
-    const modal = document.getElementById('agreement-modal');
+    var modal = document.getElementById('agreement-modal');
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = '';
@@ -54,27 +56,27 @@ function hideAgreementModal() {
 }
 
 function updateAcceptButton() {
-    const checkbox = document.getElementById('agree-checkbox');
-    const button = document.getElementById('accept-btn');
+    var checkbox = document.getElementById('agree-checkbox');
+    var button = document.getElementById('accept-btn');
     if (checkbox && button) {
         button.disabled = !checkbox.checked;
     }
 }
 
 async function acceptAgreement() {
-    const button = document.getElementById('accept-btn');
+    var button = document.getElementById('accept-btn');
     if (!button) return;
     
     button.disabled = true;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     
     try {
-        const response = await fetch('/api/accept-agreement', {
+        var response = await fetch('/api/accept-agreement', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
         
-        const data = await response.json();
+        var data = await response.json();
         console.log('Accept agreement response:', data);
         
         if (data.success) {
@@ -97,7 +99,217 @@ async function acceptAgreement() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking agreement...');
     checkAgreement();
+    checkBoxStatus();
 });
+
+// Listen for Box auth success
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'box-auth-success') {
+        console.log('Box auth success received');
+        boxConnected = true;
+        if (searchSource === 'box') {
+            searchM365();
+        }
+        addMessage('✅ Box connected successfully!', 'system');
+    }
+});
+
+// --- BOX FUNCTIONS ---
+
+async function checkBoxStatus() {
+    try {
+        var response = await fetch('/api/box/status');
+        var data = await response.json();
+        boxConnected = data.connected;
+        console.log('Box status:', data);
+    } catch (error) {
+        console.error('Box status check failed:', error);
+        boxConnected = false;
+    }
+}
+
+async function connectBox() {
+    try {
+        var response = await fetch('/api/box/auth');
+        var data = await response.json();
+        
+        if (data.error) {
+            addMessage('Box error: ' + data.error, 'system-error');
+            return;
+        }
+        
+        // Open auth window
+        boxAuthWindow = window.open(data.auth_url, 'BoxAuth', 'width=600,height=700');
+    } catch (error) {
+        addMessage('Failed to start Box connection: ' + error.message, 'system-error');
+    }
+}
+
+async function searchBox(query) {
+    var resultsDiv = document.getElementById('m365-results');
+    if (!resultsDiv) return;
+    
+    resultsDiv.innerHTML = 
+        '<div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<span style="color: var(--gray-500); font-size: 13px;">Searching Box...</span>' +
+        '</div>';
+    
+    try {
+        var response = await fetch('/api/box/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query })
+        });
+        
+        var data = await response.json();
+        
+        if (data.need_auth) {
+            boxConnected = false;
+            resultsDiv.innerHTML = 
+                '<div style="text-align: center; padding: 40px 20px;">' +
+                    '<i class="fas fa-box" style="font-size: 48px; color: #0061d5; margin-bottom: 16px;"></i>' +
+                    '<p style="color: var(--gray-600); margin-bottom: 16px;">Connect your Box account to search files</p>' +
+                    '<button onclick="connectBox()" class="box-connect-btn" style="margin: 0 auto;">' +
+                        '<i class="fas fa-link"></i> Connect Box' +
+                    '</button>' +
+                '</div>';
+            return;
+        }
+        
+        if (data.error) {
+            resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);"><i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>' + data.error + '</p>';
+            return;
+        }
+        
+        var items = data.entries || [];
+        
+        if (items.length === 0) {
+            resultsDiv.innerHTML = '<p class="m365-results-empty">No files found. Try a different search term.</p>';
+            return;
+        }
+        
+        renderBoxResults(items);
+        
+    } catch (error) {
+        resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);">Search failed: ' + error.message + '</p>';
+    }
+}
+
+function renderBoxResults(items) {
+    var resultsDiv = document.getElementById('m365-results');
+    if (!resultsDiv) return;
+    
+    var html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click files to select them for analysis.</div>';
+    
+    items.forEach(function(item) {
+        var isFolder = item.type === 'folder';
+        var date = item.modified_at ? new Date(item.modified_at).toLocaleDateString() : '';
+        var size = item.size ? formatFileSize(item.size) : '';
+        var iconClass = isFolder ? 'folder' : 'box';
+        var icon = isFolder ? 'fa-folder' : getFileIcon(item.name || 'file');
+        var parent = item.parent ? item.parent.name : '';
+        
+        if (isFolder) {
+            html += 
+                '<div class="search-result" ' +
+                    'data-type="box-folder" ' +
+                    'data-id="' + item.id + '" ' +
+                    'data-name="' + escapeHtml(item.name || 'Folder') + '" ' +
+                    'onclick="browseBoxFolder(\'' + item.id + '\')">' +
+                    '<div class="result-icon ' + iconClass + '"><i class="fas ' + icon + '"></i></div>' +
+                    '<div class="result-content">' +
+                        '<div class="result-title"><span class="truncate">' + escapeHtml(item.name || 'Folder') + '</span></div>' +
+                        '<div class="result-meta">Folder' + (parent ? ' in ' + escapeHtml(parent) : '') + '</div>' +
+                    '</div>' +
+                    '<i class="fas fa-chevron-right" style="color: var(--gray-400);"></i>' +
+                '</div>';
+        } else {
+            html += 
+                '<div class="search-result" ' +
+                    'data-type="box-file" ' +
+                    'data-id="' + item.id + '" ' +
+                    'data-name="' + escapeHtml(item.name || 'File') + '" ' +
+                    'onclick="toggleBoxFileSelection(this, \'' + item.id + '\', \'' + escapeHtml(item.name || 'File') + '\')">' +
+                    '<div class="result-icon ' + iconClass + '"><i class="fas ' + icon + '"></i></div>' +
+                    '<div class="result-content">' +
+                        '<div class="result-title"><span class="truncate">' + escapeHtml(item.name || 'File') + '</span></div>' +
+                        '<div class="result-meta">' + size + (date ? ' • ' + date : '') + '</div>' +
+                        (parent ? '<div class="result-preview">in ' + escapeHtml(parent) + '</div>' : '') +
+                    '</div>' +
+                    '<div class="result-check"><i class="fas fa-check-circle"></i></div>' +
+                '</div>';
+        }
+    });
+    
+    resultsDiv.innerHTML = html;
+}
+
+async function browseBoxFolder(folderId) {
+    var resultsDiv = document.getElementById('m365-results');
+    if (!resultsDiv) return;
+    
+    resultsDiv.innerHTML = 
+        '<div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<span style="color: var(--gray-500); font-size: 13px;">Loading folder...</span>' +
+        '</div>';
+    
+    try {
+        var response = await fetch('/api/box/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: '', folder_id: folderId })
+        });
+        
+        var data = await response.json();
+        
+        if (data.error) {
+            resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);">' + data.error + '</p>';
+            return;
+        }
+        
+        var items = data.entries || [];
+        
+        // Add back button
+        var backHtml = 
+            '<div class="search-result" onclick="browseBoxFolder(\'0\')" style="background: var(--gray-50);">' +
+                '<div class="result-icon"><i class="fas fa-arrow-left"></i></div>' +
+                '<div class="result-content">' +
+                    '<div class="result-title"><span>Back to Root</span></div>' +
+                '</div>' +
+            '</div>';
+        
+        if (items.length === 0) {
+            resultsDiv.innerHTML = backHtml + '<p class="m365-results-empty">This folder is empty</p>';
+            return;
+        }
+        
+        renderBoxResults(items);
+        resultsDiv.innerHTML = backHtml + resultsDiv.innerHTML.replace(/<div style="margin-bottom.*?<\/div>/, '');
+        
+    } catch (error) {
+        resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);">' + error.message + '</p>';
+    }
+}
+
+function toggleBoxFileSelection(element, fileId, fileName) {
+    var existingIndex = selectedM365Items.findIndex(function(item) { return item.id === fileId && item.type === 'box-file'; });
+    
+    if (existingIndex >= 0) {
+        selectedM365Items.splice(existingIndex, 1);
+        element.classList.remove('selected');
+    } else {
+        selectedM365Items.push({
+            type: 'box-file',
+            id: fileId,
+            name: fileName
+        });
+        element.classList.add('selected');
+    }
+    
+    updateSelectedCount();
+}
 
 // --- CHAT FUNCTIONS ---
 
@@ -109,8 +321,8 @@ function handleEnter(e) {
 
 function toggleM365Panel() {
     console.log('Toggle M365 panel');
-    const panel = document.getElementById('m365-panel');
-    const button = document.getElementById('m365-button');
+    var panel = document.getElementById('m365-panel');
+    var button = document.getElementById('m365-button');
     
     if (!panel || !button) {
         console.error('M365 panel or button not found');
@@ -127,8 +339,8 @@ function toggleM365Panel() {
 }
 
 function closeM365Panel() {
-    const panel = document.getElementById('m365-panel');
-    const button = document.getElementById('m365-button');
+    var panel = document.getElementById('m365-panel');
+    var button = document.getElementById('m365-button');
     
     if (panel) panel.classList.add('hidden');
     if (button) button.classList.remove('active');
@@ -139,41 +351,72 @@ function closeM365Panel() {
 function setSearchSource(source) {
     searchSource = source;
     
-    const emailBtn = document.getElementById('src-email');
-    const filesBtn = document.getElementById('src-files');
-    const calendarBtn = document.getElementById('src-calendar');
-    const searchInput = document.getElementById('m365-search-input');
+    var emailBtn = document.getElementById('src-email');
+    var filesBtn = document.getElementById('src-files');
+    var calendarBtn = document.getElementById('src-calendar');
+    var boxBtn = document.getElementById('src-box');
+    var searchInput = document.getElementById('m365-search-input');
     
     if (emailBtn) emailBtn.classList.remove('active');
     if (filesBtn) filesBtn.classList.remove('active');
     if (calendarBtn) calendarBtn.classList.remove('active');
+    if (boxBtn) boxBtn.classList.remove('active');
     
-    const activeBtn = source === 'email' ? emailBtn : source === 'files' ? filesBtn : calendarBtn;
+    var activeBtn;
+    switch(source) {
+        case 'email': activeBtn = emailBtn; break;
+        case 'files': activeBtn = filesBtn; break;
+        case 'calendar': activeBtn = calendarBtn; break;
+        case 'box': activeBtn = boxBtn; break;
+    }
     if (activeBtn) activeBtn.classList.add('active');
     
-    const placeholders = {
+    var placeholders = {
         'email': 'Search emails...',
         'files': 'Search OneDrive files...',
-        'calendar': 'Search calendar events...'
+        'calendar': 'Search calendar events...',
+        'box': 'Search Box files...'
     };
     if (searchInput) searchInput.placeholder = placeholders[source];
     
-    const resultsDiv = document.getElementById('m365-results');
+    var resultsDiv = document.getElementById('m365-results');
     if (resultsDiv) {
-        resultsDiv.innerHTML = '<p class="m365-results-empty">Search your ' + 
-            (source === 'email' ? 'Outlook emails' : source === 'files' ? 'OneDrive files' : 'calendar events') + '</p>';
+        if (source === 'box' && !boxConnected) {
+            resultsDiv.innerHTML = 
+                '<div style="text-align: center; padding: 40px 20px;">' +
+                    '<i class="fas fa-box" style="font-size: 48px; color: #0061d5; margin-bottom: 16px;"></i>' +
+                    '<p style="color: var(--gray-600); margin-bottom: 16px;">Connect your Box account to search files</p>' +
+                    '<button onclick="connectBox()" class="box-connect-btn" style="margin: 0 auto;">' +
+                        '<i class="fas fa-link"></i> Connect Box' +
+                    '</button>' +
+                '</div>';
+        } else {
+            var sourceNames = {
+                'email': 'Outlook emails',
+                'files': 'OneDrive files',
+                'calendar': 'calendar events',
+                'box': 'Box files'
+            };
+            resultsDiv.innerHTML = '<p class="m365-results-empty">Search your ' + sourceNames[source] + '</p>';
+        }
     }
     selectedM365Items = [];
     updateSelectedCount();
 }
 
 async function searchM365() {
-    const query = document.getElementById('m365-search-input').value.trim();
-    const resultsDiv = document.getElementById('m365-results');
+    var query = document.getElementById('m365-search-input').value.trim();
     
+    // Handle Box separately
+    if (searchSource === 'box') {
+        searchBox(query);
+        return;
+    }
+    
+    var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
     
-    const sourceNames = { 'email': 'Outlook', 'files': 'OneDrive', 'calendar': 'Calendar' };
+    var sourceNames = { 'email': 'Outlook', 'files': 'OneDrive', 'calendar': 'Calendar' };
     
     resultsDiv.innerHTML = 
         '<div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">' +
@@ -182,23 +425,23 @@ async function searchM365() {
         '</div>';
     
     try {
-        let endpoint = searchSource === 'calendar' ? '/api/search-calendar' : 
+        var endpoint = searchSource === 'calendar' ? '/api/search-calendar' : 
                        searchSource === 'email' ? '/api/search-outlook' : '/api/search-onedrive';
         
-        const response = await fetch(endpoint, {
+        var response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: query })
         });
         
-        const data = await response.json();
+        var data = await response.json();
         
         if (data.error) {
             resultsDiv.innerHTML = '<p class="m365-results-empty" style="color: var(--error);"><i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>' + data.error + '</p>';
             return;
         }
         
-        const items = data.value || [];
+        var items = data.value || [];
         
         if (items.length === 0) {
             resultsDiv.innerHTML = '<p class="m365-results-empty">No results found</p>';
@@ -215,17 +458,17 @@ async function searchM365() {
 }
 
 function renderCalendarResults(events) {
-    const resultsDiv = document.getElementById('m365-results');
+    var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
     
-    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click events to select them for analysis.</div>';
+    var html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click events to select them for analysis.</div>';
     
     events.forEach(function(event) {
-        const startDate = new Date(event.start?.dateTime || event.start?.date);
-        const endDate = new Date(event.end?.dateTime || event.end?.date);
-        const dateStr = startDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        const timeStr = event.isAllDay ? 'All Day' : startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' - ' + endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const location = event.location?.displayName || '';
+        var startDate = new Date(event.start?.dateTime || event.start?.date);
+        var endDate = new Date(event.end?.dateTime || event.end?.date);
+        var dateStr = startDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        var timeStr = event.isAllDay ? 'All Day' : startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' - ' + endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        var location = event.location?.displayName || '';
         
         html += 
             '<div class="search-result" ' +
@@ -251,7 +494,7 @@ function renderCalendarResults(events) {
 }
 
 function toggleCalendarSelection(element, eventId) {
-    const existingIndex = selectedM365Items.findIndex(function(item) { return item.id === eventId; });
+    var existingIndex = selectedM365Items.findIndex(function(item) { return item.id === eventId; });
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
@@ -273,17 +516,17 @@ function toggleCalendarSelection(element, eventId) {
 }
 
 function renderEmailResults(emails) {
-    const resultsDiv = document.getElementById('m365-results');
+    var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
     
-    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click emails to select. Full content will be included.</div>';
+    var html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click emails to select. Full content will be included.</div>';
     
     emails.forEach(function(email) {
-        const date = new Date(email.receivedDateTime).toLocaleDateString();
-        const time = new Date(email.receivedDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        const sender = email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown';
-        const senderEmail = email.from?.emailAddress?.address || '';
-        const hasAttachments = email.hasAttachments;
+        var date = new Date(email.receivedDateTime).toLocaleDateString();
+        var time = new Date(email.receivedDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        var sender = email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown';
+        var senderEmail = email.from?.emailAddress?.address || '';
+        var hasAttachments = email.hasAttachments;
         
         html += 
             '<div class="search-result" ' +
@@ -312,17 +555,17 @@ function renderEmailResults(emails) {
 }
 
 function renderFileResults(files) {
-    const resultsDiv = document.getElementById('m365-results');
+    var resultsDiv = document.getElementById('m365-results');
     if (!resultsDiv) return;
     
-    let html = '';
+    var html = '';
     
     files.forEach(function(file) {
-        const date = new Date(file.createdDateTime || file.lastModifiedDateTime).toLocaleDateString();
-        const size = formatFileSize(file.size);
-        const downloadUrl = file['@microsoft.graph.downloadUrl'] || file['@content.downloadUrl'] || '';
-        const name = file.name || 'Unknown File';
-        const iconClass = getFileIconClass(name);
+        var date = new Date(file.createdDateTime || file.lastModifiedDateTime).toLocaleDateString();
+        var size = formatFileSize(file.size);
+        var downloadUrl = file['@microsoft.graph.downloadUrl'] || file['@content.downloadUrl'] || '';
+        var name = file.name || 'Unknown File';
+        var iconClass = getFileIconClass(name);
         
         html += 
             '<div class="search-result" ' +
@@ -344,7 +587,7 @@ function renderFileResults(files) {
 }
 
 async function toggleEmailSelection(element, emailId) {
-    const existingIndex = selectedM365Items.findIndex(function(item) { return item.id === emailId; });
+    var existingIndex = selectedM365Items.findIndex(function(item) { return item.id === emailId; });
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
@@ -356,8 +599,8 @@ async function toggleEmailSelection(element, emailId) {
     element.style.opacity = '0.5';
     
     try {
-        const response = await fetch('/api/get-email-content/' + emailId);
-        const emailData = await response.json();
+        var response = await fetch('/api/get-email-content/' + emailId);
+        var emailData = await response.json();
         
         if (emailData.error) {
             addMessage('Failed to get email: ' + emailData.error, 'system-error');
@@ -365,17 +608,17 @@ async function toggleEmailSelection(element, emailId) {
             return;
         }
         
-        const sender = emailData.from?.emailAddress?.name || emailData.from?.emailAddress?.address || 'Unknown';
-        const senderEmail = emailData.from?.emailAddress?.address || '';
-        const toRecipients = (emailData.toRecipients || []).map(function(r) { return r.emailAddress?.address || r.emailAddress?.name; }).join(', ');
-        const ccRecipients = (emailData.ccRecipients || []).map(function(r) { return r.emailAddress?.address || r.emailAddress?.name; }).join(', ');
-        const subject = emailData.subject || 'No Subject';
-        const date = new Date(emailData.receivedDateTime).toLocaleString();
+        var sender = emailData.from?.emailAddress?.name || emailData.from?.emailAddress?.address || 'Unknown';
+        var senderEmail = emailData.from?.emailAddress?.address || '';
+        var toRecipients = (emailData.toRecipients || []).map(function(r) { return r.emailAddress?.address || r.emailAddress?.name; }).join(', ');
+        var ccRecipients = (emailData.ccRecipients || []).map(function(r) { return r.emailAddress?.address || r.emailAddress?.name; }).join(', ');
+        var subject = emailData.subject || 'No Subject';
+        var date = new Date(emailData.receivedDateTime).toLocaleString();
         
-        let bodyText = '';
+        var bodyText = '';
         if (emailData.body) {
             if (emailData.body.contentType === 'html') {
-                const temp = document.createElement('div');
+                var temp = document.createElement('div');
                 temp.innerHTML = emailData.body.content;
                 bodyText = temp.textContent || temp.innerText || '';
             } else {
@@ -383,7 +626,7 @@ async function toggleEmailSelection(element, emailId) {
             }
         }
         
-        const emailItem = {
+        var emailItem = {
             type: 'email',
             id: emailId,
             subject: subject,
@@ -399,11 +642,11 @@ async function toggleEmailSelection(element, emailId) {
         
         if (emailData.hasAttachments) {
             try {
-                const attResponse = await fetch('/api/search-outlook/' + emailId + '/attachments');
-                const attData = await attResponse.json();
+                var attResponse = await fetch('/api/search-outlook/' + emailId + '/attachments');
+                var attData = await attResponse.json();
                 
                 if (!attData.error && attData.value) {
-                    const validAttachments = attData.value.filter(function(a) { return a['@odata.type'] === '#microsoft.graph.fileAttachment'; });
+                    var validAttachments = attData.value.filter(function(a) { return a['@odata.type'] === '#microsoft.graph.fileAttachment'; });
                     
                     validAttachments.forEach(function(att) {
                         selectedM365Items.push({
@@ -433,15 +676,15 @@ async function toggleEmailSelection(element, emailId) {
 }
 
 function toggleFileSelection(element) {
-    const downloadUrl = element.dataset.downloadUrl;
-    const name = element.dataset.name;
+    var downloadUrl = element.dataset.downloadUrl;
+    var name = element.dataset.name;
     
     if (!downloadUrl) {
         addMessage('This file cannot be downloaded directly.', 'system-error');
         return;
     }
     
-    const existingIndex = selectedM365Items.findIndex(function(item) { return item.name === name && item.type === 'onedrive-file'; });
+    var existingIndex = selectedM365Items.findIndex(function(item) { return item.name === name && item.type === 'onedrive-file'; });
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
@@ -459,14 +702,14 @@ function toggleFileSelection(element) {
 }
 
 function updateSelectedCount() {
-    const actionsBar = document.getElementById('m365-actions');
-    const countSpan = document.getElementById('selected-count');
+    var actionsBar = document.getElementById('m365-actions');
+    var countSpan = document.getElementById('selected-count');
     
     if (!actionsBar || !countSpan) return;
     
-    const emailCount = selectedM365Items.filter(function(i) { return i.type === 'email'; }).length;
-    const fileCount = selectedM365Items.filter(function(i) { return i.type === 'onedrive-file' || i.type === 'email-attachment'; }).length;
-    const calendarCount = selectedM365Items.filter(function(i) { return i.type === 'calendar'; }).length;
+    var emailCount = selectedM365Items.filter(function(i) { return i.type === 'email'; }).length;
+    var fileCount = selectedM365Items.filter(function(i) { return i.type === 'onedrive-file' || i.type === 'email-attachment' || i.type === 'box-file'; }).length;
+    var calendarCount = selectedM365Items.filter(function(i) { return i.type === 'calendar'; }).length;
     
     if (selectedM365Items.length > 0) {
         actionsBar.classList.remove('hidden');
@@ -483,12 +726,14 @@ function updateSelectedCount() {
 async function addSelectedToChat() {
     if (selectedM365Items.length === 0) return;
     
-    const statusId = addLoading('Importing from Microsoft 365...');
+    var statusId = addLoading('Importing selected items...');
     
-    const emails = selectedM365Items.filter(function(i) { return i.type === 'email'; });
-    const files = selectedM365Items.filter(function(i) { return i.type === 'onedrive-file' || i.type === 'email-attachment'; });
-    const calendarEvents = selectedM365Items.filter(function(i) { return i.type === 'calendar'; });
+    var emails = selectedM365Items.filter(function(i) { return i.type === 'email'; });
+    var files = selectedM365Items.filter(function(i) { return i.type === 'onedrive-file' || i.type === 'email-attachment'; });
+    var boxFiles = selectedM365Items.filter(function(i) { return i.type === 'box-file'; });
+    var calendarEvents = selectedM365Items.filter(function(i) { return i.type === 'calendar'; });
     
+    // Add emails
     for (var j = 0; j < emails.length; j++) {
         var email = emails[j];
         selectedEmails.push({
@@ -500,6 +745,7 @@ async function addSelectedToChat() {
         });
     }
     
+    // Add calendar events
     for (var k = 0; k < calendarEvents.length; k++) {
         var event = calendarEvents[k];
         selectedCalendarEvents.push({
@@ -511,6 +757,7 @@ async function addSelectedToChat() {
         });
     }
     
+    // Download OneDrive/email attachment files
     for (var m = 0; m < files.length; m++) {
         var item = files[m];
         try {
@@ -571,6 +818,32 @@ async function addSelectedToChat() {
         }
     }
     
+    // Download Box files
+    for (var b = 0; b < boxFiles.length; b++) {
+        var boxFile = boxFiles[b];
+        try {
+            var boxResponse = await fetch('/api/box/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    file_id: boxFile.id,
+                    file_name: boxFile.name
+                })
+            });
+            
+            var boxData = await boxResponse.json();
+            if (boxData.error) throw new Error(boxData.error);
+            
+            attachedFiles.push({
+                blob_name: boxData.blob_name,
+                original_filename: boxData.original_filename,
+                source: 'box'
+            });
+        } catch (error) {
+            console.error('Failed to import Box file ' + boxFile.name + ':', error);
+        }
+    }
+    
     removeMessage(statusId);
     updateAttachmentsUI();
     closeM365Panel();
@@ -578,7 +851,7 @@ async function addSelectedToChat() {
     var importMsg = '✅ Imported: ';
     var parts = [];
     if (emails.length > 0) parts.push(emails.length + ' email' + (emails.length > 1 ? 's' : ''));
-    if (attachedFiles.length > 0) parts.push(attachedFiles.length + ' file' + (attachedFiles.length > 1 ? 's' : ''));
+    if (files.length + boxFiles.length > 0) parts.push((files.length + boxFiles.length) + ' file' + ((files.length + boxFiles.length) > 1 ? 's' : ''));
     if (calendarEvents.length > 0) parts.push(calendarEvents.length + ' calendar event' + (calendarEvents.length > 1 ? 's' : ''));
     importMsg += parts.join(' and ');
     importMsg += '. You can now ask questions about them.';
@@ -683,7 +956,7 @@ function updateAttachmentsUI() {
     });
     
     attachedFiles.forEach(function(file, index) {
-        var iconColor = file.source === 'outlook' ? 'var(--primary-500)' : file.source === 'onedrive' ? '#0ea5e9' : 'var(--gray-500)';
+        var iconColor = file.source === 'outlook' ? 'var(--primary-500)' : file.source === 'onedrive' ? '#0ea5e9' : file.source === 'box' ? '#0061d5' : 'var(--gray-500)';
         html += 
             '<div class="attachment-chip">' +
                 '<i class="fas ' + getFileIcon(file.original_filename) + '" style="color: ' + iconColor + ';"></i>' +
