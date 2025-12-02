@@ -17,8 +17,7 @@ function toggleM365Panel() {
     
     if (panel.classList.contains('hidden')) {
         panel.classList.remove('hidden');
-        button.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-700');
-        button.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-600');
+        button.classList.add('active');
         document.getElementById('m365-search-input').focus();
     } else {
         closeM365Panel();
@@ -30,8 +29,7 @@ function closeM365Panel() {
     const button = document.getElementById('m365-button');
     
     panel.classList.add('hidden');
-    button.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
-    button.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-600');
+    button.classList.remove('active');
     selectedM365Items = [];
     updateSelectedCount();
 }
@@ -44,25 +42,19 @@ function setSearchSource(source) {
     const calendarBtn = document.getElementById('src-calendar');
     const searchInput = document.getElementById('m365-search-input');
     
-    // Reset all buttons
-    [emailBtn, filesBtn, calendarBtn].forEach(btn => {
-        btn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
-    });
+    [emailBtn, filesBtn, calendarBtn].forEach(btn => btn.classList.remove('active'));
     
-    // Highlight selected
     const activeBtn = source === 'email' ? emailBtn : source === 'files' ? filesBtn : calendarBtn;
-    activeBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
+    activeBtn.classList.add('active');
     
-    // Update placeholder
     const placeholders = {
-        'email': 'Search emails (e.g., case name, client, topic)...',
+        'email': 'Search emails...',
         'files': 'Search OneDrive files...',
-        'calendar': 'Search calendar events or leave blank for upcoming...'
+        'calendar': 'Search calendar events...'
     };
     searchInput.placeholder = placeholders[source];
     
-    // Clear results
-    document.getElementById('m365-results').innerHTML = `<p class="text-gray-400 text-sm text-center py-8">Search your ${source === 'email' ? 'Outlook emails' : source === 'files' ? 'OneDrive files' : 'calendar events'}</p>`;
+    document.getElementById('m365-results').innerHTML = `<p class="m365-results-empty">Search your ${source === 'email' ? 'Outlook emails' : source === 'files' ? 'OneDrive files' : 'calendar events'}</p>`;
     selectedM365Items = [];
     updateSelectedCount();
 }
@@ -74,64 +66,49 @@ async function searchM365() {
     const sourceNames = { 'email': 'Outlook', 'files': 'OneDrive', 'calendar': 'Calendar' };
     
     resultsDiv.innerHTML = `
-        <div class="flex items-center justify-center py-8 gap-3">
-            <div class="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-gray-500">Searching ${sourceNames[searchSource]}...</span>
+        <div style="display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+            <div class="loading-spinner"></div>
+            <span style="color: var(--gray-500); font-size: 13px;">Searching ${sourceNames[searchSource]}...</span>
         </div>
     `;
     
     try {
-        let endpoint, body;
-        
-        if (searchSource === 'calendar') {
-            endpoint = '/api/search-calendar';
-            body = { query: query };
-        } else if (searchSource === 'email') {
-            endpoint = '/api/search-outlook';
-            body = { query: query };
-        } else {
-            endpoint = '/api/search-onedrive';
-            body = { query: query };
-        }
+        let endpoint = searchSource === 'calendar' ? '/api/search-calendar' : 
+                       searchSource === 'email' ? '/api/search-outlook' : '/api/search-onedrive';
         
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify({ query: query })
         });
         
         const data = await response.json();
         
         if (data.error) {
-            resultsDiv.innerHTML = `<p class="text-red-500 text-sm text-center py-8"><i class="fas fa-exclamation-circle mr-2"></i>${data.error}</p>`;
+            resultsDiv.innerHTML = `<p class="m365-results-empty" style="color: var(--error);"><i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>${data.error}</p>`;
             return;
         }
         
         const items = data.value || [];
         
         if (items.length === 0) {
-            resultsDiv.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">No results found</p>';
+            resultsDiv.innerHTML = '<p class="m365-results-empty">No results found</p>';
             return;
         }
         
-        if (searchSource === 'email') {
-            renderEmailResults(items);
-        } else if (searchSource === 'calendar') {
-            renderCalendarResults(items);
-        } else {
-            renderFileResults(items);
-        }
+        if (searchSource === 'email') renderEmailResults(items);
+        else if (searchSource === 'calendar') renderCalendarResults(items);
+        else renderFileResults(items);
         
     } catch (error) {
-        resultsDiv.innerHTML = `<p class="text-red-500 text-sm text-center py-8"><i class="fas fa-exclamation-circle mr-2"></i>Search failed: ${error.message}</p>`;
+        resultsDiv.innerHTML = `<p class="m365-results-empty" style="color: var(--error);">Search failed: ${error.message}</p>`;
     }
 }
 
 function renderCalendarResults(events) {
     const resultsDiv = document.getElementById('m365-results');
     
-    let html = '<div class="space-y-2">';
-    html += '<p class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle mr-1"></i>Click events to select them for analysis (e.g., find upcoming hearings).</p>';
+    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click events to select them for analysis.</div>';
     
     events.forEach((event) => {
         const startDate = new Date(event.start?.dateTime || event.start?.date);
@@ -141,7 +118,7 @@ function renderCalendarResults(events) {
         const location = event.location?.displayName || '';
         
         html += `
-            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
+            <div class="search-result" 
                  data-type="calendar" 
                  data-id="${event.id}" 
                  data-subject="${escapeHtml(event.subject || 'No Title')}"
@@ -150,26 +127,17 @@ function renderCalendarResults(events) {
                  data-location="${escapeHtml(location)}"
                  data-body="${escapeHtml(event.bodyPreview || '')}"
                  onclick="toggleCalendarSelection(this, '${event.id}')">
-                <div class="flex items-start gap-3">
-                    <div class="mt-1">
-                        <i class="fas fa-calendar-day text-purple-500"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-gray-800">${escapeHtml(event.subject || 'No Title')}</span>
-                        </div>
-                        <div class="text-xs text-gray-500 mt-0.5">${dateStr} • ${timeStr}</div>
-                        ${location ? `<div class="text-xs text-gray-400 mt-0.5"><i class="fas fa-map-marker-alt mr-1"></i>${escapeHtml(location)}</div>` : ''}
-                    </div>
-                    <div class="check-indicator hidden text-blue-600">
-                        <i class="fas fa-check-circle text-lg"></i>
-                    </div>
+                <div class="result-icon calendar"><i class="fas fa-calendar-day"></i></div>
+                <div class="result-content">
+                    <div class="result-title"><span class="truncate">${escapeHtml(event.subject || 'No Title')}</span></div>
+                    <div class="result-meta">${dateStr} • ${timeStr}</div>
+                    ${location ? `<div class="result-preview"><i class="fas fa-map-marker-alt" style="margin-right: 4px;"></i>${escapeHtml(location)}</div>` : ''}
                 </div>
+                <div class="result-check"><i class="fas fa-check-circle"></i></div>
             </div>
         `;
     });
     
-    html += '</div>';
     resultsDiv.innerHTML = html;
 }
 
@@ -178,8 +146,7 @@ function toggleCalendarSelection(element, eventId) {
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.add('hidden');
+        element.classList.remove('selected');
     } else {
         selectedM365Items.push({
             type: 'calendar',
@@ -190,8 +157,7 @@ function toggleCalendarSelection(element, eventId) {
             location: element.dataset.location,
             body: element.dataset.body
         });
-        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.remove('hidden');
+        element.classList.add('selected');
     }
     
     updateSelectedCount();
@@ -200,10 +166,9 @@ function toggleCalendarSelection(element, eventId) {
 function renderEmailResults(emails) {
     const resultsDiv = document.getElementById('m365-results');
     
-    let html = '<div class="space-y-2">';
-    html += '<p class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle mr-1"></i>Click emails to select. Email body and any attachments will be included for analysis.</p>';
+    let html = '<div style="margin-bottom: 12px; font-size: 12px; color: var(--gray-500);"><i class="fas fa-info-circle" style="margin-right: 6px;"></i>Click emails to select. Full content will be included.</div>';
     
-    emails.forEach((email, index) => {
+    emails.forEach((email) => {
         const date = new Date(email.receivedDateTime).toLocaleDateString();
         const time = new Date(email.receivedDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const sender = email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown';
@@ -211,7 +176,7 @@ function renderEmailResults(emails) {
         const hasAttachments = email.hasAttachments;
         
         html += `
-            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
+            <div class="search-result" 
                  data-type="email" 
                  data-id="${email.id}" 
                  data-subject="${escapeHtml(email.subject || 'No Subject')}"
@@ -220,64 +185,52 @@ function renderEmailResults(emails) {
                  data-sender-email="${escapeHtml(senderEmail)}"
                  data-date="${email.receivedDateTime}"
                  onclick="toggleEmailSelection(this, '${email.id}')">
-                <div class="flex items-start gap-3">
-                    <div class="mt-1">
-                        <i class="fas fa-envelope text-blue-500"></i>
+                <div class="result-icon email"><i class="fas fa-envelope"></i></div>
+                <div class="result-content">
+                    <div class="result-title">
+                        <span class="truncate">${escapeHtml(email.subject || 'No Subject')}</span>
+                        ${hasAttachments ? '<i class="fas fa-paperclip" style="color: var(--gray-400); font-size: 11px;"></i>' : ''}
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-gray-800 truncate">${escapeHtml(email.subject || 'No Subject')}</span>
-                            ${hasAttachments ? '<i class="fas fa-paperclip text-gray-400 text-xs" title="Has attachments"></i>' : ''}
-                        </div>
-                        <div class="text-xs text-gray-500 mt-0.5">${escapeHtml(sender)} • ${date} ${time}</div>
-                        <div class="text-xs text-gray-400 mt-1 truncate">${escapeHtml(email.bodyPreview || '')}</div>
-                    </div>
-                    <div class="check-indicator hidden text-blue-600">
-                        <i class="fas fa-check-circle text-lg"></i>
-                    </div>
+                    <div class="result-meta">${escapeHtml(sender)} • ${date} ${time}</div>
+                    <div class="result-preview">${escapeHtml(email.bodyPreview || '')}</div>
                 </div>
+                <div class="result-check"><i class="fas fa-check-circle"></i></div>
             </div>
         `;
     });
     
-    html += '</div>';
     resultsDiv.innerHTML = html;
 }
 
 function renderFileResults(files) {
     const resultsDiv = document.getElementById('m365-results');
     
-    let html = '<div class="space-y-2">';
+    let html = '';
     
-    files.forEach((file, index) => {
+    files.forEach((file) => {
         const date = new Date(file.createdDateTime || file.lastModifiedDateTime).toLocaleDateString();
         const size = formatFileSize(file.size);
         const downloadUrl = file['@microsoft.graph.downloadUrl'] || file['@content.downloadUrl'] || '';
         const name = file.name || 'Unknown File';
-        const icon = getFileIconClass(name);
+        const iconClass = getFileIconClass(name);
         
         html += `
-            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
+            <div class="search-result" 
                  data-type="file" 
                  data-name="${escapeHtml(name)}"
                  data-download-url="${escapeHtml(downloadUrl)}"
                  data-web-url="${escapeHtml(file.webUrl || '')}"
                  onclick="toggleFileSelection(this)">
-                <div class="flex items-center gap-3">
-                    <i class="fas ${icon} text-lg w-6 text-center"></i>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-gray-800 truncate">${escapeHtml(name)}</div>
-                        <div class="text-xs text-gray-500 mt-0.5">${size} • ${date}</div>
-                    </div>
-                    <div class="check-indicator hidden text-blue-600">
-                        <i class="fas fa-check-circle text-lg"></i>
-                    </div>
+                <div class="result-icon file"><i class="fas ${iconClass}"></i></div>
+                <div class="result-content">
+                    <div class="result-title"><span class="truncate">${escapeHtml(name)}</span></div>
+                    <div class="result-meta">${size} • ${date}</div>
                 </div>
+                <div class="result-check"><i class="fas fa-check-circle"></i></div>
             </div>
         `;
     });
     
-    html += '</div>';
     resultsDiv.innerHTML = html;
 }
 
@@ -286,8 +239,7 @@ async function toggleEmailSelection(element, emailId) {
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.add('hidden');
+        element.classList.remove('selected');
         updateSelectedCount();
         return;
     }
@@ -361,8 +313,7 @@ async function toggleEmailSelection(element, emailId) {
             }
         }
         
-        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.remove('hidden');
+        element.classList.add('selected');
         
     } catch (error) {
         addMessage(`Failed to get email: ${error.message}`, 'system-error');
@@ -385,16 +336,14 @@ function toggleFileSelection(element) {
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.add('hidden');
+        element.classList.remove('selected');
     } else {
         selectedM365Items.push({
             type: 'onedrive-file',
             name: name,
             downloadUrl: downloadUrl
         });
-        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
-        element.querySelector('.check-indicator').classList.remove('hidden');
+        element.classList.add('selected');
     }
     
     updateSelectedCount();
@@ -537,7 +486,7 @@ async function handleFileSelect(event) {
             continue;
         }
 
-        const statusId = addUploadingStatus(file.name);
+        const statusId = addLoading(`Uploading ${file.name}...`);
 
         try {
             const urlResponse = await fetch('/api/get-upload-url', {
@@ -600,39 +549,31 @@ function updateAttachmentsUI() {
     
     selectedEmails.forEach((email, index) => {
         html += `
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
-                <i class="fas fa-envelope text-blue-500"></i>
-                <span class="text-gray-700 max-w-[150px] truncate" title="${escapeHtml(email.subject)}">${escapeHtml(email.subject)}</span>
-                <button onclick="removeEmail(${index})" class="text-gray-400 hover:text-red-500 ml-1">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="attachment-chip">
+                <i class="fas fa-envelope" style="color: var(--primary-500);"></i>
+                <span class="name" title="${escapeHtml(email.subject)}">${escapeHtml(email.subject)}</span>
+                <span class="remove" onclick="removeEmail(${index})"><i class="fas fa-times"></i></span>
             </div>
         `;
     });
     
     selectedCalendarEvents.forEach((event, index) => {
         html += `
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-purple-200 text-sm">
-                <i class="fas fa-calendar text-purple-500"></i>
-                <span class="text-gray-700 max-w-[150px] truncate" title="${escapeHtml(event.subject)}">${escapeHtml(event.subject)}</span>
-                <button onclick="removeCalendarEvent(${index})" class="text-gray-400 hover:text-red-500 ml-1">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="attachment-chip">
+                <i class="fas fa-calendar" style="color: #8b5cf6;"></i>
+                <span class="name" title="${escapeHtml(event.subject)}">${escapeHtml(event.subject)}</span>
+                <span class="remove" onclick="removeCalendarEvent(${index})"><i class="fas fa-times"></i></span>
             </div>
         `;
     });
     
     attachedFiles.forEach((file, index) => {
-        const sourceIcon = file.source === 'outlook' ? 'fa-envelope' : file.source === 'onedrive' ? 'fa-cloud' : 'fa-file';
-        const sourceColor = file.source === 'outlook' ? 'text-blue-500' : file.source === 'onedrive' ? 'text-sky-500' : 'text-gray-500';
-        
+        const iconColor = file.source === 'outlook' ? 'var(--primary-500)' : file.source === 'onedrive' ? '#0ea5e9' : 'var(--gray-500)';
         html += `
-            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
-                <i class="fas ${getFileIcon(file.original_filename)} ${sourceColor}"></i>
-                <span class="text-gray-700 max-w-[150px] truncate">${escapeHtml(file.original_filename)}</span>
-                <button onclick="removeAttachment(${index})" class="text-gray-400 hover:text-red-500 ml-1">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="attachment-chip">
+                <i class="fas ${getFileIcon(file.original_filename)}" style="color: ${iconColor};"></i>
+                <span class="name">${escapeHtml(file.original_filename)}</span>
+                <span class="remove" onclick="removeAttachment(${index})"><i class="fas fa-times"></i></span>
             </div>
         `;
     });
@@ -659,17 +600,17 @@ function getFileIcon(filename) {
 function getFileIconClass(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     const icons = {
-        'pdf': 'fa-file-pdf text-red-500',
-        'doc': 'fa-file-word text-blue-600',
-        'docx': 'fa-file-word text-blue-600',
-        'txt': 'fa-file-lines text-gray-500',
-        'png': 'fa-file-image text-purple-500',
-        'jpg': 'fa-file-image text-purple-500',
-        'jpeg': 'fa-file-image text-purple-500',
-        'xls': 'fa-file-excel text-green-600',
-        'xlsx': 'fa-file-excel text-green-600'
+        'pdf': 'fa-file-pdf',
+        'doc': 'fa-file-word',
+        'docx': 'fa-file-word',
+        'txt': 'fa-file-lines',
+        'png': 'fa-file-image',
+        'jpg': 'fa-file-image',
+        'jpeg': 'fa-file-image',
+        'xls': 'fa-file-excel',
+        'xlsx': 'fa-file-excel'
     };
-    return icons[ext] || 'fa-file text-gray-400';
+    return icons[ext] || 'fa-file';
 }
 
 function removeAttachment(index) {
@@ -694,21 +635,6 @@ function clearAllAttachments() {
     updateAttachmentsUI();
 }
 
-function addUploadingStatus(filename) {
-    const container = document.getElementById('chat-container');
-    const div = document.createElement('div');
-    div.className = 'flex justify-start animate-fade-in';
-    div.innerHTML = `
-        <div class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-200 flex items-center gap-3">
-            <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-blue-700 text-sm">Uploading ${escapeHtml(filename)}...</span>
-        </div>`;
-    div.id = 'upload-' + Date.now();
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    return div.id;
-}
-
 // --- CHAT FUNCTIONS ---
 
 async function sendMessage() {
@@ -720,15 +646,9 @@ async function sendMessage() {
     let displayMessage = message;
     const attachments = [];
     
-    if (selectedEmails.length > 0) {
-        attachments.push(`${selectedEmails.length} email${selectedEmails.length > 1 ? 's' : ''}`);
-    }
-    if (selectedCalendarEvents.length > 0) {
-        attachments.push(`${selectedCalendarEvents.length} event${selectedCalendarEvents.length > 1 ? 's' : ''}`);
-    }
-    if (attachedFiles.length > 0) {
-        attachments.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
-    }
+    if (selectedEmails.length > 0) attachments.push(`${selectedEmails.length} email${selectedEmails.length > 1 ? 's' : ''}`);
+    if (selectedCalendarEvents.length > 0) attachments.push(`${selectedCalendarEvents.length} event${selectedCalendarEvents.length > 1 ? 's' : ''}`);
+    if (attachedFiles.length > 0) attachments.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
     
     if (attachments.length > 0) {
         displayMessage = message 
@@ -803,16 +723,12 @@ async function pollForResult(jobId, maxAttempts = 120, interval = 1000) {
 function addMessage(text, type, isMarkdown = false) {
     const container = document.getElementById('chat-container');
     const div = document.createElement('div');
-    div.className = `flex ${type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`;
+    
+    const messageClass = type === 'user' ? 'message-user' : type === 'system-error' ? 'message-system message-error' : 'message-system';
+    div.className = `message ${messageClass}`;
     
     const bubble = document.createElement('div');
-    bubble.className = `p-4 rounded-2xl shadow-sm max-w-2xl text-sm leading-relaxed ${
-        type === 'user' 
-        ? 'bg-blue-600 text-white rounded-tr-sm' 
-        : type === 'system-error' 
-            ? 'bg-red-50 text-red-700 border border-red-200 rounded-tl-sm'
-            : 'bg-white text-gray-700 border border-gray-200 rounded-tl-sm prose-chat'
-    }`;
+    bubble.className = 'message-bubble' + (isMarkdown && type !== 'user' ? ' prose-chat' : '');
     
     if (isMarkdown && type !== 'user') {
         bubble.innerHTML = renderMarkdown(text);
@@ -829,61 +745,37 @@ function addMessage(text, type, isMarkdown = false) {
 function renderMarkdown(text) {
     if (!text) return '';
     
-    // Escape HTML first
     let html = text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     
-    // Code blocks (must come before other processing)
     html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-    
-    // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
-    // Headers
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
     html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-    
-    // Bold and italic
     html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    
-    // Horizontal rule
     html = html.replace(/^---$/gm, '<hr>');
-    
-    // Blockquotes
     html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-    
-    // Unordered lists
     html = html.replace(/^[\s]*[-*] (.+)$/gm, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-    
-    // Ordered lists
     html = html.replace(/^[\s]*\d+\. (.+)$/gm, '<oli>$1</oli>');
     html = html.replace(/(<oli>.*<\/oli>\n?)+/g, function(match) {
         return '<ol>' + match.replace(/<\/?oli>/g, function(tag) {
             return tag === '<oli>' ? '<li>' : '</li>';
         }) + '</ol>';
     });
-    
-    // Links
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-    
-    // Paragraphs - convert double newlines to paragraph breaks
     html = html.replace(/\n\n+/g, '</p><p>');
-    
-    // Single newlines to <br> (but not inside pre/code blocks)
     html = html.replace(/(?<!<\/pre>|<\/code>)\n(?!<)/g, '<br>');
     
-    // Wrap in paragraph if not already wrapped
     if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol') && !html.startsWith('<pre') && !html.startsWith('<blockquote')) {
         html = '<p>' + html + '</p>';
     }
     
-    // Clean up empty paragraphs
     html = html.replace(/<p><\/p>/g, '');
     html = html.replace(/<p>(<h[123]>)/g, '$1');
     html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
@@ -903,11 +795,11 @@ function renderMarkdown(text) {
 function addLoading(customText) {
     const container = document.getElementById('chat-container');
     const div = document.createElement('div');
-    div.className = 'flex justify-start animate-fade-in';
+    div.className = 'message message-system';
     div.innerHTML = `
-        <div class="bg-white px-4 py-3 rounded-xl border border-gray-200 flex items-center gap-3 shadow-sm">
-            <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-gray-500 text-sm font-medium">${customText || 'Thinking...'}</span>
+        <div class="loading-bubble">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">${customText || 'Thinking...'}</span>
         </div>`;
     div.id = 'loading-' + Date.now();
     container.appendChild(div);
