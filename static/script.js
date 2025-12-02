@@ -1,5 +1,6 @@
-// Track attached files
+// Track attached files and emails
 let attachedFiles = [];
+let selectedEmails = [];
 let searchSource = 'email';
 let selectedM365Items = [];
 
@@ -44,14 +45,13 @@ function setSearchSource(source) {
     if (source === 'email') {
         emailBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
         filesBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
-        searchInput.placeholder = 'Search emails...';
+        searchInput.placeholder = 'Search emails (e.g., case name, client, topic)...';
     } else {
         filesBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all';
         emailBtn.className = 'px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-all';
         searchInput.placeholder = 'Search OneDrive files...';
     }
     
-    // Clear results when switching
     document.getElementById('m365-results').innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Search your ' + (source === 'email' ? 'Outlook emails' : 'OneDrive files') + '</p>';
     selectedM365Items = [];
     updateSelectedCount();
@@ -105,33 +105,39 @@ function renderEmailResults(emails) {
     const resultsDiv = document.getElementById('m365-results');
     
     let html = '<div class="space-y-2">';
+    html += '<p class="text-xs text-gray-500 mb-2"><i class="fas fa-info-circle mr-1"></i>Click emails to select. Email body and any attachments will be included for analysis.</p>';
     
     emails.forEach((email, index) => {
         const date = new Date(email.receivedDateTime).toLocaleDateString();
+        const time = new Date(email.receivedDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         const sender = email.from?.emailAddress?.name || email.from?.emailAddress?.address || 'Unknown';
+        const senderEmail = email.from?.emailAddress?.address || '';
         const hasAttachments = email.hasAttachments;
         
         html += `
-            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all ${hasAttachments ? '' : 'opacity-60'}" 
+            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
                  data-type="email" 
                  data-id="${email.id}" 
                  data-subject="${escapeHtml(email.subject || 'No Subject')}"
                  data-has-attachments="${hasAttachments}"
+                 data-sender="${escapeHtml(sender)}"
+                 data-sender-email="${escapeHtml(senderEmail)}"
+                 data-date="${email.receivedDateTime}"
                  onclick="toggleEmailSelection(this, '${email.id}')">
                 <div class="flex items-start gap-3">
                     <div class="mt-1">
-                        <i class="fas ${hasAttachments ? 'fa-envelope text-blue-500' : 'fa-envelope-open text-gray-400'}"></i>
+                        <i class="fas fa-envelope text-blue-500"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
                             <span class="font-medium text-gray-800 truncate">${escapeHtml(email.subject || 'No Subject')}</span>
-                            ${hasAttachments ? '<i class="fas fa-paperclip text-gray-400 text-xs"></i>' : ''}
+                            ${hasAttachments ? '<i class="fas fa-paperclip text-gray-400 text-xs" title="Has attachments"></i>' : ''}
                         </div>
-                        <div class="text-xs text-gray-500 mt-0.5">${escapeHtml(sender)} • ${date}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">${escapeHtml(sender)} • ${date} ${time}</div>
                         <div class="text-xs text-gray-400 mt-1 truncate">${escapeHtml(email.bodyPreview || '')}</div>
                     </div>
                     <div class="check-indicator hidden text-blue-600">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle text-lg"></i>
                     </div>
                 </div>
             </div>
@@ -155,7 +161,7 @@ function renderFileResults(files) {
         const icon = getFileIconClass(name);
         
         html += `
-            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all" 
+            <div class="search-result border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-gray-50" 
                  data-type="file" 
                  data-name="${escapeHtml(name)}"
                  data-download-url="${escapeHtml(downloadUrl)}"
@@ -168,7 +174,7 @@ function renderFileResults(files) {
                         <div class="text-xs text-gray-500 mt-0.5">${size} • ${date}</div>
                     </div>
                     <div class="check-indicator hidden text-blue-600">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle text-lg"></i>
                     </div>
                 </div>
             </div>
@@ -180,66 +186,102 @@ function renderFileResults(files) {
 }
 
 async function toggleEmailSelection(element, emailId) {
-    const hasAttachments = element.dataset.hasAttachments === 'true';
-    
-    if (!hasAttachments) {
-        addMessage('This email has no attachments to import.', 'system-error');
-        return;
-    }
-    
     // Check if already selected
     const existingIndex = selectedM365Items.findIndex(item => item.id === emailId);
     
     if (existingIndex >= 0) {
         // Deselect
         selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected');
+        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
         element.querySelector('.check-indicator').classList.add('hidden');
-    } else {
-        // Fetch attachments for this email
-        element.style.opacity = '0.5';
-        
-        try {
-            const response = await fetch(`/api/search-outlook/${emailId}/attachments`);
-            const data = await response.json();
-            
-            if (data.error) {
-                addMessage(`Failed to get attachments: ${data.error}`, 'system-error');
-                element.style.opacity = '1';
-                return;
-            }
-            
-            const attachments = data.value || [];
-            const validAttachments = attachments.filter(a => a['@odata.type'] === '#microsoft.graph.fileAttachment');
-            
-            if (validAttachments.length === 0) {
-                addMessage('No downloadable attachments found in this email.', 'system-error');
-                element.style.opacity = '1';
-                return;
-            }
-            
-            // Add each attachment
-            validAttachments.forEach(att => {
-                selectedM365Items.push({
-                    type: 'email-attachment',
-                    id: emailId + '-' + att.id,
-                    emailId: emailId,
-                    name: att.name,
-                    contentBytes: att.contentBytes,
-                    contentType: att.contentType
-                });
-            });
-            
-            element.classList.add('selected');
-            element.querySelector('.check-indicator').classList.remove('hidden');
-            
-        } catch (error) {
-            addMessage(`Failed to get attachments: ${error.message}`, 'system-error');
-        }
-        
-        element.style.opacity = '1';
+        updateSelectedCount();
+        return;
     }
     
+    // Select - fetch full email content
+    element.style.opacity = '0.5';
+    
+    try {
+        // Get full email content
+        const response = await fetch(`/api/get-email-content/${emailId}`);
+        const emailData = await response.json();
+        
+        if (emailData.error) {
+            addMessage(`Failed to get email: ${emailData.error}`, 'system-error');
+            element.style.opacity = '1';
+            return;
+        }
+        
+        // Extract email details
+        const sender = emailData.from?.emailAddress?.name || emailData.from?.emailAddress?.address || 'Unknown';
+        const senderEmail = emailData.from?.emailAddress?.address || '';
+        const toRecipients = (emailData.toRecipients || []).map(r => r.emailAddress?.address || r.emailAddress?.name).join(', ');
+        const ccRecipients = (emailData.ccRecipients || []).map(r => r.emailAddress?.address || r.emailAddress?.name).join(', ');
+        const subject = emailData.subject || 'No Subject';
+        const date = new Date(emailData.receivedDateTime).toLocaleString();
+        
+        // Get body text (strip HTML if needed)
+        let bodyText = '';
+        if (emailData.body) {
+            if (emailData.body.contentType === 'html') {
+                // Basic HTML to text conversion
+                const temp = document.createElement('div');
+                temp.innerHTML = emailData.body.content;
+                bodyText = temp.textContent || temp.innerText || '';
+            } else {
+                bodyText = emailData.body.content || '';
+            }
+        }
+        
+        // Add to selected items
+        const emailItem = {
+            type: 'email',
+            id: emailId,
+            subject: subject,
+            from: `${sender} <${senderEmail}>`,
+            to: toRecipients,
+            cc: ccRecipients,
+            date: date,
+            body: bodyText.trim(),
+            hasAttachments: emailData.hasAttachments
+        };
+        
+        selectedM365Items.push(emailItem);
+        
+        // Also fetch attachments if any
+        if (emailData.hasAttachments) {
+            try {
+                const attResponse = await fetch(`/api/search-outlook/${emailId}/attachments`);
+                const attData = await attResponse.json();
+                
+                if (!attData.error && attData.value) {
+                    const validAttachments = attData.value.filter(a => a['@odata.type'] === '#microsoft.graph.fileAttachment');
+                    
+                    validAttachments.forEach(att => {
+                        selectedM365Items.push({
+                            type: 'email-attachment',
+                            id: emailId + '-' + att.id,
+                            emailId: emailId,
+                            name: att.name,
+                            contentBytes: att.contentBytes,
+                            contentType: att.contentType,
+                            parentSubject: subject
+                        });
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to fetch attachments:', e);
+            }
+        }
+        
+        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
+        element.querySelector('.check-indicator').classList.remove('hidden');
+        
+    } catch (error) {
+        addMessage(`Failed to get email: ${error.message}`, 'system-error');
+    }
+    
+    element.style.opacity = '1';
     updateSelectedCount();
 }
 
@@ -252,11 +294,11 @@ function toggleFileSelection(element) {
         return;
     }
     
-    const existingIndex = selectedM365Items.findIndex(item => item.name === name);
+    const existingIndex = selectedM365Items.findIndex(item => item.name === name && item.type === 'onedrive-file');
     
     if (existingIndex >= 0) {
         selectedM365Items.splice(existingIndex, 1);
-        element.classList.remove('selected');
+        element.classList.remove('selected', 'bg-blue-50', 'border-blue-300');
         element.querySelector('.check-indicator').classList.add('hidden');
     } else {
         selectedM365Items.push({
@@ -264,7 +306,7 @@ function toggleFileSelection(element) {
             name: name,
             downloadUrl: downloadUrl
         });
-        element.classList.add('selected');
+        element.classList.add('selected', 'bg-blue-50', 'border-blue-300');
         element.querySelector('.check-indicator').classList.remove('hidden');
     }
     
@@ -275,9 +317,16 @@ function updateSelectedCount() {
     const actionsBar = document.getElementById('m365-actions');
     const countSpan = document.getElementById('selected-count');
     
+    // Count unique emails and files
+    const emailCount = selectedM365Items.filter(i => i.type === 'email').length;
+    const fileCount = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment').length;
+    
     if (selectedM365Items.length > 0) {
         actionsBar.classList.remove('hidden');
-        countSpan.textContent = `${selectedM365Items.length} file${selectedM365Items.length > 1 ? 's' : ''} selected`;
+        let text = [];
+        if (emailCount > 0) text.push(`${emailCount} email${emailCount > 1 ? 's' : ''}`);
+        if (fileCount > 0) text.push(`${fileCount} file${fileCount > 1 ? 's' : ''}`);
+        countSpan.textContent = text.join(', ') + ' selected';
     } else {
         actionsBar.classList.add('hidden');
     }
@@ -286,9 +335,25 @@ function updateSelectedCount() {
 async function addSelectedToChat() {
     if (selectedM365Items.length === 0) return;
     
-    const statusId = addLoading('Importing files from Microsoft 365...');
+    const statusId = addLoading('Importing from Microsoft 365...');
     
-    for (const item of selectedM365Items) {
+    // Separate emails from files
+    const emails = selectedM365Items.filter(i => i.type === 'email');
+    const files = selectedM365Items.filter(i => i.type === 'onedrive-file' || i.type === 'email-attachment');
+    
+    // Add emails to selectedEmails array
+    for (const email of emails) {
+        selectedEmails.push({
+            subject: email.subject,
+            from: email.from,
+            to: email.to,
+            date: email.date,
+            body: email.body
+        });
+    }
+    
+    // Process file attachments
+    for (const item of files) {
         try {
             if (item.type === 'email-attachment') {
                 // Upload base64 content directly to blob storage
@@ -354,8 +419,16 @@ async function addSelectedToChat() {
     updateAttachmentsUI();
     closeM365Panel();
     
-    if (attachedFiles.length > 0) {
-        addMessage(`✅ Imported ${selectedM365Items.length} file(s) from Microsoft 365. You can now ask questions about them.`, 'system');
+    // Show confirmation
+    let importMsg = '✅ Imported: ';
+    const parts = [];
+    if (emails.length > 0) parts.push(`${emails.length} email${emails.length > 1 ? 's' : ''}`);
+    if (attachedFiles.length > 0) parts.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
+    importMsg += parts.join(' and ');
+    importMsg += '. You can now ask questions about them.';
+    
+    if (parts.length > 0) {
+        addMessage(importMsg, 'system');
     }
 }
 
@@ -418,7 +491,9 @@ function updateAttachmentsUI() {
     const list = document.getElementById('attachments-list');
     const count = document.getElementById('attachment-count');
 
-    if (attachedFiles.length === 0) {
+    const totalItems = attachedFiles.length + selectedEmails.length;
+    
+    if (totalItems === 0) {
         preview.classList.add('hidden');
         count.classList.add('hidden');
         return;
@@ -426,22 +501,40 @@ function updateAttachmentsUI() {
 
     preview.classList.remove('hidden');
     count.classList.remove('hidden');
-    count.textContent = attachedFiles.length;
+    count.textContent = totalItems;
 
-    list.innerHTML = attachedFiles.map((file, index) => {
+    let html = '';
+    
+    // Render emails
+    selectedEmails.forEach((email, index) => {
+        html += `
+            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
+                <i class="fas fa-envelope text-blue-500"></i>
+                <span class="text-gray-700 max-w-[150px] truncate" title="${escapeHtml(email.subject)}">${escapeHtml(email.subject)}</span>
+                <button onclick="removeEmail(${index})" class="text-gray-400 hover:text-red-500 ml-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    // Render files
+    attachedFiles.forEach((file, index) => {
         const sourceIcon = file.source === 'outlook' ? 'fa-envelope' : file.source === 'onedrive' ? 'fa-cloud' : 'fa-file';
         const sourceColor = file.source === 'outlook' ? 'text-blue-500' : file.source === 'onedrive' ? 'text-sky-500' : 'text-gray-500';
         
-        return `
+        html += `
             <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-sm">
                 <i class="fas ${getFileIcon(file.original_filename)} ${sourceColor}"></i>
-                <span class="text-gray-700 max-w-[150px] truncate">${file.original_filename}</span>
+                <span class="text-gray-700 max-w-[150px] truncate">${escapeHtml(file.original_filename)}</span>
                 <button onclick="removeAttachment(${index})" class="text-gray-400 hover:text-red-500 ml-1">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         `;
-    }).join('');
+    });
+    
+    list.innerHTML = html;
 }
 
 function getFileIcon(filename) {
@@ -481,8 +574,14 @@ function removeAttachment(index) {
     updateAttachmentsUI();
 }
 
+function removeEmail(index) {
+    selectedEmails.splice(index, 1);
+    updateAttachmentsUI();
+}
+
 function clearAllAttachments() {
     attachedFiles = [];
+    selectedEmails = [];
     updateAttachmentsUI();
 }
 
@@ -507,14 +606,23 @@ async function sendMessage() {
     const input = document.getElementById('user-input');
     const message = input.value.trim();
     
-    if (!message && attachedFiles.length === 0) return;
+    if (!message && attachedFiles.length === 0 && selectedEmails.length === 0) return;
 
+    // Build display message
     let displayMessage = message;
+    const attachments = [];
+    
+    if (selectedEmails.length > 0) {
+        attachments.push(`${selectedEmails.length} email${selectedEmails.length > 1 ? 's' : ''}`);
+    }
     if (attachedFiles.length > 0) {
-        const fileNames = attachedFiles.map(f => f.original_filename).join(', ');
+        attachments.push(`${attachedFiles.length} file${attachedFiles.length > 1 ? 's' : ''}`);
+    }
+    
+    if (attachments.length > 0) {
         displayMessage = message 
-            ? `📎 ${fileNames}\n\n${message}`
-            : `📎 Attached: ${fileNames}`;
+            ? `📎 ${attachments.join(', ')}\n\n${message}`
+            : `📎 Attached: ${attachments.join(', ')}`;
     }
 
     addMessage(displayMessage, 'user');
@@ -527,8 +635,9 @@ async function sendMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                messages: [{ role: 'user', content: message || 'Please analyze the attached files.' }],
-                blobs: attachedFiles
+                messages: [{ role: 'user', content: message || 'Please analyze the attached content.' }],
+                blobs: attachedFiles,
+                emails: selectedEmails
             })
         });
 
