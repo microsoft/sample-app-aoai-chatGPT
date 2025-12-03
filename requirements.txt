@@ -10,3 +10,4 @@ azure-identity
 azure-ai-documentintelligence==1.0.0
 jinja2
 aiofiles
+httpx
