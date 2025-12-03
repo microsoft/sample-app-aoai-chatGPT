@@ -133,6 +133,50 @@ def get_user_email(request: Request) -> str:
     
     return os.getenv("TEST_USER_EMAIL", "unknown@user.com").lower()
 
+def get_user_info(request: Request) -> dict:
+    """Get full user info from Azure Easy Auth"""
+    user_info = {
+        "email": None,
+        "name": None,
+        "authenticated": False
+    }
+    
+    # Check for principal name (email)
+    email = request.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+    if email:
+        user_info["email"] = email
+        user_info["authenticated"] = True
+    
+    # Try to get more details from the principal
+    principal = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    if principal:
+        try:
+            decoded = json.loads(base64.b64decode(principal))
+            claims = {c["typ"]: c["val"] for c in decoded.get("claims", [])}
+            
+            user_info["email"] = claims.get("preferred_username") or claims.get("email") or claims.get("name") or user_info["email"]
+            user_info["name"] = claims.get("name") or claims.get("given_name", "")
+            if claims.get("family_name"):
+                user_info["name"] = f"{claims.get('given_name', '')} {claims.get('family_name', '')}".strip()
+            user_info["authenticated"] = True
+        except:
+            pass
+    
+    # Fallback for testing
+    if not user_info["authenticated"]:
+        test_email = os.getenv("TEST_USER_EMAIL")
+        if test_email:
+            user_info["email"] = test_email
+            user_info["name"] = test_email.split("@")[0].replace(".", " ").title()
+            user_info["authenticated"] = True
+    
+    return user_info
+
+@app.get("/api/user-info")
+async def api_user_info(request: Request):
+    """Get current user information"""
+    return get_user_info(request)
+
 # --- HELPER: GRAPH AUTH ---
 def get_graph_headers(req: Request):
     auth_header = req.headers.get("Authorization")
@@ -529,10 +573,84 @@ async def box_disconnect(request: Request):
 # --- AGENTIC SEARCH SYSTEM ---
 
 def search_box_internal(token: str, query: str, limit: int = 10) -> list:
-    """Internal Box search - returns list of files with metadata"""
+    """Internal Box search - finds client folder first, then files within it"""
     try:
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(
+        
+        # Step 1: Search for folders matching the query (client/case name)
+        folder_response = requests.get(
+            "https://api.box.com/2.0/search",
+            headers=headers,
+            params={
+                "query": query,
+                "type": "folder",
+                "limit": 5,
+                "fields": "id,name,parent"
+            }
+        )
+        
+        found_files = []
+        client_folder_id = None
+        client_folder_name = None
+        
+        if folder_response.status_code == 200:
+            folders = folder_response.json().get("entries", [])
+            logger.info(f"Box folder search for '{query}' found {len(folders)} folders")
+            
+            # Find the best matching folder
+            for folder in folders:
+                folder_name = folder.get("name", "").lower()
+                if query.lower() in folder_name:
+                    client_folder_id = folder.get("id")
+                    client_folder_name = folder.get("name")
+                    logger.info(f"Found client folder: {client_folder_name} (ID: {client_folder_id})")
+                    break
+        
+        # Step 2: If we found a client folder, get ALL files from it (recursively)
+        if client_folder_id:
+            # Get items from the client folder
+            folder_items = requests.get(
+                f"https://api.box.com/2.0/folders/{client_folder_id}/items",
+                headers=headers,
+                params={
+                    "limit": 100,
+                    "fields": "id,name,size,created_at,modified_at,type,extension,parent"
+                }
+            )
+            
+            if folder_items.status_code == 200:
+                items = folder_items.json().get("entries", [])
+                
+                # Collect files and recurse into subfolders
+                subfolders = []
+                for item in items:
+                    if item.get("type") == "file":
+                        item["client_folder"] = client_folder_name
+                        found_files.append(item)
+                    elif item.get("type") == "folder":
+                        subfolders.append(item)
+                
+                # Search one level of subfolders
+                for subfolder in subfolders[:10]:  # Limit subfolder depth
+                    subfolder_items = requests.get(
+                        f"https://api.box.com/2.0/folders/{subfolder['id']}/items",
+                        headers=headers,
+                        params={
+                            "limit": 50,
+                            "fields": "id,name,size,created_at,modified_at,type,extension,parent"
+                        }
+                    )
+                    if subfolder_items.status_code == 200:
+                        for item in subfolder_items.json().get("entries", []):
+                            if item.get("type") == "file":
+                                item["client_folder"] = client_folder_name
+                                item["subfolder"] = subfolder.get("name")
+                                found_files.append(item)
+                
+                logger.info(f"Found {len(found_files)} files in client folder '{client_folder_name}'")
+        
+        # Step 3: Also do a direct file search as backup
+        file_response = requests.get(
             "https://api.box.com/2.0/search",
             headers=headers,
             params={
@@ -542,27 +660,49 @@ def search_box_internal(token: str, query: str, limit: int = 10) -> list:
                 "fields": "id,name,size,created_at,modified_at,parent,extension"
             }
         )
-        if response.status_code == 200:
-            return response.json().get("entries", [])
-        return []
+        
+        if file_response.status_code == 200:
+            direct_files = file_response.json().get("entries", [])
+            # Add files not already in found_files
+            existing_ids = {f["id"] for f in found_files}
+            for f in direct_files:
+                if f["id"] not in existing_ids:
+                    found_files.append(f)
+        
+        logger.info(f"Box search total: {len(found_files)} files for query '{query}'")
+        return found_files[:limit]
+        
     except Exception as e:
         logger.error(f"Box internal search error: {e}")
         return []
 
-def download_box_file_internal(token: str, file_id: str) -> bytes:
-    """Download file content from Box"""
+def download_box_file_internal(token: str, file_id: str, file_name: str = "unknown") -> bytes:
+    """Download file content from Box with detailed logging"""
     try:
         headers = {"Authorization": f"Bearer {token}"}
+        
+        logger.info(f"Downloading Box file: {file_name} (ID: {file_id})")
+        
         response = requests.get(
             f"https://api.box.com/2.0/files/{file_id}/content",
             headers=headers,
-            allow_redirects=True
+            allow_redirects=True,
+            timeout=60
         )
+        
         if response.status_code == 200:
+            content_length = len(response.content)
+            logger.info(f"Successfully downloaded {file_name}: {content_length} bytes")
             return response.content
+        else:
+            logger.error(f"Box download failed for {file_name}: HTTP {response.status_code} - {response.text[:500]}")
+            return None
+            
+    except requests.exceptions.Timeout:
+        logger.error(f"Box download timeout for {file_name}")
         return None
     except Exception as e:
-        logger.error(f"Box download error: {e}")
+        logger.error(f"Box download error for {file_name}: {e}")
         return None
 
 def search_outlook_internal(graph_token: str, query: str, limit: int = 10) -> list:
@@ -626,7 +766,7 @@ def search_calendar_internal(graph_token: str, query: str, limit: int = 10) -> l
         return []
 
 def extract_text_from_file(file_content: bytes, filename: str) -> str:
-    """Extract text from file using Document Intelligence"""
+    """Extract text from file using Document Intelligence with detailed logging"""
     try:
         from azure.ai.documentintelligence import DocumentIntelligenceClient
         from azure.core.credentials import AzureKeyCredential
@@ -635,21 +775,49 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
         doc_key = os.getenv("DOC_INTEL_KEY")
         
         if not doc_endpoint or not doc_key:
+            logger.error(f"Document Intelligence not configured for {filename}")
             return f"[Could not extract text from {filename} - Document Intelligence not configured]"
         
+        # Check file size
+        file_size = len(file_content)
+        logger.info(f"Extracting text from {filename} ({file_size} bytes)")
+        
+        if file_size == 0:
+            logger.error(f"Empty file content for {filename}")
+            return f"[File {filename} is empty]"
+        
+        if file_size > 50 * 1024 * 1024:  # 50MB limit
+            logger.error(f"File {filename} too large: {file_size} bytes")
+            return f"[File {filename} is too large for processing]"
+        
         # Only process supported file types
-        supported_ext = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg', '.tiff', '.bmp']
+        supported_ext = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.xlsx', '.xls', '.pptx', '.ppt']
         ext = os.path.splitext(filename)[1].lower()
+        
         if ext not in supported_ext:
+            logger.warning(f"Unsupported file type {ext} for {filename}")
             return f"[File type {ext} not supported for text extraction]"
         
+        logger.info(f"Calling Document Intelligence for {filename}")
         doc_client = DocumentIntelligenceClient(endpoint=doc_endpoint, credential=AzureKeyCredential(doc_key))
-        poller = doc_client.begin_analyze_document("prebuilt-layout", body=file_content)
+        
+        poller = doc_client.begin_analyze_document(
+            "prebuilt-layout", 
+            body=file_content,
+            content_type="application/octet-stream"
+        )
         result = poller.result()
         
-        return result.content or f"[No text extracted from {filename}]"
+        extracted_text = result.content or ""
+        logger.info(f"Extracted {len(extracted_text)} chars from {filename}")
+        
+        if not extracted_text:
+            return f"[No text content found in {filename}]"
+        
+        return extracted_text
+        
     except Exception as e:
-        logger.error(f"Text extraction error for {filename}: {e}")
+        logger.error(f"Text extraction error for {filename}: {type(e).__name__}: {e}")
         return f"[Error extracting text from {filename}: {str(e)}]"
 
 @app.post("/api/agentic")
@@ -731,23 +899,44 @@ def agentic_task(job_id: str, data: dict):
                 box_query = plan.get("box_query", "")
                 if box_query:
                     sources_searched.append(f"Box: '{box_query}'")
-                    box_results = search_box_internal(box_token, box_query, limit=5)
+                    box_results = search_box_internal(box_token, box_query, limit=10)
+                    
+                    if box_results:
+                        logger.info(f"Box found {len(box_results)} files for '{box_query}'")
+                        JOBS[job_id]["status"] = f"Found {len(box_results)} Box files, reading..."
+                    else:
+                        logger.warning(f"No Box files found for '{box_query}'")
                     
                     # Download and extract text from top results
-                    for file_info in box_results[:3]:  # Limit to 3 files for performance
+                    files_processed = 0
+                    for file_info in box_results[:5]:  # Limit to 5 files for performance
                         file_id = file_info.get("id")
                         file_name = file_info.get("name", "unknown")
+                        client_folder = file_info.get("client_folder", "")
+                        subfolder = file_info.get("subfolder", "")
                         
                         JOBS[job_id]["status"] = f"Reading {file_name}..."
-                        file_content = download_box_file_internal(box_token, file_id)
+                        file_content = download_box_file_internal(box_token, file_id, file_name)
                         
                         if file_content:
                             text = extract_text_from_file(file_content, file_name)
+                            location = client_folder
+                            if subfolder:
+                                location = f"{client_folder}/{subfolder}"
+                            
                             collected_documents.append({
                                 "name": file_name,
-                                "source": "Box",
+                                "source": f"Box ({location})" if location else "Box",
                                 "text": text[:50000]  # Limit per doc
                             })
+                            files_processed += 1
+                        else:
+                            logger.warning(f"Failed to download {file_name} from Box")
+                    
+                    logger.info(f"Successfully processed {files_processed} Box files")
+            elif plan.get("search_box") and not box_token:
+                logger.warning("Box search requested but no Box token available")
+                sources_searched.append("Box: (not connected)")
             
             # Search Outlook
             if plan.get("search_emails") and graph_token:
@@ -896,8 +1085,23 @@ Please provide a comprehensive response, citing specific sources where applicabl
         result_text = final_response.choices[0].message.content
         
         # Add sources footer if searches were performed
-        if sources_searched:
-            result_text += f"\n\n---\n📚 **Sources searched:** {', '.join(sources_searched)}"
+        if sources_searched or collected_documents or collected_emails or collected_calendar:
+            footer_parts = []
+            
+            if collected_documents:
+                doc_names = [d["name"] for d in collected_documents[:5]]
+                footer_parts.append(f"📄 **{len(collected_documents)} documents**: {', '.join(doc_names)}")
+            
+            if collected_emails:
+                footer_parts.append(f"📧 **{len(collected_emails)} emails** reviewed")
+            
+            if collected_calendar:
+                footer_parts.append(f"📅 **{len(collected_calendar)} calendar events** found")
+            
+            if sources_searched:
+                footer_parts.append(f"🔍 **Searched:** {', '.join(sources_searched)}")
+            
+            result_text += "\n\n---\n" + "\n".join(footer_parts)
         
         JOBS[job_id]["status"] = "Complete"
         JOBS[job_id]["result"] = result_text
@@ -989,13 +1193,15 @@ async def login_page(request: Request):
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Main app"""
-    auth_header = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN")
-    principal_header = request.headers.get("X-MS-CLIENT-PRINCIPAL")
+    """Main app - requires authentication"""
+    user_info = get_user_info(request)
     
-    if not auth_header and not principal_header:
-        if os.getenv("TEST_GRAPH_TOKEN"):
-            return templates.TemplateResponse("index.html", {"request": request})
+    # Check if user is authenticated
+    if not user_info["authenticated"]:
+        # In production, redirect to login
+        # For local testing with TEST_USER_EMAIL, allow access
+        if not os.getenv("TEST_USER_EMAIL"):
+            return RedirectResponse(url="/login")
     
     return templates.TemplateResponse("index.html", {"request": request})
 
