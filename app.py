@@ -18,11 +18,20 @@ from openai import AzureOpenAI
 
 app = FastAPI(title="Joogni", description="California Family Law AI Assistant")
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static files only if directory exists
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if os.path.isdir(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+elif os.path.isdir("/home/site/wwwroot/static"):
+    app.mount("/static", StaticFiles(directory="/home/site/wwwroot/static"), name="static")
 
-# Templates
-templates = Jinja2Templates(directory="templates")
+# Templates - find the correct directory
+templates_dir = "templates"
+if os.path.isdir("/home/site/wwwroot/templates"):
+    templates_dir = "/home/site/wwwroot/templates"
+elif os.path.isdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")):
+    templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+templates = Jinja2Templates(directory=templates_dir)
 
 # System prompt for Joogni
 JOOGNI_SYSTEM_PROMPT = """You are Joogni, a California family law AI assistant designed for attorneys at Gill Law Group. 
