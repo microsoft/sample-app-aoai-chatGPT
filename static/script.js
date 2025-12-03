@@ -102,7 +102,31 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, checking agreement...');
     checkAgreement();
     checkBoxStatus();
+    loadUserInfo();
 });
+
+// --- USER INFO ---
+
+async function loadUserInfo() {
+    try {
+        var response = await fetch('/api/user-info');
+        var data = await response.json();
+        
+        var userNameEl = document.getElementById('user-name');
+        if (userNameEl && data.authenticated) {
+            // Show name if available, otherwise show email
+            var displayName = data.name || data.email || 'User';
+            // Shorten email if needed
+            if (!data.name && data.email && data.email.length > 25) {
+                displayName = data.email.split('@')[0];
+            }
+            userNameEl.textContent = displayName;
+            userNameEl.title = data.email || ''; // Show full email on hover
+        }
+    } catch (error) {
+        console.error('Failed to load user info:', error);
+    }
+}
 
 // Listen for Box auth success
 window.addEventListener('message', function(event) {
