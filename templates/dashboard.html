@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joogni - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-900 bg-opacity-50 border-b border-blue-800">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white bg-opacity-10 rounded-lg flex items-center justify-center text-white font-bold text-xl border border-white border-opacity-20">
+                    J
+                </div>
+                <h1 class="text-xl font-semibold text-white">Joogni</h1>
+            </div>
+            <a href="/.auth/logout" class="flex items-center gap-2 text-sm bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-lg border border-blue-700 transition-colors">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Welcome -->
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-3">Welcome to Joogni</h2>
+            <p class="text-blue-200">Your family law practice toolkit</p>
+        </div>
+
+        <!-- Main Tools Grid -->
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+            <!-- AI Chatbot Card -->
+            <a href="/chat" class="card-hover bg-white rounded-2xl p-8 shadow-xl">
+                <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fas fa-robot text-blue-600 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">AI Legal Assistant</h3>
+                <p class="text-gray-600 mb-4">
+                    Ask questions about California Family Code, analyze documents, search your emails and calendar, and draft legal documents.
+                </p>
+                <ul class="text-sm text-gray-500 space-y-2">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>CA Family Code Q&A</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Document Analysis</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>M365 Integration</li>
+                </ul>
+                <div class="mt-6 flex items-center text-blue-600 font-medium">
+                    Open Chatbot <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+
+            <!-- Calculators Card -->
+            <a href="/calculators" class="card-hover bg-white rounded-2xl p-8 shadow-xl">
+                <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
+                    <i class="fas fa-calculator text-purple-600 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Family Law Calculators</h3>
+                <p class="text-gray-600 mb-4">
+                    Calculate support obligations, property divisions, retirement apportionment, and more with our suite of legal calculators.
+                </p>
+                <ul class="text-sm text-gray-500 space-y-2">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Child & Spousal Support</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Ostler-Smith Bonuses</li>
+                    <li><i class="fas fa-check text-green-500 mr-2"></i>Property Calculations</li>
+                </ul>
+                <div class="mt-6 flex items-center text-purple-600 font-medium">
+                    Open Calculators <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+        </div>
+
+        <!-- Quick Stats / Info -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white bg-opacity-10 rounded-xl p-4 text-center border border-white border-opacity-10">
+                <i class="fas fa-balance-scale text-blue-300 text-2xl mb-2"></i>
+                <p class="text-white font-medium">Court Days</p>
+                <p class="text-blue-200 text-xs">Deadline Calculator</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-xl p-4 text-center border border-white border-opacity-10">
+                <i class="fas fa-percentage text-blue-300 text-2xl mb-2"></i>
+                <p class="text-white font-medium">Arrears</p>
+                <p class="text-blue-200 text-xs">Interest Calculator</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-xl p-4 text-center border border-white border-opacity-10">
+                <i class="fas fa-home text-blue-300 text-2xl mb-2"></i>
+                <p class="text-white font-medium">Moore Marsden</p>
+                <p class="text-blue-200 text-xs">Coming Soon</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-xl p-4 text-center border border-white border-opacity-10">
+                <i class="fas fa-chart-line text-blue-300 text-2xl mb-2"></i>
+                <p class="text-white font-medium">Pereira/Van Camp</p>
+                <p class="text-blue-200 text-xs">Coming Soon</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6">
+        <p class="text-blue-300 text-xs opacity-70">© 2024 Gill Law Group, PC. All rights reserved.</p>
+    </footer>
+</body>
+</html>

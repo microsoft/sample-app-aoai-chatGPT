@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculators | Joogni</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --navy: #0a1628;
+            --navy-light: #132038;
+            --gold: #c9a962;
+            --gold-light: #d4bc7d;
+            --cream: #f8f6f1;
+            --white: #ffffff;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --red: #dc2626;
+            --green: #16a34a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            background: var(--cream);
+        }
+
+        /* Header */
+        header {
+            background: var(--navy);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        nav a {
+            padding: 0.5rem 1rem;
+            color: var(--gray-300);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        nav a:hover, nav a.active {
+            background: var(--navy-light);
+            color: var(--white);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--gray-500);
+            border-radius: 6px;
+            color: var(--gray-300);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--navy-light);
+            border-color: var(--gray-300);
+            color: var(--white);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            position: sticky;
+            top: 64px;
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gray-500);
+            margin-bottom: 1rem;
+            padding-left: 0.75rem;
+        }
+
+        .calc-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .calc-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .calc-nav-item:hover {
+            background: var(--cream);
+        }
+
+        .calc-nav-item.active {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .calc-nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .calc-nav-item.active i {
+            color: var(--gold);
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 1rem 0;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem 3rem;
+            max-width: 900px;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+        }
+
+        .content-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+        }
+
+        .content-header p {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+        }
+
+        /* Calculator Sections */
+        .calc-section {
+            display: none;
+        }
+
+        .calc-section.active {
+            display: block;
+        }
+
+        /* Form Styling */
+        .calc-card {
+            background: var(--white);
+            border-radius: 16px;
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-card-header {
+            background: var(--navy);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .calc-card-header i {
+            color: var(--gold);
+        }
+
+        .calc-card-body {
+            padding: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .form-group input, .form-group select {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.2);
+        }
+
+        .input-prefix {
+            position: relative;
+        }
+
+        .input-prefix::before {
+            content: '$';
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+        }
+
+        .input-prefix input {
+            padding-left: 1.75rem;
+        }
+
+        .input-suffix {
+            position: relative;
+        }
+
+        .input-suffix::after {
+            content: attr(data-suffix);
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 0.85rem;
+        }
+
+        .input-suffix input {
+            padding-right: 2.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--navy-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-100);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Results */
+        .results-card {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            color: var(--white);
+        }
+
+        .results-card h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .results-card h3 i {
+            color: var(--gold);
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--gray-300);
+            font-size: 0.9rem;
+        }
+
+        .result-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .result-value.negative {
+            color: #f87171;
+        }
+
+        .result-item.total {
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--gold);
+        }
+
+        .result-item.total .result-label {
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .result-item.total .result-value {
+            font-size: 2rem;
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            background: var(--cream);
+            border-left: 4px solid var(--gold);
+            padding: 1rem 1.25rem;
+            margin-top: 1.5rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .disclaimer p {
+            font-size: 0.85rem;
+            color: var(--gray-700);
+            line-height: 1.6;
+        }
+
+        .disclaimer strong {
+            color: var(--navy);
+        }
+
+        /* Help Text */
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        /* Toggle Group */
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.25rem;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.625rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--white);
+            color: var(--navy);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Preset Buttons for Timeshare */
+        .preset-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+            padding: 0.875rem 1rem;
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--gold);
+            background: var(--cream);
+        }
+
+        .preset-btn.active {
+            border-color: var(--navy);
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .preset-btn.active span {
+            color: var(--gold);
+        }
+
+        .preset-btn strong {
+            font-size: 0.9rem;
+            color: var(--navy);
+        }
+
+        .preset-btn.active strong {
+            color: var(--white);
+        }
+
+        .preset-btn span {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar {
+                display: none;
+            }
+            .content {
+                padding: 1.5rem;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <a href="/dashboard" class="logo">
+                <div class="logo-icon">J</div>
+                <span class="logo-text">Joogni</span>
+            </a>
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/chat">AI Assistant</a>
+                <a href="/calculators" class="active">Calculators</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <a href="/.auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <h3>Support Calculations</h3>
+            <div class="calc-nav">
+                <div class="calc-nav-item active" data-section="timeshare">
+                    <i class="fas fa-calendar-week"></i>
+                    <span>Timeshare Calculator</span>
+                </div>
+                <div class="calc-nav-item" data-section="child-support">
+                    <i class="fas fa-child"></i>
+                    <span>Child Support</span>
+                </div>
+                <div class="calc-nav-item" data-section="spousal-support">
+                    <i class="fas fa-hand-holding-heart"></i>
+                    <span>Spousal Support</span>
+                </div>
+                <div class="calc-nav-item" data-section="ostler-smith">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Ostler-Smith</span>
+                </div>
+                <div class="calc-nav-item" data-section="arrears">
+                    <i class="fas fa-clock"></i>
+                    <span>Support Arrears</span>
+                </div>
+            </div>
+            
+            <div class="nav-divider"></div>
+            
+            <h3>Property Calculations</h3>
+            <div class="calc-nav">
+                <div class="calc-nav-item" data-section="moore-marsden">
+                    <i class="fas fa-home"></i>
+                    <span>Moore-Marsden</span>
+                </div>
+                <div class="calc-nav-item" data-section="pereira-vancamp">
+                    <i class="fas fa-building"></i>
+                    <span>Pereira / Van Camp</span>
+                </div>
+            </div>
+            
+            <div class="nav-divider"></div>
+            
+            <h3>Date Calculations</h3>
+            <div class="calc-nav">
+                <div class="calc-nav-item" data-section="court-days">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Court Days</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Timeshare Calculator -->
+            <section id="timeshare" class="calc-section active">
+                <div class="content-header">
+                    <h1>Timeshare Calculator</h1>
+                    <p>Calculate custody time percentage for child support calculations</p>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-calendar-check"></i>
+                        Quick Presets - Common Schedules
+                    </div>
+                    <div class="calc-card-body">
+                        <p style="color: var(--gray-600); margin-bottom: 1rem; font-size: 0.9rem;">Select a common custody schedule to auto-fill, or use custom input below.</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                            <button class="preset-btn" data-preset="5050-week" onclick="applyPreset('5050-week')">
+                                <strong>Alternating Weeks</strong>
+                                <span>50% / 50%</span>
+                            </button>
+                            <button class="preset-btn" data-preset="5050-223" onclick="applyPreset('5050-223')">
+                                <strong>2-2-3 Schedule</strong>
+                                <span>50% / 50%</span>
+                            </button>
+                            <button class="preset-btn" data-preset="eow" onclick="applyPreset('eow')">
+                                <strong>Every Other Weekend</strong>
+                                <span>14% / 86%</span>
+                            </button>
+                            <button class="preset-btn" data-preset="eow-weeknight" onclick="applyPreset('eow-weeknight')">
+                                <strong>EOW + 1 Weeknight</strong>
+                                <span>21% / 79%</span>
+                            </button>
+                            <button class="preset-btn" data-preset="eow-2weeknights" onclick="applyPreset('eow-2weeknights')">
+                                <strong>EOW + 2 Weeknights</strong>
+                                <span>29% / 71%</span>
+                            </button>
+                            <button class="preset-btn" data-preset="primary" onclick="applyPreset('primary')">
+                                <strong>Primary Custody</strong>
+                                <span>0% / 100%</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-sliders-h"></i>
+                        Custom Schedule - Regular Parenting Time
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Parent 1 Label</label>
+                                <input type="text" id="ts-p1-label" value="Parent 1" placeholder="e.g., Father, Mother">
+                            </div>
+                            <div class="form-group">
+                                <label>Parent 2 Label</label>
+                                <input type="text" id="ts-p2-label" value="Parent 2" placeholder="e.g., Mother, Father">
+                            </div>
+                        </div>
+                        
+                        <p style="color: var(--gray-600); margin: 1.5rem 0 1rem; font-size: 0.9rem; font-weight: 500;">Regular Schedule (per 14-day period):</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Weekday Overnights with Parent 1</label>
+                                <input type="number" id="ts-weekday-nights" value="0" min="0" max="10" step="1">
+                                <span class="help-text">Mon-Thu nights per 2-week period (max 8)</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Weekend Overnights with Parent 1</label>
+                                <input type="number" id="ts-weekend-nights" value="0" min="0" max="8" step="1">
+                                <span class="help-text">Fri-Sun nights per 2-week period (max 6)</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="margin-top: 1rem;">
+                            <div class="form-group full-width">
+                                <label>— OR — Enter Total Overnights Directly</label>
+                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                    <input type="number" id="ts-total-nights" placeholder="Total nights with Parent 1" min="0" max="14" style="flex: 1;">
+                                    <span style="color: var(--gray-500);">out of 14 nights</span>
+                                </div>
+                                <span class="help-text">If you prefer to enter total overnights per 2-week period instead of weekday/weekend split</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-umbrella-beach"></i>
+                        Holiday & Vacation Adjustments (Optional)
+                    </div>
+                    <div class="calc-card-body">
+                        <p style="color: var(--gray-600); margin-bottom: 1rem; font-size: 0.9rem;">Adjust for extended summer/vacation time or unequal holiday splits.</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Extra Summer Weeks with Parent 1</label>
+                                <input type="number" id="ts-summer-weeks" value="0" min="-8" max="8" step="0.5">
+                                <span class="help-text">Additional weeks beyond regular schedule (can be negative)</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Extra Holiday Days with Parent 1</label>
+                                <input type="number" id="ts-holiday-days" value="0" min="-14" max="14" step="1">
+                                <span class="help-text">Net additional days for holidays (can be negative)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="calculateTimeshare()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate Timeshare
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearTimeshare()">
+                        <i class="fas fa-redo"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div id="ts-results" class="results-card" style="display: none; margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-pie"></i> Timeshare Results</h3>
+                    
+                    <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+                        <div style="position: relative; width: 180px; height: 180px;">
+                            <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"></circle>
+                                <circle id="ts-pie-p1" cx="18" cy="18" r="15.9" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="0 100" stroke-linecap="round"></circle>
+                            </svg>
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div id="ts-pie-label" style="font-size: 1.75rem; font-weight: 700; color: var(--gold);">0%</div>
+                                <div id="ts-pie-sublabel" style="font-size: 0.75rem; color: var(--gray-300);">Parent 1</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <span class="result-label" id="ts-result-p1-label">Parent 1 Overnights/Year</span>
+                        <span class="result-value" id="ts-p1-nights">0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label" id="ts-result-p2-label">Parent 2 Overnights/Year</span>
+                        <span class="result-value" id="ts-p2-nights">0</span>
+                    </div>
+                    <div class="result-item total">
+                        <span class="result-label" id="ts-result-p1-pct-label">Parent 1 Timeshare</span>
+                        <span class="result-value" id="ts-p1-pct">0%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label" id="ts-result-p2-pct-label">Parent 2 Timeshare</span>
+                        <span class="result-value" id="ts-p2-pct">0%</span>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                        <p style="font-size: 0.85rem; color: var(--gray-300); margin-bottom: 0.5rem;"><strong>For Child Support Calculator:</strong></p>
+                        <p style="font-size: 0.9rem; color: var(--white);">Enter <strong id="ts-for-cs">0%</strong> as the higher earner's timeshare percentage.</p>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>Note:</strong> Timeshare is calculated based on overnights per year (365 days). Courts may calculate differently in some circumstances. This tool provides an estimate for guideline child support calculations.</p>
+                </div>
+            </section>
+
+            <!-- Child Support Calculator -->
+            <section id="child-support" class="calc-section">
+                <div class="content-header">
+                    <h1>Child Support Calculator</h1>
+                    <p>California Guideline Child Support per Family Code §4055</p>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-user"></i>
+                        Party 1 (Higher Earner)
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gross Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p1-gross" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tax Filing Status</label>
+                                <select id="cs-p1-filing">
+                                    <option value="single">Single</option>
+                                    <option value="married">Married Filing Jointly</option>
+                                    <option value="head">Head of Household</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Federal/State Taxes (Monthly)</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p1-taxes" placeholder="0.00">
+                                </div>
+                                <span class="help-text">Estimated combined federal & state withholding</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Health Insurance (Self)</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p1-health" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mandatory Retirement</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p1-retirement" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Union Dues</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p1-union" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-user"></i>
+                        Party 2 (Lower Earner)
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gross Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p2-gross" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tax Filing Status</label>
+                                <select id="cs-p2-filing">
+                                    <option value="single">Single</option>
+                                    <option value="married">Married Filing Jointly</option>
+                                    <option value="head">Head of Household</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Federal/State Taxes (Monthly)</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p2-taxes" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Health Insurance (Self)</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p2-health" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mandatory Retirement</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p2-retirement" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Union Dues</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-p2-union" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-users"></i>
+                        Children & Timeshare
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Number of Children</label>
+                                <select id="cs-children">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Party 1's Timeshare with Children</label>
+                                <div class="input-suffix" data-suffix="%">
+                                    <input type="number" id="cs-timeshare" placeholder="50" min="0" max="100">
+                                </div>
+                                <span class="help-text">% of time children are with Party 1</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Health Insurance for Children (Monthly)</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="cs-child-health" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Paid By</label>
+                                <select id="cs-health-payer">
+                                    <option value="p1">Party 1</option>
+                                    <option value="p2">Party 2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="calculateChildSupport()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate Support
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearChildSupport()">
+                        <i class="fas fa-redo"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div id="cs-results" class="results-card" style="display: none; margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-bar"></i> Calculation Results</h3>
+                    <div class="result-item">
+                        <span class="result-label">Party 1 Net Disposable Income</span>
+                        <span class="result-value" id="cs-p1-net">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Party 2 Net Disposable Income</span>
+                        <span class="result-value" id="cs-p2-net">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Combined Net Income</span>
+                        <span class="result-value" id="cs-combined">$0</span>
+                    </div>
+                    <div class="result-item total">
+                        <span class="result-label">Guideline Child Support</span>
+                        <span class="result-value" id="cs-guideline">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Direction</span>
+                        <span class="result-value" id="cs-direction" style="font-size: 1rem;">—</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>Disclaimer:</strong> This calculator provides an estimate based on the California guideline formula (FC §4055). Actual support may vary based on additional factors, deductions, and judicial discretion. For official calculations, use DissoMaster or XSpouse.</p>
+                </div>
+            </section>
+
+            <!-- Spousal Support Calculator -->
+            <section id="spousal-support" class="calc-section">
+                <div class="content-header">
+                    <h1>Temporary Spousal Support Calculator</h1>
+                    <p>Santa Clara County Guideline (commonly used statewide)</p>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-cog"></i>
+                        Calculation Method
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-group">
+                            <label>Select Formula</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" data-method="no-children">No Minor Children</button>
+                                <button class="toggle-btn" data-method="with-children">With Minor Children</button>
+                            </div>
+                            <span class="help-text" style="margin-top: 0.75rem; display: block;">
+                                <strong>No Children:</strong> 40% of Payor's Net − 50% of Payee's Net<br>
+                                <strong>With Children:</strong> 35% of Payor's Net − 40% of Payee's Net (after child support)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-user"></i>
+                        Payor (Higher Earner)
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gross Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="ss-payor-gross" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Net Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="ss-payor-net" placeholder="0.00">
+                                </div>
+                                <span class="help-text">After taxes and mandatory deductions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-user"></i>
+                        Payee (Supported Spouse)
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gross Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="ss-payee-gross" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Net Monthly Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="ss-payee-net" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ss-cs-section" class="calc-card" style="display: none;">
+                    <div class="calc-card-header">
+                        <i class="fas fa-child"></i>
+                        Child Support Adjustment
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Monthly Child Support Amount</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="ss-child-support" placeholder="0.00">
+                                </div>
+                                <span class="help-text">Enter the calculated child support amount</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Paid By</label>
+                                <select id="ss-cs-payer">
+                                    <option value="payor">Payor pays CS</option>
+                                    <option value="payee">Payee pays CS</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="calculateSpousalSupport()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate Support
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearSpousalSupport()">
+                        <i class="fas fa-redo"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div id="ss-results" class="results-card" style="display: none; margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-bar"></i> Calculation Results</h3>
+                    <div class="result-item">
+                        <span class="result-label">Payor's Adjusted Net</span>
+                        <span class="result-value" id="ss-payor-adjusted">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Payee's Adjusted Net</span>
+                        <span class="result-value" id="ss-payee-adjusted">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label" id="ss-formula-label">40% of Payor − 50% of Payee</span>
+                        <span class="result-value" id="ss-formula-result">$0</span>
+                    </div>
+                    <div class="result-item total">
+                        <span class="result-label">Temporary Spousal Support</span>
+                        <span class="result-value" id="ss-guideline">$0</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>Disclaimer:</strong> This calculator uses the Santa Clara County guideline formula for temporary spousal support. Long-term support is discretionary and based on FC §4320 factors. This is an estimate only.</p>
+                </div>
+            </section>
+
+            <!-- Ostler-Smith Calculator -->
+            <section id="ostler-smith" class="calc-section">
+                <div class="content-header">
+                    <h1>Ostler-Smith Calculator</h1>
+                    <p>Variable Income Support Analysis (Bonus, Commission, Overtime)</p>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-info-circle"></i>
+                        About Ostler-Smith
+                    </div>
+                    <div class="calc-card-body">
+                        <p style="color: var(--gray-700); line-height: 1.7; margin-bottom: 1rem;">
+                            <em>In re Marriage of Ostler & Smith</em> (1990) established that support orders can include a percentage of future variable income (bonuses, commissions, overtime) in addition to base support calculated on regular income.
+                        </p>
+                        <p style="color: var(--gray-700); line-height: 1.7;">
+                            This calculator helps determine the additional support owed when variable income is received.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-percentage"></i>
+                        Ostler-Smith Percentages
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Child Support Percentage</label>
+                                <div class="input-suffix" data-suffix="%">
+                                    <input type="number" id="os-cs-percent" placeholder="0" min="0" max="100">
+                                </div>
+                                <span class="help-text">% of net variable income for child support</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Spousal Support Percentage</label>
+                                <div class="input-suffix" data-suffix="%">
+                                    <input type="number" id="os-ss-percent" placeholder="0" min="0" max="100">
+                                </div>
+                                <span class="help-text">% of net variable income for spousal support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Variable Income Received
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gross Variable Income</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="os-gross" placeholder="0.00">
+                                </div>
+                                <span class="help-text">Bonus, commission, or overtime received</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Estimated Tax Rate</label>
+                                <div class="input-suffix" data-suffix="%">
+                                    <input type="number" id="os-tax-rate" placeholder="35" min="0" max="100">
+                                </div>
+                                <span class="help-text">Combined federal + state marginal rate</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Other Deductions</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="os-deductions" placeholder="0.00">
+                                </div>
+                                <span class="help-text">401k, health insurance on bonus, etc.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Period</label>
+                                <select id="os-period">
+                                    <option value="annual">Annual Bonus</option>
+                                    <option value="quarterly">Quarterly Bonus</option>
+                                    <option value="monthly">Monthly Commission</option>
+                                    <option value="onetime">One-Time Payment</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="calculateOstlerSmith()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate Ostler-Smith
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearOstlerSmith()">
+                        <i class="fas fa-redo"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div id="os-results" class="results-card" style="display: none; margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-bar"></i> Ostler-Smith Results</h3>
+                    <div class="result-item">
+                        <span class="result-label">Gross Variable Income</span>
+                        <span class="result-value" id="os-gross-result">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Less: Taxes & Deductions</span>
+                        <span class="result-value negative" id="os-deductions-result">−$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Net Variable Income</span>
+                        <span class="result-value" id="os-net-result">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Additional Child Support</span>
+                        <span class="result-value" id="os-cs-result">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Additional Spousal Support</span>
+                        <span class="result-value" id="os-ss-result">$0</span>
+                    </div>
+                    <div class="result-item total">
+                        <span class="result-label">Total Additional Support Due</span>
+                        <span class="result-value" id="os-total">$0</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>Disclaimer:</strong> Ostler-Smith percentages are typically set by court order based on guideline calculations. This calculator applies those percentages to actual variable income received. Consult the specific court order for exact terms.</p>
+                </div>
+            </section>
+
+            <!-- Arrears Calculator -->
+            <section id="arrears" class="calc-section">
+                <div class="content-header">
+                    <h1>Support Arrears Calculator</h1>
+                    <p>Calculate unpaid support with statutory interest (FC §155.5)</p>
+                </div>
+
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <i class="fas fa-calendar"></i>
+                        Arrears Period
+                    </div>
+                    <div class="calc-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Monthly Support Ordered</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="arr-monthly" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Months Unpaid</label>
+                                <input type="number" id="arr-months" placeholder="0" min="0">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Partial Payments Made</label>
+                                <div class="input-prefix">
+                                    <input type="number" id="arr-payments" placeholder="0.00">
+                                </div>
+                                <span class="help-text">Total payments made during arrears period</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Interest Rate (Annual)</label>
+                                <div class="input-suffix" data-suffix="%">
+                                    <input type="number" id="arr-rate" value="10" min="0" max="100">
+                                </div>
+                                <span class="help-text">Statutory rate is 10% per FC §155.5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="calculateArrears()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate Arrears
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearArrears()">
+                        <i class="fas fa-redo"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <div id="arr-results" class="results-card" style="display: none; margin-top: 2rem;">
+                    <h3><i class="fas fa-chart-bar"></i> Arrears Results</h3>
+                    <div class="result-item">
+                        <span class="result-label">Total Support Owed</span>
+                        <span class="result-value" id="arr-owed">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Less: Payments Made</span>
+                        <span class="result-value negative" id="arr-paid">−$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Principal Arrears</span>
+                        <span class="result-value" id="arr-principal">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Estimated Interest</span>
+                        <span class="result-value" id="arr-interest">$0</span>
+                    </div>
+                    <div class="result-item total">
+                        <span class="result-label">Total Arrears with Interest</span>
+                        <span class="result-value" id="arr-total">$0</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <p><strong>Disclaimer:</strong> Interest calculation is simplified. Actual interest accrues on each missed payment from its due date. For precise calculations, compute interest for each missed payment individually.</p>
+                </div>
+            </section>
+
+            <!-- Placeholder sections for future calculators -->
+            <section id="moore-marsden" class="calc-section">
+                <div class="content-header">
+                    <h1>Moore-Marsden Calculator</h1>
+                    <p>Community Interest in Separate Property Real Estate</p>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-body" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-hard-hat" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--navy); margin-bottom: 0.5rem;">Coming Soon</h3>
+                        <p style="color: var(--gray-500);">Moore-Marsden calculator is under development.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pereira-vancamp" class="calc-section">
+                <div class="content-header">
+                    <h1>Pereira / Van Camp Calculator</h1>
+                    <p>Business Apportionment Methods</p>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-body" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-hard-hat" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--navy); margin-bottom: 0.5rem;">Coming Soon</h3>
+                        <p style="color: var(--gray-500);">Pereira / Van Camp calculator is under development.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="court-days" class="calc-section">
+                <div class="content-header">
+                    <h1>Court Days Calculator</h1>
+                    <p>Calculate Deadlines Using Court Days (CCP §12-12a)</p>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-body" style="text-align: center; padding: 3rem;">
+                        <i class="fas fa-hard-hat" style="font-size: 3rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--navy); margin-bottom: 0.5rem;">Coming Soon</h3>
+                        <p style="color: var(--gray-500);">Court days calculator is under development.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.calc-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Update nav
+                document.querySelectorAll('.calc-nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update content
+                const sectionId = this.dataset.section;
+                document.querySelectorAll('.calc-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Spousal support method toggle
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const method = this.dataset.method;
+                const csSection = document.getElementById('ss-cs-section');
+                if (method === 'with-children') {
+                    csSection.style.display = 'block';
+                } else {
+                    csSection.style.display = 'none';
+                }
+            });
+        });
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // ============== Timeshare Calculator ==============
+        
+        // Preset schedules (overnights per 14-day period with Parent 1)
+        const presets = {
+            '5050-week': { weekday: 5, weekend: 2, description: 'Week on/week off' },
+            '5050-223': { weekday: 4, weekend: 3, description: '2-2-3 rotating' },
+            'eow': { weekday: 0, weekend: 2, description: 'Every other weekend (Fri-Sun)' },
+            'eow-weeknight': { weekday: 2, weekend: 2, description: 'EOW + 1 dinner overnight/week' },
+            'eow-2weeknights': { weekday: 4, weekend: 2, description: 'EOW + 2 dinner overnights/week' },
+            'primary': { weekday: 0, weekend: 0, description: 'No overnights' }
+        };
+
+        function applyPreset(presetKey) {
+            const preset = presets[presetKey];
+            if (!preset) return;
+
+            // Update form fields
+            document.getElementById('ts-weekday-nights').value = preset.weekday;
+            document.getElementById('ts-weekend-nights').value = preset.weekend;
+            document.getElementById('ts-total-nights').value = '';
+            document.getElementById('ts-summer-weeks').value = 0;
+            document.getElementById('ts-holiday-days').value = 0;
+
+            // Update button states
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-preset="${presetKey}"]`).classList.add('active');
+
+            // Auto-calculate
+            calculateTimeshare();
+        }
+
+        function calculateTimeshare() {
+            const p1Label = document.getElementById('ts-p1-label').value || 'Parent 1';
+            const p2Label = document.getElementById('ts-p2-label').value || 'Parent 2';
+            
+            // Get inputs
+            let totalNightsPerPeriod;
+            const directTotal = parseFloat(document.getElementById('ts-total-nights').value);
+            
+            if (!isNaN(directTotal) && directTotal >= 0) {
+                // Use direct total if provided
+                totalNightsPerPeriod = directTotal;
+            } else {
+                // Calculate from weekday + weekend
+                const weekdayNights = parseFloat(document.getElementById('ts-weekday-nights').value) || 0;
+                const weekendNights = parseFloat(document.getElementById('ts-weekend-nights').value) || 0;
+                totalNightsPerPeriod = weekdayNights + weekendNights;
+            }
+
+            const summerWeeks = parseFloat(document.getElementById('ts-summer-weeks').value) || 0;
+            const holidayDays = parseFloat(document.getElementById('ts-holiday-days').value) || 0;
+
+            // Calculate annual overnights
+            // 365 days / 14 days = ~26.07 two-week periods per year
+            const periodsPerYear = 365 / 14;
+            let p1NightsPerYear = totalNightsPerPeriod * periodsPerYear;
+
+            // Add summer weeks adjustment (7 nights per week)
+            p1NightsPerYear += summerWeeks * 7;
+
+            // Add holiday adjustment
+            p1NightsPerYear += holidayDays;
+
+            // Ensure within bounds
+            p1NightsPerYear = Math.max(0, Math.min(365, p1NightsPerYear));
+            const p2NightsPerYear = 365 - p1NightsPerYear;
+
+            // Calculate percentages
+            const p1Percent = (p1NightsPerYear / 365) * 100;
+            const p2Percent = (p2NightsPerYear / 365) * 100;
+
+            // Update labels
+            document.getElementById('ts-result-p1-label').textContent = `${p1Label} Overnights/Year`;
+            document.getElementById('ts-result-p2-label').textContent = `${p2Label} Overnights/Year`;
+            document.getElementById('ts-result-p1-pct-label').textContent = `${p1Label} Timeshare`;
+            document.getElementById('ts-result-p2-pct-label').textContent = `${p2Label} Timeshare`;
+            document.getElementById('ts-pie-sublabel').textContent = p1Label;
+
+            // Update results
+            document.getElementById('ts-p1-nights').textContent = Math.round(p1NightsPerYear);
+            document.getElementById('ts-p2-nights').textContent = Math.round(p2NightsPerYear);
+            document.getElementById('ts-p1-pct').textContent = p1Percent.toFixed(1) + '%';
+            document.getElementById('ts-p2-pct').textContent = p2Percent.toFixed(1) + '%';
+
+            // Update pie chart
+            const pieCircle = document.getElementById('ts-pie-p1');
+            pieCircle.setAttribute('stroke-dasharray', `${p1Percent} ${100 - p1Percent}`);
+            document.getElementById('ts-pie-label').textContent = p1Percent.toFixed(0) + '%';
+
+            // Update guidance for child support
+            document.getElementById('ts-for-cs').textContent = p1Percent.toFixed(1) + '%';
+
+            // Show results
+            document.getElementById('ts-results').style.display = 'block';
+        }
+
+        function clearTimeshare() {
+            document.getElementById('ts-p1-label').value = 'Parent 1';
+            document.getElementById('ts-p2-label').value = 'Parent 2';
+            document.getElementById('ts-weekday-nights').value = 0;
+            document.getElementById('ts-weekend-nights').value = 0;
+            document.getElementById('ts-total-nights').value = '';
+            document.getElementById('ts-summer-weeks').value = 0;
+            document.getElementById('ts-holiday-days').value = 0;
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ts-results').style.display = 'none';
+        }
+
+        // ============== Child Support Calculator ==============
+        function calculateChildSupport() {
+            // Get Party 1 values
+            const p1Gross = parseFloat(document.getElementById('cs-p1-gross').value) || 0;
+            const p1Taxes = parseFloat(document.getElementById('cs-p1-taxes').value) || 0;
+            const p1Health = parseFloat(document.getElementById('cs-p1-health').value) || 0;
+            const p1Retirement = parseFloat(document.getElementById('cs-p1-retirement').value) || 0;
+            const p1Union = parseFloat(document.getElementById('cs-p1-union').value) || 0;
+            
+            // Get Party 2 values
+            const p2Gross = parseFloat(document.getElementById('cs-p2-gross').value) || 0;
+            const p2Taxes = parseFloat(document.getElementById('cs-p2-taxes').value) || 0;
+            const p2Health = parseFloat(document.getElementById('cs-p2-health').value) || 0;
+            const p2Retirement = parseFloat(document.getElementById('cs-p2-retirement').value) || 0;
+            const p2Union = parseFloat(document.getElementById('cs-p2-union').value) || 0;
+            
+            // Get children and timeshare
+            const numChildren = parseInt(document.getElementById('cs-children').value) || 1;
+            const timeshare = (parseFloat(document.getElementById('cs-timeshare').value) || 50) / 100;
+            
+            // Calculate net disposable incomes
+            const p1Net = p1Gross - p1Taxes - p1Health - p1Retirement - p1Union;
+            const p2Net = p2Gross - p2Taxes - p2Health - p2Retirement - p2Union;
+            const totalNet = p1Net + p2Net;
+            
+            // Determine high and low earner
+            let highNet, lowNet, highTimeshare;
+            let direction = '';
+            
+            if (p1Net >= p2Net) {
+                highNet = p1Net;
+                lowNet = p2Net;
+                highTimeshare = timeshare;
+                direction = 'Party 1 pays Party 2';
+            } else {
+                highNet = p2Net;
+                lowNet = p1Net;
+                highTimeshare = 1 - timeshare;
+                direction = 'Party 2 pays Party 1';
+            }
+            
+            // K factor based on number of children
+            const kFactors = {
+                1: 0.25,
+                2: 0.40,
+                3: 0.475,
+                4: 0.525,
+                5: 0.56,
+                6: 0.59
+            };
+            const kBase = kFactors[numChildren] || 0.25;
+            
+            // Calculate K (adjusted for timeshare)
+            const K = kBase * (1 + highTimeshare);
+            
+            // California guideline formula: CS = K[HN - (H%)(TN)]
+            let guideline = K * (highNet - (highTimeshare * totalNet));
+            
+            // Can't be negative
+            if (guideline < 0) {
+                guideline = 0;
+                direction = 'No support indicated (possible deviation from guideline)';
+            }
+            
+            // Display results
+            document.getElementById('cs-p1-net').textContent = formatCurrency(p1Net);
+            document.getElementById('cs-p2-net').textContent = formatCurrency(p2Net);
+            document.getElementById('cs-combined').textContent = formatCurrency(totalNet);
+            document.getElementById('cs-guideline').textContent = formatCurrency(guideline);
+            document.getElementById('cs-direction').textContent = direction;
+            document.getElementById('cs-results').style.display = 'block';
+        }
+
+        function clearChildSupport() {
+            document.querySelectorAll('#child-support input').forEach(input => input.value = '');
+            document.getElementById('cs-results').style.display = 'none';
+        }
+
+        // Spousal Support Calculator
+        function calculateSpousalSupport() {
+            const payorNet = parseFloat(document.getElementById('ss-payor-net').value) || 0;
+            const payeeNet = parseFloat(document.getElementById('ss-payee-net').value) || 0;
+            const hasChildren = document.querySelector('.toggle-btn.active').dataset.method === 'with-children';
+            
+            let payorAdjusted = payorNet;
+            let payeeAdjusted = payeeNet;
+            let formulaLabel = '';
+            
+            if (hasChildren) {
+                const childSupport = parseFloat(document.getElementById('ss-child-support').value) || 0;
+                const csPayer = document.getElementById('ss-cs-payer').value;
+                
+                if (csPayer === 'payor') {
+                    payorAdjusted = payorNet - childSupport;
+                    payeeAdjusted = payeeNet + childSupport;
+                } else {
+                    payorAdjusted = payorNet + childSupport;
+                    payeeAdjusted = payeeNet - childSupport;
+                }
+                
+                formulaLabel = '35% of Payor − 40% of Payee';
+                var guideline = (0.35 * payorAdjusted) - (0.40 * payeeAdjusted);
+            } else {
+                formulaLabel = '40% of Payor − 50% of Payee';
+                var guideline = (0.40 * payorAdjusted) - (0.50 * payeeAdjusted);
+            }
+            
+            // Can't be negative
+            if (guideline < 0) guideline = 0;
+            
+            // Display results
+            document.getElementById('ss-payor-adjusted').textContent = formatCurrency(payorAdjusted);
+            document.getElementById('ss-payee-adjusted').textContent = formatCurrency(payeeAdjusted);
+            document.getElementById('ss-formula-label').textContent = formulaLabel;
+            document.getElementById('ss-formula-result').textContent = formatCurrency(guideline);
+            document.getElementById('ss-guideline').textContent = formatCurrency(guideline);
+            document.getElementById('ss-results').style.display = 'block';
+        }
+
+        function clearSpousalSupport() {
+            document.querySelectorAll('#spousal-support input').forEach(input => input.value = '');
+            document.getElementById('ss-results').style.display = 'none';
+        }
+
+        // Ostler-Smith Calculator
+        function calculateOstlerSmith() {
+            const gross = parseFloat(document.getElementById('os-gross').value) || 0;
+            const taxRate = (parseFloat(document.getElementById('os-tax-rate').value) || 35) / 100;
+            const deductions = parseFloat(document.getElementById('os-deductions').value) || 0;
+            const csPercent = (parseFloat(document.getElementById('os-cs-percent').value) || 0) / 100;
+            const ssPercent = (parseFloat(document.getElementById('os-ss-percent').value) || 0) / 100;
+            
+            const taxes = gross * taxRate;
+            const totalDeductions = taxes + deductions;
+            const net = gross - totalDeductions;
+            
+            const childSupport = net * csPercent;
+            const spousalSupport = net * ssPercent;
+            const total = childSupport + spousalSupport;
+            
+            // Display results
+            document.getElementById('os-gross-result').textContent = formatCurrency(gross);
+            document.getElementById('os-deductions-result').textContent = '−' + formatCurrency(totalDeductions);
+            document.getElementById('os-net-result').textContent = formatCurrency(net);
+            document.getElementById('os-cs-result').textContent = formatCurrency(childSupport);
+            document.getElementById('os-ss-result').textContent = formatCurrency(spousalSupport);
+            document.getElementById('os-total').textContent = formatCurrency(total);
+            document.getElementById('os-results').style.display = 'block';
+        }
+
+        function clearOstlerSmith() {
+            document.querySelectorAll('#ostler-smith input').forEach(input => {
+                if (input.id === 'os-tax-rate') {
+                    input.value = '35';
+                } else {
+                    input.value = '';
+                }
+            });
+            document.getElementById('os-results').style.display = 'none';
+        }
+
+        // Arrears Calculator
+        function calculateArrears() {
+            const monthly = parseFloat(document.getElementById('arr-monthly').value) || 0;
+            const months = parseFloat(document.getElementById('arr-months').value) || 0;
+            const payments = parseFloat(document.getElementById('arr-payments').value) || 0;
+            const rate = (parseFloat(document.getElementById('arr-rate').value) || 10) / 100;
+            
+            const totalOwed = monthly * months;
+            const principal = totalOwed - payments;
+            
+            // Simplified interest calculation (average method)
+            // In reality, interest accrues on each payment from its due date
+            const avgMonths = months / 2;
+            const interest = principal * (rate / 12) * avgMonths;
+            
+            const total = principal + interest;
+            
+            // Display results
+            document.getElementById('arr-owed').textContent = formatCurrency(totalOwed);
+            document.getElementById('arr-paid').textContent = '−' + formatCurrency(payments);
+            document.getElementById('arr-principal').textContent = formatCurrency(principal);
+            document.getElementById('arr-interest').textContent = formatCurrency(interest);
+            document.getElementById('arr-total').textContent = formatCurrency(total);
+            document.getElementById('arr-results').style.display = 'block';
+        }
+
+        function clearArrears() {
+            document.querySelectorAll('#arrears input').forEach(input => {
+                if (input.id === 'arr-rate') {
+                    input.value = '10';
+                } else {
+                    input.value = '';
+                }
+            });
+            document.getElementById('arr-results').style.display = 'none';
+        }
+
+        // Check URL hash for direct navigation
+        if (window.location.hash) {
+            const sectionId = window.location.hash.substring(1);
+            const navItem = document.querySelector(`[data-section="${sectionId}"]`);
+            if (navItem) {
+                navItem.click();
+            }
+        }
+    </script>
+</body>
+</html>
