@@ -3,68 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joogni | Sign In</title>
+    <title>Joogni - Family Law AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-            min-height: 100vh;
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
         }
-        .login-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
-        .accent-bar {
-            height: 6px;
-            background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%);
-            border-radius: 12px 12px 0 0;
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
         }
-        .sign-in-btn {
-            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
-        .sign-in-btn:hover {
-            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
-    <div class="login-card w-full max-w-md">
-        <div class="accent-bar"></div>
-        <div class="p-10 text-center">
-            <!-- Logo -->
-            <div class="mb-6">
-                <div class="w-16 h-16 bg-blue-900 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <span class="text-white text-3xl font-bold">J</span>
-                </div>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Branding -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-10 rounded-2xl mb-4 border border-white border-opacity-20 pulse-glow">
+                <span class="text-4xl font-bold text-white">J</span>
             </div>
-            
-            <!-- Title -->
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Joogni</h1>
-            <p class="text-gray-500 mb-8">Your secure, internal legal copilot.</p>
-            
-            <!-- Sign In Button -->
-            <a href="/.auth/login/aad?post_login_redirect_uri=/" class="sign-in-btn inline-flex items-center justify-center gap-3 text-white font-semibold py-3 px-8 rounded-lg w-full max-w-xs mx-auto">
-                <i class="fab fa-microsoft text-lg"></i>
-                <span>Sign In with Microsoft</span>
+            <h1 class="text-3xl font-bold text-white mb-2">Joogni</h1>
+            <p class="text-blue-200 text-sm">Family Law AI Assistant & Practice Tools</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card rounded-2xl shadow-2xl p-8">
+            <h2 class="text-xl font-semibold text-gray-800 text-center mb-2">Welcome Back</h2>
+            <p class="text-gray-500 text-center text-sm mb-8">Sign in to access your legal toolkit</p>
+
+            <!-- Microsoft Sign In Button -->
+            <a href="/.auth/login/aad?post_login_redirect_uri=/dashboard" 
+               class="flex items-center justify-center gap-3 w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:scale-[1.02] shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                </svg>
+                Sign in with Microsoft
             </a>
-            
-            <!-- Footer text -->
-            <p class="text-gray-400 text-sm mt-8">
-                You must sign in with your <span class="font-medium text-gray-600">@thegillfirm.com</span> account to continue.
-            </p>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-400 text-center">
+                    Authorized users only. By signing in, you agree to our terms of use.
+                </p>
+            </div>
         </div>
-        
-        <!-- Bottom branding -->
-        <div class="border-t border-gray-100 py-4 text-center">
-            <p class="text-xs text-gray-400">
-                <i class="fas fa-shield-alt mr-1"></i> Secured by Microsoft Entra ID
-            </p>
+
+        <!-- Features Preview -->
+        <div class="mt-8 grid grid-cols-2 gap-4 text-center">
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 border border-white border-opacity-10">
+                <i class="fas fa-robot text-blue-300 text-xl mb-2"></i>
+                <p class="text-white text-sm font-medium">AI Chatbot</p>
+                <p class="text-blue-200 text-xs">CA Family Code</p>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-4 border border-white border-opacity-10">
+                <i class="fas fa-calculator text-blue-300 text-xl mb-2"></i>
+                <p class="text-white text-sm font-medium">Calculators</p>
+                <p class="text-blue-200 text-xs">Support & Property</p>
+            </div>
         </div>
+
+        <!-- Footer -->
+        <p class="text-center text-blue-300 text-xs mt-8 opacity-70">
+            © 2024 Gill Law Group, PC. All rights reserved.
+        </p>
     </div>
 </body>
 </html>
