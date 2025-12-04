@@ -555,7 +555,7 @@ async def conversation(request: Request):
         client = AzureOpenAI(
             api_key=key,
             azure_endpoint=endpoint,
-            api_version="2024-02-01"
+            api_version="2024-10-21"
         )
         
         # Build messages with system prompt
