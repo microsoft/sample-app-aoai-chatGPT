@@ -540,9 +540,26 @@ async def conversation(request: Request):
     print("=== CONVERSATION ENDPOINT HIT ===", file=sys.stderr)
     try:
         data = await request.json()
+        print(f"Full request data: {data}", file=sys.stderr)
+        print(f"Data keys: {data.keys() if isinstance(data, dict) else 'not a dict'}", file=sys.stderr)
+        
+        # Try different possible message formats
         messages = data.get("messages", [])
+        if not messages:
+            messages = data.get("conversation", [])
+        if not messages:
+            messages = data.get("history", [])
+        if not messages and "message" in data:
+            # Single message format
+            messages = [{"role": "user", "content": data.get("message", "")}]
+        if not messages and "query" in data:
+            messages = [{"role": "user", "content": data.get("query", "")}]
+        if not messages and "prompt" in data:
+            messages = [{"role": "user", "content": data.get("prompt", "")}]
+            
         context = data.get("context", "")
-        print(f"Messages received: {len(messages)}", file=sys.stderr)
+        print(f"Messages after parsing: {len(messages)}", file=sys.stderr)
+        print(f"Messages content: {messages}", file=sys.stderr)
         
         # Get Azure OpenAI credentials
         key = os.getenv("AZURE_OPENAI_KEY")
@@ -588,15 +605,23 @@ async def conversation(request: Request):
                 "content": msg.get("content", "")
             })
         
+        print(f"Total chat_messages: {len(chat_messages)}", file=sys.stderr)
+        print(f"Making Azure OpenAI call with tools={bool(graph_token)}...", file=sys.stderr)
+        
         # First call - may request tool use
-        response = client.chat.completions.create(
-            model=deployment,
-            messages=chat_messages,
-            tools=TOOLS if graph_token else None,
-            tool_choice="auto" if graph_token else None,
-            temperature=0.7,
-            max_tokens=2000
-        )
+        try:
+            response = client.chat.completions.create(
+                model=deployment,
+                messages=chat_messages,
+                tools=TOOLS if graph_token else None,
+                tool_choice="auto" if graph_token else None,
+                temperature=0.7,
+                max_tokens=2000
+            )
+            print(f"Azure OpenAI response received!", file=sys.stderr)
+        except Exception as api_error:
+            print(f"Azure OpenAI API Error: {type(api_error).__name__}: {api_error}", file=sys.stderr)
+            raise
         
         response_message = response.choices[0].message
         
