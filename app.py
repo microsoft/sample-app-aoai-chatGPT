@@ -536,15 +536,22 @@ async def box_status(request: Request):
 @app.post("/api/agentic")
 async def conversation(request: Request):
     """Handle chat conversation with Azure OpenAI - with function calling for M365."""
+    import sys
+    print("=== CONVERSATION ENDPOINT HIT ===", file=sys.stderr)
     try:
         data = await request.json()
         messages = data.get("messages", [])
         context = data.get("context", "")
+        print(f"Messages received: {len(messages)}", file=sys.stderr)
         
         # Get Azure OpenAI credentials
         key = os.getenv("AZURE_OPENAI_KEY")
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "model-router")
+        
+        print(f"Endpoint: {endpoint}", file=sys.stderr)
+        print(f"Deployment: {deployment}", file=sys.stderr)
+        print(f"Key present: {bool(key)}", file=sys.stderr)
         
         if not key or not endpoint:
             raise HTTPException(status_code=500, detail="Azure OpenAI not configured")
@@ -552,11 +559,13 @@ async def conversation(request: Request):
         # Get Graph token for M365 access
         graph_token = get_graph_token(request)
         
+        print("Creating AzureOpenAI client...", file=sys.stderr)
         client = AzureOpenAI(
             api_key=key,
             azure_endpoint=endpoint,
             api_version="2024-10-21"
         )
+        print("Client created, making request...", file=sys.stderr)
         
         # Build messages with system prompt
         chat_messages = [{"role": "system", "content": JOOGNI_SYSTEM_PROMPT}]
@@ -836,6 +845,22 @@ async def search_onedrive_direct(request: Request, q: str):
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+
+@app.get("/api/test")
+async def test_endpoint():
+    """Test endpoint to verify API is working."""
+    import sys
+    print("=== TEST ENDPOINT HIT ===", file=sys.stderr)
+    key = os.getenv("AZURE_OPENAI_KEY")
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+    return {
+        "status": "ok",
+        "key_present": bool(key),
+        "endpoint": endpoint,
+        "deployment": deployment
+    }
 
 
 if __name__ == "__main__":
