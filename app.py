@@ -533,6 +533,7 @@ async def box_status(request: Request):
 
 
 @app.post("/api/conversation")
+@app.post("/api/agentic")
 async def conversation(request: Request):
     """Handle chat conversation with Azure OpenAI - with function calling for M365."""
     try:
@@ -654,6 +655,15 @@ async def conversation(request: Request):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/check_status/{request_id}")
+async def check_status(request_id: str):
+    """Check status of a request - returns completed since we process synchronously."""
+    return JSONResponse({
+        "status": "completed",
+        "request_id": request_id
+    })
 
 
 @app.post("/api/documents/analyze")
