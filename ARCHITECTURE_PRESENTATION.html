@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure OpenAI Chat Application - Architecture Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0078d4 0%, #003d7a 100%);
+            overflow: hidden;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 60px;
+            background: white;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide-header {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            color: white;
+            padding: 20px 40px;
+            margin: -60px -60px 40px -60px;
+            border-bottom: 5px solid #005a9e;
+        }
+
+        .slide-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .slide-subtitle {
+            font-size: 24px;
+            opacity: 0.9;
+            color: white;
+        }
+
+        .slide-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 42px;
+            color: #0078d4;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #0078d4;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #0078d4;
+            margin-bottom: 25px;
+        }
+
+        h3 {
+            font-size: 28px;
+            color: #106ebe;
+            margin: 25px 0 15px 0;
+        }
+
+        h4 {
+            font-size: 22px;
+            color: #005a9e;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        ul, ol {
+            margin-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            font-size: 20px;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .highlight {
+            background: #fff4ce;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #0078d4;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            border-left: 4px solid #0078d4;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #0078d4;
+            font-size: 22px;
+        }
+
+        .card p, .card li {
+            font-size: 18px;
+        }
+
+        .architecture-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 3px solid #0078d4;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #003d7a;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 32px;
+            color: #0078d4;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        th {
+            background: #0078d4;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 18px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .metric-value {
+            font-size: 48px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-button:hover {
+            background: #005a9e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 120, 212, 0.4);
+        }
+
+        .nav-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #0078d4;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            margin: 5px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #4caf50;
+        }
+
+        .warning {
+            background: #ff9800;
+        }
+
+        .info {
+            background: #2196f3;
+        }
+
+        .danger {
+            background: #f44336;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .security-badge {
+            background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin: 5px;
+            font-weight: bold;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tech-badge {
+            background: white;
+            border: 2px solid #0078d4;
+            color: #0078d4;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        @media print {
+            .navigation, .slide-counter {
+                display: none;
+            }
+            .slide {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- Slide 1: Title Slide -->
+        <div class="slide active">
+            <div class="slide-content center">
+                <div class="icon">🚀</div>
+                <h1 style="font-size: 64px; margin-bottom: 20px;">Azure OpenAI Chat Application</h1>
+                <h2 style="color: #106ebe; margin-bottom: 40px;">Architecture & Technical Documentation</h2>
+                <p style="font-size: 28px; color: #666;">Production-Ready Enterprise Chat Solution</p>
+                <div style="margin-top: 60px;">
+                    <span class="badge success" style="font-size: 20px; padding: 10px 25px;">React + TypeScript</span>
+                    <span class="badge info" style="font-size: 20px; padding: 10px 25px;">Python + Quart</span>
+                    <span class="badge warning" style="font-size: 20px; padding: 10px 25px;">Azure OpenAI</span>
+                    <span class="badge" style="font-size: 20px; padding: 10px 25px;">GPT-4</span>
+                </div>
+                <p style="margin-top: 60px; font-size: 22px; color: #999;">December 2025</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Executive Summary -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Executive Summary</div>
+                <div class="slide-subtitle">Overview of the Solution</div>
+            </div>
+            <div class="slide-content">
+                <h2>What is This Application?</h2>
+                <p>A <span class="highlight">production-ready, enterprise-grade chat application</span> built on Azure OpenAI services, providing an intelligent conversational interface with advanced capabilities.</p>
+
+                <h3>Key Capabilities</h3>
+                <ul class="feature-list">
+                    <li><strong>Real-time Chat</strong> - Conversations powered by GPT-3.5-turbo, GPT-4, and GPT-4o</li>
+                    <li><strong>Retrieval-Augmented Generation (RAG)</strong> - Chat with your own data</li>
+                    <li><strong>Persistent Chat History</strong> - User conversation tracking via Azure CosmosDB</li>
+                    <li><strong>Function Calling</strong> - Integration with Azure Functions for extended capabilities</li>
+                    <li><strong>Multi-Datasource Support</strong> - Azure AI Search, CosmosDB, Elasticsearch, Pinecone, MongoDB</li>
+                    <li><strong>Enterprise Security</strong> - Azure Entra ID authentication, Microsoft Defender integration</li>
+                    <li><strong>Scalable Architecture</strong> - Async processing, streaming responses, containerization</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: Key Metrics -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Key Metrics</div>
+                <div class="slide-subtitle">Application Statistics</div>
+            </div>
+            <div class="slide-content">
+                <div class="three-column">
+                    <div class="metric">
+                        <span class="metric-value">1,062</span>
+                        <span class="metric-label">Lines of Backend Code (app.py)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">3,000+</span>
+                        <span class="metric-label">Lines of Frontend Code</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">8+</span>
+                        <span class="metric-label">Data Source Integrations</span>
+                    </div>
+                </div>
+
+                <div class="three-column">
+                    <div class="metric" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
+                        <span class="metric-value">4</span>
+                        <span class="metric-label">GPT Models Supported</span>
+                    </div>
+                    <div class="metric" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        <span class="metric-value">10+</span>
+                        <span class="metric-label">Azure Services Integrated</span>
+                    </div>
+                    <div class="metric" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);">
+                        <span class="metric-value">5</span>
+                        <span class="metric-label">Deployment Options</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: System Architecture Overview -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">System Architecture</div>
+                <div class="slide-subtitle">High-Level Component View</div>
+            </div>
+            <div class="slide-content">
+                <div class="architecture-box">CLIENT LAYER<br/>Web Browser → React SPA (TypeScript + Fluent UI)</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">APPLICATION LAYER<br/>Quart Web Server (Python 3.11) + Static File Server</div>
+                <div class="flow-arrow">↓</div>
+                <div class="two-column">
+                    <div class="architecture-box">BUSINESS LOGIC<br/>Conversation Handler<br/>History Manager<br/>Auth Manager<br/>Security Module</div>
+                    <div class="architecture-box">AZURE SERVICES<br/>Azure OpenAI<br/>CosmosDB<br/>AI Search<br/>Entra ID<br/>Microsoft Defender</div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">OPTIONAL DATA SOURCES<br/>Elasticsearch | Pinecone | MongoDB | Azure SQL</div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Technology Stack - Backend -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Technology Stack</div>
+                <div class="slide-subtitle">Backend Technologies</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Technology</th>
+                        <th>Version</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Runtime</strong></td>
+                        <td>Python</td>
+                        <td>3.11</td>
+                        <td>Core language</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Web Framework</strong></td>
+                        <td>Quart</td>
+                        <td>0.19.9</td>
+                        <td>Async web server (Flask alternative)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WSGI Server</strong></td>
+                        <td>Gunicorn</td>
+                        <td>20.1.0</td>
+                        <td>Production server</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI SDK</strong></td>
+                        <td>OpenAI</td>
+                        <td>1.55.3</td>
+                        <td>Azure OpenAI client</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Validation</strong></td>
+                        <td>Pydantic</td>
+                        <td>2.2.1</td>
+                        <td>Settings & request validation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HTTP Client</strong></td>
+                        <td>httpx</td>
+                        <td>3.9.2</td>
+                        <td>Async HTTP requests</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Azure SDK</strong></td>
+                        <td>azure-search-documents</td>
+                        <td>11.4.0b6</td>
+                        <td>AI Search integration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database</strong></td>
+                        <td>azure-cosmos</td>
+                        <td>4.5.0</td>
+                        <td>CosmosDB client</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 6: Technology Stack - Frontend -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Technology Stack</div>
+                <div class="slide-subtitle">Frontend Technologies</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Technology</th>
+                        <th>Version</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Framework</strong></td>
+                        <td>React</td>
+                        <td>18.2.0</td>
+                        <td>UI library</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Language</strong></td>
+                        <td>TypeScript</td>
+                        <td>4.9.5</td>
+                        <td>Static typing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Build Tool</strong></td>
+                        <td>Vite</td>
+                        <td>4.1.5</td>
+                        <td>Dev server and bundler</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UI Library</strong></td>
+                        <td>Fluent UI React</td>
+                        <td>8.109.0</td>
+                        <td>Microsoft design system</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Routing</strong></td>
+                        <td>React Router</td>
+                        <td>6.8.1</td>
+                        <td>Client-side routing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Markdown</strong></td>
+                        <td>React Markdown</td>
+                        <td>8.0.5</td>
+                        <td>Render chat responses</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Security</strong></td>
+                        <td>DOMPurify</td>
+                        <td>3.0.8</td>
+                        <td>HTML sanitization</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Syntax Highlighting</strong></td>
+                        <td>React Syntax Highlighter</td>
+                        <td>15.5.0</td>
+                        <td>Code blocks in chat</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 7: Application Structure -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Application Structure</div>
+                <div class="slide-subtitle">Directory Organization</div>
+            </div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div>
+                        <h3>Backend Structure</h3>
+                        <div class="code-block">
+app.py                  # Main entry (1,062 lines)
+requirements.txt        # Python deps
+gunicorn.conf.py       # Server config
+
+backend/
+├── auth/
+│   ├── auth_utils.py  # Auth helpers
+│   └── sample_user.py # Sample users
+├── history/
+│   └── cosmosdbservice.py
+├── security/
+│   └── ms_defender_utils.py
+├── settings.py        # Config (Pydantic)
+└── utils.py          # Utilities
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Frontend Structure</h3>
+                        <div class="code-block">
+frontend/
+├── src/
+│   ├── pages/
+│   │   ├── chat/Chat.tsx (500+ lines)
+│   │   ├── layout/Layout.tsx
+│   │   └── NoPage.tsx
+│   ├── components/
+│   │   ├── Answer/
+│   │   ├── QuestionInput/
+│   │   ├── ChatHistory/
+│   │   └── common/
+│   ├── api/
+│   │   ├── api.ts     # API client
+│   │   └── models.ts  # TypeScript interfaces
+│   ├── state/
+│   │   ├── AppProvider.tsx
+│   │   └── AppReducer.tsx
+│   └── index.tsx
+├── vite.config.ts
+└── package.json
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Conversation Flow - Part 1 -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Conversation Flow</div>
+                <div class="slide-subtitle">Request Processing Pipeline</div>
+            </div>
+            <div class="slide-content">
+                <h3>Step-by-Step Flow</h3>
+                <div class="architecture-box">1. User Types Message in Chat.tsx</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">2. Frontend Calls conversationApi()</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">3. POST /conversation → Quart API (app.py:585)</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">4. Validate Auth Token & Extract User</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">5. prepare_model_args() - Build Request Payload</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">6. Send to Azure OpenAI (Streaming or Non-Streaming)</div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Conversation Flow - Part 2 -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Conversation Flow</div>
+                <div class="slide-subtitle">Response Processing</div>
+            </div>
+            <div class="slide-content">
+                <h3>Streaming Response Flow</h3>
+                <div class="two-column">
+                    <div class="card">
+                        <h3>Stream Mode (Default)</h3>
+                        <ul>
+                            <li>stream_chat_request()</li>
+                            <li>async for chunk in response</li>
+                            <li>format_as_ndjson()</li>
+                            <li>Yield NDJSON lines</li>
+                            <li>Frontend parses progressively</li>
+                            <li>Lower latency, better UX</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Non-Stream Mode</h3>
+                        <ul>
+                            <li>complete_chat_request()</li>
+                            <li>Await full response</li>
+                            <li>format_non_streaming_response()</li>
+                            <li>Return complete JSON</li>
+                            <li>Display all at once</li>
+                            <li>Simpler implementation</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="architecture-box" style="margin-top: 30px;">Frontend Updates UI → Extract Citations → Render Markdown → Display to User</div>
+            </div>
+        </div>
+
+        <!-- Slide 10: RAG Architecture -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">RAG Architecture</div>
+                <div class="slide-subtitle">Retrieval-Augmented Generation</div>
+            </div>
+            <div class="slide-content">
+                <h3>What is RAG?</h3>
+                <p>RAG combines <span class="highlight">retrieval of relevant documents</span> with <span class="highlight">AI generation</span> to provide answers based on your own data.</p>
+
+                <h3>Supported Data Sources</h3>
+                <div class="tech-stack">
+                    <div class="tech-badge">Azure AI Search</div>
+                    <div class="tech-badge">Azure CosmosDB Mongo vCore</div>
+                    <div class="tech-badge">Elasticsearch</div>
+                    <div class="tech-badge">Pinecone</div>
+                    <div class="tech-badge">MongoDB</div>
+                    <div class="tech-badge">Azure ML Index</div>
+                    <div class="tech-badge">Azure SQL Server</div>
+                    <div class="tech-badge">Prompt Flow</div>
+                </div>
+
+                <h3>RAG Process Flow</h3>
+                <div class="architecture-box">User Question → Query Data Source → Retrieve Relevant Docs</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">Send to Azure OpenAI with Context → Generate Answer with Citations</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">Display Answer + Source Links to User</div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Chat History Management -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Chat History Management</div>
+                <div class="slide-subtitle">Persistent Conversations with CosmosDB</div>
+            </div>
+            <div class="slide-content">
+                <h3>History API Endpoints</h3>
+                <table>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>/history/generate</td>
+                        <td>POST</td>
+                        <td>Create new conversation</td>
+                    </tr>
+                    <tr>
+                        <td>/history/update</td>
+                        <td>POST</td>
+                        <td>Add messages to conversation</td>
+                    </tr>
+                    <tr>
+                        <td>/history/list</td>
+                        <td>GET</td>
+                        <td>List user's conversations</td>
+                    </tr>
+                    <tr>
+                        <td>/history/read</td>
+                        <td>POST</td>
+                        <td>Get messages in conversation</td>
+                    </tr>
+                    <tr>
+                        <td>/history/rename</td>
+                        <td>POST</td>
+                        <td>Rename conversation</td>
+                    </tr>
+                    <tr>
+                        <td>/history/delete</td>
+                        <td>DELETE</td>
+                        <td>Delete conversation</td>
+                    </tr>
+                    <tr>
+                        <td>/history/delete_all</td>
+                        <td>DELETE</td>
+                        <td>Clear all conversations</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 12: CosmosDB Schema -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">CosmosDB Schema</div>
+                <div class="slide-subtitle">Data Model for Chat History</div>
+            </div>
+            <div class="slide-content">
+                <h3>Database Configuration</h3>
+                <ul>
+                    <li><strong>Database:</strong> db_conversation_history</li>
+                    <li><strong>Container:</strong> conversations</li>
+                    <li><strong>Partition Key:</strong> /userId (enables user isolation)</li>
+                </ul>
+
+                <div class="two-column" style="margin-top: 30px;">
+                    <div class="card">
+                        <h3>Conversation Document</h3>
+                        <div class="code-block" style="font-size: 14px;">
+{
+  "id": "uuid",
+  "type": "conversation",
+  "userId": "user@contoso.com",
+  "createdAt": "2025-12-07T10:00:00Z",
+  "updatedAt": "2025-12-07T10:30:00Z",
+  "title": "Azure OpenAI Discussion",
+  "date": "2025-12-07T10:00:00Z"
+}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Message Document</h3>
+                        <div class="code-block" style="font-size: 14px;">
+{
+  "id": "uuid",
+  "type": "message",
+  "userId": "user@contoso.com",
+  "conversationId": "conv-uuid",
+  "role": "user",
+  "content": "What is Azure OpenAI?",
+  "createdAt": "2025-12-07T10:00:15Z",
+  "feedback": null
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Function Calling -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Function Calling</div>
+                <div class="slide-subtitle">Extending AI Capabilities with Azure Functions</div>
+            </div>
+            <div class="slide-content">
+                <h3>How Function Calling Works</h3>
+                <div class="architecture-box">1. User: "What's the weather in Seattle?"</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">2. Azure OpenAI Response includes tool_calls</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">3. process_function_call() → Extract function name & args</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">4. Call Azure Function via HTTP POST</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">5. Function Executes → Returns Result</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">6. Add Result to Messages → Send Follow-up to OpenAI</div>
+                <div class="flow-arrow">↓</div>
+                <div class="architecture-box">7. Final Answer Displayed to User</div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Authentication Architecture -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Authentication Architecture</div>
+                <div class="slide-subtitle">Securing the Application</div>
+            </div>
+            <div class="slide-content">
+                <h3>Authentication Methods</h3>
+                <div class="three-column">
+                    <div class="card">
+                        <h3>Azure App Service Easy Auth</h3>
+                        <p>Built-in authentication without code changes</p>
+                    </div>
+                    <div class="card">
+                        <h3>Azure Entra ID</h3>
+                        <p>OAuth 2.0 / OpenID Connect for enterprise users</p>
+                    </div>
+                    <div class="card">
+                        <h3>Development Mode</h3>
+                        <p>No authentication for local testing</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">User Context Usage</h3>
+                <ul>
+                    <li>✓ Filter conversations by userId (data isolation)</li>
+                    <li>✓ Document-level access control in search queries</li>
+                    <li>✓ Microsoft Defender security context</li>
+                    <li>✓ Audit logging and compliance</li>
+                    <li>✓ Group-based authorization (RBAC)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 15: Security Architecture -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Security Architecture</div>
+                <div class="slide-subtitle">Multi-Layer Security Approach</div>
+            </div>
+            <div class="slide-content">
+                <h3>Security Layers</h3>
+                <table>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Protection</th>
+                    </tr>
+                    <tr>
+                        <td>Network</td>
+                        <td>Azure NSG, Private Endpoints</td>
+                        <td>Network isolation</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication</td>
+                        <td>Azure Entra ID</td>
+                        <td>Identity verification</td>
+                    </tr>
+                    <tr>
+                        <td>Authorization</td>
+                        <td>RBAC, Group-based access</td>
+                        <td>Resource access control</td>
+                    </tr>
+                    <tr>
+                        <td>Secrets</td>
+                        <td>Azure Key Vault</td>
+                        <td>Secure credential storage</td>
+                    </tr>
+                    <tr>
+                        <td>Input Validation</td>
+                        <td>Pydantic schemas</td>
+                        <td>Prevent injection attacks</td>
+                    </tr>
+                    <tr>
+                        <td>Output Sanitization</td>
+                        <td>DOMPurify</td>
+                        <td>XSS prevention</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring</td>
+                        <td>Microsoft Defender, App Insights</td>
+                        <td>Threat detection</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 16: OWASP Top 10 Protection -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Security - OWASP Top 10</div>
+                <div class="slide-subtitle">Industry Standard Threat Mitigation</div>
+            </div>
+            <div class="slide-content">
+                <h3>Protection Against OWASP Top 10</h3>
+                <div class="two-column">
+                    <div>
+                        <div class="card">
+                            <h4>1. Injection</h4>
+                            <p>✓ Pydantic validation<br/>✓ Parameterized queries</p>
+                        </div>
+                        <div class="card">
+                            <h4>2. Broken Authentication</h4>
+                            <p>✓ Azure Entra ID<br/>✓ OAuth 2.0</p>
+                        </div>
+                        <div class="card">
+                            <h4>3. Sensitive Data Exposure</h4>
+                            <p>✓ Azure Key Vault<br/>✓ Encrypted storage</p>
+                        </div>
+                        <div class="card">
+                            <h4>4. XML External Entities</h4>
+                            <p>✓ JSON-only API<br/>✓ No XML parsing</p>
+                        </div>
+                        <div class="card">
+                            <h4>5. Broken Access Control</h4>
+                            <p>✓ RBAC<br/>✓ User context filtering</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card">
+                            <h4>6. Security Misconfiguration</h4>
+                            <p>✓ Bicep templates<br/>✓ Secure defaults</p>
+                        </div>
+                        <div class="card">
+                            <h4>7. Cross-Site Scripting (XSS)</h4>
+                            <p>✓ DOMPurify sanitization<br/>✓ Content Security Policy</p>
+                        </div>
+                        <div class="card">
+                            <h4>8. Insecure Deserialization</h4>
+                            <p>✓ JSON schema validation<br/>✓ Type checking</p>
+                        </div>
+                        <div class="card">
+                            <h4>9. Known Vulnerabilities</h4>
+                            <p>✓ Dependabot alerts<br/>✓ Regular updates</p>
+                        </div>
+                        <div class="card">
+                            <h4>10. Insufficient Logging</h4>
+                            <p>✓ Application Insights<br/>✓ Audit logs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Azure Resources -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Azure Resources</div>
+                <div class="slide-subtitle">Infrastructure Components</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>Resource</th>
+                        <th>Type</th>
+                        <th>Purpose</th>
+                        <th>SKU</th>
+                    </tr>
+                    <tr>
+                        <td>App Service Plan</td>
+                        <td>Microsoft.Web/serverfarms</td>
+                        <td>Hosting infrastructure</td>
+                        <td>B1 (Dev), P1V2 (Prod)</td>
+                    </tr>
+                    <tr>
+                        <td>App Service</td>
+                        <td>Microsoft.Web/sites</td>
+                        <td>Web application</td>
+                        <td>Linux</td>
+                    </tr>
+                    <tr>
+                        <td>Azure OpenAI</td>
+                        <td>Microsoft.CognitiveServices</td>
+                        <td>AI models</td>
+                        <td>S0</td>
+                    </tr>
+                    <tr>
+                        <td>CosmosDB</td>
+                        <td>Microsoft.DocumentDB</td>
+                        <td>Chat history</td>
+                        <td>Standard</td>
+                    </tr>
+                    <tr>
+                        <td>AI Search</td>
+                        <td>Microsoft.Search</td>
+                        <td>Document search</td>
+                        <td>Basic/Standard</td>
+                    </tr>
+                    <tr>
+                        <td>Key Vault</td>
+                        <td>Microsoft.KeyVault</td>
+                        <td>Secrets management</td>
+                        <td>Standard</td>
+                    </tr>
+                    <tr>
+                        <td>Application Insights</td>
+                        <td>Microsoft.Insights</td>
+                        <td>Monitoring</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Storage Account</td>
+                        <td>Microsoft.Storage</td>
+                        <td>Blob storage</td>
+                        <td>Standard LRS</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 18: Deployment Options -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Deployment Options</div>
+                <div class="slide-subtitle">Multiple Paths to Production</div>
+            </div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="card">
+                        <h3>1. Azure Developer CLI (Recommended)</h3>
+                        <div class="code-block">
+# Install azd
+curl -fsSL https://aka.ms/install-azd.sh | bash
+
+# Login to Azure
+azd auth login
+
+# Provision and deploy
+azd up
+                        </div>
+                        <p><strong>Benefits:</strong> Automated, reproducible, includes auth setup</p>
+                    </div>
+                    <div class="card">
+                        <h3>2. Manual Deployment</h3>
+                        <div class="code-block">
+# Build frontend
+cd frontend && npm run build
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Deploy to Azure
+az webapp up --name <app-name>
+                        </div>
+                        <p><strong>Benefits:</strong> Full control, customizable</p>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 20px;">
+                    <div class="card">
+                        <h3>3. Docker Deployment</h3>
+                        <div class="code-block">
+# Build image
+docker build -t azure-openai-chat .
+
+# Run container
+docker run -p 8080:8080 \
+  -e AZURE_OPENAI_ENDPOINT=<endpoint> \
+  azure-openai-chat
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>4. GitHub Actions CI/CD</h3>
+                        <div class="code-block">
+# .github/workflows/deploy.yml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: Environment Configuration -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Environment Configuration</div>
+                <div class="slide-subtitle">Required Environment Variables</div>
+            </div>
+            <div class="slide-content">
+                <h3>Azure OpenAI Configuration</h3>
+                <div class="code-block">
+AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com/
+AZURE_OPENAI_API_KEY=<key>
+AZURE_OPENAI_MODEL=gpt-4
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_OPENAI_STREAM=true
+AZURE_OPENAI_TEMPERATURE=0.7
+AZURE_OPENAI_MAX_TOKENS=1000
+                </div>
+
+                <h3>Chat History Configuration</h3>
+                <div class="code-block">
+AZURE_COSMOSDB_ACCOUNT=<cosmos-account-name>
+AZURE_COSMOSDB_DATABASE=db_conversation_history
+AZURE_COSMOSDB_CONVERSATIONS_CONTAINER=conversations
+AZURE_COSMOSDB_ENABLE_FEEDBACK=true
+                </div>
+
+                <h3>Data Source Configuration (Optional)</h3>
+                <div class="code-block">
+DATASOURCE_TYPE=AzureAISearch
+AZURE_SEARCH_SERVICE=<search-service-name>
+AZURE_SEARCH_INDEX=<index-name>
+AZURE_SEARCH_KEY=<key>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: Settings Management -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Settings Management</div>
+                <div class="slide-subtitle">Type-Safe Configuration with Pydantic</div>
+            </div>
+            <div class="slide-content">
+                <h3>Backend Settings Architecture</h3>
+                <div class="code-block">
+from pydantic import BaseSettings, Field
+
+class _AzureOpenAISettings(BaseSettings):
+    endpoint: str = Field(...)
+    key: str = Field(...)
+    model: str = Field(default="gpt-4")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    max_tokens: int = Field(default=1000, ge=1)
+
+    @validator('temperature')
+    def validate_temperature(cls, v):
+        if not 0.0 <= v <= 2.0:
+            raise ValueError('Temperature must be between 0.0 and 2.0')
+        return v
+
+@lru_cache()
+def get_settings():
+    """Cached settings instance"""
+    return AppSettings()
+                </div>
+
+                <h3>Key Features</h3>
+                <ul>
+                    <li>✓ Type-safe environment variable loading</li>
+                    <li>✓ Validation with constraints (min, max, regex)</li>
+                    <li>✓ Default values and optional fields</li>
+                    <li>✓ Automatic .env file loading</li>
+                    <li>✓ Cached for performance</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 21: Frontend State Management -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Frontend State Management</div>
+                <div class="slide-subtitle">React Context & Reducer Pattern</div>
+            </div>
+            <div class="slide-content">
+                <h3>State Architecture</h3>
+                <div class="two-column">
+                    <div class="card">
+                        <h3>AppProvider.tsx</h3>
+                        <p>Global state container using React Context API</p>
+                        <h4>State Properties:</h4>
+                        <ul style="font-size: 16px;">
+                            <li>currentChat (messages array)</li>
+                            <li>chatHistory (list of conversations)</li>
+                            <li>isChatHistoryOpen</li>
+                            <li>isCosmosDBAvailable</li>
+                            <li>frontendSettings</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>AppReducer.tsx</h3>
+                        <p>State mutation logic</p>
+                        <h4>Actions:</h4>
+                        <ul style="font-size: 16px;">
+                            <li>UPDATE_CURRENT_CHAT</li>
+                            <li>UPDATE_CHAT_HISTORY</li>
+                            <li>UPDATE_CHAT_HISTORY_LOADING_STATE</li>
+                            <li>FETCH_FRONTEND_SETTINGS</li>
+                            <li>SET_COSMOSDB_STATUS</li>
+                            <li>TOGGLE_CHAT_HISTORY</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">Benefits of This Pattern</h3>
+                <ul>
+                    <li>✓ Centralized state management</li>
+                    <li>✓ Predictable state updates</li>
+                    <li>✓ Easy testing and debugging</li>
+                    <li>✓ Component decoupling</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 22: API Documentation -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">API Documentation</div>
+                <div class="slide-subtitle">REST API Endpoints</div>
+            </div>
+            <div class="slide-content">
+                <h3>Main Endpoints</h3>
+                <table>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Purpose</th>
+                        <th>Auth Required</th>
+                    </tr>
+                    <tr>
+                        <td>/conversation</td>
+                        <td>POST</td>
+                        <td>Send chat message, get AI response</td>
+                        <td>Yes (if enabled)</td>
+                    </tr>
+                    <tr>
+                        <td>/history/generate</td>
+                        <td>POST</td>
+                        <td>Create new conversation</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/history/update</td>
+                        <td>POST</td>
+                        <td>Add messages to conversation</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/history/list</td>
+                        <td>GET</td>
+                        <td>List user's conversations</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/history/read</td>
+                        <td>POST</td>
+                        <td>Get messages in conversation</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/history/rename</td>
+                        <td>POST</td>
+                        <td>Rename conversation</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/history/delete</td>
+                        <td>DELETE</td>
+                        <td>Delete conversation</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>/frontend_settings</td>
+                        <td>GET</td>
+                        <td>Get UI configuration</td>
+                        <td>No</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 23: Testing Strategy -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Testing Strategy</div>
+                <div class="slide-subtitle">Comprehensive Test Coverage</div>
+            </div>
+            <div class="slide-content">
+                <h3>Test Structure</h3>
+                <div class="two-column">
+                    <div class="card">
+                        <h3>Backend Tests (Pytest)</h3>
+                        <h4>Unit Tests</h4>
+                        <ul>
+                            <li>test_utils.py - Utility functions</li>
+                            <li>test_settings.py - Configuration</li>
+                            <li>Test env files in dotenv_data/</li>
+                        </ul>
+                        <h4>Integration Tests</h4>
+                        <ul>
+                            <li>test_datasources.py - Data sources</li>
+                            <li>End-to-end API tests</li>
+                            <li>CosmosDB integration</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Frontend Tests (Jest)</h3>
+                        <h4>Component Tests</h4>
+                        <ul>
+                            <li>Chat.test.tsx</li>
+                            <li>Answer.test.tsx</li>
+                            <li>QuestionInput.test.tsx</li>
+                        </ul>
+                        <h4>Test Configuration</h4>
+                        <ul>
+                            <li>jest.config.ts</li>
+                            <li>setupTests.ts</li>
+                            <li>React Testing Library</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Running Tests</h3>
+                <div class="code-block">
+# Backend unit tests
+pytest tests/unit_tests/
+
+# Backend integration tests
+pytest tests/integration_tests/
+
+# Frontend tests
+cd frontend && npm test
+
+# Coverage report
+pytest --cov=backend --cov-report=html
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 24: Performance Optimization -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Performance Optimization</div>
+                <div class="slide-subtitle">Speed and Scalability Techniques</div>
+            </div>
+            <div class="slide-content">
+                <h3>Backend Optimizations</h3>
+                <div class="three-column">
+                    <div class="card">
+                        <h3>Async/Await</h3>
+                        <p>All I/O operations use async patterns for non-blocking execution</p>
+                    </div>
+                    <div class="card">
+                        <h3>Streaming</h3>
+                        <p>NDJSON streaming for lower latency and progressive rendering</p>
+                    </div>
+                    <div class="card">
+                        <h3>Connection Pooling</h3>
+                        <p>Reuse HTTP connections to Azure services</p>
+                    </div>
+                </div>
+
+                <h3>Frontend Optimizations</h3>
+                <div class="three-column">
+                    <div class="card">
+                        <h3>Code Splitting</h3>
+                        <p>Vite automatic chunking reduces initial load time</p>
+                    </div>
+                    <div class="card">
+                        <h3>Tree Shaking</h3>
+                        <p>Remove unused code from production bundles</p>
+                    </div>
+                    <div class="card">
+                        <h3>Lazy Loading</h3>
+                        <p>Load components on demand</p>
+                    </div>
+                </div>
+
+                <h3>Gunicorn Configuration</h3>
+                <div class="code-block">
+workers = (multiprocessing.cpu_count() * 2) + 1
+worker_class = "uvicorn.workers.UvicornWorker"
+timeout = 120
+max_requests = 1000
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 25: Monitoring and Observability -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Monitoring & Observability</div>
+                <div class="slide-subtitle">Application Insights Integration</div>
+            </div>
+            <div class="slide-content">
+                <h3>Metrics Tracked</h3>
+                <div class="two-column">
+                    <div class="card">
+                        <h3>Automatic Metrics</h3>
+                        <ul>
+                            <li>Request count and duration</li>
+                            <li>Response status codes</li>
+                            <li>Dependency calls (OpenAI, CosmosDB)</li>
+                            <li>Exception rates and types</li>
+                            <li>Server resource usage (CPU, memory)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Custom Telemetry</h3>
+                        <ul>
+                            <li>Conversation started events</li>
+                            <li>Message length metrics</li>
+                            <li>Model usage tracking</li>
+                            <li>User activity patterns</li>
+                            <li>Feature usage analytics</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>Log Analytics Queries</h3>
+                <div class="code-block">
+// Average response time
+requests
+| where timestamp > ago(1h)
+| summarize avg(duration) by bin(timestamp, 5m)
+
+// Error rate
+exceptions
+| where timestamp > ago(1h)
+| summarize count() by type
+| order by count_ desc
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 26: Key Backend Files -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Key Backend Files</div>
+                <div class="slide-subtitle">Core Python Modules</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>File</th>
+                        <th>Lines</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><strong>app.py</strong></td>
+                        <td>1,062</td>
+                        <td>Main application server, route handlers, conversation orchestration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>backend/settings.py</strong></td>
+                        <td>~400</td>
+                        <td>Pydantic settings, environment variable management, validation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>backend/utils.py</strong></td>
+                        <td>~300</td>
+                        <td>Response formatting, streaming helpers, utility functions</td>
+                    </tr>
+                    <tr>
+                        <td><strong>backend/history/cosmosdbservice.py</strong></td>
+                        <td>~500</td>
+                        <td>CosmosDB client, conversation CRUD, message persistence</td>
+                    </tr>
+                    <tr>
+                        <td><strong>backend/auth/auth_utils.py</strong></td>
+                        <td>~200</td>
+                        <td>Authentication helpers, user context extraction, token validation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>backend/security/ms_defender_utils.py</strong></td>
+                        <td>~100</td>
+                        <td>Microsoft Defender integration, security context building</td>
+                    </tr>
+                    <tr>
+                        <td><strong>gunicorn.conf.py</strong></td>
+                        <td>~50</td>
+                        <td>Production WSGI server configuration, workers, timeout</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 27: Key Frontend Files -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Key Frontend Files</div>
+                <div class="slide-subtitle">Core React Components</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>File</th>
+                        <th>Lines</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Chat.tsx</strong></td>
+                        <td>500+</td>
+                        <td>Main chat interface, message display, user input, citations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>api.ts</strong></td>
+                        <td>~300</td>
+                        <td>API client functions for conversation, history, settings</td>
+                    </tr>
+                    <tr>
+                        <td><strong>models.ts</strong></td>
+                        <td>~200</td>
+                        <td>TypeScript interfaces and type definitions</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AppProvider.tsx</strong></td>
+                        <td>~150</td>
+                        <td>React context provider, global state container</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AppReducer.tsx</strong></td>
+                        <td>~200</td>
+                        <td>State management reducer, action handlers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AnswerParser.tsx</strong></td>
+                        <td>~300</td>
+                        <td>Markdown parsing, citation extraction, syntax highlighting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ChatHistoryPanel.tsx</strong></td>
+                        <td>~250</td>
+                        <td>Chat history sidebar, conversation list, selection</td>
+                    </tr>
+                    <tr>
+                        <td><strong>vite.config.ts</strong></td>
+                        <td>~50</td>
+                        <td>Frontend build configuration, output to ../static/</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 28: Data Flow Example -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Complete Data Flow Example</div>
+                <div class="slide-subtitle">End-to-End Message Processing</div>
+            </div>
+            <div class="slide-content">
+                <h3>User Query: "What is Azure OpenAI?"</h3>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                    STEP 1: User Input<br/>
+                    User types in Chat.tsx → Click Send
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                    STEP 2: API Call<br/>
+                    conversationApi() → POST /conversation<br/>
+                    Body: {messages: [{role: "user", content: "What is Azure OpenAI?"}]}
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                    STEP 3: Backend Processing<br/>
+                    app.py:conversation() → Validate auth → prepare_model_args()
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);">
+                    STEP 4: Azure OpenAI Call<br/>
+                    send_chat_request() → POST to OpenAI endpoint<br/>
+                    Stream response chunks
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);">
+                    STEP 5: Response Streaming<br/>
+                    format_as_ndjson() → Yield NDJSON chunks to frontend
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="architecture-box" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                    STEP 6: Frontend Display<br/>
+                    Parse chunks → AnswerParser → Render markdown → Show to user
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 29: Best Practices -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Best Practices & Recommendations</div>
+                <div class="slide-subtitle">Production Deployment Guidance</div>
+            </div>
+            <div class="slide-content">
+                <h3>Security Best Practices</h3>
+                <ul>
+                    <li>✓ Always enable Azure Entra ID authentication in production</li>
+                    <li>✓ Store all secrets in Azure Key Vault, not environment variables</li>
+                    <li>✓ Enable Microsoft Defender for Cloud for threat protection</li>
+                    <li>✓ Use Managed Identity for Azure service authentication</li>
+                    <li>✓ Implement network security with Private Endpoints</li>
+                    <li>✓ Enable CORS only for trusted domains</li>
+                </ul>
+
+                <h3>Performance Best Practices</h3>
+                <ul>
+                    <li>✓ Use streaming mode for better user experience</li>
+                    <li>✓ Configure appropriate Gunicorn workers (CPU cores × 2 + 1)</li>
+                    <li>✓ Enable CosmosDB indexing for fast queries</li>
+                    <li>✓ Use Azure CDN for static assets in production</li>
+                    <li>✓ Implement request throttling to prevent abuse</li>
+                </ul>
+
+                <h3>Cost Optimization</h3>
+                <ul>
+                    <li>✓ Use GPT-3.5-turbo for non-critical conversations</li>
+                    <li>✓ Implement conversation TTL in CosmosDB</li>
+                    <li>✓ Monitor token usage with Application Insights</li>
+                    <li>✓ Scale App Service based on actual usage</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 30: Architecture Strengths -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Architecture Strengths</div>
+                <div class="slide-subtitle">Why This Design Excels</div>
+            </div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="card">
+                        <h3>✓ Scalability</h3>
+                        <ul>
+                            <li>Async processing throughout</li>
+                            <li>Horizontal scaling with workers</li>
+                            <li>Streaming for efficient resource usage</li>
+                            <li>Connection pooling and caching</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>✓ Security</h3>
+                        <ul>
+                            <li>Multi-layer security architecture</li>
+                            <li>Enterprise-grade authentication</li>
+                            <li>OWASP Top 10 protection</li>
+                            <li>Comprehensive audit logging</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="two-column">
+                    <div class="card">
+                        <h3>✓ Flexibility</h3>
+                        <ul>
+                            <li>Multi-datasource RAG support</li>
+                            <li>Configurable AI models</li>
+                            <li>Extensible function calling</li>
+                            <li>Customizable UI and branding</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>✓ Maintainability</h3>
+                        <ul>
+                            <li>Clean separation of concerns</li>
+                            <li>Type-safe configuration</li>
+                            <li>Comprehensive testing</li>
+                            <li>Well-documented codebase</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="two-column">
+                    <div class="card">
+                        <h3>✓ Observability</h3>
+                        <ul>
+                            <li>Application Insights integration</li>
+                            <li>Custom telemetry and metrics</li>
+                            <li>Log Analytics for diagnostics</li>
+                            <li>Real-time monitoring dashboards</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>✓ Developer Experience</h3>
+                        <ul>
+                            <li>Modern tech stack (React, TypeScript, Python)</li>
+                            <li>Fast local development (Vite HMR)</li>
+                            <li>Multiple deployment options</li>
+                            <li>IaC templates for reproducibility</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 31: Common Use Cases -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Common Use Cases</div>
+                <div class="slide-subtitle">Real-World Applications</div>
+            </div>
+            <div class="slide-content">
+                <div class="three-column">
+                    <div class="card">
+                        <div class="icon center">📚</div>
+                        <h3>Internal Knowledge Base</h3>
+                        <p>Chat with company documentation, policies, and procedures using RAG</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">🛠️</div>
+                        <h3>IT Support Assistant</h3>
+                        <p>Automated helpdesk for common IT issues and troubleshooting</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">📊</div>
+                        <h3>Data Analysis Assistant</h3>
+                        <p>Query databases and generate insights using function calling</p>
+                    </div>
+                </div>
+
+                <div class="three-column">
+                    <div class="card">
+                        <div class="icon center">🎓</div>
+                        <h3>Training & Onboarding</h3>
+                        <p>Interactive training bot for new employees with company-specific knowledge</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">💼</div>
+                        <h3>Sales Enablement</h3>
+                        <p>Product information and sales playbook assistant for sales teams</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">⚖️</div>
+                        <h3>Compliance Assistant</h3>
+                        <p>Legal and compliance document search and interpretation</p>
+                    </div>
+                </div>
+
+                <div class="three-column">
+                    <div class="card">
+                        <div class="icon center">🔬</div>
+                        <h3>Research Assistant</h3>
+                        <p>Academic paper search and summarization for researchers</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">🏥</div>
+                        <h3>Healthcare Information</h3>
+                        <p>Medical reference and patient education (with proper disclaimers)</p>
+                    </div>
+                    <div class="card">
+                        <div class="icon center">🌐</div>
+                        <h3>Multilingual Support</h3>
+                        <p>Customer support in multiple languages with translation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 32: Extensibility Points -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Extensibility Points</div>
+                <div class="slide-subtitle">How to Customize and Extend</div>
+            </div>
+            <div class="slide-content">
+                <h3>Easy Customization Points</h3>
+
+                <div class="card">
+                    <h3>1. Custom Data Sources</h3>
+                    <p>Add new datasource by implementing:</p>
+                    <div class="code-block" style="font-size: 14px;">
+class _CustomDataSourceSettings(BaseSettings):
+    endpoint: str
+    api_key: str
+
+    def construct_payload_configuration(self):
+        return {
+            "type": "custom_source",
+            "parameters": {...}
+        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>2. Custom Azure Functions</h3>
+                    <p>Extend AI capabilities with custom functions:</p>
+                    <ul>
+                        <li>Create Azure Function with HTTP trigger</li>
+                        <li>Define function schema in OpenAI request</li>
+                        <li>Handle function call in process_function_call()</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>3. UI Customization</h3>
+                    <p>Brand the interface with environment variables:</p>
+                    <div class="code-block" style="font-size: 14px;">
+UI_TITLE=Your Company Chat
+UI_CHAT_LOGO=/assets/company-logo.svg
+UI_CHAT_TITLE=Welcome to Company AI Assistant
+UI_CHAT_DESCRIPTION=Ask questions about our products and services
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>4. Custom Middleware</h3>
+                    <p>Add request/response processing in app.py:</p>
+                    <ul>
+                        <li>@app.before_request for pre-processing</li>
+                        <li>@app.after_request for post-processing</li>
+                        <li>Custom logging, analytics, rate limiting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 33: Troubleshooting Guide -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Troubleshooting Guide</div>
+                <div class="slide-subtitle">Common Issues and Solutions</div>
+            </div>
+            <div class="slide-content">
+                <table>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Possible Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                    <tr>
+                        <td>401 Unauthorized</td>
+                        <td>Authentication not configured</td>
+                        <td>Set AUTH_ENABLED=false for dev, or configure Entra ID</td>
+                    </tr>
+                    <tr>
+                        <td>Azure OpenAI 404</td>
+                        <td>Wrong endpoint or model name</td>
+                        <td>Verify AZURE_OPENAI_ENDPOINT and MODEL settings</td>
+                    </tr>
+                    <tr>
+                        <td>CosmosDB connection failed</td>
+                        <td>Invalid credentials or endpoint</td>
+                        <td>Check AZURE_COSMOSDB_ACCOUNT and key/connection string</td>
+                    </tr>
+                    <tr>
+                        <td>Streaming not working</td>
+                        <td>API version incompatible</td>
+                        <td>Use AZURE_OPENAI_API_VERSION=2024-02-15-preview or later</td>
+                    </tr>
+                    <tr>
+                        <td>Chat history not saving</td>
+                        <td>CosmosDB not enabled</td>
+                        <td>Provision CosmosDB and set connection strings</td>
+                    </tr>
+                    <tr>
+                        <td>Frontend not loading</td>
+                        <td>Build not executed</td>
+                        <td>Run: cd frontend && npm run build</td>
+                    </tr>
+                    <tr>
+                        <td>Slow response times</td>
+                        <td>Insufficient workers</td>
+                        <td>Increase Gunicorn workers in gunicorn.conf.py</td>
+                    </tr>
+                    <tr>
+                        <td>CORS errors</td>
+                        <td>Frontend domain not allowed</td>
+                        <td>Configure CORS in app.py @app.after_request</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Slide 34: Future Enhancements -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Future Enhancements</div>
+                <div class="slide-subtitle">Potential Improvements and Roadmap</div>
+            </div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div>
+                        <h3>Short-Term Enhancements</h3>
+                        <ul class="feature-list">
+                            <li>Voice input/output with Speech SDK</li>
+                            <li>Image upload and analysis (GPT-4 Vision)</li>
+                            <li>Export conversations to PDF/Word</li>
+                            <li>Advanced prompt engineering templates</li>
+                            <li>Conversation branching and forking</li>
+                            <li>Real-time collaboration (shared chats)</li>
+                            <li>Integration with Microsoft Teams</li>
+                            <li>Custom theme support (dark mode)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Long-Term Enhancements</h3>
+                        <ul class="feature-list">
+                            <li>Multi-modal AI (text + images + audio)</li>
+                            <li>Fine-tuned models for specific domains</li>
+                            <li>Advanced RAG with semantic caching</li>
+                            <li>A/B testing for prompt optimization</li>
+                            <li>User feedback loop for model improvement</li>
+                            <li>Enterprise analytics dashboard</li>
+                            <li>Mobile native apps (iOS/Android)</li>
+                            <li>Offline mode with sync</li>
+                            <li>Plugin ecosystem for extensions</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">Emerging Technologies to Watch</h3>
+                <div class="tech-stack">
+                    <div class="tech-badge">GPT-4o (Omni)</div>
+                    <div class="tech-badge">Semantic Kernel</div>
+                    <div class="tech-badge">LangChain</div>
+                    <div class="tech-badge">AutoGen</div>
+                    <div class="tech-badge">Prompt Flow Pro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 35: Conclusion -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Conclusion</div>
+                <div class="slide-subtitle">Summary and Next Steps</div>
+            </div>
+            <div class="slide-content">
+                <h2 class="center">Production-Ready Enterprise AI Chat Solution</h2>
+
+                <div class="three-column" style="margin: 40px 0;">
+                    <div class="metric">
+                        <span class="metric-value">✓</span>
+                        <span class="metric-label">Scalable</span>
+                    </div>
+                    <div class="metric" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
+                        <span class="metric-value">✓</span>
+                        <span class="metric-label">Secure</span>
+                    </div>
+                    <div class="metric" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                        <span class="metric-value">✓</span>
+                        <span class="metric-label">Flexible</span>
+                    </div>
+                </div>
+
+                <h3>Key Takeaways</h3>
+                <ul class="feature-list">
+                    <li>Modern, production-ready architecture with proven technologies</li>
+                    <li>Comprehensive security with Azure Entra ID and Defender</li>
+                    <li>Flexible RAG support for 8+ data source types</li>
+                    <li>Scalable async design with streaming responses</li>
+                    <li>Well-documented, maintainable, and extensible codebase</li>
+                </ul>
+
+                <h3>Next Steps</h3>
+                <ol>
+                    <li><strong>Review Documentation</strong> - Read ARCHITECTURE_DOCUMENTATION.md</li>
+                    <li><strong>Set Up Environment</strong> - Configure Azure resources with azd up</li>
+                    <li><strong>Customize</strong> - Brand UI, configure data sources, add custom functions</li>
+                    <li><strong>Test</strong> - Run unit and integration tests</li>
+                    <li><strong>Deploy</strong> - Push to production with CI/CD pipeline</li>
+                    <li><strong>Monitor</strong> - Set up Application Insights dashboards</li>
+                </ol>
+
+                <p class="center" style="margin-top: 60px; font-size: 24px; color: #0078d4; font-weight: bold;">
+                    Ready to build intelligent conversational experiences with Azure OpenAI!
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 36: Thank You -->
+        <div class="slide">
+            <div class="slide-content center">
+                <div class="icon" style="font-size: 96px;">🎉</div>
+                <h1 style="font-size: 72px; margin-bottom: 30px;">Thank You!</h1>
+                <h2 style="color: #106ebe; margin-bottom: 60px;">Azure OpenAI Chat Application</h2>
+
+                <div style="margin: 60px 0;">
+                    <p style="font-size: 32px; margin-bottom: 20px;">Architecture Documentation Complete</p>
+                    <p style="font-size: 24px; color: #666;">36 Comprehensive Slides</p>
+                </div>
+
+                <div style="margin-top: 80px;">
+                    <div class="badge success" style="font-size: 24px; padding: 15px 30px; margin: 10px;">1,062 Lines Backend</div>
+                    <div class="badge info" style="font-size: 24px; padding: 15px 30px; margin: 10px;">3,000+ Lines Frontend</div>
+                    <div class="badge warning" style="font-size: 24px; padding: 15px 30px; margin: 10px;">10+ Azure Services</div>
+                    <div class="badge" style="font-size: 24px; padding: 15px 30px; margin: 10px;">8 Data Sources</div>
+                </div>
+
+                <p style="margin-top: 80px; font-size: 28px; color: #0078d4; font-weight: bold;">
+                    🚀 Ready for Enterprise Deployment
+                </p>
+
+                <p style="margin-top: 40px; font-size: 20px; color: #999;">
+                    Documentation Version 1.0 | December 2025
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    </div>
+
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="slideNumber">1</span> / <span id="totalSlides">36</span>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = document.querySelectorAll('.slide').length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+
+            if (n > totalSlides) {
+                currentSlide = totalSlides;
+            }
+            if (n < 1) {
+                currentSlide = 1;
+            }
+
+            slides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            slides[currentSlide - 1].classList.add('active');
+            document.getElementById('slideNumber').textContent = currentSlide;
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function changeSlide(n) {
+            currentSlide += n;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                changeSlide(1);
+            } else if (e.key === 'Home') {
+                currentSlide = 1;
+                showSlide(currentSlide);
+            } else if (e.key === 'End') {
+                currentSlide = totalSlides;
+                showSlide(currentSlide);
+            }
+        });
+
+        // Initialize
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
