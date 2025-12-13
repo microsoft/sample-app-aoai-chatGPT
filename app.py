@@ -9,6 +9,7 @@ import json
 import base64
 import re
 import httpx
+import uuid
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -668,6 +669,9 @@ async def conversation(request: Request):
             )
             
             return JSONResponse({
+                "job_id": str(uuid.uuid4()),
+                "status": "completed",
+                "response": final_response.choices[0].message.content,
                 "response": final_response.choices[0].message.content,
                 "tools_used": [tc.function.name for tc in response_message.tool_calls],
                 "usage": {
@@ -678,6 +682,9 @@ async def conversation(request: Request):
         
         # No tool calls - return direct response
         return JSONResponse({
+            "job_id": str(uuid.uuid4()),
+            "status": "completed",
+            "response": response_message.content,
             "response": response_message.content,
             "usage": {
                 "prompt_tokens": response.usage.prompt_tokens,

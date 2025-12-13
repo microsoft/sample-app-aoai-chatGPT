@@ -1162,6 +1162,7 @@ async function sendMessage() {
 
     // Add agentic status indicator
     var statusId = addAgenticStatus();
+    console.log('Agentic result statusId:', statusId);
 
     try {
         var response = await fetch('/api/agentic', {
@@ -1177,6 +1178,7 @@ async function sendMessage() {
         });
 
         var data = await response.json();
+        console.log('Agentic result data:', data);
 
         if (data.error) {
             removeMessage(statusId);
@@ -1189,8 +1191,8 @@ async function sendMessage() {
         
         removeMessage(statusId);
 
-        if (result.status === 'Complete') {
-            addMessage(result.result, 'system', true);
+        if (result.status === 'completed') {
+            addMessage(data.response, 'system', true);
         } else if (result.status === 'Failed') {
             addMessage('Error: ' + result.result, 'system-error');
         } else {
@@ -1272,17 +1274,18 @@ async function pollForResultWithStatus(jobId, statusId, maxAttempts, interval) {
             var data = await response.json();
             
             // Update status display
-            if (data.status && data.status !== 'Complete' && data.status !== 'Failed') {
+            if (data.status && data.status !== 'completed' && data.status !== 'Failed') {
                 updateAgenticStatus(statusId, data.status, true);
             }
             
-            if (data.status === 'Complete' || data.status === 'Failed') {
+            if (data.status === 'completed' || data.status === 'Failed') {
                 return data;
             }
             
             await new Promise(function(resolve) { setTimeout(resolve, interval); });
         } catch (error) {
             console.error('Polling error:', error);
+            return { status: 'Failed', result: 'Connection error: ' + error.message };
         }
     }
     return { status: 'Timeout', result: 'Request timed out' };
@@ -1297,7 +1300,7 @@ async function pollForResult(jobId, maxAttempts, interval) {
             var response = await fetch('/api/check_status/' + jobId);
             var data = await response.json();
             
-            if (data.status === 'Complete' || data.status === 'Failed') {
+            if (data.status === 'completed' || data.status === 'Failed') {
                 return data;
             }
             
