@@ -1,29 +1,93 @@
+/* New futuristic / pan-African theme base */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
 * {
   box-sizing: border-box;
 }
 
-html,
-body {
+:root{
+  --bg-1: #060617; /* deep indigo */
+  --bg-2: #0b1224; /* darker navy */
+  --panel: rgba(255,255,255,0.03);
+  --glass: rgba(255,255,255,0.04);
+  --accent-gold: #ffb400;
+  --accent-teal: #00c2a8;
+  --accent-orange: #ff5e3a;
+  --accent-green: #39d353;
+  --muted: #bfc7d6;
+  --neon: rgba(0,194,168,0.22);
+  --pattern-opacity: 0.07;
+  --code-bg: #071226;
+  --radius: 12px;
+  --max-width: 1028px;
+  --font-heading: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-}
-
-html {
-  background: #f2f2f2;
-  font-family:
-    'Segoe UI',
-    'Segoe UI Web (West European)',
-    'Segoe UI',
-    -apple-system,
-    BlinkMacSystemFont,
-    Roboto,
-    'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--muted);
+  background:
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%),
+    url('/assets/african-pattern.svg');
+  background-repeat: repeat;
+  background-size: 240px;
+  background-blend-mode: overlay;
+  isolation: isolate;
 }
 
+/* subtle overlay so pattern is very faint */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(255,180,64,0.03), transparent 10%),
+              radial-gradient(1000px 500px at 90% 90%, rgba(0,194,168,0.03), transparent 10%);
+  pointer-events: none;
+}
+
+/* root container sizing */
 #root {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* headings */
+h1, h2, h3, h4 {
+  color: #fff;
+  font-family: var(--font-heading);
+}
+
+/* utility: glass panel */
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* make links pop */
+a {
+  color: var(--accent-teal);
+  text-decoration: underline dotted;
+}
+
+/* code blocks (global default) */
+pre, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', monospace;
+  background: var(--code-bg);
+  color: #e6f1ff;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* small responsive tweaks */
+@media (max-width: 480px){
+  :root { --max-width: 100%; --radius: 10px; }
 }

@@ -1,3 +1,5 @@
+/* Futuristic header and small layout adjustments */
+
 .layout {
   display: flex;
   flex-direction: column;
@@ -5,107 +7,87 @@
 }
 
 .header {
-  background-color: #f2f2f2;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  padding: 12px 18px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.5);
 }
 
 .headerContainer {
   display: flex;
-  justify-content: left;
+  justify-content: space-between;
   align-items: center;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
 }
 
 .headerTitleContainer {
   display: flex;
   align-items: center;
-  margin-left: 14px;
   text-decoration: none;
+  gap: 12px;
 }
 
 .headerTitle {
   font-style: normal;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 20px;
   line-height: 28px;
-  display: flex;
-  align-items: flex-end;
-  color: #242424;
+  color: var(--accent-gold);
+  margin: 0;
 }
 
 .headerIcon {
-  height: 32px;
+  height: 40px;
   width: auto;
-  margin-left: 36px;
+  margin-left: 8px;
 }
 
+/* share button area */
 .shareButtonContainer {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  margin-right: 20px;
-}
-
-.shareButton {
-  color: #ffffff;
-}
-
-.shareButtonText {
-  font-style: normal;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
+  gap: 8px;
   align-items: center;
-  color: #ffffff;
 }
 
 .urlTextBox {
-  font-style: normal;
   font-weight: 400;
   font-size: 14px;
-  line-height: 20px;
-  color: #707070;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  max-width: 360px;
+  color: #fff;
 }
 
 .copyButtonContainer {
-  box-sizing: border-box;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
-  padding: 5px 12px;
-  gap: 4px;
-  background: #ffffff;
-  border: 1px solid #d1d1d1;
-  border-radius: 4px;
-}
-
-.copyButtonContainer:hover {
+  padding: 6px 10px;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(0,194,168,0.08), rgba(255,180,64,0.04));
+  border-radius: 8px;
   cursor: pointer;
-  background: #d1d1d1;
-}
-
-.copyButton {
-  color: #424242;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.03);
 }
 
 .copyButtonText {
-  font-style: normal;
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
-  display: flex;
-  align-items: center;
-  color: #242424;
+  color: #fff;
 }
 
+/* responsive tweaks */
 @media (max-width: 480px) {
   .headerTitleContainer {
     margin-left: 4px;
   }
-
   .headerIcon {
-    margin-left: 26px;
+    margin-left: 6px;
+    height: 34px;
   }
 }

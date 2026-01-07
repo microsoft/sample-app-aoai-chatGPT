@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="40" viewBox="0 0 180 40" role="img" aria-label="Kouyou logo">
+  <rect width="180" height="40" rx="6" fill="transparent"/>
+  <g font-family="Poppins, sans-serif" font-weight="700" font-size="18">
+    <text x="46" y="26" fill="#ffb400">Kouyou</text>
+  </g>
+  <g transform="translate(8,6)">
+    <circle cx="10" cy="10" r="10" fill="#00c2a8"/>
+    <path d="M6 10 L14 10 M10 6 L10 14" stroke="#061025" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+</svg>
