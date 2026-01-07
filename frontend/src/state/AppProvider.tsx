@@ -29,6 +29,7 @@ export interface AppState {
   frontendSettings: FrontendSettings | null
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
   isLoading: boolean;
+  answerExecResult: { [answerId: string]: [] }
 }
 
 export type Action =
@@ -49,6 +50,7 @@ export type Action =
     payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral }
   }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
+  | { type: 'SET_ANSWER_EXEC_RESULT'; payload: { answerId: string, exec_result: [] } }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
@@ -62,7 +64,8 @@ const initialState: AppState = {
   },
   frontendSettings: null,
   feedbackState: {},
-  isLoading: true
+  isLoading: true,
+  answerExecResult: {},
 }
 
 export const AppStateContext = createContext<

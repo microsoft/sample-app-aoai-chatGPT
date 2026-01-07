@@ -10,6 +10,7 @@ This repo contains sample code for a simple chat webapp that integrates with Azu
   - Elasticsearch index (preview)
   - Pinecone index (private preview)
   - Azure SQL Server (private preview)
+  - Mongo DB (preview)
 
 ## Configure the app
 
@@ -58,9 +59,6 @@ Please see the [section below](#add-an-identity-provider) for important informat
 2. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 
 3. You can see the local running app at http://127.0.0.1:50505.
-
-NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
-
 
 ### Deploy with the Azure CLI
 
@@ -153,6 +151,7 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |AZURE_OPENAI_SYSTEM_MESSAGE|No|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
     |AZURE_OPENAI_STREAM|No|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
     |AZURE_OPENAI_EMBEDDING_NAME|Only if using vector search using an Azure OpenAI embedding model||The name of your embedding model deployment if using vector search.
+    |MS_DEFENDER_ENABLED|Yes|True|Whether or not the Microsoft Defender for Cloud's threat protection for AI workloads plan is enabled on your subscription or not , for more details [Microsoft Defender for Cloud documentation](https://learn.microsoft.com/azure/defender-for-cloud/gain-end-user-context-ai).|
 
     See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
 
@@ -283,6 +282,34 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
     - `PINECONE_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
 
+#### Chat with your data using Mongo DB (Private Preview)
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
+
+2. To connect to your data, you need to specify an Mongo DB database configuration.  Learn more about [MongoDB](https://www.mongodb.com/).
+
+3. Configure data source settings as described in the table below.
+
+    | App Setting | Required? | Default Value | Note |
+    | --- | --- | --- | ------------- |
+    |DATASOURCE_TYPE|Yes||Must be set to `MongoDB`|
+    |MONGODB_CONNECTION_STRING|Yes||The connection string used to connect to your Mongo DB instance|
+    |MONGODB_VECTOR_INDEX|Yes||The name of your Mongo DB vector index|
+    |MONGODB_DATABASE_NAME|Yes||The name of your Mongo DB database|
+    |MONGODB_CONTAINER_NAME|Yes||The name of your Mongo DB container|
+    |MONGODB_TOP_K|No|5|The number of documents to retrieve when querying your search index.|
+    |MONGODB_ENABLE_IN_DOMAIN|No|True|Limits responses to only queries relating to your data.|
+    |MONGODB_STRICTNESS|No|3|Integer from 1 to 5 specifying the strictness for the model limiting responses to your data.|
+    |MONGODB_CONTENT_COLUMNS|No||List of fields in your search index that contains the text content of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
+    |MONGODB_FILENAME_COLUMN|No|| Field from your search index that gives a unique identifier of the source of your data to display in the UI.|
+    |MONGODB_TITLE_COLUMN|No||Field from your search index that gives a relevant title or header for your data content to display in the UI.|
+    |MONGODB_URL_COLUMN|No||Field from your search index that contains a URL for the document, e.g. an Azure Blob Storage URI. This value is not currently used.|
+    |MONGODB_VECTOR_COLUMNS|No||List of fields in your search index that contain vector embeddings of your documents to use when formulating a bot response. Represent these as a string joined with "|", e.g. `"product_description|product_manual"`|
+
+    MongoDB uses vector search by default, so ensure these settings are configured on your app:
+    - `AZURE_OPENAI_EMBEDDING_NAME`: the name of your Ada (text-embedding-ada-002) model deployment on your Azure OpenAI resource.
+    - `MONGODB_VECTOR_COLUMNS`: the vector columns in your index to use when searching. Join them with `|` like `contentVector|titleVector`.
+    
 #### Chat with your data using Azure SQL Server (Private Preview)
 
 1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above. 
@@ -296,6 +323,9 @@ Note: RBAC assignments can take a few minutes before becoming effective.
     |DATASOURCE_TYPE|Yes||Must be set to `AzureSqlServer`|
     |AZURE_SQL_SERVER_CONNECTION_STRING|Yes||The connection string to use to connect to your Azure SQL Server instance|
     |AZURE_SQL_SERVER_TABLE_SCHEMA|Yes||The table schema for your Azure SQL Server table.  Must be surrounded by double quotes (`"`).|
+    |AZURE_SQL_SERVER_PORT||Not publicly available at this time.|The port to use to connect to your Azure SQL Server instance.|
+    |AZURE_SQL_SERVER_DATABASE_NAME||Not publicly available at this time.|
+    |AZURE_SQL_SERVER_DATABASE_SERVER||Not publicly available at this time.|
 
 #### Chat with your data using Promptflow
 
@@ -328,6 +358,126 @@ Configure your settings using the table below.
     |AZURE_COSMOSDB_CONVERSATIONS_CONTAINER|Only if using chat history||The name of the Azure Cosmos DB container used for storing chat history|
     |AZURE_COSMOSDB_ACCOUNT_KEY|Only if using chat history||The account key for the Azure Cosmos DB account used for storing chat history|
     |AZURE_COSMOSDB_ENABLE_FEEDBACK|No|False|Whether or not to enable message feedback on chat history messages|
+
+
+#### Enable Azure OpenAI function calling via Azure Functions
+
+Refer to this article to learn more about [function calling with Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/function-calling).
+
+1. Update the `AZURE_OPENAI_*` environment variables as described in the [basic chat experience](#basic-chat-experience) above.
+
+2. Add any additional configuration (described in previous sections) needed for chatting with data, if required.
+
+3. To enable function calling via remote Azure Functions, you will need to set up an Azure Function resource. Refer to this [instruction guide](https://learn.microsoft.com/azure/azure-functions/functions-create-function-app-portal?pivots=programming-language-python) to create an Azure Function resource.
+
+4. You will need to create the following Azure Functions to implement function calling logic:
+
+    * Create one function with routing, e.g. /tools, that will return a JSON array with the function definitions.
+    * Create a second function with routing, e.g. /tool, that will execute the functions with the given arguments.
+    The request body will be a JSON structure with the function name and arguments of the function to be executed.   
+    Use this sample as function request body to test your function call:
+
+        ```
+        {
+            "tool_name" : "get_current_weather",
+            "tool_arguments" : {"location":"Lamego"}
+        }
+        ```
+
+    * Create functions without routing to implement all the functions defined in the JSON definition.
+    
+    Sample code for the Azure Functions:
+
+    ```
+    import azure.functions as func
+    import logging
+    import json
+    import random
+
+    app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+
+    azure_openai_tools_json = """[{
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city name, e.g. San Francisco"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    }]"""
+
+    azure_openai_available_tools = ["get_current_weather"]
+
+    @app.route(route="tools")
+    def tools(req: func.HttpRequest) -> func.HttpResponse:
+        logging.info('tools function processed a request.')
+
+        return func.HttpResponse(
+            azure_openai_tools_json,
+            status_code=200
+        )
+
+    @app.route(route="tool")
+    def tool(req: func.HttpRequest) -> func.HttpResponse:
+        logging.info('tool function processed a request.')
+
+        tool_name = req.params.get('tool_name')
+        if not tool_name:
+            try:
+                req_body = req.get_json()
+            except ValueError:
+                pass
+            else:
+                tool_name = req_body.get('tool_name')
+
+        tool_arguments = req.params.get('tool_arguments')
+        if not tool_arguments:
+            try:
+                req_body = req.get_json()
+            except ValueError:
+                pass
+            else:
+                tool_arguments = req_body.get('tool_arguments')
+
+        if tool_name and tool_arguments:
+            if tool_name in azure_openai_available_tools:
+                logging.info('tool function: tool_name and tool_arguments are valid.')
+                result = globals()[tool_name](**tool_arguments)
+                return func.HttpResponse(
+                    result,
+                    status_code = 200
+                )
+
+        logging.info('tool function: tool_name or tool_arguments are invalid.')
+        return func.HttpResponse(
+                "The tool function we executed successfully but the tool name or arguments were invalid. ",
+                status_code=400
+        )
+
+    def get_current_weather(location: str) -> str:
+        logging.info('get_current_weather function processed a request.')
+        temperature = random.randint(10, 30)
+        weather = random.choice(["sunny", "cloudy", "rainy", "windy"])
+        return f"The current weather in {location} is {temperature}°C and {weather}."
+    ```
+
+4. Configure data source settings as described in the table below:
+
+    | App Setting | Required? | Default Value | Note |
+    | ----------- | --------- | ------------- | ---- |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_ENABLED | No |  |  |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOL_BASE_URL | Only if using function calling |  | The base URL of your Azure Function "tool", e.g. [https://<azure-function-name>.azurewebsites.net/api/tool]() |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOL_KEY | Only if using function calling |  | The function key used to access the Azure Function "tool" |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOLS_BASE_URL | Only if using function calling |  | The base URL of your Azure Function "tools", e.g. [https://<azure-function-name>.azurewebsites.net/api/tools]() |
+    | AZURE_OPENAI_FUNCTION_CALL_AZURE_FUNCTIONS_TOOLS_KEY | Only if using function calling |  | The function key used to access the Azure Function "tools" |
 
 
 #### Common Customization Scenarios (e.g. updating the default chat logo and headers)
@@ -390,7 +540,6 @@ We recommend keeping these best practices in mind:
 - Pull in changes from `main` frequently to ensure you have the latest bug fixes and improvements, especially when using Azure OpenAI on your data.
 
 **A note on Azure OpenAI API versions**: The application code in this repo will implement the request and response contracts for the most recent preview API version supported for Azure OpenAI.  To keep your application up-to-date as the Azure OpenAI API evolves with time, be sure to merge the latest API version update into your own application code and redeploy using the methods described in this document.
-
 
 ## Contributing
 

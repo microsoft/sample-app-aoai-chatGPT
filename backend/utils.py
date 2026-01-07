@@ -131,6 +131,22 @@ def format_stream_response(chatCompletionChunk, history_metadata, apim_request_i
                 }
                 response_obj["choices"][0]["messages"].append(messageObj)
                 return response_obj
+            if delta.tool_calls:
+                messageObj = {
+                    "role": "tool",
+                    "tool_calls": {
+                        "id": delta.tool_calls[0].id,
+                        "function": {
+                            "name" : delta.tool_calls[0].function.name,
+                            "arguments": delta.tool_calls[0].function.arguments
+                        },
+                        "type": delta.tool_calls[0].type
+                    }
+                }
+                if hasattr(delta, "context"):
+                    messageObj["context"] = json.dumps(delta.context)
+                response_obj["choices"][0]["messages"].append(messageObj)
+                return response_obj
             else:
                 if delta.content:
                     messageObj = {
@@ -166,10 +182,12 @@ def format_pf_non_streaming_response(
                 "content": chatCompletion[response_field_name] 
             })
         if citations_field_name in chatCompletion:
+            citation_content= {"citations": chatCompletion[citations_field_name]}
             messages.append({ 
                 "role": "tool",
-                "content": chatCompletion[citations_field_name]
+                "content": json.dumps(citation_content)
             })
+
         response_obj = {
             "id": chatCompletion["id"],
             "model": "",

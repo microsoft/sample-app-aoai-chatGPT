@@ -6,7 +6,7 @@ This project uses GitHub Issues to track bugs and feature requests. Please searc
 issues before filing new issues to avoid duplicates.  For new issues, file your bug or 
 feature request as a new Issue.
 
-For help and questions about using this project, please use the GitHub Issues and Discussions on this project. For help with Azure OpenAI Service or Azure AI Search, please file support tickets with the appropriate service.
+For help and questions about using this project, please use the GitHub Issues and Discussions on this project. Please note that this sample app is provided **as is** and the maintainers of this sample are not able to provide direct support on modifying the project to suit custom requirements.
 
 ## Microsoft Support Policy  
 

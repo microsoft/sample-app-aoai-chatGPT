@@ -66,7 +66,7 @@ def test_dotenv_with_elasticsearch_success(app_settings):
     assert payload["parameters"] is not None
     assert payload["parameters"]["endpoint"] == "dummy"
     print(payload)
-    
+
     
     
 
