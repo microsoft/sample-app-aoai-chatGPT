@@ -30,7 +30,7 @@
   background: transparent !important;
   resize: none;
   overflow-y: hidden;
-  min-height: 24px;
+  min-height: 28px;
 }
 
 .questionInputSendButtonContainer {
