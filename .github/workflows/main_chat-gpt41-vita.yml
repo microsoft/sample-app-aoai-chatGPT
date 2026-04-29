@@ -1,8 +1,7 @@
-# .github/workflows/main_chat-gpt41-vita.yml
-name: Build and Deploy Python App to Azure Web App
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-env:
-  AZURE_WEBAPP_NAME: chat-gpt41-vita  # Имя вашего App Service
+name: Build and deploy container app to Azure Web App - chat-gpt41-vita
 
 on:
   push:
@@ -13,56 +12,42 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to container registry
+        uses: docker/login-action@v2
         with:
-          python-version: '3.11'
+          registry: sampleappaoaichatgpt.azurecr.io/
+          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_33663CC5FADA45EEABECFEEBE82B10BD }}
+          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_20567E789E324F81BE9AD2C1F38D42B0 }}
 
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      # Опционально: запустите тесты, если они есть
-      # - name: Run tests
-      #   run: |
-      #     pip install pytest
-      #     pytest tests
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v3
         with:
-          name: python-app
-          path: |
-            .
-            !venv/
-            !*.pyc
-            !__pycache__/
+          context: .
+          push: true
+          tags: sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_33663CC5FADA45EEABECFEEBE82B10BD }}/sample-app-aoai-chatgpt:${{ github.sha }}
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
+    
     needs: build
-    environment:
-      name: 'Production'
-      url: $
-
+    
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-          
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+      
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          app-name: 'chat-gpt41-vita'
+          slot-name: 'Production'
+          images: 'sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_33663CC5FADA45EEABECFEEBE82B10BD }}/sample-app-aoai-chatgpt:${{ github.sha }}'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B90BA9EB0B594BD6ADDDBAFC09C90D7A }}
