@@ -25,15 +25,15 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: sampleappaoaichatgpt.azurecr.io/
-          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_71D474D7E728403CB297CE6A63C2929D }}
-          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_4C99469F7FFD40ADAE16C0347B9D81D5 }}
+          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_D4B3E2E58DA2403BB4188DE4EC712B05 }}
+          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_00C8E9475B034615BA5AC370BDAF318A }}
 
       - name: Build and push container image to registry
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_71D474D7E728403CB297CE6A63C2929D }}/sample-app-aoai-chatgpt:${{ github.sha }}
+          tags: sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_D4B3E2E58DA2403BB4188DE4EC712B05 }}/sample-app-aoai-chatgpt:${{ github.sha }}
           file: ./Dockerfile
 
   deploy:
@@ -49,5 +49,5 @@ jobs:
         with:
           app-name: 'chat-gpt41-vita'
           slot-name: 'Production'
-          images: 'sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_71D474D7E728403CB297CE6A63C2929D }}/sample-app-aoai-chatgpt:${{ github.sha }}'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_12F1487B9A1C4FCF9B4ED1944C1C4593 }}
+          images: 'sampleappaoaichatgpt.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_D4B3E2E58DA2403BB4188DE4EC712B05 }}/sample-app-aoai-chatgpt:${{ github.sha }}'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_621A4DCA4D5D4538AE6EBF0B6043C924 }}
