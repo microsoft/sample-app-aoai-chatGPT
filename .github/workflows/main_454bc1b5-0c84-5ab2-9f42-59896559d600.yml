@@ -1,0 +1,31 @@
+name: Deploy Python code to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'chat-gpt41-vita'  # Ваше имя приложения
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_04B5D12680444C16A09B22F7F153ADD7 }}
+          package: .
